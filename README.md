@@ -20,28 +20,28 @@ $ git clone https://github.com/babelouest/orcania.git
 $ cd orcania/
 $ make
 $ sudo make install
-$ cd ..
+$ cd ../..
 
 # Install Yder
 $ git clone https://github.com/babelouest/yder.git
 $ cd yder/src/
 $ make
 $ sudo make install
-$ cd ..
+$ cd ../..
 
 # Install Ulfius
 $ git clone https://github.com/babelouest/ulfius.git
 $ cd ulfius/src/
 $ make
 $ sudo make install
-$ cd ..
+$ cd ../..
 
 # Install Hoel
 $ git clone https://github.com/babelouest/hoel.git
 $ cd hoel/src/
 $ make
 $ sudo make install
-$ cd ..
+$ cd ../..
 
 $ git clone git@github.com:babelouest/taliesin.git
 $ cd taliesin/src

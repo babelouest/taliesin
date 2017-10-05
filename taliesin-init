@@ -1,0 +1,47 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          taliesin
+# Required-Start:    $network $time
+# Required-Stop:     $network $time
+# Should-Start:
+# Should-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Starts the taliesin daemon
+# Description:
+### END INIT INFO
+
+user=pi
+group=pi
+prefix=/usr/bin
+exec_prefix=${prefix}
+taliesin=${prefix}/taliesin
+taliesinconf=--config=/etc/taliesin/taliesin.conf
+pidfile=/var/run/taliesin.pid
+
+case "$1" in
+  stop)
+    echo -n "Stopping Taliesin "
+    start-stop-daemon --stop --pidfile $pidfile
+    echo "OK"
+    ;;
+
+  start)
+    echo -n "Starting Taliesin "
+    touch $pidfile
+    chown $user:$group $pidfile
+    start-stop-daemon --start --quiet --make-pidfile --pidfile $pidfile \
+      --chuid $user:$group --background --exec $taliesin -- $taliesinhconf
+    echo "OK"
+    ;;
+
+  restart)
+    $0 stop
+    $0 start
+    ;;
+
+  *)
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
+    ;;
+esac

@@ -1,0 +1,133 @@
+#
+#
+#  Taliesin - Media server
+#
+# Copyright 2017 Nicolas Mora <mail@babelouest.org>
+# Gnu Public License V3 <http://fsf.org/>
+#
+#
+
+# port to open for remote commands
+port=8576
+
+# api_prefix
+api_prefix="api"
+
+# path to static files to access webapp
+app_files_path="webapp/dist/"
+
+# static files prefix
+app_files_prefix = "app"
+
+# mime types for webapp files
+app_files_mime_types =
+(
+  {
+    extension = ".html"
+    type = "text/html"
+  },
+  {
+    extension = ".css"
+    type = "text/css"
+  },
+  {
+    extension = ".js"
+    type = "application/javascript"
+  },
+  {
+    extension = ".png"
+    type = "image/png"
+  },
+  {
+    extension = ".jpg"
+    type = "image/jpeg"
+  },
+  {
+    extension = ".jpeg"
+    type = "image/jpeg"
+  },
+  {
+    extension = ".ttf"
+    type = "font/ttf"
+  },
+  {
+    extension = ".woff"
+    type = "font/woff"
+  },
+  {
+    extension = ".woff2"
+    type = "font/woff2"
+  },
+  {
+    extension = ".map"
+    type = "application/octet-stream"
+  },
+  {
+    extension = ".json"
+    type = "text/json"
+  },
+  {
+    extension = ".ico"
+    type = "image/x-icon"
+  }
+)
+
+# access-control-allow-origin value
+allow_origin="*"
+
+# log mode (console, syslog, file)
+log_mode="console,file"
+
+# log level: NONE, ERROR, WARNING, INFO, DEBUG
+log_level="WARNING"
+
+# output to log file (required if log_mode is file)
+log_file="/tmp/taliesin.log"
+
+# scopes required
+oauth_scope_user="taliesin"
+oauth_scope_admin="taliesin_admin"
+
+# TLS/SSL configuration values
+use_secure_connection=false
+secure_connection_key_file="cert.key"
+secure_connection_pem_file="cert.pem"
+
+# MariaDB/Mysql database connection
+database =
+{
+  type = "mariadb";
+  host = "localhost";
+  user = "taliesin";
+  password = "taliesin";
+  dbname = "taliesin";
+  port = 0;
+};
+
+# SQLite database connection
+#database =
+#{
+#   type               = "sqlite3";
+#   path               = "/tmp/taliesin.db";
+#};
+
+# security parameters
+user_can_create_data_source = false # default false, only administrator can create data_source
+use_oauth2_authentication   = true  # default true, on false no authentication is required and all users have all the scopes
+
+# streaming default parameters
+stream_format      = "mp3"
+stream_channels    = 2
+stream_sample_rate = 44100
+stream_bitrate     = 128000
+
+# jwt parameters
+jwt =
+{
+   use_rsa = false
+   rsa_pub_file = "public.pem"
+   
+   use_sha = true
+   sha_secret = "secret"
+   
+}

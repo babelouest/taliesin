@@ -1,0 +1,15 @@
+[Unit]
+Description=Taliesin media server
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=-/usr/local/etc/taliesin/taliesin.conf
+ExecStart=/usr/local/bin/taliesin --config-file=/usr/local/etc/taliesin/taliesin.conf
+User=pi
+KillMode=process
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+Alias=taliesin

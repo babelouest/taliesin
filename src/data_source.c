@@ -78,42 +78,42 @@ json_t * data_source_get(struct config_elements * config, const char * username,
   int res;
   char * profile_query, * escaped, * data_source_scope;
   
-	if (username != NULL) {
-		escaped = h_escape_string(config->conn, username);
-		profile_query = msprintf("(`tds_username` IS NULL OR `tds_username`= '%s')", escaped);
-		h_free(escaped);
-		j_query = json_pack("{sss[sssss]s{s{ssss}ss}}",
-												"table",
-												TALIESIN_TABLE_DATA_SOURCE,
-												"columns",
-													"tds_username",
-													"tds_name AS name",
-													"tds_description AS description",
-													"tds_icon AS icon",
-													config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(tds_last_updated) AS last_updated":"tds_last_updated AS last_updated",
-												"where",
-													" ",
-														"operator",
-														"raw",
-														"value",
-														profile_query,
-													"tds_name",
-													name);
+  if (username != NULL) {
+    escaped = h_escape_string(config->conn, username);
+    profile_query = msprintf("(`tds_username` IS NULL OR `tds_username`= '%s')", escaped);
+    h_free(escaped);
+    j_query = json_pack("{sss[sssss]s{s{ssss}ss}}",
+                        "table",
+                        TALIESIN_TABLE_DATA_SOURCE,
+                        "columns",
+                          "tds_username",
+                          "tds_name AS name",
+                          "tds_description AS description",
+                          "tds_icon AS icon",
+                          config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(tds_last_updated) AS last_updated":"tds_last_updated AS last_updated",
+                        "where",
+                          " ",
+                            "operator",
+                            "raw",
+                            "value",
+                            profile_query,
+                          "tds_name",
+                          name);
     o_free(profile_query);
-	} else {
-		j_query = json_pack("{sss[sssss]s{ss}}",
-												"table",
-												TALIESIN_TABLE_DATA_SOURCE,
-												"columns",
-													"tds_username",
-													"tds_name AS name",
-													"tds_description AS description",
-													"tds_icon AS icon",
-													config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(tds_last_updated) AS last_updated":"tds_last_updated AS last_updated",
-												"where",
-													"tds_name",
-													name);
-	}
+  } else {
+    j_query = json_pack("{sss[sssss]s{ss}}",
+                        "table",
+                        TALIESIN_TABLE_DATA_SOURCE,
+                        "columns",
+                          "tds_username",
+                          "tds_name AS name",
+                          "tds_description AS description",
+                          "tds_icon AS icon",
+                          config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(tds_last_updated) AS last_updated":"tds_last_updated AS last_updated",
+                        "where",
+                          "tds_name",
+                          name);
+  }
   if (j_query != NULL) {
     if (get_id) {
       json_array_append_new(json_object_get(j_query, "columns"), json_string("tds_username AS username"));
@@ -162,11 +162,11 @@ json_t * is_data_source_valid(struct config_elements * config, const char * user
             json_is_string(json_object_get(j_data_source, "name")) &&
             json_string_length(json_object_get(j_data_source, "name")) > 0 && 
             json_string_length(json_object_get(j_data_source, "name")) < 128) {
-					if (is_admin && o_strcmp(json_string_value(json_object_get(j_data_source, "scope")), TALIESIN_SCOPE_ALL) == 0) {
-						j_element = data_source_get(config, NULL, json_string_value(json_object_get(j_data_source, "name")), 0);
-					} else {
-						j_element = data_source_get(config, username, json_string_value(json_object_get(j_data_source, "name")), 0);
-					}
+          if (is_admin && o_strcmp(json_string_value(json_object_get(j_data_source, "scope")), TALIESIN_SCOPE_ALL) == 0) {
+            j_element = data_source_get(config, NULL, json_string_value(json_object_get(j_data_source, "name")), 0);
+          } else {
+            j_element = data_source_get(config, username, json_string_value(json_object_get(j_data_source, "name")), 0);
+          }
           if (check_result_value(j_element, T_OK)) {
             json_array_append_new(j_result, json_pack("{ss}", "name", "A data_source with the same name already exist"));
           } else if (!check_result_value(j_element, T_ERROR_NOT_FOUND)) {
@@ -184,30 +184,30 @@ json_t * is_data_source_valid(struct config_elements * config, const char * user
           }
           json_decref(j_element);
         }
-				
-				if (json_object_get(j_data_source, "path") == NULL ||
-						!json_is_string(json_object_get(j_data_source, "path")) ||
-						json_string_length(json_object_get(j_data_source, "path")) > 1024
-					) {
-					json_array_append_new(j_result, json_pack("{ss}", "path", "Path is an mandatory string up to 1024 characters"));
-				} else {
-					if (!is_fs_directory_readable(json_string_value(json_object_get(j_data_source, "path")))) {
-						json_array_append_new(j_result, json_pack("{ss}", "path", "Path is not accessible from the server"));
-					}
-				}
+        
+        if (json_object_get(j_data_source, "path") == NULL ||
+            !json_is_string(json_object_get(j_data_source, "path")) ||
+            json_string_length(json_object_get(j_data_source, "path")) > 1024
+          ) {
+          json_array_append_new(j_result, json_pack("{ss}", "path", "Path is an mandatory string up to 1024 characters"));
+        } else {
+          if (!is_fs_directory_readable(json_string_value(json_object_get(j_data_source, "path")))) {
+            json_array_append_new(j_result, json_pack("{ss}", "path", "Path is not accessible from the server"));
+          }
+        }
 
-				if (json_object_get(j_data_source, "scope") != NULL &&
-						(
-							!json_is_string(json_object_get(j_data_source, "scope")) ||
-							(
-								o_strcmp(json_string_value(json_object_get(j_data_source, "scope")), TALIESIN_SCOPE_ALL) != 0 &&
-								o_strcmp(json_string_value(json_object_get(j_data_source, "scope")), TALIESIN_SCOPE_ME) != 0
-							)
-							|| (o_strcmp(json_string_value(json_object_get(j_data_source, "scope")), TALIESIN_SCOPE_ALL) == 0 && !is_admin)
-						)
-					) {
-					json_array_append_new(j_result, json_pack("{ss}", "scope", "scope value is an optional string and can be only " TALIESIN_SCOPE_ALL " or " TALIESIN_SCOPE_ME ", only administrator can add data source for all users"));
-				} else if (!config->user_can_create_data_source && o_strcmp(json_string_value(json_object_get(j_data_source, "scope")), TALIESIN_SCOPE_ME) == 0) {
+        if (json_object_get(j_data_source, "scope") != NULL &&
+            (
+              !json_is_string(json_object_get(j_data_source, "scope")) ||
+              (
+                o_strcmp(json_string_value(json_object_get(j_data_source, "scope")), TALIESIN_SCOPE_ALL) != 0 &&
+                o_strcmp(json_string_value(json_object_get(j_data_source, "scope")), TALIESIN_SCOPE_ME) != 0
+              )
+              || (o_strcmp(json_string_value(json_object_get(j_data_source, "scope")), TALIESIN_SCOPE_ALL) == 0 && !is_admin)
+            )
+          ) {
+          json_array_append_new(j_result, json_pack("{ss}", "scope", "scope value is an optional string and can be only " TALIESIN_SCOPE_ALL " or " TALIESIN_SCOPE_ME ", only administrator can add data source for all users"));
+        } else if (!config->user_can_create_data_source && o_strcmp(json_string_value(json_object_get(j_data_source, "scope")), TALIESIN_SCOPE_ME) == 0) {
           json_array_append_new(j_result, json_pack("{ss}", "scope", "only administrator can add data source"));
         }
       }
@@ -314,7 +314,7 @@ int data_source_delete(struct config_elements * config, const char * username, c
   json_t * j_query;
   int res, to_return;
   char * escaped, * profile_clause;
-	
+  
   escaped = h_escape_string(config->conn, username);
   profile_clause = msprintf("(`tds_username` IS NULL OR `tds_username`= '%s')", escaped);
   h_free(escaped);
@@ -325,10 +325,10 @@ int data_source_delete(struct config_elements * config, const char * username, c
                         "tds_name",
                         data_source,
                         " ",
-													"operator",
-													"raw",
-													"value",
-													profile_clause);
+                          "operator",
+                          "raw",
+                          "value",
+                          profile_clause);
   o_free(profile_clause);
   if (j_query != NULL) {
     res = h_delete(config->conn, j_query, NULL);
@@ -438,43 +438,43 @@ int media_update(struct config_elements * config, json_int_t tm_id, json_t * j_m
     res = h_update(config->conn, j_query, NULL);
     json_decref(j_query);
     if (res == H_OK) {
-			if (json_object_get(json_object_get(j_media, "metadata"), "tags") != NULL) {
-				// delete media metadata
-				j_query = json_pack("{sss{sI}}",
-														"table",
-														TALIESIN_TABLE_META_DATA,
-														"where",
-															"tm_id",
-															tm_id);
-				res = h_delete(config->conn, j_query, NULL);
-				json_decref(j_query);
-				if (res == H_OK) {
-					// Insert media metadata
-					j_query = json_pack("{sss[]}",
-															"table",
-															TALIESIN_TABLE_META_DATA,
-															"values");
-					if (j_query != NULL) {
-						json_object_foreach(json_object_get(json_object_get(j_media, "metadata"), "tags"), key, j_tag) {
-							json_array_append_new(json_object_get(j_query, "values"), json_pack("{sIssss}", "tm_id", tm_id, "tmd_key", key, "tmd_value", json_string_value(j_tag)));
-						}
-						res = h_insert(config->conn, j_query, NULL);
-						json_decref(j_query);
-						if (res != H_OK) {
-							y_log_message(Y_LOG_LEVEL_ERROR, "media_update - error insert media metadata in database");
-							ret = T_ERROR_DB;
-						}
-					} else {
-						y_log_message(Y_LOG_LEVEL_ERROR, "media_update - error allocating resources for j_query (2)");
-						ret = T_ERROR_MEMORY;
-					}
-				} else {
-					y_log_message(Y_LOG_LEVEL_ERROR, "media_update - error delete media metadata in database");
-					ret = T_ERROR_DB;
-				}
-			} else {
-				ret = T_OK;
-			}
+      if (json_object_get(json_object_get(j_media, "metadata"), "tags") != NULL) {
+        // delete media metadata
+        j_query = json_pack("{sss{sI}}",
+                            "table",
+                            TALIESIN_TABLE_META_DATA,
+                            "where",
+                              "tm_id",
+                              tm_id);
+        res = h_delete(config->conn, j_query, NULL);
+        json_decref(j_query);
+        if (res == H_OK) {
+          // Insert media metadata
+          j_query = json_pack("{sss[]}",
+                              "table",
+                              TALIESIN_TABLE_META_DATA,
+                              "values");
+          if (j_query != NULL) {
+            json_object_foreach(json_object_get(json_object_get(j_media, "metadata"), "tags"), key, j_tag) {
+              json_array_append_new(json_object_get(j_query, "values"), json_pack("{sIssss}", "tm_id", tm_id, "tmd_key", key, "tmd_value", json_string_value(j_tag)));
+            }
+            res = h_insert(config->conn, j_query, NULL);
+            json_decref(j_query);
+            if (res != H_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "media_update - error insert media metadata in database");
+              ret = T_ERROR_DB;
+            }
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "media_update - error allocating resources for j_query (2)");
+            ret = T_ERROR_MEMORY;
+          }
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "media_update - error delete media metadata in database");
+          ret = T_ERROR_DB;
+        }
+      } else {
+        ret = T_OK;
+      }
     } else {
       y_log_message(Y_LOG_LEVEL_ERROR, "media_update - error insert media in database");
       ret = T_ERROR_DB;
@@ -650,104 +650,104 @@ int scan_directory(struct config_elements * config, struct _refresh_config * ref
   if (refresh_config != NULL && refresh_config->refresh_status == DATA_SOURCE_REFRESH_STATUS_RUNNING) {
     if (data_source_set_refresh_mode(config, tds_id, tf_id, DATA_SOURCE_REFRESH_MODE_IN_REFRESH) == T_OK) {
       path = msprintf("%s/%s", json_string_value(json_object_get(j_data_source, "path")), sub_path!=NULL?sub_path:"");
-			if (o_strlen(path) <= PATH_MAX) {
+      if (o_strlen(path) <= PATH_MAX) {
         //y_log_message(Y_LOG_LEVEL_DEBUG, "scan %s", path);
-				j_folder = fs_directory_read(path);
-				if (j_folder != NULL) {
-					json_array_foreach(j_folder, index, j_element) {
-						if (o_strcmp(json_string_value(json_object_get(j_element, "type")), "folder") == 0) {
-							// Look for folder in database
-							new_tf_id = folder_get_id(config, j_data_source, tf_id, json_string_value(json_object_get(j_element, "name")));
-							if (new_tf_id < 0) {
-								// Folder does not exist yet, we create it
-								if (sub_path != NULL) {
-									new_sub_path = msprintf("%s/%s", sub_path, json_string_value(json_object_get(j_element, "name")));
-								} else {
-									new_sub_path = o_strdup(json_string_value(json_object_get(j_element, "name")));
-								}
-								new_tf_id = insert_new_folder(config, tds_id, tf_id, json_string_value(json_object_get(j_element, "name")), new_sub_path);
-								o_free(new_sub_path);
-							} else {
-								//y_log_message(Y_LOG_LEVEL_DEBUG, "do not update %s/%s", path, json_string_value(json_object_get(j_element, "name")));
-								if (folder_set_refresh_status(config, new_tf_id, DATA_SOURCE_REFRESH_MODE_PROCESSED) != T_OK) {
-									y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Error updating folder status");
-								}
-							}
-							if (new_tf_id > 0) {
-								if (sub_path != NULL) {
-									new_sub_path = msprintf("%s/%s", sub_path, json_string_value(json_object_get(j_element, "name")));
-								} else {
-									new_sub_path = o_strdup(json_string_value(json_object_get(j_element, "name")));
-								}
-								if (scan_directory(config, refresh_config, thumbnail_cover_codec_context, tds_id, j_data_source, new_sub_path, new_tf_id) != T_OK) {
-									y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Error scanning subdirectory %s", new_sub_path);
-								}
-								j_folder_cover = media_folder_detect_cover_by_id(config, j_data_source, new_tf_id, new_sub_path);
-								if (check_result_value(j_folder_cover, T_OK)) {
-									//y_log_message(Y_LOG_LEVEL_DEBUG, "Add cover %" JSON_INTEGER_FORMAT " to folder %s", json_integer_value(json_object_get(json_object_get(j_folder_cover, "cover"), "tic_id")), new_sub_path);
-									if (set_folder_cover(config, tds_id, new_tf_id, json_integer_value(json_object_get(json_object_get(j_folder_cover, "cover"), "tic_id"))) != T_OK) {
-										y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Error updating folder with cover");
-									}
-								} else {
-									if (set_folder_cover(config, tds_id, new_tf_id, 0) != T_OK) {
-										y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Error cleaning folder cover");
-									}
-								}
-								json_decref(j_folder_cover);
-								j_folder_cover = NULL;
-								o_free(new_sub_path);
-							} else {
-								y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Error insert new folder %s", json_string_value(json_object_get(j_element, "name")));
-							}
-						} else if (o_strcmp(json_string_value(json_object_get(j_element, "type")), "file") == 0) {
-							if (json_string_length(json_object_get(j_element, "name")) <= NAME_MAX) {
-								file_path = msprintf("%s/%s", path, json_string_value(json_object_get(j_element, "name")));
-								relative_path = msprintf("%s/%s", sub_path!=NULL?sub_path:"", json_string_value(json_object_get(j_element, "name")));
-								j_media = media_get_full(config, j_data_source, relative_path);
-								if (check_result_value(j_media, T_ERROR_NOT_FOUND)) {
-									//y_log_message(Y_LOG_LEVEL_DEBUG, "insert %s", file_path);
-									json_object_set_new(j_element, "metadata", fs_get_metadata(config, thumbnail_cover_codec_context, file_path));
-									if (media_add(config, tds_id, tf_id, relative_path, j_element) != T_OK) {
-										y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Error insert new media %s", json_string_value(json_object_get(j_element, "name")));
-									}
-								} else if (check_result_value(j_media, T_OK) && !json_is_array(json_object_get(j_media, "media"))) {
-									// Check if last_modified is newer than the one in the database, if so, update current file rather than creating a new one
-									//y_log_message(Y_LOG_LEVEL_DEBUG, "compare database last_modified %" JSON_INTEGER_FORMAT " with file last_modified %" JSON_INTEGER_FORMAT, json_integer_value(json_object_get(json_object_get(j_media, "media"), "last_updated")), json_integer_value(json_object_get(j_element, "last_modified")));
-									if (json_integer_value(json_object_get(json_object_get(j_media, "media"), "last_updated")) < json_integer_value(json_object_get(j_element, "last_modified"))) {
-										if (0 == o_strcmp("audio", json_string_value(json_object_get(json_object_get(j_media, "media"), "type"))) ||
-												0 == o_strcmp("video", json_string_value(json_object_get(json_object_get(j_media, "media"), "type"))) ||
-												0 == o_strcmp("image", json_string_value(json_object_get(json_object_get(j_media, "media"), "type")))) {
-											json_object_set_new(j_element, "metadata", fs_get_metadata(config, thumbnail_cover_codec_context, file_path));
-										}
-										//y_log_message(Y_LOG_LEVEL_DEBUG, "update %s", file_path);
-										if (media_update(config, json_integer_value(json_object_get(json_object_get(j_media, "media"), "id")), j_element) != T_OK) {
-											y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Error update media %s", json_string_value(json_object_get(j_element, "name")));
-										}
-									} else {
-										//y_log_message(Y_LOG_LEVEL_DEBUG, "do not update %s", file_path);
-										if (media_set_refresh_status(config, json_integer_value(json_object_get(json_object_get(j_media, "media"), "id")), DATA_SOURCE_REFRESH_MODE_PROCESSED) != T_OK) {
-											y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Error updating media status");
-										}
-									}
-								} else {
-									y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Error getting media %s from data source %s", relative_path, json_string_value(json_object_get(j_data_source, "name")));
-								}
-								o_free(file_path);
-								o_free(relative_path);
-								json_decref(j_media);
-							} else {
-								y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Can't evaluate '%s', name too long", json_string_value(json_object_get(j_element, "name")));
-							}
-							refresh_config->nb_files_read++;
-						}
-					}
-				} else {
-					res = T_ERROR_PARAM;
-				}
-				json_decref(j_folder);
-			} else {
-				y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Can't scan '%s', path too long", path);
-			}
+        j_folder = fs_directory_read(path);
+        if (j_folder != NULL) {
+          json_array_foreach(j_folder, index, j_element) {
+            if (o_strcmp(json_string_value(json_object_get(j_element, "type")), "folder") == 0) {
+              // Look for folder in database
+              new_tf_id = folder_get_id(config, j_data_source, tf_id, json_string_value(json_object_get(j_element, "name")));
+              if (new_tf_id < 0) {
+                // Folder does not exist yet, we create it
+                if (sub_path != NULL) {
+                  new_sub_path = msprintf("%s/%s", sub_path, json_string_value(json_object_get(j_element, "name")));
+                } else {
+                  new_sub_path = o_strdup(json_string_value(json_object_get(j_element, "name")));
+                }
+                new_tf_id = insert_new_folder(config, tds_id, tf_id, json_string_value(json_object_get(j_element, "name")), new_sub_path);
+                o_free(new_sub_path);
+              } else {
+                //y_log_message(Y_LOG_LEVEL_DEBUG, "do not update %s/%s", path, json_string_value(json_object_get(j_element, "name")));
+                if (folder_set_refresh_status(config, new_tf_id, DATA_SOURCE_REFRESH_MODE_PROCESSED) != T_OK) {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Error updating folder status");
+                }
+              }
+              if (new_tf_id > 0) {
+                if (sub_path != NULL) {
+                  new_sub_path = msprintf("%s/%s", sub_path, json_string_value(json_object_get(j_element, "name")));
+                } else {
+                  new_sub_path = o_strdup(json_string_value(json_object_get(j_element, "name")));
+                }
+                if (scan_directory(config, refresh_config, thumbnail_cover_codec_context, tds_id, j_data_source, new_sub_path, new_tf_id) != T_OK) {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Error scanning subdirectory %s", new_sub_path);
+                }
+                j_folder_cover = media_folder_detect_cover_by_id(config, j_data_source, new_tf_id, new_sub_path);
+                if (check_result_value(j_folder_cover, T_OK)) {
+                  //y_log_message(Y_LOG_LEVEL_DEBUG, "Add cover %" JSON_INTEGER_FORMAT " to folder %s", json_integer_value(json_object_get(json_object_get(j_folder_cover, "cover"), "tic_id")), new_sub_path);
+                  if (set_folder_cover(config, tds_id, new_tf_id, json_integer_value(json_object_get(json_object_get(j_folder_cover, "cover"), "tic_id"))) != T_OK) {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Error updating folder with cover");
+                  }
+                } else {
+                  if (set_folder_cover(config, tds_id, new_tf_id, 0) != T_OK) {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Error cleaning folder cover");
+                  }
+                }
+                json_decref(j_folder_cover);
+                j_folder_cover = NULL;
+                o_free(new_sub_path);
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Error insert new folder %s", json_string_value(json_object_get(j_element, "name")));
+              }
+            } else if (o_strcmp(json_string_value(json_object_get(j_element, "type")), "file") == 0) {
+              if (json_string_length(json_object_get(j_element, "name")) <= NAME_MAX) {
+                file_path = msprintf("%s/%s", path, json_string_value(json_object_get(j_element, "name")));
+                relative_path = msprintf("%s/%s", sub_path!=NULL?sub_path:"", json_string_value(json_object_get(j_element, "name")));
+                j_media = media_get_full(config, j_data_source, relative_path);
+                if (check_result_value(j_media, T_ERROR_NOT_FOUND)) {
+                  //y_log_message(Y_LOG_LEVEL_DEBUG, "insert %s", file_path);
+                  json_object_set_new(j_element, "metadata", fs_get_metadata(config, thumbnail_cover_codec_context, file_path));
+                  if (media_add(config, tds_id, tf_id, relative_path, j_element) != T_OK) {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Error insert new media %s", json_string_value(json_object_get(j_element, "name")));
+                  }
+                } else if (check_result_value(j_media, T_OK) && !json_is_array(json_object_get(j_media, "media"))) {
+                  // Check if last_modified is newer than the one in the database, if so, update current file rather than creating a new one
+                  //y_log_message(Y_LOG_LEVEL_DEBUG, "compare database last_modified %" JSON_INTEGER_FORMAT " with file last_modified %" JSON_INTEGER_FORMAT, json_integer_value(json_object_get(json_object_get(j_media, "media"), "last_updated")), json_integer_value(json_object_get(j_element, "last_modified")));
+                  if (json_integer_value(json_object_get(json_object_get(j_media, "media"), "last_updated")) < json_integer_value(json_object_get(j_element, "last_modified"))) {
+                    if (0 == o_strcmp("audio", json_string_value(json_object_get(json_object_get(j_media, "media"), "type"))) ||
+                        0 == o_strcmp("video", json_string_value(json_object_get(json_object_get(j_media, "media"), "type"))) ||
+                        0 == o_strcmp("image", json_string_value(json_object_get(json_object_get(j_media, "media"), "type")))) {
+                      json_object_set_new(j_element, "metadata", fs_get_metadata(config, thumbnail_cover_codec_context, file_path));
+                    }
+                    //y_log_message(Y_LOG_LEVEL_DEBUG, "update %s", file_path);
+                    if (media_update(config, json_integer_value(json_object_get(json_object_get(j_media, "media"), "id")), j_element) != T_OK) {
+                      y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Error update media %s", json_string_value(json_object_get(j_element, "name")));
+                    }
+                  } else {
+                    //y_log_message(Y_LOG_LEVEL_DEBUG, "do not update %s", file_path);
+                    if (media_set_refresh_status(config, json_integer_value(json_object_get(json_object_get(j_media, "media"), "id")), DATA_SOURCE_REFRESH_MODE_PROCESSED) != T_OK) {
+                      y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Error updating media status");
+                    }
+                  }
+                } else {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Error getting media %s from data source %s", relative_path, json_string_value(json_object_get(j_data_source, "name")));
+                }
+                o_free(file_path);
+                o_free(relative_path);
+                json_decref(j_media);
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Can't evaluate '%s', name too long", json_string_value(json_object_get(j_element, "name")));
+              }
+              refresh_config->nb_files_read++;
+            }
+          }
+        } else {
+          res = T_ERROR_PARAM;
+        }
+        json_decref(j_folder);
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Can't scan '%s', path too long", path);
+      }
       o_free(path);
     } else {
       y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Error data_source_set_refresh_mode");
@@ -815,8 +815,8 @@ void run_data_source_clean(struct config_elements * config, json_int_t tds_id) {
                           "raw",
                           "value",
                           cover_clause,
-												"tds_id",
-												tds_id);
+                        "tds_id",
+                        tds_id);
   o_free(cover_clause);
   if (h_delete(config->conn, j_query, NULL) != H_OK) {
     y_log_message(Y_LOG_LEVEL_ERROR, "data_source_clean - error cleaning table %s", TALIESIN_TABLE_IMAGE_COVER);
@@ -848,94 +848,94 @@ void run_data_source_clean(struct config_elements * config, json_int_t tds_id) {
 
 void * thread_run_refresh_data_source(void * data) {
   struct _refresh_config * refresh_config = (struct _refresh_config *)data;
-	struct config_elements * config = refresh_config->config;
+  struct config_elements * config = refresh_config->config;
   AVCodecContext  * thumbnail_cover_codec_context = NULL;
   json_int_t tds_id = json_integer_value(json_object_get(refresh_config->j_data_source, "id"));
   int i;
 
   // Wait for previous scans to be completed
-	while (refresh_config->index && refresh_config->refresh_status == DATA_SOURCE_REFRESH_STATUS_PENDING) {
-		y_log_message(Y_LOG_LEVEL_DEBUG, "data_source %s index is at %d, wait", json_string_value(json_object_get(refresh_config->j_data_source, "name")), refresh_config->index);
-		pthread_mutex_lock(&config->refresh_lock);
-		pthread_cond_wait(&config->refresh_cond, &config->refresh_lock);
-		pthread_mutex_unlock(&config->refresh_lock);
-	}
+  while (refresh_config->index && refresh_config->refresh_status == DATA_SOURCE_REFRESH_STATUS_PENDING) {
+    y_log_message(Y_LOG_LEVEL_DEBUG, "data_source %s index is at %d, wait", json_string_value(json_object_get(refresh_config->j_data_source, "name")), refresh_config->index);
+    pthread_mutex_lock(&config->refresh_lock);
+    pthread_cond_wait(&config->refresh_cond, &config->refresh_lock);
+    pthread_mutex_unlock(&config->refresh_lock);
+  }
   if (tds_id > 0) {
-		refresh_config->refresh_status = refresh_config->refresh_action;
+    refresh_config->refresh_status = refresh_config->refresh_action;
     if (data_source_set_refresh_status(config, tds_id, DATA_SOURCE_REFRESH_STATUS_RUNNING) == T_OK) {
-			if (refresh_config->refresh_status == DATA_SOURCE_REFRESH_STATUS_RUNNING) {
-				// Refreshing
-				if (init_output_jpeg_image(&thumbnail_cover_codec_context, TALIESIN_COVER_THUMB_WIDTH, TALIESIN_COVER_THUMB_HEIGHT) != T_OK) {
-					y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error init_output_jpeg_image");
-					if (data_source_set_refresh_status(config, tds_id, DATA_SOURCE_REFRESH_STATUS_ERROR) != T_OK) {
-						y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error setting data source refresh status");
-					}
-				} else {
-					refresh_config->nb_files_total = fs_directory_count_files_recursive(json_string_value(json_object_get(refresh_config->j_data_source, "path")));
-					y_log_message(Y_LOG_LEVEL_DEBUG, "count total files: %zd", refresh_config->nb_files_total);
-					if (refresh_config->nb_files_total >= 0) {
-						y_log_message(Y_LOG_LEVEL_DEBUG, "start scan for data_source %s in path %s", json_string_value(json_object_get(refresh_config->j_data_source, "name")), refresh_config->path);
-						if (scan_directory(config, refresh_config, thumbnail_cover_codec_context, tds_id, refresh_config->j_data_source, refresh_config->path, folder_get_id(config, refresh_config->j_data_source, 0, refresh_config->path)) == T_OK) {
-							if (data_source_set_refresh_status(config, tds_id, DATA_SOURCE_REFRESH_STATUS_NOT_RUNNING) != T_OK) {
-								y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error setting data source refresh status");
-							}
-						} else {
-							if (data_source_set_refresh_status(config, tds_id, DATA_SOURCE_REFRESH_STATUS_ERROR) != T_OK) {
-								y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error setting data source refresh status");
-							}
-						}
-						y_log_message(Y_LOG_LEVEL_DEBUG, "scan complete for data_source %s", json_string_value(json_object_get(refresh_config->j_data_source, "name")));
-					} else {
-						y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error calculating the number of files in the data_source");
-						if (data_source_set_refresh_status(config, tds_id, DATA_SOURCE_REFRESH_STATUS_ERROR) != T_OK) {
-							y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error setting data source refresh status");
-						}
-					}
-				}
-				avcodec_close(thumbnail_cover_codec_context);
-				avcodec_free_context(&thumbnail_cover_codec_context);
-				if (data_source_clean_removed(config, tds_id) != T_OK) {
-					y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error data_source_clean_removed");
-				}
-			} else {
-				// Cleaning
-				y_log_message(Y_LOG_LEVEL_DEBUG, "start clean for data_source %s", json_string_value(json_object_get(refresh_config->j_data_source, "name")));
-				run_data_source_clean(config, tds_id);
-				if (data_source_set_refresh_status(config, tds_id, DATA_SOURCE_REFRESH_STATUS_NOT_RUNNING) != T_OK) {
-					y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error setting data source refresh status");
-				}
-				y_log_message(Y_LOG_LEVEL_DEBUG, "clean complete for data_source %s", json_string_value(json_object_get(refresh_config->j_data_source, "name")));
-			}
+      if (refresh_config->refresh_status == DATA_SOURCE_REFRESH_STATUS_RUNNING) {
+        // Refreshing
+        if (init_output_jpeg_image(&thumbnail_cover_codec_context, TALIESIN_COVER_THUMB_WIDTH, TALIESIN_COVER_THUMB_HEIGHT) != T_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error init_output_jpeg_image");
+          if (data_source_set_refresh_status(config, tds_id, DATA_SOURCE_REFRESH_STATUS_ERROR) != T_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error setting data source refresh status");
+          }
+        } else {
+          refresh_config->nb_files_total = fs_directory_count_files_recursive(json_string_value(json_object_get(refresh_config->j_data_source, "path")));
+          y_log_message(Y_LOG_LEVEL_DEBUG, "count total files: %zd", refresh_config->nb_files_total);
+          if (refresh_config->nb_files_total >= 0) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "start scan for data_source %s in path %s", json_string_value(json_object_get(refresh_config->j_data_source, "name")), refresh_config->path);
+            if (scan_directory(config, refresh_config, thumbnail_cover_codec_context, tds_id, refresh_config->j_data_source, refresh_config->path, folder_get_id(config, refresh_config->j_data_source, 0, refresh_config->path)) == T_OK) {
+              if (data_source_set_refresh_status(config, tds_id, DATA_SOURCE_REFRESH_STATUS_NOT_RUNNING) != T_OK) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error setting data source refresh status");
+              }
+            } else {
+              if (data_source_set_refresh_status(config, tds_id, DATA_SOURCE_REFRESH_STATUS_ERROR) != T_OK) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error setting data source refresh status");
+              }
+            }
+            y_log_message(Y_LOG_LEVEL_DEBUG, "scan complete for data_source %s", json_string_value(json_object_get(refresh_config->j_data_source, "name")));
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error calculating the number of files in the data_source");
+            if (data_source_set_refresh_status(config, tds_id, DATA_SOURCE_REFRESH_STATUS_ERROR) != T_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error setting data source refresh status");
+            }
+          }
+        }
+        avcodec_close(thumbnail_cover_codec_context);
+        avcodec_free_context(&thumbnail_cover_codec_context);
+        if (data_source_clean_removed(config, tds_id) != T_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error data_source_clean_removed");
+        }
+      } else {
+        // Cleaning
+        y_log_message(Y_LOG_LEVEL_DEBUG, "start clean for data_source %s", json_string_value(json_object_get(refresh_config->j_data_source, "name")));
+        run_data_source_clean(config, tds_id);
+        if (data_source_set_refresh_status(config, tds_id, DATA_SOURCE_REFRESH_STATUS_NOT_RUNNING) != T_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error setting data source refresh status");
+        }
+        y_log_message(Y_LOG_LEVEL_DEBUG, "clean complete for data_source %s", json_string_value(json_object_get(refresh_config->j_data_source, "name")));
+      }
     } else {
       y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error setting data source refresh status");
     }
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error getting tds_id");
   }
-	for (i=0; i<config->nb_refresh_status - 1; i++) {
-		if (json_integer_value(json_object_get(config->refresh_status_list[i]->j_data_source, "id")) == tds_id) {
-			break;
-		}
-	}
-	
-	for (;i<config->nb_refresh_status - 1; i++) {
-		y_log_message(Y_LOG_LEVEL_DEBUG, "decrease index for %s currently at %d", json_string_value(json_object_get(config->refresh_status_list[i + 1]->j_data_source, "name")), config->refresh_status_list[i + 1]->index);
-		config->refresh_status_list[i + 1]->index--;
-		config->refresh_status_list[i] = config->refresh_status_list[i + 1];
-	}
-	pthread_mutex_lock(&config->refresh_lock);
-	pthread_cond_signal(&config->refresh_cond);
-	pthread_mutex_unlock(&config->refresh_lock);
+  for (i=0; i<config->nb_refresh_status - 1; i++) {
+    if (json_integer_value(json_object_get(config->refresh_status_list[i]->j_data_source, "id")) == tds_id) {
+      break;
+    }
+  }
+  
+  for (;i<config->nb_refresh_status - 1; i++) {
+    y_log_message(Y_LOG_LEVEL_DEBUG, "decrease index for %s currently at %d", json_string_value(json_object_get(config->refresh_status_list[i + 1]->j_data_source, "name")), config->refresh_status_list[i + 1]->index);
+    config->refresh_status_list[i + 1]->index--;
+    config->refresh_status_list[i] = config->refresh_status_list[i + 1];
+  }
+  pthread_mutex_lock(&config->refresh_lock);
+  pthread_cond_signal(&config->refresh_cond);
+  pthread_mutex_unlock(&config->refresh_lock);
   json_decref(refresh_config->j_data_source);
   o_free(refresh_config->path);
-	o_free(refresh_config);
-	if (config->nb_refresh_status > 1) {
-		config->refresh_status_list = o_realloc(config->refresh_status_list, (config->nb_refresh_status - 1)*sizeof(struct _refresh_config));
-	} else {
-		o_free(config->refresh_status_list);
-		config->refresh_status_list = NULL;
-	}
-	config->nb_refresh_status--;
+  o_free(refresh_config);
+  if (config->nb_refresh_status > 1) {
+    config->refresh_status_list = o_realloc(config->refresh_status_list, (config->nb_refresh_status - 1)*sizeof(struct _refresh_config));
+  } else {
+    o_free(config->refresh_status_list);
+    config->refresh_status_list = NULL;
+  }
+  config->nb_refresh_status--;
   return NULL;
 }
 
@@ -943,71 +943,71 @@ int data_source_refresh_run(struct config_elements * config, json_t * j_data_sou
   int thread_refresh_ret, thread_refresh_detach, ret, index;
   pthread_t thread_refresh;
   json_int_t tds_id = json_integer_value(json_object_get(j_data_source, "id"));
-	json_t * j_status;
-	struct _refresh_config * refresh_config;
+  json_t * j_status;
+  struct _refresh_config * refresh_config;
   
   j_status = data_source_get_refresh_status(config, tds_id);
   if (check_result_value(j_status, T_OK) && (0 == o_strcmp("not running", json_string_value(json_object_get(json_object_get(j_status, "refresh"), "status"))) || 0 == o_strcmp("error", json_string_value(json_object_get(json_object_get(j_status, "refresh"), "status"))))) {
-		index = config->nb_refresh_status;
-		refresh_config = o_malloc(sizeof(struct _refresh_config));
-		config->refresh_status_list = o_realloc(config->refresh_status_list, (config->nb_refresh_status + 1)*sizeof(struct _refresh_config *));
-		if (refresh_config != NULL && config->refresh_status_list != NULL) {
-			config->nb_refresh_status++;
-			config->refresh_status_list[index] = refresh_config;
-			y_log_message(Y_LOG_LEVEL_DEBUG, "Add new refresh_config at index %d", index);
+    index = config->nb_refresh_status;
+    refresh_config = o_malloc(sizeof(struct _refresh_config));
+    config->refresh_status_list = o_realloc(config->refresh_status_list, (config->nb_refresh_status + 1)*sizeof(struct _refresh_config *));
+    if (refresh_config != NULL && config->refresh_status_list != NULL) {
+      config->nb_refresh_status++;
+      config->refresh_status_list[index] = refresh_config;
+      y_log_message(Y_LOG_LEVEL_DEBUG, "Add new refresh_config at index %d", index);
       refresh_config->config = config;
       refresh_config->j_data_source = j_data_source;
       refresh_config->path = o_strdup(path);
-			if (index) {
-				refresh_config->refresh_status = DATA_SOURCE_REFRESH_STATUS_PENDING;
-			} else {
-				refresh_config->refresh_status = DATA_SOURCE_REFRESH_STATUS_RUNNING;
-			}
-			if (clean) {
-				refresh_config->refresh_action = DATA_SOURCE_REFRESH_STATUS_CLEANING;
-			} else {
-				refresh_config->refresh_action = DATA_SOURCE_REFRESH_STATUS_RUNNING;
-			}
-			refresh_config->nb_files_read = 0;
-			refresh_config->nb_files_total = 0;
-			refresh_config->index = index;
-			if (!index || data_source_set_refresh_status(config, tds_id, DATA_SOURCE_REFRESH_STATUS_PENDING) == T_OK) {
-				thread_refresh_ret = pthread_create(&thread_refresh, NULL, thread_run_refresh_data_source, (void *)refresh_config);
-				thread_refresh_detach = pthread_detach(thread_refresh);
-				if (thread_refresh_ret || thread_refresh_detach) {
-					y_log_message(Y_LOG_LEVEL_ERROR, "data_source_refresh_run - Error creating or detaching data source refresh thread, return code: %d, detach code: %d",
-												thread_refresh_ret, thread_refresh_detach);
-					ret = T_ERROR;
-				} else {
-					ret = T_OK;
-				}
-			} else {
-				y_log_message(Y_LOG_LEVEL_ERROR, "data_source_refresh_run - Error setting status pending to data_sources");
-				ret = T_ERROR;
-			}
-		} else {
-			y_log_message(Y_LOG_LEVEL_ERROR, "data_source_refresh_run - Error allocating resources for refresh_config->refresh_status_list");
-			ret = T_ERROR;
-		}
+      if (index) {
+        refresh_config->refresh_status = DATA_SOURCE_REFRESH_STATUS_PENDING;
+      } else {
+        refresh_config->refresh_status = DATA_SOURCE_REFRESH_STATUS_RUNNING;
+      }
+      if (clean) {
+        refresh_config->refresh_action = DATA_SOURCE_REFRESH_STATUS_CLEANING;
+      } else {
+        refresh_config->refresh_action = DATA_SOURCE_REFRESH_STATUS_RUNNING;
+      }
+      refresh_config->nb_files_read = 0;
+      refresh_config->nb_files_total = 0;
+      refresh_config->index = index;
+      if (!index || data_source_set_refresh_status(config, tds_id, DATA_SOURCE_REFRESH_STATUS_PENDING) == T_OK) {
+        thread_refresh_ret = pthread_create(&thread_refresh, NULL, thread_run_refresh_data_source, (void *)refresh_config);
+        thread_refresh_detach = pthread_detach(thread_refresh);
+        if (thread_refresh_ret || thread_refresh_detach) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "data_source_refresh_run - Error creating or detaching data source refresh thread, return code: %d, detach code: %d",
+                        thread_refresh_ret, thread_refresh_detach);
+          ret = T_ERROR;
+        } else {
+          ret = T_OK;
+        }
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "data_source_refresh_run - Error setting status pending to data_sources");
+        ret = T_ERROR;
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "data_source_refresh_run - Error allocating resources for refresh_config->refresh_status_list");
+      ret = T_ERROR;
+    }
   } else if (check_result_value(j_status, T_OK) && (0 == o_strcmp("running", json_string_value(json_object_get(json_object_get(j_status, "refresh"), "status"))) || 0 == o_strcmp("preparing", json_string_value(json_object_get(json_object_get(j_status, "refresh"), "status"))))) {
     ret = T_ERROR_PARAM;
   } else {
     ret = T_ERROR_NOT_FOUND;
   }
-	json_decref(j_status);
-	return ret;
+  json_decref(j_status);
+  return ret;
 }
 
 int data_source_refresh_stop(struct config_elements * config, json_t * j_data_source) {
   int i;
-	json_int_t tds_id = json_integer_value(json_object_get(j_data_source, "id"));
+  json_int_t tds_id = json_integer_value(json_object_get(j_data_source, "id"));
   
-	for (i=0; i<config->nb_refresh_status; i++) {
-		if (json_integer_value(json_object_get(config->refresh_status_list[i]->j_data_source, "id")) == tds_id) {
-			config->refresh_status_list[i]->refresh_status = DATA_SOURCE_REFRESH_STATUS_STOP;
-		}
-	}
-	return data_source_set_refresh_status(config, tds_id, DATA_SOURCE_REFRESH_STATUS_NOT_RUNNING);
+  for (i=0; i<config->nb_refresh_status; i++) {
+    if (json_integer_value(json_object_get(config->refresh_status_list[i]->j_data_source, "id")) == tds_id) {
+      config->refresh_status_list[i]->refresh_status = DATA_SOURCE_REFRESH_STATUS_STOP;
+    }
+  }
+  return data_source_set_refresh_status(config, tds_id, DATA_SOURCE_REFRESH_STATUS_NOT_RUNNING);
 }
 
 json_t * data_source_get_refresh_status(struct config_elements * config, json_int_t tds_id) {
@@ -1063,7 +1063,7 @@ json_t * data_source_get_refresh_status(struct config_elements * config, json_in
     j_return = json_pack("{si}", "result", T_ERROR_DB);
   }
   json_decref(j_result);
-	
+  
   return j_return;
 }
 

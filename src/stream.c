@@ -58,16 +58,16 @@ json_t * stream_list(struct config_elements * config, const char * username) {
       if (config->jukebox_set[i]->username == NULL || 0 == o_strcmp(config->jukebox_set[i]->username, username)) {
         j_stream_info = jukebox_get_info(config->jukebox_set[i]);
         if (check_result_value(j_stream_info, T_OK)) {
-					j_stream = json_copy(json_object_get(j_stream_info, "jukebox"));
-					if (j_stream != NULL) {
-						j_clients = jukebox_get_clients(config->jukebox_set[i]);
-						if (check_result_value(j_clients, T_OK)) {
-							json_object_set(j_stream, "clients", json_object_get(j_clients, "clients"));
-						} else {
-							y_log_message(Y_LOG_LEVEL_ERROR, "stream_list - Error jukebox_get_clients");
-						}
-						json_decref(j_clients);
-						json_array_append_new(json_object_get(j_result, "stream"), j_stream);
+          j_stream = json_copy(json_object_get(j_stream_info, "jukebox"));
+          if (j_stream != NULL) {
+            j_clients = jukebox_get_clients(config->jukebox_set[i]);
+            if (check_result_value(j_clients, T_OK)) {
+              json_object_set(j_stream, "clients", json_object_get(j_clients, "clients"));
+            } else {
+              y_log_message(Y_LOG_LEVEL_ERROR, "stream_list - Error jukebox_get_clients");
+            }
+            json_decref(j_clients);
+            json_array_append_new(json_object_get(j_result, "stream"), j_stream);
           } else {
             y_log_message(Y_LOG_LEVEL_ERROR, "stream_list - Error allocating resources for j_stream");
           }
@@ -108,4 +108,66 @@ json_t * is_stream_parameters_valid(const char * format, unsigned short channels
     y_log_message(Y_LOG_LEVEL_ERROR, "is_stream_parameters_valid - Error allocating resources for j_result");
   }
   return j_result;
+}
+
+static json_t * db_stream_get_media_list(struct config_elements * config, json_int_t ts_id) {
+  json_t * j_result, * j_return;
+  int res;
+  char * query;
+  
+  query = msprintf("SELECT `%s`.`tds_path` AS tds_path, `%s`.`tds_name` AS data_source, `%s`.`tm_id` AS tm_id, `%s`.`tm_path` AS path FROM `%s`, `%s`, `%s` "
+                   "WHERE `%s`.`ts_id`=%" JSON_INTEGER_FORMAT " AND `%s`.`tm_id`=`%s`.`tm_id` "
+                   "AND `%s`.`tds_id`=`%s`.`tds_id` ORDER BY `%s`.`tse_id`",
+                   TALIESIN_TABLE_DATA_SOURCE, TALIESIN_TABLE_DATA_SOURCE, TALIESIN_TABLE_MEDIA, TALIESIN_TABLE_MEDIA, 
+                   TALIESIN_TABLE_DATA_SOURCE, TALIESIN_TABLE_MEDIA, TALIESIN_TABLE_STREAM_ELEMENT, 
+                   TALIESIN_TABLE_STREAM_ELEMENT, ts_id, TALIESIN_TABLE_STREAM_ELEMENT, TALIESIN_TABLE_MEDIA,
+                   TALIESIN_TABLE_MEDIA, TALIESIN_TABLE_DATA_SOURCE, TALIESIN_TABLE_STREAM_ELEMENT);
+  res = h_execute_query_json(config->conn, query, &j_result);
+  o_free(query);
+  if (res == H_OK) {
+    j_return = json_pack("{siso}", "result", T_OK, "media", j_result);
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "db_stream_get_media_list - Error executing j_query");
+    j_return = json_pack("{si}", "result", T_ERROR_DB);
+  }
+  return j_return;
+}
+
+json_t * db_stream_list(struct config_elements * config) {
+  json_t * j_query, * j_result, * j_return, * j_element, * j_media;
+  int res;
+  size_t index;
+  
+  j_query = json_pack("{sss[ssssssssssss]}",
+                      "table",
+                      TALIESIN_TABLE_STREAM,
+                      "columns",
+                        "ts_id AS id",
+                        "ts_username AS username",
+                        "ts_name AS name",
+                        "ts_display_name AS display_name",
+                        "tpl_id",
+                        "ts_random AS random",
+                        "ts_index AS current_index",
+                        "ts_webradio AS webradio",
+                        "ts_format AS format",
+                        "ts_channels AS channels",
+                        "ts_sample_rate AS sample_rate",
+                        "ts_bitrate AS bitrate");
+  res = h_select(config->conn, j_query, &j_result, NULL);
+  json_decref(j_query);
+  if (res == H_OK) {
+    json_array_foreach(j_result, index, j_element) {
+      j_media = db_stream_get_media_list(config, json_integer_value(json_object_get(j_element, "id")));
+      if (check_result_value(j_media, T_OK)) {
+        json_object_set(j_element, "media", json_object_get(j_media, "media"));
+      }
+      json_decref(j_media);
+    }
+    j_return = json_pack("{siso}", "result", T_OK, "stream", j_result);
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "db_stream_list - Error executing j_query");
+    j_return = json_pack("{si}", "result", T_ERROR_DB);
+  }
+  return j_return;
 }

@@ -77,6 +77,8 @@
 #define TALIESIN_TABLE_MEDIA_HISTORY      "t_media_history"
 #define TALIESIN_TABLE_CONFIG             "t_config"
 #define TALIESIN_TABLE_CATEGORY_INFO      "t_category_info"
+#define TALIESIN_TABLE_STREAM             "t_stream"
+#define TALIESIN_TABLE_STREAM_ELEMENT     "t_stream_element"
 
 #define TALIESIN_SCOPE_ALL "all"
 #define TALIESIN_SCOPE_ME  "me"
@@ -187,13 +189,13 @@ pthread_cond_t  global_handler_close_cond;
  */
 struct _t_file {
   char                    * path;
-	json_int_t                tm_id;
+  json_int_t                tm_id;
   struct _t_file          * next;
 };
 
 struct _t_file_list {
   unsigned int     nb_files;
-	pthread_mutex_t  file_lock;
+  pthread_mutex_t  file_lock;
   
   struct _t_file * start;
   struct _t_file * end;
@@ -204,19 +206,19 @@ struct _audio_buffer {
   size_t                 max_size;
   short int              complete;
   uint8_t              * data;
-	size_t               * offset_list;
-	unsigned int           nb_offset;
-	
+  size_t               * offset_list;
+  unsigned int           nb_offset;
+  
   unsigned int           nb_client;
   struct timespec        start;
-	
+  
   struct _t_file       * file;
   char                 * title;
-	unsigned int           index;
+  unsigned int           index;
   uint64_t               counter;
   short int              skip;
-	unsigned short int     read;
-	
+  unsigned short int     read;
+  
   struct _audio_buffer * next;
 };
 
@@ -255,29 +257,29 @@ struct _audio_stream {
 struct _t_webradio {
   char                      name[TALIESIN_PLAYLIST_NAME_LENGTH + 1];
   char                    * display_name;
-	char                    * username;
+  char                    * username;
   json_int_t                tpl_id;
-	char                    * playlist_name;
+  char                    * playlist_name;
   
   struct _audio_stream    * audio_stream;
   struct timespec           start;
-	
+  
   struct _t_file_list     * file_list;
-	unsigned long             current_index;
+  unsigned long             current_index;
 
   pthread_mutex_t           message_lock;
   pthread_cond_t            message_cond;
   short int                 message_type;
-	
+  
   pthread_mutex_t           websocket_lock;
   pthread_cond_t            websocket_cond;
-	unsigned int              nb_websocket;
-	
+  unsigned int              nb_websocket;
+  
   short int                 random;
-	
+  
   // TODO play_after another time
-	//unsigned int              nb_play_after;
-	//unsigned int            * play_after_index;
+  //unsigned int              nb_play_after;
+  //unsigned int            * play_after_index;
   
   struct config_elements  * config;
 };
@@ -285,29 +287,29 @@ struct _t_webradio {
 struct _client_data_webradio {
   struct _audio_stream * audio_stream;
   struct _audio_buffer * current_buffer;
-	
+  
   uint64_t               global_offset;
   uint64_t               first_buffer_counter;
   struct timespec        start;
-	
+  
   short int              send_header;
   size_t                 header_offset;
-	
+  
   size_t                 buffer_offset;
-	
+  
   int                    metadata_send;
   size_t                 metadata_offset;
   size_t                 metadata_len;
   size_t                 metadata_current_offset;
-	char *                 metadata_buffer;
-	
+  char *                 metadata_buffer;
+  
   char                   stream_name[TALIESIN_PLAYLIST_NAME_LENGTH + 1];
   char                 * client_address;
   char                 * user_agent;
-	short unsigned int     command;
-	
-	char                 * server_remote_address;
-	char                 * api_prefix;
+  short unsigned int     command;
+  
+  char                 * server_remote_address;
+  char                 * api_prefix;
 };
 
 struct _client_data_jukebox {
@@ -319,14 +321,14 @@ struct _client_data_jukebox {
   size_t                          metadata_offset;
   size_t                          metadata_len;
   size_t                          metadata_current_offset;
-	char *                          metadata_buffer;
-	
+  char *                          metadata_buffer;
+  
   char                            stream_name[TALIESIN_PLAYLIST_NAME_LENGTH + 1];
-	short unsigned int              command;
-	short unsigned int              client_present;
-	
-	char                          * server_remote_address;
-	char                          * api_prefix;
+  short unsigned int              command;
+  short unsigned int              client_present;
+  
+  char                          * server_remote_address;
+  char                          * api_prefix;
 };
 
 struct _jukebox_audio_buffer {
@@ -334,7 +336,7 @@ struct _jukebox_audio_buffer {
   size_t               max_size;
   short int            complete;
   uint8_t            * data;
-	
+  
   struct _t_file     * file;
   char               * title;
   char               * client_address;
@@ -343,46 +345,46 @@ struct _jukebox_audio_buffer {
   short                status;
   pthread_mutex_t      buffer_lock;
   pthread_cond_t       buffer_cond;
-	
-	struct _t_jukebox * jukebox;
+  
+  struct _t_jukebox * jukebox;
 };
 
 struct _t_jukebox {
   char                             name[TALIESIN_PLAYLIST_NAME_LENGTH + 1];
   char                           * display_name;
-	char                           * username;
+  char                           * username;
   json_int_t                       tpl_id;
-	char                           * playlist_name;
+  char                           * playlist_name;
   short int                        status;
   
   struct _jukebox_audio_buffer  ** jukebox_audio_buffer;
-	unsigned int                     nb_jukebox_audio_buffer;
-	
+  unsigned int                     nb_jukebox_audio_buffer;
+  
   struct _t_file_list            * file_list;
 
   pthread_mutex_t                  message_lock;
   pthread_cond_t                   message_cond;
   short int                        message_type;
-	
+  
   pthread_mutex_t                  websocket_lock;
   pthread_cond_t                   websocket_cond;
-	unsigned int                     nb_websocket;
-	
+  unsigned int                     nb_websocket;
+  
   struct config_elements         * config;
 
   char                           * stream_format;
   unsigned short int               stream_channels;
   unsigned int                     stream_sample_rate;
   unsigned int                     stream_bitrate;
-	
-	unsigned int                     nb_client;
-	time_t                           last_seen;
+  
+  unsigned int                     nb_client;
+  time_t                           last_seen;
 };
 
 struct _refresh_config {
   struct config_elements * config;
   json_t                 * j_data_source;
-	char                   * path;
+  char                   * path;
   unsigned int             index;
   int                      refresh_status;
   int                      refresh_action;
@@ -391,13 +393,13 @@ struct _refresh_config {
 };
 
 struct _ws_stream {
-	struct config_elements * config;
-	char                   * username;
-	int                      is_admin;
-	int                      is_authenticated;
-	struct _t_webradio     * webradio;
-	struct _t_jukebox      * jukebox;
-	int                      status;
+  struct config_elements * config;
+  char                   * username;
+  int                      is_admin;
+  int                      is_authenticated;
+  struct _t_webradio     * webradio;
+  struct _t_jukebox      * jukebox;
+  int                      status;
 };
 
 struct _close_jukebox {
@@ -407,7 +409,7 @@ struct _close_jukebox {
 
 struct config_elements {
   char                             * config_file;
-	char                             * server_remote_address;
+  char                             * server_remote_address;
   char                             * api_prefix;
   unsigned long                      log_mode;
   unsigned long                      log_level;
@@ -534,6 +536,7 @@ json_t             * is_webradio_command_valid(struct config_elements * config, 
 json_t             * webradio_command(struct config_elements * config, struct _t_webradio * webradio, const char * username, json_t * j_command);
 json_t             * add_webradio_from_path(struct config_elements * config, json_t * j_data_source, const char * path, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, int recursive, short int random, struct _t_webradio ** new_webradio);
 json_t             * add_webradio_from_playlist(struct config_elements * config, json_t * j_playlist, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, short int random, struct _t_webradio ** new_webradio);
+int                  add_webradio_from_db_stream(struct config_elements * config, json_t * j_stream, struct _t_webradio ** new_webradio);
 int                  scan_path_to_webradio(struct config_elements * config, json_t * j_data_source, const char * path, int recursive, struct _t_webradio * webradio);
 
 int     client_data_webradio_init(struct _client_data_webradio * client_data);
@@ -553,6 +556,7 @@ int                 is_valid_jukebox_element_parameter(struct config_elements * 
 void              * jukebox_run_thread(void * args);
 json_t            * add_jukebox_from_path(struct config_elements * config, json_t * j_data_source, const char * path, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, int recursive);
 json_t            * add_jukebox_from_playlist(struct config_elements * config, json_t * j_playlist, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate);
+int                 add_jukebox_from_db_stream(struct config_elements * config, json_t * j_stream);
 
 int     init_client_data_jukebox(struct _client_data_jukebox * client_data);
 void    clean_client_data_jukebox(struct _client_data_jukebox * client_data);
@@ -585,6 +589,9 @@ int        media_image_cover_clean_orphan(struct config_elements * config, json_
 int        is_valid_b64_image(const unsigned char * base64_image);
 json_int_t media_cover_save(struct config_elements * config, json_int_t tds_id, const unsigned char * image_base64);
 
+// db stream functions
+json_t * db_stream_list(struct config_elements * config);
+
 // Search functions
 json_t * media_simple_search(struct config_elements * config, const char * username, const char * search_pattern, unsigned short int search_category);
 json_t * is_valid_media_advanced_search(struct config_elements * config, const char * username, json_t * search_criteria);
@@ -615,7 +622,6 @@ int      playlist_can_update(json_t * j_playlist, int is_admin);
 int      playlist_add_media(struct config_elements * config, json_int_t tpl_id, json_t * media_list);
 int      playlist_delete_media(struct config_elements * config, json_int_t tpl_id, json_t * media_list);
 json_t * playlist_media_cover_get(struct config_elements * config, const char * username, const char * name, int thumbnail);
-int      playlist_load_as_webradio(struct config_elements * config, json_t * j_playlist);
 
 // Libav functions
 int open_input_file(const char *filename, AVFormatContext **input_format_context, AVCodecContext **input_codec_context, int type);
@@ -630,12 +636,12 @@ int read_decode_convert_and_store(AVAudioFifo *fifo,
                                   int *finished);
 int load_encode_and_return(AVAudioFifo *fifo,
                            AVCodecContext *output_codec_context,
-													 AVFormatContext * output_format_context,
+                           AVFormatContext * output_format_context,
                            int64_t * pts,
                            int * data_present);
 int encode_audio_frame_and_return(AVFrame * frame,
                                   AVCodecContext * output_codec_context,
-																	AVFormatContext * output_format_context,
+                                  AVFormatContext * output_format_context,
                                   int64_t * pts,
                                   int * data_present);
 int init_output_jpeg_image(AVCodecContext ** thumbnail_cover_codec_context, int dst_width, int dst_height);

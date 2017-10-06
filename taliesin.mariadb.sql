@@ -5,9 +5,10 @@
 -- FLUSH PRIVILEGES;
 -- USE `taliesin`;
 
+DROP TABLE IF EXISTS `t_stream_element`;
+DROP TABLE IF EXISTS `t_stream`;
 DROP TABLE IF EXISTS `t_category_info`;
 DROP TABLE IF EXISTS `t_config`;
-DROP TABLE IF EXISTS `t_profile_playlist`;
 DROP TABLE IF EXISTS `t_media_history`;
 DROP TABLE IF EXISTS `t_playlist_element`;
 DROP TABLE IF EXISTS `t_playlist`;
@@ -86,11 +87,6 @@ CREATE TABLE `t_playlist` (
   `tpl_username` VARCHAR(128),
 	`tpl_name` VARCHAR(128) NOT NULL,
 	`tpl_description` VARCHAR(512),
-  `tpl_webradio_startup` TINYINT(1) DEFAULT 0, -- 0: off, 1: no random, 2: random
-  `tpl_webradio_startup_format` VARCHAR(16),
-  `tpl_webradio_startup_channels` TINYINT(1),
-  `tpl_webradio_startup_sample_rate` INT(11),
-  `tpl_webradio_startup_bit_rate` INT(11),
 	`tic_id` INT(11),
   FOREIGN KEY(`tic_id`) REFERENCES `t_image_cover`(`tic_id`) ON DELETE SET NULL
 );
@@ -114,13 +110,6 @@ CREATE TABLE `t_media_history` (
   FOREIGN KEY(`tm_id`) REFERENCES `t_media`(`tm_id`) ON DELETE CASCADE
 );
 
-CREATE TABLE `t_profile_playlist` (
-	`tpp_id` INT(11) PRIMARY KEY AUTO_INCREMENT,
-	`tpl_id` INT(11) NOT NULL,
-	`tpp_description` VARCHAR(512),
-  FOREIGN KEY(`tpl_id`) REFERENCES `t_playlist`(`tpl_id`)
-);
-
 CREATE TABLE `t_config` (
 	`tc_id` INT(11) PRIMARY KEY AUTO_INCREMENT,
 	`tc_type` VARCHAR(32),
@@ -137,6 +126,31 @@ CREATE TABLE `t_category_info` (
 	`tic_id` INT(11),
   FOREIGN KEY(`tds_id`) REFERENCES `t_data_source`(`tds_id`) ON DELETE CASCADE,
   FOREIGN KEY(`tic_id`) REFERENCES `t_image_cover`(`tic_id`) ON DELETE SET NULL
+);
+
+CREATE TABLE `t_stream` (
+	`ts_id` INT(11) PRIMARY KEY AUTO_INCREMENT,
+  `ts_username` VARCHAR(128),
+	`ts_name` VARCHAR(128) NOT NULL,
+	`ts_display_name` VARCHAR(512),
+	`tpl_id` INT(11),
+	`ts_index` INT(11) DEFAULT 0,
+	`ts_webradio` TINYINT(1),
+	`ts_random` TINYINT(1) DEFAULT 0,
+	`ts_format` VARCHAR(16),
+	`ts_channels` TINYINT(1),
+	`ts_sample_rate` INT(11),
+	`ts_bitrate` INT(11),
+  FOREIGN KEY(`tpl_id`) REFERENCES `t_playlist`(`tpl_id`) ON DELETE CASCADE
+);
+CREATE INDEX `i_ts_name` ON `t_stream`(`ts_name`);
+
+CREATE TABLE `t_stream_element` (
+	`tse_id` INT(11) PRIMARY KEY AUTO_INCREMENT,
+	`ts_id` INT(11) NOT NULL,
+	`tm_id` INT(11) NOT NULL,
+  FOREIGN KEY(`ts_id`) REFERENCES `t_stream`(`ts_id`) ON DELETE CASCADE,
+  FOREIGN KEY(`tm_id`) REFERENCES `t_media`(`tm_id`) ON DELETE CASCADE
 );
 
 INSERT INTO `t_config` (`tc_type`, `tc_value`) VALUES ('video_file_extension', '.avi'), ('video_file_extension', '.mpg'), ('video_file_extension', '.mpeg'), ('video_file_extension', '.mp4'), ('video_file_extension', '.m4v'), ('video_file_extension', '.mov'), ('video_file_extension', '.wmv'), ('video_file_extension', '.ogv'), ('video_file_extension', '.divx'), ('video_file_extension', '.m2ts'), ('video_file_extension', '.mkv');

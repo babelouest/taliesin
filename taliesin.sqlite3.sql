@@ -1,8 +1,9 @@
 -- SQlite3 init script
 
+DROP TABLE IF EXISTS `t_stream_element`;
+DROP TABLE IF EXISTS `t_stream`;
 DROP TABLE IF EXISTS `t_category_info`;
 DROP TABLE IF EXISTS `t_config`;
-DROP TABLE IF EXISTS `t_profile_playlist`;
 DROP TABLE IF EXISTS `t_media_history`;
 DROP TABLE IF EXISTS `t_playlist_element`;
 DROP TABLE IF EXISTS `t_playlist`;
@@ -81,11 +82,6 @@ CREATE TABLE `t_playlist` (
   `tpl_username` TEXT,
 	`tpl_name` TEXT NOT NULL,
 	`tpl_description` TEXT,
-  `tpl_webradio_startup` INTEGER DEFAULT 0, -- 0: off, 1: no random, 2: random
-  `tpl_webradio_startup_format` TEXT,
-  `tpl_webradio_startup_channels` INTEGER,
-  `tpl_webradio_startup_sample_rate` INTEGER,
-  `tpl_webradio_startup_bit_rate` INTEGER,
 	`tic_id` INTEGER,
   FOREIGN KEY(`tic_id`) REFERENCES `t_image_cover`(`tic_id`) ON DELETE SET NULL
 );
@@ -109,13 +105,6 @@ CREATE TABLE `t_media_history` (
   FOREIGN KEY(`tm_id`) REFERENCES `t_media`(`tm_id`) ON DELETE CASCADE
 );
 
-CREATE TABLE `t_profile_playlist` (
-	`tpp_id` INTEGER PRIMARY KEY AUTOINCREMENT,
-	`tpl_id` INTEGER NOT NULL,
-	`tpp_description` TEXT,
-  FOREIGN KEY(`tpl_id`) REFERENCES `t_playlist`(`tpl_id`)
-);
-
 CREATE TABLE `t_config` (
 	`tc_id` INTEGER PRIMARY KEY AUTOINCREMENT,
 	`tc_type` TEXT,
@@ -132,6 +121,31 @@ CREATE TABLE `t_category_info` (
 	`tic_id` INTEGER,
   FOREIGN KEY(`tds_id`) REFERENCES `t_data_source`(`tds_id`) ON DELETE CASCADE,
   FOREIGN KEY(`tic_id`) REFERENCES `t_image_cover`(`tic_id`) ON DELETE SET NULL
+);
+
+CREATE TABLE `t_stream` (
+	`ts_id` INTEGER PRIMARY KEY AUTOINCREMENT,
+  `ts_username` TEXT,
+	`ts_name` TEXT NOT NULL,
+	`ts_display_name` TEXT,
+	`tpl_id` INTEGER,
+	`ts_index` INTEGER DEFAULT 0,
+	`ts_webradio` INTEGER,
+	`ts_random` INTEGER DEFAULT 0,
+	`ts_format` TEXT,
+	`ts_channels` INTEGER,
+	`ts_sample_rate` INTEGER,
+	`ts_bitrate` INTEGER,
+  FOREIGN KEY(`tpl_id`) REFERENCES `t_playlist`(`tpl_id`) ON DELETE CASCADE
+);
+CREATE INDEX `i_ts_name` ON `t_stream`(`ts_name`);
+
+CREATE TABLE `t_stream_element` (
+	`tse_id` INTEGER PRIMARY KEY AUTOINCREMENT,
+	`ts_id` INTEGER NOT NULL,
+	`tm_id` INTEGER NOT NULL,
+  FOREIGN KEY(`ts_id`) REFERENCES `t_stream`(`ts_id`) ON DELETE CASCADE,
+  FOREIGN KEY(`tm_id`) REFERENCES `t_media`(`tm_id`) ON DELETE CASCADE
 );
 
 INSERT INTO `t_config` (`tc_type`, `tc_value`) VALUES ('video_file_extension', '.avi'), ('video_file_extension', '.mpg'), ('video_file_extension', '.mpeg'), ('video_file_extension', '.mp4'), ('video_file_extension', '.m4v'), ('video_file_extension', '.mov'), ('video_file_extension', '.wmv'), ('video_file_extension', '.ogv'), ('video_file_extension', '.divx'), ('video_file_extension', '.m2ts'), ('video_file_extension', '.mkv');

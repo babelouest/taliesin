@@ -31,12 +31,10 @@ char * user_login = NULL;
 START_TEST(test_create_playlist_ok)
 {
   char * url = msprintf("%s/playlist", TALIESIN_SERVER_URI);
-  json_t * j_playlist = json_pack("{ss ss ss s{ss} s[{ssss}{ssss}]}",
+  json_t * j_playlist = json_pack("{ss ss ss s[{ssss}{ssss}]}",
 																	"name", PLAYLIST_USER_VALID,
 																	"description", "description for "PLAYLIST_USER_VALID,
 																	"scope", "me",
-                                  "webradio_startup",
-                                    "status", "off",
 																	"media",
 																		"data_source", DATA_SOURCE_VALID,
 																		"path", "/fss/free-software-song.ogg",

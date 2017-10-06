@@ -34,7 +34,7 @@ char ** get_array_from_json_list(json_t * j_config_values) {
     json_array_foreach(j_config_values, index, j_element) {
       char_array[index] = o_strdup(json_string_value(j_element));
     }
-		char_array[json_array_size(j_config_values)] = NULL;
+    char_array[json_array_size(j_config_values)] = NULL;
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "get_array_from_json_list - Error allocating resources for char_array");
   }
@@ -79,24 +79,24 @@ json_t * config_get_db_values(struct config_elements * config, const char * conf
  * Get config values and return as a JSON array of strings
  */
 json_t * config_get_values(struct config_elements * config, const char * config_type) {
-	json_t * j_result = config_get_db_values(config, config_type), * j_return, * j_element;
-	size_t index;
-	
-	if (check_result_value(j_result, T_OK)) {
-		j_return = json_pack("{sis[]}", "result", T_OK, "config");
-		if (j_return != NULL) {
-			json_array_foreach(json_object_get(j_result, "config"), index, j_element) {
-				json_array_append(json_object_get(j_return, "config"), json_object_get(j_element, "conf_value"));
-			}
-		} else {
-			y_log_message(Y_LOG_LEVEL_ERROR, "Error allocating resources for j_return");
-		}
-	} else {
-		y_log_message(Y_LOG_LEVEL_ERROR, "config_get_values - Error config_get_db_values");
-		j_return = json_pack("{si}", "result", T_ERROR);
-	}
-	json_decref(j_result);
-	return j_return;
+  json_t * j_result = config_get_db_values(config, config_type), * j_return, * j_element;
+  size_t index;
+  
+  if (check_result_value(j_result, T_OK)) {
+    j_return = json_pack("{sis[]}", "result", T_OK, "config");
+    if (j_return != NULL) {
+      json_array_foreach(json_object_get(j_result, "config"), index, j_element) {
+        json_array_append(json_object_get(j_return, "config"), json_object_get(j_element, "conf_value"));
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "Error allocating resources for j_return");
+    }
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "config_get_values - Error config_get_db_values");
+    j_return = json_pack("{si}", "result", T_ERROR);
+  }
+  json_decref(j_result);
+  return j_return;
 }
 
 /**
@@ -312,36 +312,36 @@ int load_config_values(struct config_elements * config) {
  * Get the type of a file based on its path
  */
 int config_get_type_from_path(struct config_elements * config, const char * path) {
-	char * save_path = o_strdup(path);
-	const char * ext = get_filename_ext(save_path);
-	int ret = TALIESIN_FILE_TYPE_UNKNOWN;
-	
-	// Check for audio extension
+  char * save_path = o_strdup(path);
+  const char * ext = get_filename_ext(save_path);
+  int ret = TALIESIN_FILE_TYPE_UNKNOWN;
+  
+  // Check for audio extension
   if (string_array_has_value((const char **)config->audio_file_extension, ext)) {
     ret = TALIESIN_FILE_TYPE_AUDIO;
   }
-	
-	if (ret == TALIESIN_FILE_TYPE_UNKNOWN) {
-		// Check for video extension
+  
+  if (ret == TALIESIN_FILE_TYPE_UNKNOWN) {
+    // Check for video extension
     if (string_array_has_value((const char **)config->video_file_extension, ext)) {
       ret = TALIESIN_FILE_TYPE_VIDEO;
     }
-	}
-	
-	if (ret == TALIESIN_FILE_TYPE_UNKNOWN) {
-		// Check for subtitle extension
+  }
+  
+  if (ret == TALIESIN_FILE_TYPE_UNKNOWN) {
+    // Check for subtitle extension
     if (string_array_has_value((const char **)config->subtitle_file_extension, ext)) {
       ret = TALIESIN_FILE_TYPE_SUBTITLE;
     }
-	}
-	
-	if (ret == TALIESIN_FILE_TYPE_UNKNOWN) {
-		// Check for image extension
+  }
+  
+  if (ret == TALIESIN_FILE_TYPE_UNKNOWN) {
+    // Check for image extension
     if (string_array_has_value((const char **)config->image_file_extension, ext)) {
       ret = TALIESIN_FILE_TYPE_IMAGE;
     }
-	}
-	
-	o_free(save_path);
-	return ret;
+  }
+  
+  o_free(save_path);
+  return ret;
 }

@@ -106,14 +106,14 @@ int callback_taliesin_server_configuration (const struct _u_request * request, s
                         ((struct config_elements *)user_data)->oauth_scope_user,
                         "oauth_scope_admin",
                         ((struct config_elements *)user_data)->oauth_scope_admin,
-												"defrault_stream_format",
-												((struct config_elements *)user_data)->stream_format,
-												"defrault_stream_channels",
-												((struct config_elements *)user_data)->stream_channels,
-												"defrault_stream_sample_rate",
-												((struct config_elements *)user_data)->stream_sample_rate,
-												"defrault_stream_bitrate",
-												((struct config_elements *)user_data)->stream_bitrate));
+                        "defrault_stream_format",
+                        ((struct config_elements *)user_data)->stream_format,
+                        "defrault_stream_channels",
+                        ((struct config_elements *)user_data)->stream_channels,
+                        "defrault_stream_sample_rate",
+                        ((struct config_elements *)user_data)->stream_sample_rate,
+                        "defrault_stream_bitrate",
+                        ((struct config_elements *)user_data)->stream_bitrate));
   return U_CALLBACK_CONTINUE;
 };
 
@@ -141,24 +141,24 @@ int callback_taliesin_check_admin_access (const struct _u_request * request, str
   struct config_elements * config = (struct config_elements *)user_data;
   char * scope;
   int res, found = 0;
-	json_t * j_element;
-	size_t index;
+  json_t * j_element;
+  size_t index;
   
   if (config->use_oauth2_authentication) {
     if ((res = callback_check_glewlwyd_access_token(request, response, config->glewlwyd_resource_config)) == U_CALLBACK_CONTINUE) {
-			json_array_foreach(json_object_get(((json_t *)response->shared_data), "scope"), index, j_element) {
-				if (0 ==  o_strcmp(json_string_value(j_element), config->oauth_scope_admin)) {
-					found = 1;
-					break;
-				}
-			}
-			if (found) {
+      json_array_foreach(json_object_get(((json_t *)response->shared_data), "scope"), index, j_element) {
+        if (0 ==  o_strcmp(json_string_value(j_element), config->oauth_scope_admin)) {
+          found = 1;
+          break;
+        }
+      }
+      if (found) {
         return U_CALLBACK_CONTINUE;
-			} else {
+      } else {
         json_decref((json_t *)response->shared_data);
         response->shared_data = NULL;
         return U_CALLBACK_UNAUTHORIZED;
-			}
+      }
     } else {
       return res;
     }
@@ -347,19 +347,19 @@ int callback_taliesin_data_source_refresh_run (const struct _u_request * request
             res = U_CALLBACK_ERROR;
           }
         } else {
-					j_media = media_get(config, json_object_get(j_data_source, "data_source"), decode_path);
-					if (check_result_value(j_media, T_OK) && json_is_array(json_object_get(j_media, "media"))) {
-						if (data_source_refresh_run(config, json_deep_copy(json_object_get(j_data_source, "data_source")), decode_path, 0) != T_OK) {
-							y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_data_source_refresh_run - Error data_source_refresh_run");
-							res = U_CALLBACK_ERROR;
-						}
-					} else if (check_result_value(j_media, T_ERROR_NOT_FOUND)) {
-						response->status = 404;
-					} else {
-						y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_data_source_refresh_run - Error media_get");
-						res = U_CALLBACK_ERROR;
-					}
-					json_decref(j_media);
+          j_media = media_get(config, json_object_get(j_data_source, "data_source"), decode_path);
+          if (check_result_value(j_media, T_OK) && json_is_array(json_object_get(j_media, "media"))) {
+            if (data_source_refresh_run(config, json_deep_copy(json_object_get(j_data_source, "data_source")), decode_path, 0) != T_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_data_source_refresh_run - Error data_source_refresh_run");
+              res = U_CALLBACK_ERROR;
+            }
+          } else if (check_result_value(j_media, T_ERROR_NOT_FOUND)) {
+            response->status = 404;
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_data_source_refresh_run - Error media_get");
+            res = U_CALLBACK_ERROR;
+          }
+          json_decref(j_media);
         }
         o_free(decode_path_save);
         o_free(path);
@@ -390,16 +390,16 @@ int callback_taliesin_data_source_refresh_status (const struct _u_request * requ
   j_data_source = data_source_get(config, get_username(request, response, config), u_map_get(request->map_url, "data_source"), 1);
   if (check_result_value(j_data_source, T_OK)) {
     j_status = data_source_get_refresh_status(config, json_integer_value(json_object_get(json_object_get(j_data_source, "data_source"), "id")));
-		if (check_result_value(j_status, T_OK)) {
-			if (ulfius_set_json_body_response(response, 200, json_object_get(j_status, "refresh")) != U_OK) {
-				y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_data_source_refresh_status - error ulfius_set_json_body_response");
-				response->status = 500;
-			}
-		} else {
-			y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_data_source_refresh_status - error data_source_get_refresh_status");
-			response->status = 500;
-		}
-		json_decref(j_status);
+    if (check_result_value(j_status, T_OK)) {
+      if (ulfius_set_json_body_response(response, 200, json_object_get(j_status, "refresh")) != U_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_data_source_refresh_status - error ulfius_set_json_body_response");
+        response->status = 500;
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_data_source_refresh_status - error data_source_get_refresh_status");
+      response->status = 500;
+    }
+    json_decref(j_status);
   } else if (check_result_value(j_data_source, T_ERROR_NOT_FOUND)) {
     response->status = 404;
   } else {
@@ -407,14 +407,14 @@ int callback_taliesin_data_source_refresh_status (const struct _u_request * requ
     res = U_CALLBACK_ERROR;
   }
   json_decref(j_data_source);
-	
+  
   return res;
 }
 
 int callback_taliesin_data_source_refresh_stop (const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct config_elements * config = (struct config_elements *)user_data;
   json_t * j_data_source;
-	int res;
+  int res;
   
   j_data_source = data_source_get(config, get_username(request, response, config), u_map_get(request->map_url, "data_source"), 1);
   if (check_result_value(j_data_source, T_OK)) {
@@ -422,8 +422,8 @@ int callback_taliesin_data_source_refresh_stop (const struct _u_request * reques
       if ((res = data_source_refresh_stop(config, json_object_get(j_data_source, "data_source"))) == T_ERROR) {
         y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_data_source_refresh_stop - Error data_source_refresh_stop");
         response->status = 500;
-			} else if (res == T_ERROR_PARAM) {
-				response->status = 400;
+      } else if (res == T_ERROR_PARAM) {
+        response->status = 400;
       }
     } else {
       if (set_response_json_body_and_clean(response, 403, json_pack("[{ss}]", "scope", "User can't refresh a data source for all users, admin is required")) != U_OK) {
@@ -449,10 +449,10 @@ int callback_taliesin_data_source_clean (const struct _u_request * request, stru
   j_data_source = data_source_get(config, get_username(request, response, config), u_map_get(request->map_url, "data_source"), 1);
   if (check_result_value(j_data_source, T_OK)) {
     if (data_source_can_update(json_object_get(j_data_source, "data_source"), has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin))) {
-			if (data_source_refresh_run(config, json_deep_copy(json_object_get(j_data_source, "data_source")), NULL, 1) != T_OK) {
-				y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_data_source_clean - Error data_source_refresh_run");
-				response->status = 500;
-			}
+      if (data_source_refresh_run(config, json_deep_copy(json_object_get(j_data_source, "data_source")), NULL, 1) != T_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_data_source_clean - Error data_source_refresh_run");
+        response->status = 500;
+      }
     } else {
       if (set_response_json_body_and_clean(response, 403, json_pack("[{ss}]", "scope", "User can't refresh a data source for all users, admin is required")) != U_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_data_source_refresh_stop - Error setting json response");
@@ -502,9 +502,9 @@ int callback_taliesin_media_get (const struct _u_request * request, struct _u_re
         while (decode_path[0] == '/') {
           decode_path++;
         }
-				while (decode_path[strlen(decode_path) - 1] == '/') {
-					decode_path[strlen(decode_path) - 1] = '\0';
-				}
+        while (decode_path[strlen(decode_path) - 1] == '/') {
+          decode_path[strlen(decode_path) - 1] = '\0';
+        }
         j_result = media_get(config, json_object_get(j_data_source, "data_source"), decode_path);
         if (check_result_value(j_result, T_OK)) {
           if (u_map_get(request->map_url, "webradio") != NULL || u_map_get(request->map_url, "jukebox") != NULL) {
@@ -543,8 +543,8 @@ int callback_taliesin_media_get (const struct _u_request * request, struct _u_re
                     json_object_set_new(json_object_get(j_stream_info, "stream"), "media", json_deep_copy(json_object_get(j_result, "media")));
                     ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
                   }
-								} else if (check_result_value(j_stream_info, T_ERROR_NOT_FOUND)) {
-									response->status = 404;
+                } else if (check_result_value(j_stream_info, T_ERROR_NOT_FOUND)) {
+                  response->status = 404;
                 } else {
                   y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get - Error streaming file");
                   response->status = 500;
@@ -563,7 +563,7 @@ int callback_taliesin_media_get (const struct _u_request * request, struct _u_re
                   response->status = 500;
                 }
                 json_decref(j_stream_info);
-							}
+              }
             } else if (j_valid != NULL && json_array_size(j_valid) > 0) {
               ulfius_set_json_body_response(response, 400, j_valid);
             } else {
@@ -637,48 +637,48 @@ int callback_taliesin_category_get_info (const struct _u_request * request, stru
   if (check_result_value(j_data_source, T_OK)) {
     if (json_integer_value(json_object_get(json_object_get(j_data_source, "data_source"), "refresh_status")) == DATA_SOURCE_REFRESH_STATUS_NOT_RUNNING) {
       if (0 == o_strcmp(u_map_get(request->map_url, "level"), "artist") ||
-					0 == o_strcmp(u_map_get(request->map_url, "level"), "album") ||
-					0 == o_strcmp(u_map_get(request->map_url, "level"), "year") ||
-					0 == o_strcmp(u_map_get(request->map_url, "level"), "genre")) {
-				if (u_map_get(request->map_url, "cover") == NULL) {
-					j_result = media_category_get_info(config, json_object_get(j_data_source, "data_source"), u_map_get(request->map_url, "level"), u_map_get(request->map_url, "category"));
-					if (check_result_value(j_result, T_OK)) {
-						ulfius_set_json_body_response(response, 200, json_object_get(j_result, "info"));
-					} else if (check_result_value(j_result, T_ERROR_NOT_FOUND)) {
-						response->status = 404;
-					} else {
-						y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_get_info - Error media_category_get");
-						response->status = 500;
-					}
-					json_decref(j_result);
-				} else {
-					j_cover = media_category_cover_get(config, json_object_get(j_data_source, "data_source"), u_map_get(request->map_url, "level"), u_map_get(request->map_url, "category"), (u_map_get(request->map_url, "thumbnail")!=NULL));
-					if (check_result_value(j_cover, T_OK)) {
-						cover_b64 = json_string_value(json_object_get(j_cover, "cover"));
-						if (u_map_get(request->map_url, "base64")!=NULL) {
-							ulfius_set_string_body_response(response, 200, cover_b64);
-						} else {
-							cover_b64_len = o_strlen(cover_b64);
-							cover_decoded = o_malloc(cover_b64_len);
-							if (o_base64_decode((const unsigned char *)cover_b64, cover_b64_len, cover_decoded, &cover_decoded_len)) {
-								ulfius_set_binary_body_response(response, 200, (const char *)cover_decoded, cover_decoded_len);
-							} else {
-								y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_cover_get - Error decoding cover");
-								response->status = 500;
-							}
-							o_free(cover_decoded);
-						}
-					} else if (check_result_value(j_cover, T_ERROR_NOT_FOUND)) {
-						response->status = 404;
-					} else {
-						y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_cover_get - Error getting cover");
-						response->status = 500;
-					}
-					json_decref(j_cover);
-				}
+          0 == o_strcmp(u_map_get(request->map_url, "level"), "album") ||
+          0 == o_strcmp(u_map_get(request->map_url, "level"), "year") ||
+          0 == o_strcmp(u_map_get(request->map_url, "level"), "genre")) {
+        if (u_map_get(request->map_url, "cover") == NULL) {
+          j_result = media_category_get_info(config, json_object_get(j_data_source, "data_source"), u_map_get(request->map_url, "level"), u_map_get(request->map_url, "category"));
+          if (check_result_value(j_result, T_OK)) {
+            ulfius_set_json_body_response(response, 200, json_object_get(j_result, "info"));
+          } else if (check_result_value(j_result, T_ERROR_NOT_FOUND)) {
+            response->status = 404;
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_get_info - Error media_category_get");
+            response->status = 500;
+          }
+          json_decref(j_result);
+        } else {
+          j_cover = media_category_cover_get(config, json_object_get(j_data_source, "data_source"), u_map_get(request->map_url, "level"), u_map_get(request->map_url, "category"), (u_map_get(request->map_url, "thumbnail")!=NULL));
+          if (check_result_value(j_cover, T_OK)) {
+            cover_b64 = json_string_value(json_object_get(j_cover, "cover"));
+            if (u_map_get(request->map_url, "base64")!=NULL) {
+              ulfius_set_string_body_response(response, 200, cover_b64);
+            } else {
+              cover_b64_len = o_strlen(cover_b64);
+              cover_decoded = o_malloc(cover_b64_len);
+              if (o_base64_decode((const unsigned char *)cover_b64, cover_b64_len, cover_decoded, &cover_decoded_len)) {
+                ulfius_set_binary_body_response(response, 200, (const char *)cover_decoded, cover_decoded_len);
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_cover_get - Error decoding cover");
+                response->status = 500;
+              }
+              o_free(cover_decoded);
+            }
+          } else if (check_result_value(j_cover, T_ERROR_NOT_FOUND)) {
+            response->status = 404;
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_cover_get - Error getting cover");
+            response->status = 500;
+          }
+          json_decref(j_cover);
+        }
       } else {
-				response->status = 404;
-			}
+        response->status = 404;
+      }
     } else {
       response->status = 503;
     }
@@ -700,22 +700,22 @@ int callback_taliesin_category_set_info (const struct _u_request * request, stru
   if (check_result_value(j_data_source, T_OK)) {
     if (json_integer_value(json_object_get(json_object_get(j_data_source, "data_source"), "refresh_status")) == DATA_SOURCE_REFRESH_STATUS_NOT_RUNNING) {
       if (0 == o_strcmp(u_map_get(request->map_url, "level"), "artist") ||
-					0 == o_strcmp(u_map_get(request->map_url, "level"), "album") ||
-					0 == o_strcmp(u_map_get(request->map_url, "level"), "year") ||
-					0 == o_strcmp(u_map_get(request->map_url, "level"), "genre")) {
-				j_is_valid = is_media_category_info_valid(config, j_body);
-				if (j_is_valid != NULL && json_array_size(j_is_valid) == 0) {
-					if (media_category_set_info(config, json_object_get(j_data_source, "data_source"), u_map_get(request->map_url, "level"), u_map_get(request->map_url, "category"), j_body) != T_OK) {
-						y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_set_info - Error media_category_set_info");
-						response->status = 500;
-					}
-				} else if (j_is_valid != NULL) {
-					ulfius_set_json_body_response(response, 400, j_is_valid);
-				} else {
+          0 == o_strcmp(u_map_get(request->map_url, "level"), "album") ||
+          0 == o_strcmp(u_map_get(request->map_url, "level"), "year") ||
+          0 == o_strcmp(u_map_get(request->map_url, "level"), "genre")) {
+        j_is_valid = is_media_category_info_valid(config, j_body);
+        if (j_is_valid != NULL && json_array_size(j_is_valid) == 0) {
+          if (media_category_set_info(config, json_object_get(j_data_source, "data_source"), u_map_get(request->map_url, "level"), u_map_get(request->map_url, "category"), j_body) != T_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_set_info - Error media_category_set_info");
+            response->status = 500;
+          }
+        } else if (j_is_valid != NULL) {
+          ulfius_set_json_body_response(response, 400, j_is_valid);
+        } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_set_info - Error is_media_category_info_valid");
           response->status = 500;
-				}
-				json_decref(j_is_valid);
+        }
+        json_decref(j_is_valid);
       } else {
         response->status = 404;
       }
@@ -741,13 +741,13 @@ int callback_taliesin_category_delete_info (const struct _u_request * request, s
   if (check_result_value(j_data_source, T_OK)) {
     if (json_integer_value(json_object_get(json_object_get(j_data_source, "data_source"), "refresh_status")) == DATA_SOURCE_REFRESH_STATUS_NOT_RUNNING) {
       if (0 == o_strcmp(u_map_get(request->map_url, "level"), "artist") ||
-					0 == o_strcmp(u_map_get(request->map_url, "level"), "album") ||
-					0 == o_strcmp(u_map_get(request->map_url, "level"), "year") ||
-					0 == o_strcmp(u_map_get(request->map_url, "level"), "genre")) {
-				if (media_category_delete_info(config, json_object_get(j_data_source, "data_source"), u_map_get(request->map_url, "level"), u_map_get(request->map_url, "category")) != T_OK) {
-					y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_delete_info - Error media_category_set_info");
-					response->status = 500;
-				}
+          0 == o_strcmp(u_map_get(request->map_url, "level"), "album") ||
+          0 == o_strcmp(u_map_get(request->map_url, "level"), "year") ||
+          0 == o_strcmp(u_map_get(request->map_url, "level"), "genre")) {
+        if (media_category_delete_info(config, json_object_get(j_data_source, "data_source"), u_map_get(request->map_url, "level"), u_map_get(request->map_url, "category")) != T_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_delete_info - Error media_category_set_info");
+          response->status = 500;
+        }
       } else {
         response->status = 404;
       }
@@ -772,9 +772,9 @@ int callback_taliesin_category_get (const struct _u_request * request, struct _u
   if (check_result_value(j_data_source, T_OK)) {
     if (json_integer_value(json_object_get(json_object_get(j_data_source, "data_source"), "refresh_status")) == DATA_SOURCE_REFRESH_STATUS_NOT_RUNNING) {
       if (0 == o_strcmp(u_map_get(request->map_url, "level"), "artist") ||
-					0 == o_strcmp(u_map_get(request->map_url, "level"), "album") ||
-					0 == o_strcmp(u_map_get(request->map_url, "level"), "year") ||
-					0 == o_strcmp(u_map_get(request->map_url, "level"), "genre")) {
+          0 == o_strcmp(u_map_get(request->map_url, "level"), "album") ||
+          0 == o_strcmp(u_map_get(request->map_url, "level"), "year") ||
+          0 == o_strcmp(u_map_get(request->map_url, "level"), "genre")) {
         j_result = media_category_get(config, json_object_get(j_data_source, "data_source"), u_map_get(request->map_url, "level"));
         if (check_result_value(j_result, T_OK)) {
           ulfius_set_json_body_response(response, 200, json_object_get(j_result, "list"));
@@ -815,82 +815,82 @@ int callback_taliesin_category_list (const struct _u_request * request, struct _
   if (check_result_value(j_data_source, T_OK)) {
     if (json_integer_value(json_object_get(json_object_get(j_data_source, "data_source"), "refresh_status")) == DATA_SOURCE_REFRESH_STATUS_NOT_RUNNING) {
       if (0 == o_strcmp(u_map_get(request->map_url, "level"), "artist") ||
-					0 == o_strcmp(u_map_get(request->map_url, "level"), "album") ||
-					0 == o_strcmp(u_map_get(request->map_url, "level"), "year") ||
-					0 == o_strcmp(u_map_get(request->map_url, "level"), "genre")) {
+          0 == o_strcmp(u_map_get(request->map_url, "level"), "album") ||
+          0 == o_strcmp(u_map_get(request->map_url, "level"), "year") ||
+          0 == o_strcmp(u_map_get(request->map_url, "level"), "genre")) {
         j_result = media_category_list(config, json_object_get(j_data_source, "data_source"), u_map_get(request->map_url, "level"), u_map_get(request->map_url, "category"));
-				if (check_result_value(j_result, T_OK)) {
-					if (u_map_get(request->map_url, "webradio") != NULL || u_map_get(request->map_url, "jukebox") != NULL) {
-						format = u_map_get(request->map_url, "format");
-						channels = u_map_get(request->map_url, "channels")!=NULL?strtol(u_map_get(request->map_url, "channels"), NULL, 10):TALIESIN_STREAM_DEFAULT_CHANNELS;
-						sample_rate = u_map_get(request->map_url, "samplerate")!=NULL?strtol(u_map_get(request->map_url, "samplerate"), NULL, 10):TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
-						if (0 == o_strcmp(format, "flac")) {
-							bit_rate = TALIESIN_STREAM_FLAC_BIT_RATE;
-						} else {
-							bit_rate = u_map_get(request->map_url, "bitrate")!=NULL?strtol(u_map_get(request->map_url, "bitrate"), NULL, 10):TALIESIN_STREAM_DEFAULT_BIT_RATE;
-						}
-						if (format == NULL) {
-							format = TALIESIN_STREAM_DEFAULT_FORMAT;
-						}
-						if (!channels) {
-							sample_rate = TALIESIN_STREAM_DEFAULT_CHANNELS;
-						}
-						if (!sample_rate) {
-							channels = TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
-						}
-						if (!bit_rate) {
-							bit_rate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
-						}
-						j_valid = is_stream_parameters_valid(format, channels, sample_rate, bit_rate);
-						if (j_valid != NULL && json_array_size(j_valid) == 0) {
-							if (u_map_get(request->map_url, "webradio") != NULL) {
-								j_fake_jukebox = json_pack("{sssssisO}", "description", u_map_get(request->map_url, "category"), "name", u_map_get(request->map_url, "category"), "tpl_id", 0, "media", json_object_get(j_result, "list"));
-								j_stream_info = add_webradio_from_playlist(config, j_fake_jukebox, get_username(request, response, config), format, channels, sample_rate, bit_rate, (u_map_get(request->map_url, "random")!=NULL), &webradio);
-								if (check_result_value(j_stream_info, T_OK)) {
-									ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
-									detach_thread_webradio = pthread_detach(thread_webradio);
-									if (ret_thread_webradio || detach_thread_webradio) {
-										y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio");
-										response->status = 500;
-									} else {
-										json_object_set_new(json_object_get(j_stream_info, "stream"), "media", json_deep_copy(json_object_get(j_result, "media")));
-										ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
-									}
-								} else {
-									y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get - Error streaming file");
-									response->status = 500;
-								}
-								json_decref(j_stream_info);
-								json_decref(j_fake_jukebox);
-							} else if (u_map_get(request->map_url, "jukebox") != NULL) {
-								j_fake_jukebox = json_pack("{sssssisO}", "description", u_map_get(request->map_url, "category"), "name", u_map_get(request->map_url, "category"), "tpl_id", 0, "media", json_object_get(j_result, "list"));
-								j_stream_info = add_jukebox_from_playlist(config, j_fake_jukebox, get_username(request, response, config), format, channels, sample_rate, bit_rate);
-								if (check_result_value(j_stream_info, T_OK)) {
-									json_object_set_new(json_object_get(j_stream_info, "stream"), "media", json_deep_copy(json_object_get(j_result, "media")));
-									ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
-								} else {
-									y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get - Error creating jukebox");
-									response->status = 500;
-								}
-								json_decref(j_stream_info);
-								json_decref(j_fake_jukebox);
-							}
-						} else if (j_valid != NULL && json_array_size(j_valid) > 0) {
-							ulfius_set_json_body_response(response, 400, json_deep_copy(j_valid));
-						} else {
-							y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get - Error is_stream_parameters_valid");
-							response->status = 500;
-						}
-						json_decref(j_valid);
-					} else {
-						ulfius_set_json_body_response(response, 200, json_object_get(j_result, "list"));
-					}
-				} else if (check_result_value(j_result, T_ERROR_NOT_FOUND)) {
-					response->status = 404;
-				} else {
-					y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_get - Error media_category_get");
-					response->status = 500;
-				}
+        if (check_result_value(j_result, T_OK)) {
+          if (u_map_get(request->map_url, "webradio") != NULL || u_map_get(request->map_url, "jukebox") != NULL) {
+            format = u_map_get(request->map_url, "format");
+            channels = u_map_get(request->map_url, "channels")!=NULL?strtol(u_map_get(request->map_url, "channels"), NULL, 10):TALIESIN_STREAM_DEFAULT_CHANNELS;
+            sample_rate = u_map_get(request->map_url, "samplerate")!=NULL?strtol(u_map_get(request->map_url, "samplerate"), NULL, 10):TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
+            if (0 == o_strcmp(format, "flac")) {
+              bit_rate = TALIESIN_STREAM_FLAC_BIT_RATE;
+            } else {
+              bit_rate = u_map_get(request->map_url, "bitrate")!=NULL?strtol(u_map_get(request->map_url, "bitrate"), NULL, 10):TALIESIN_STREAM_DEFAULT_BIT_RATE;
+            }
+            if (format == NULL) {
+              format = TALIESIN_STREAM_DEFAULT_FORMAT;
+            }
+            if (!channels) {
+              sample_rate = TALIESIN_STREAM_DEFAULT_CHANNELS;
+            }
+            if (!sample_rate) {
+              channels = TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
+            }
+            if (!bit_rate) {
+              bit_rate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
+            }
+            j_valid = is_stream_parameters_valid(format, channels, sample_rate, bit_rate);
+            if (j_valid != NULL && json_array_size(j_valid) == 0) {
+              if (u_map_get(request->map_url, "webradio") != NULL) {
+                j_fake_jukebox = json_pack("{sssssisO}", "description", u_map_get(request->map_url, "category"), "name", u_map_get(request->map_url, "category"), "tpl_id", 0, "media", json_object_get(j_result, "list"));
+                j_stream_info = add_webradio_from_playlist(config, j_fake_jukebox, get_username(request, response, config), format, channels, sample_rate, bit_rate, (u_map_get(request->map_url, "random")!=NULL), &webradio);
+                if (check_result_value(j_stream_info, T_OK)) {
+                  ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
+                  detach_thread_webradio = pthread_detach(thread_webradio);
+                  if (ret_thread_webradio || detach_thread_webradio) {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio");
+                    response->status = 500;
+                  } else {
+                    json_object_set_new(json_object_get(j_stream_info, "stream"), "media", json_deep_copy(json_object_get(j_result, "media")));
+                    ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
+                  }
+                } else {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get - Error streaming file");
+                  response->status = 500;
+                }
+                json_decref(j_stream_info);
+                json_decref(j_fake_jukebox);
+              } else if (u_map_get(request->map_url, "jukebox") != NULL) {
+                j_fake_jukebox = json_pack("{sssssisO}", "description", u_map_get(request->map_url, "category"), "name", u_map_get(request->map_url, "category"), "tpl_id", 0, "media", json_object_get(j_result, "list"));
+                j_stream_info = add_jukebox_from_playlist(config, j_fake_jukebox, get_username(request, response, config), format, channels, sample_rate, bit_rate);
+                if (check_result_value(j_stream_info, T_OK)) {
+                  json_object_set_new(json_object_get(j_stream_info, "stream"), "media", json_deep_copy(json_object_get(j_result, "media")));
+                  ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
+                } else {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get - Error creating jukebox");
+                  response->status = 500;
+                }
+                json_decref(j_stream_info);
+                json_decref(j_fake_jukebox);
+              }
+            } else if (j_valid != NULL && json_array_size(j_valid) > 0) {
+              ulfius_set_json_body_response(response, 400, json_deep_copy(j_valid));
+            } else {
+              y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get - Error is_stream_parameters_valid");
+              response->status = 500;
+            }
+            json_decref(j_valid);
+          } else {
+            ulfius_set_json_body_response(response, 200, json_object_get(j_result, "list"));
+          }
+        } else if (check_result_value(j_result, T_ERROR_NOT_FOUND)) {
+          response->status = 404;
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_get - Error media_category_get");
+          response->status = 500;
+        }
         json_decref(j_result);
       } else {
         response->status = 404;
@@ -916,13 +916,13 @@ int callback_taliesin_subcategory_get (const struct _u_request * request, struct
   if (check_result_value(j_data_source, T_OK)) {
     if (json_integer_value(json_object_get(json_object_get(j_data_source, "data_source"), "refresh_status")) == DATA_SOURCE_REFRESH_STATUS_NOT_RUNNING) {
       if ((0 == o_strcmp(u_map_get(request->map_url, "level"), "artist") ||
-					0 == o_strcmp(u_map_get(request->map_url, "level"), "album") ||
-					0 == o_strcmp(u_map_get(request->map_url, "level"), "year") ||
-					0 == o_strcmp(u_map_get(request->map_url, "level"), "genre")) &&
-					(0 == o_strcmp(u_map_get(request->map_url, "sublevel"), "artist") ||
-					0 == o_strcmp(u_map_get(request->map_url, "sublevel"), "album") ||
-					0 == o_strcmp(u_map_get(request->map_url, "sublevel"), "year") ||
-					0 == o_strcmp(u_map_get(request->map_url, "sublevel"), "genre"))) {
+          0 == o_strcmp(u_map_get(request->map_url, "level"), "album") ||
+          0 == o_strcmp(u_map_get(request->map_url, "level"), "year") ||
+          0 == o_strcmp(u_map_get(request->map_url, "level"), "genre")) &&
+          (0 == o_strcmp(u_map_get(request->map_url, "sublevel"), "artist") ||
+          0 == o_strcmp(u_map_get(request->map_url, "sublevel"), "album") ||
+          0 == o_strcmp(u_map_get(request->map_url, "sublevel"), "year") ||
+          0 == o_strcmp(u_map_get(request->map_url, "sublevel"), "genre"))) {
         if (o_strcmp(u_map_get(request->map_url, "level"), u_map_get(request->map_url, "sublevel")) != 0) {
           j_result = media_subcategory_get(config, json_object_get(j_data_source, "data_source"), u_map_get(request->map_url, "level"), u_map_get(request->map_url, "category"), u_map_get(request->map_url, "sublevel"));
           if (check_result_value(j_result, T_OK)) {
@@ -967,88 +967,88 @@ int callback_taliesin_subcategory_list (const struct _u_request * request, struc
   if (check_result_value(j_data_source, T_OK)) {
     if (json_integer_value(json_object_get(json_object_get(j_data_source, "data_source"), "refresh_status")) == DATA_SOURCE_REFRESH_STATUS_NOT_RUNNING) {
       if ((0 == o_strcmp(u_map_get(request->map_url, "level"), "artist") ||
-					0 == o_strcmp(u_map_get(request->map_url, "level"), "album") ||
-					0 == o_strcmp(u_map_get(request->map_url, "level"), "year") ||
-					0 == o_strcmp(u_map_get(request->map_url, "level"), "genre")) &&
-					(0 == o_strcmp(u_map_get(request->map_url, "sublevel"), "artist") ||
-					0 == o_strcmp(u_map_get(request->map_url, "sublevel"), "album") ||
-					0 == o_strcmp(u_map_get(request->map_url, "sublevel"), "year") ||
-					0 == o_strcmp(u_map_get(request->map_url, "sublevel"), "genre"))) {
+          0 == o_strcmp(u_map_get(request->map_url, "level"), "album") ||
+          0 == o_strcmp(u_map_get(request->map_url, "level"), "year") ||
+          0 == o_strcmp(u_map_get(request->map_url, "level"), "genre")) &&
+          (0 == o_strcmp(u_map_get(request->map_url, "sublevel"), "artist") ||
+          0 == o_strcmp(u_map_get(request->map_url, "sublevel"), "album") ||
+          0 == o_strcmp(u_map_get(request->map_url, "sublevel"), "year") ||
+          0 == o_strcmp(u_map_get(request->map_url, "sublevel"), "genre"))) {
         if (o_strcmp(u_map_get(request->map_url, "level"), u_map_get(request->map_url, "sublevel")) != 0) {
           j_result = media_subcategory_list(config, json_object_get(j_data_source, "data_source"), u_map_get(request->map_url, "level"), u_map_get(request->map_url, "category"), u_map_get(request->map_url, "sublevel"), u_map_get(request->map_url, "subcategory"));
-					if (check_result_value(j_result, T_OK)) {
-						if (u_map_get(request->map_url, "webradio") != NULL || u_map_get(request->map_url, "jukebox") != NULL) {
-							format = u_map_get(request->map_url, "format");
-							channels = u_map_get(request->map_url, "channels")!=NULL?strtol(u_map_get(request->map_url, "channels"), NULL, 10):TALIESIN_STREAM_DEFAULT_CHANNELS;
-							sample_rate = u_map_get(request->map_url, "samplerate")!=NULL?strtol(u_map_get(request->map_url, "samplerate"), NULL, 10):TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
-							if (0 == o_strcmp(format, "flac")) {
-								bit_rate = TALIESIN_STREAM_FLAC_BIT_RATE;
-							} else {
-								bit_rate = u_map_get(request->map_url, "bitrate")!=NULL?strtol(u_map_get(request->map_url, "bitrate"), NULL, 10):TALIESIN_STREAM_DEFAULT_BIT_RATE;
-							}
-							if (format == NULL) {
-								format = TALIESIN_STREAM_DEFAULT_FORMAT;
-							}
-							if (!channels) {
-								sample_rate = TALIESIN_STREAM_DEFAULT_CHANNELS;
-							}
-							if (!sample_rate) {
-								channels = TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
-							}
-							if (!bit_rate) {
-								bit_rate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
-							}
-							j_valid = is_stream_parameters_valid(format, channels, sample_rate, bit_rate);
-							if (j_valid != NULL && json_array_size(j_valid) == 0) {
-								if (u_map_get(request->map_url, "webradio") != NULL) {
-									j_fake_jukebox = json_pack("{sssssiso}", "description", u_map_get(request->map_url, "category"), "name", u_map_get(request->map_url, "category"), "tpl_id", 0, "media", json_object_get(j_result, "list"));
-									j_stream_info = add_webradio_from_playlist(config, j_fake_jukebox, get_username(request, response, config), format, channels, sample_rate, bit_rate, (u_map_get(request->map_url, "random")!=NULL), &webradio);
-									if (check_result_value(j_stream_info, T_OK)) {
-										ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
-										detach_thread_webradio = pthread_detach(thread_webradio);
-										if (ret_thread_webradio || detach_thread_webradio) {
-											y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio");
-											response->status = 500;
-										} else {
-											json_object_set_new(json_object_get(j_stream_info, "stream"), "media", json_deep_copy(json_object_get(j_result, "media")));
-											ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
-										}
-									} else {
-										y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get - Error streaming file");
-										response->status = 500;
-									}
-									json_decref(j_stream_info);
-									json_decref(j_fake_jukebox);
-								} else if (u_map_get(request->map_url, "jukebox") != NULL) {
-									j_fake_jukebox = json_pack("{sssssiso}", "description", u_map_get(request->map_url, "category"), "name", u_map_get(request->map_url, "category"), "tpl_id", 0, "media", json_object_get(j_result, "list"));
-									j_stream_info = add_jukebox_from_playlist(config, j_fake_jukebox, get_username(request, response, config), format, channels, sample_rate, bit_rate);
-									if (check_result_value(j_stream_info, T_OK)) {
-										json_object_set_new(json_object_get(j_stream_info, "stream"), "media", json_deep_copy(json_object_get(j_result, "media")));
-										ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
-									} else {
-										y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get - Error creating jukebox");
-										response->status = 500;
-									}
-									json_decref(j_stream_info);
-									json_decref(j_fake_jukebox);
-								}
-							} else if (j_valid != NULL && json_array_size(j_valid) > 0) {
-								ulfius_set_json_body_response(response, 400, json_deep_copy(j_valid));
-							} else {
-								y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get - Error is_stream_parameters_valid");
-								response->status = 500;
-							}
-							json_decref(j_valid);
-						} else {
-							ulfius_set_json_body_response(response, 200, json_object_get(j_result, "list"));
-						}
-					} else if (check_result_value(j_result, T_ERROR_NOT_FOUND)) {
-						response->status = 404;
-					} else {
-						y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_get - Error media_category_get");
-						response->status = 500;
-					}
-					json_decref(j_result);
+          if (check_result_value(j_result, T_OK)) {
+            if (u_map_get(request->map_url, "webradio") != NULL || u_map_get(request->map_url, "jukebox") != NULL) {
+              format = u_map_get(request->map_url, "format");
+              channels = u_map_get(request->map_url, "channels")!=NULL?strtol(u_map_get(request->map_url, "channels"), NULL, 10):TALIESIN_STREAM_DEFAULT_CHANNELS;
+              sample_rate = u_map_get(request->map_url, "samplerate")!=NULL?strtol(u_map_get(request->map_url, "samplerate"), NULL, 10):TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
+              if (0 == o_strcmp(format, "flac")) {
+                bit_rate = TALIESIN_STREAM_FLAC_BIT_RATE;
+              } else {
+                bit_rate = u_map_get(request->map_url, "bitrate")!=NULL?strtol(u_map_get(request->map_url, "bitrate"), NULL, 10):TALIESIN_STREAM_DEFAULT_BIT_RATE;
+              }
+              if (format == NULL) {
+                format = TALIESIN_STREAM_DEFAULT_FORMAT;
+              }
+              if (!channels) {
+                sample_rate = TALIESIN_STREAM_DEFAULT_CHANNELS;
+              }
+              if (!sample_rate) {
+                channels = TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
+              }
+              if (!bit_rate) {
+                bit_rate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
+              }
+              j_valid = is_stream_parameters_valid(format, channels, sample_rate, bit_rate);
+              if (j_valid != NULL && json_array_size(j_valid) == 0) {
+                if (u_map_get(request->map_url, "webradio") != NULL) {
+                  j_fake_jukebox = json_pack("{sssssiso}", "description", u_map_get(request->map_url, "category"), "name", u_map_get(request->map_url, "category"), "tpl_id", 0, "media", json_object_get(j_result, "list"));
+                  j_stream_info = add_webradio_from_playlist(config, j_fake_jukebox, get_username(request, response, config), format, channels, sample_rate, bit_rate, (u_map_get(request->map_url, "random")!=NULL), &webradio);
+                  if (check_result_value(j_stream_info, T_OK)) {
+                    ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
+                    detach_thread_webradio = pthread_detach(thread_webradio);
+                    if (ret_thread_webradio || detach_thread_webradio) {
+                      y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio");
+                      response->status = 500;
+                    } else {
+                      json_object_set_new(json_object_get(j_stream_info, "stream"), "media", json_deep_copy(json_object_get(j_result, "media")));
+                      ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
+                    }
+                  } else {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get - Error streaming file");
+                    response->status = 500;
+                  }
+                  json_decref(j_stream_info);
+                  json_decref(j_fake_jukebox);
+                } else if (u_map_get(request->map_url, "jukebox") != NULL) {
+                  j_fake_jukebox = json_pack("{sssssiso}", "description", u_map_get(request->map_url, "category"), "name", u_map_get(request->map_url, "category"), "tpl_id", 0, "media", json_object_get(j_result, "list"));
+                  j_stream_info = add_jukebox_from_playlist(config, j_fake_jukebox, get_username(request, response, config), format, channels, sample_rate, bit_rate);
+                  if (check_result_value(j_stream_info, T_OK)) {
+                    json_object_set_new(json_object_get(j_stream_info, "stream"), "media", json_deep_copy(json_object_get(j_result, "media")));
+                    ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
+                  } else {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get - Error creating jukebox");
+                    response->status = 500;
+                  }
+                  json_decref(j_stream_info);
+                  json_decref(j_fake_jukebox);
+                }
+              } else if (j_valid != NULL && json_array_size(j_valid) > 0) {
+                ulfius_set_json_body_response(response, 400, json_deep_copy(j_valid));
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get - Error is_stream_parameters_valid");
+                response->status = 500;
+              }
+              json_decref(j_valid);
+            } else {
+              ulfius_set_json_body_response(response, 200, json_object_get(j_result, "list"));
+            }
+          } else if (check_result_value(j_result, T_ERROR_NOT_FOUND)) {
+            response->status = 404;
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_get - Error media_category_get");
+            response->status = 500;
+          }
+          json_decref(j_result);
         } else {
           response->status = 400;
         }
@@ -1105,7 +1105,7 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
     jukebox_index = strtol(u_map_get_case(request->map_url, "index"), NULL, 10);
   }
   if (current_webradio != NULL) {
-		response->status = 200;
+    response->status = 200;
     client_data_webradio = o_malloc(sizeof (struct _client_data_webradio));
     if (client_data_webradio != NULL) {
       if (client_data_webradio_init(client_data_webradio) == T_OK) {
@@ -1182,9 +1182,9 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
       y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error allocating resources for client_data_webradio");
       response->status = 500;
     }
-		if (response->status != 200) {
-			client_data_webradio_clean(client_data_webradio);
-		}
+    if (response->status != 200) {
+      client_data_webradio_clean(client_data_webradio);
+    }
   } else if (current_jukebox != NULL) {
     if (u_map_get_case(request->map_url, "index") != NULL) {
       file = file_list_get_file(current_jukebox->file_list, jukebox_index);
@@ -1833,37 +1833,37 @@ int callback_taliesin_playlist_get (const struct _u_request * request, struct _u
   }
   j_result = playlist_get(config, get_username(request, response, config), u_map_get(request->map_url, "playlist"), 0, offset, limit);
   if (check_result_value(j_result, T_OK)) {
-		if (u_map_get(request->map_url, "cover") == NULL) {
-			json_object_del(json_object_get(j_result, "playlist"), "tpl_id");
-			if (set_response_json_body_and_clean(response, 200, json_copy(json_object_get(j_result, "playlist"))) != U_OK) {
-				y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_playlist_get - Error setting json response");
-				res = U_CALLBACK_ERROR;
-			}
-		} else {
-			j_cover = playlist_media_cover_get(config, get_username(request, response, config), u_map_get(request->map_url, "playlist"), (u_map_get(request->map_url, "thumbnail")!=NULL));
-			if (check_result_value(j_cover, T_OK)) {
-				cover_b64 = json_string_value(json_object_get(j_cover, "cover"));
-				if (u_map_get(request->map_url, "base64")!=NULL) {
-					ulfius_set_string_body_response(response, 200, cover_b64);
-				} else {
-					cover_b64_len = o_strlen(cover_b64);
-					cover_decoded = o_malloc(cover_b64_len);
-					if (o_base64_decode((const unsigned char *)cover_b64, cover_b64_len, cover_decoded, &cover_decoded_len)) {
-						ulfius_set_binary_body_response(response, 200, (const char *)cover_decoded, cover_decoded_len);
-					} else {
-						y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_cover_get - Error decoding cover");
-						response->status = 500;
-					}
-					o_free(cover_decoded);
-				}
-			} else if (check_result_value(j_cover, T_ERROR_NOT_FOUND)) {
-				response->status = 404;
-			} else {
-				y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_cover_get - Error getting cover");
-				response->status = 500;
-			}
-			json_decref(j_cover);
-		}
+    if (u_map_get(request->map_url, "cover") == NULL) {
+      json_object_del(json_object_get(j_result, "playlist"), "tpl_id");
+      if (set_response_json_body_and_clean(response, 200, json_copy(json_object_get(j_result, "playlist"))) != U_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_playlist_get - Error setting json response");
+        res = U_CALLBACK_ERROR;
+      }
+    } else {
+      j_cover = playlist_media_cover_get(config, get_username(request, response, config), u_map_get(request->map_url, "playlist"), (u_map_get(request->map_url, "thumbnail")!=NULL));
+      if (check_result_value(j_cover, T_OK)) {
+        cover_b64 = json_string_value(json_object_get(j_cover, "cover"));
+        if (u_map_get(request->map_url, "base64")!=NULL) {
+          ulfius_set_string_body_response(response, 200, cover_b64);
+        } else {
+          cover_b64_len = o_strlen(cover_b64);
+          cover_decoded = o_malloc(cover_b64_len);
+          if (o_base64_decode((const unsigned char *)cover_b64, cover_b64_len, cover_decoded, &cover_decoded_len)) {
+            ulfius_set_binary_body_response(response, 200, (const char *)cover_decoded, cover_decoded_len);
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_cover_get - Error decoding cover");
+            response->status = 500;
+          }
+          o_free(cover_decoded);
+        }
+      } else if (check_result_value(j_cover, T_ERROR_NOT_FOUND)) {
+        response->status = 404;
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_cover_get - Error getting cover");
+        response->status = 500;
+      }
+      json_decref(j_cover);
+    }
   } else if (check_result_value(j_result, T_ERROR_NOT_FOUND)) {
     response->status = 404;
   } else {
@@ -2172,20 +2172,20 @@ int callback_taliesin_search (const struct _u_request * request, struct _u_respo
       } else if (0 == o_strcmp("genre", u_map_get_case(request->map_url, "category"))) {
         category = TALIESIN_SEARCH_CATEGORY_GENRE;
       } else if (u_map_get_case(request->map_url, "category") != NULL) {
-				category = TALIESIN_SEARCH_CATEGORY_INVALID;
-			}
+        category = TALIESIN_SEARCH_CATEGORY_INVALID;
+      }
     }
-		if (category != TALIESIN_SEARCH_CATEGORY_INVALID) {
-			j_result = media_simple_search(config, get_username(request, response, config), u_map_get_case(request->map_url, "q"), category);
-			if (check_result_value(j_result, T_OK)) {
-				ulfius_set_json_body_response(response, 200, json_object_get(j_result, "search"));
-			} else {
-				response->status = 500;
-			}
-			json_decref(j_result);
-		} else {
-			response->status = 400;
-		}
+    if (category != TALIESIN_SEARCH_CATEGORY_INVALID) {
+      j_result = media_simple_search(config, get_username(request, response, config), u_map_get_case(request->map_url, "q"), category);
+      if (check_result_value(j_result, T_OK)) {
+        ulfius_set_json_body_response(response, 200, json_object_get(j_result, "search"));
+      } else {
+        response->status = 500;
+      }
+      json_decref(j_result);
+    } else {
+      response->status = 400;
+    }
   } else {
     j_result = json_pack("{ssss}", "result", "error", "reason", "You must provide at least a search pattern in the url");
     ulfius_set_json_body_response(response, 400, j_result);
@@ -2198,25 +2198,25 @@ int callback_taliesin_advanced_search (const struct _u_request * request, struct
   struct config_elements * config = (struct config_elements *)user_data;
   json_t * j_is_valid, * j_result = NULL, * j_body;
   
-	j_body = ulfius_get_json_body_request(request, NULL);
-	j_is_valid = is_valid_media_advanced_search(config, get_username(request, response, config), j_body);
-	if (j_is_valid != NULL && json_array_size(j_is_valid) == 0) {
-		j_result = media_advanced_search(config, get_username(request, response, config), j_body);
-		if (check_result_value(j_result, T_OK)) {
-			ulfius_set_json_body_response(response, 200, json_object_get(j_result, "list"));
-		} else {
-			y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_advanced_search - Error media_advanced_search");
-			response->status = 500;
-		}
-		json_decref(j_result);
-	} else if (j_is_valid != NULL && json_array_size(j_is_valid) > 0) {
-		ulfius_set_json_body_response(response, 400, j_is_valid);
-	} else {
-		y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_advanced_search - Error is_valid_media_advanced_search");
-		response->status = 500;
-	}
-	json_decref(j_is_valid);
-	json_decref(j_body);
+  j_body = ulfius_get_json_body_request(request, NULL);
+  j_is_valid = is_valid_media_advanced_search(config, get_username(request, response, config), j_body);
+  if (j_is_valid != NULL && json_array_size(j_is_valid) == 0) {
+    j_result = media_advanced_search(config, get_username(request, response, config), j_body);
+    if (check_result_value(j_result, T_OK)) {
+      ulfius_set_json_body_response(response, 200, json_object_get(j_result, "list"));
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_advanced_search - Error media_advanced_search");
+      response->status = 500;
+    }
+    json_decref(j_result);
+  } else if (j_is_valid != NULL && json_array_size(j_is_valid) > 0) {
+    ulfius_set_json_body_response(response, 400, j_is_valid);
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_advanced_search - Error is_valid_media_advanced_search");
+    response->status = 500;
+  }
+  json_decref(j_is_valid);
+  json_decref(j_body);
   return U_CALLBACK_CONTINUE;
 }
 

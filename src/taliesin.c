@@ -42,8 +42,11 @@ int main (int argc, char ** argv) {
   struct config_elements * config = o_malloc(sizeof(struct config_elements));
   int res, i;
   pthread_mutexattr_t mutexattr;
-  json_t * j_playlist_list, * j_element;
+  json_t * j_stream_list, * j_element;
   size_t index;
+  int ret_thread_webradio = 0, detach_thread_webradio = 0;
+  pthread_t thread_webradio;
+  struct _t_webradio * webradio;
   
   av_register_all();
   
@@ -55,7 +58,7 @@ int main (int argc, char ** argv) {
   
   // Init config structure with default values
   config->config_file = NULL;
-	config->server_remote_address = NULL;
+  config->server_remote_address = NULL;
   config->api_prefix = NULL;
   config->log_mode = Y_LOG_MODE_NONE;
   config->log_level = Y_LOG_LEVEL_NONE;
@@ -73,7 +76,7 @@ int main (int argc, char ** argv) {
   config->oauth_scope_admin = NULL;
   config->nb_webradio = 0;
   config->webradio_set = NULL;
-  config->nb_jukebox	= 0;
+  config->nb_jukebox  = 0;
   config->jukebox_set = NULL;
   config->nb_refresh_status = 0;
   config->refresh_status_list = NULL;
@@ -102,8 +105,8 @@ int main (int argc, char ** argv) {
     fprintf(stderr, "Error init stream_stop_lock or stream_stop_cond");
     return 1;
   }
-	if (pthread_mutex_init(&config->refresh_lock, NULL) || 
-			pthread_cond_init(&config->refresh_cond, NULL)) {
+  if (pthread_mutex_init(&config->refresh_lock, NULL) || 
+      pthread_cond_init(&config->refresh_cond, NULL)) {
     fprintf(stderr, "Error init refresh_lock or refresh_cond");
     return 1;
   }
@@ -160,7 +163,7 @@ int main (int argc, char ** argv) {
   }
   
   //av_log_set_callback(&redirect_libav_logs);
-	
+  
   // At this point, we declare all API endpoints and configure 
   
   // Data source endpoints
@@ -207,14 +210,14 @@ int main (int argc, char ** argv) {
   // Streaming endpoint
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/stream/:stream_name", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_stream_media, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/stream/:stream_name/cover", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_stream_cover, (void*)config);
-	
+  
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/stream/", TALIESIN_CALLBACK_PRIORITY_AUTHENTICATION, &callback_taliesin_check_access, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/stream/", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_stream_get_list, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "PUT", config->api_prefix, "/stream/:stream_name/manage", TALIESIN_CALLBACK_PRIORITY_AUTHENTICATION, &callback_taliesin_check_access, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "PUT", config->api_prefix, "/stream/:stream_name/manage", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_stream_manage, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/stream/:stream_name/ws", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_stream_manage_ws, (void*)config);
-	
-	// Search endpoints
+  
+  // Search endpoints
   ulfius_add_endpoint_by_val(config->instance, "*", config->api_prefix, "/search/", TALIESIN_CALLBACK_PRIORITY_AUTHENTICATION, &callback_taliesin_check_access, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/search/", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_search, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "PUT", config->api_prefix, "/search/", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_advanced_search, (void*)config);
@@ -233,7 +236,29 @@ int main (int argc, char ** argv) {
   u_map_put(config->instance->default_headers, "Cache-Control", "no-store");
   u_map_put(config->instance->default_headers, "Pragma", "no-cache");
 
-  y_log_message(Y_LOG_LEVEL_INFO, "Start taliesin on port %d, prefix: %s, secure: %s", config->instance->port, config->api_prefix, config->use_secure_connection?"true":"false");
+  j_stream_list = db_stream_list(config);
+  if (check_result_value(j_stream_list, T_OK)) {
+    json_array_foreach(json_object_get(j_stream_list, "stream"), index, j_element) {
+      if (json_integer_value(json_object_get(j_element, "webradio"))) {
+        if (add_webradio_from_db_stream(config, j_element, &webradio) != T_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "Error adding webradio stream");
+        } else {
+          ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
+          detach_thread_webradio = pthread_detach(thread_webradio);
+          if (ret_thread_webradio || detach_thread_webradio) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio");
+          }
+        }
+      } else {
+        if (add_jukebox_from_db_stream(config, j_element) != T_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "Error adding jukebox stream");
+        }
+      }
+    }
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "Error getting startup stream lists");
+  }
+  json_decref(j_stream_list);
   
   if (config->use_secure_connection) {
     char * key_file = get_file_content(config->secure_connection_key_file);
@@ -250,18 +275,7 @@ int main (int argc, char ** argv) {
   }
   
   if (res == U_OK) {
-    // Load playlist as webradio
-    j_playlist_list = playlist_list_webradio_startup(config);
-    if (check_result_value(j_playlist_list, T_OK)) {
-      json_array_foreach(json_object_get(j_playlist_list, "playlist"), index, j_element) {
-        if (playlist_load_as_webradio(config, j_element) != T_OK) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "Error playlist_load_as_webradio");
-        }
-      }
-    } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "Error playlist_list_webradio_startup");
-    }
-    json_decref(j_playlist_list);
+    y_log_message(Y_LOG_LEVEL_INFO, "Start taliesin on port %d, prefix: %s, secure: %s", config->instance->port, config->api_prefix, config->use_secure_connection?"true":"false");
     // Wait until stop signal is broadcasted
     pthread_mutex_lock(&global_handler_close_lock);
     pthread_cond_wait(&global_handler_close_cond, &global_handler_close_lock);
@@ -285,18 +299,18 @@ int main (int argc, char ** argv) {
         y_log_message(Y_LOG_LEVEL_ERROR, "Error closing playlist");
       }
     }
-		for (i=0; i<config->nb_refresh_status; i++) {
-			config->refresh_status_list[i]->refresh_status = DATA_SOURCE_REFRESH_STATUS_STOP;
-			config->refresh_status_list[i]->index = 0;
-		}
-		pthread_mutex_lock(&config->refresh_lock);
-		pthread_cond_signal(&config->refresh_cond);
-		pthread_mutex_unlock(&config->refresh_lock);
-		while (config->nb_refresh_status) {
+    for (i=0; i<config->nb_refresh_status; i++) {
+      config->refresh_status_list[i]->refresh_status = DATA_SOURCE_REFRESH_STATUS_STOP;
+      config->refresh_status_list[i]->index = 0;
+    }
+    pthread_mutex_lock(&config->refresh_lock);
+    pthread_cond_signal(&config->refresh_cond);
+    pthread_mutex_unlock(&config->refresh_lock);
+    while (config->nb_refresh_status) {
       pthread_mutex_lock(&config->refresh_lock);
       pthread_cond_wait(&config->refresh_cond, &config->refresh_lock);
       pthread_mutex_unlock(&config->refresh_lock);
-		}
+    }
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "Error starting taliesin webservice");
     exit_server(&config, TALIESIN_ERROR);
@@ -733,79 +747,79 @@ int build_config_from_file(struct config_elements * config) {
   if (config->use_oauth2_authentication) {
     jwt = config_setting_get_member(root, "jwt");
     if (jwt != NULL) {
-			config_setting_lookup_bool(jwt, "use_rsa", &cur_use_rsa);
-			config_setting_lookup_bool(jwt, "use_ecdsa", &cur_use_ecdsa);
-			config_setting_lookup_bool(jwt, "use_sha", &cur_use_sha);
-			config_setting_lookup_int(jwt, "key_size", &cur_key_size);
-			if (cur_key_size == 256 || cur_key_size == 384 || cur_key_size == 512) {
-				if (cur_use_rsa) {
-					config_setting_lookup_string(jwt, "rsa_pub_file", &cur_rsa_pub_file);
-					if (cur_rsa_pub_file != NULL) {
-						config->glewlwyd_resource_config->jwt_decode_key = get_file_content(cur_rsa_pub_file);
-						if (cur_key_size == 256) {
-							config->glewlwyd_resource_config->jwt_alg = JWT_ALG_RS256;
-						} else if (cur_key_size == 384) {
-							config->glewlwyd_resource_config->jwt_alg = JWT_ALG_RS384;
-						} else if (cur_key_size == 512) {
-							config->glewlwyd_resource_config->jwt_alg = JWT_ALG_RS512;
-						}
-						if (config->glewlwyd_resource_config->jwt_decode_key == NULL) {
-							config_destroy(&cfg);
-							fprintf(stderr, "Error, rsa_pub_file content incorrect\n");
-							return 0;
-						}
-					} else {
-						config_destroy(&cfg);
-						fprintf(stderr, "Error, rsa_pub_file incorrect\n");
-						return 0;
-					}
-				} else if (cur_use_ecdsa) {
-					config_setting_lookup_string(jwt, "ecdsa_pub_file", &cur_ecdsa_pub_file);
-					if (cur_ecdsa_pub_file != NULL) {
-						config->glewlwyd_resource_config->jwt_decode_key = get_file_content(cur_ecdsa_pub_file);
-						if (cur_key_size == 256) {
-							config->glewlwyd_resource_config->jwt_alg = JWT_ALG_ES256;
-						} else if (cur_key_size == 384) {
-							config->glewlwyd_resource_config->jwt_alg = JWT_ALG_ES384;
-						} else if (cur_key_size == 512) {
-							config->glewlwyd_resource_config->jwt_alg = JWT_ALG_ES512;
-						}
-						if (config->glewlwyd_resource_config->jwt_decode_key == NULL) {
-							config_destroy(&cfg);
-							fprintf(stderr, "Error, ecdsa_pub_file content incorrect\n");
-							return 0;
-						}
-					} else {
-						config_destroy(&cfg);
-						fprintf(stderr, "Error, ecdsa_pub_file incorrect\n");
-						return 0;
-					}
-				} else if (cur_use_sha) {
-					config_setting_lookup_string(jwt, "sha_secret", &cur_sha_secret);
-					if (cur_sha_secret != NULL) {
-						config->glewlwyd_resource_config->jwt_decode_key = o_strdup(cur_sha_secret);
-						if (cur_key_size == 256) {
-							config->glewlwyd_resource_config->jwt_alg = JWT_ALG_HS256;
-						} else if (cur_key_size == 384) {
-							config->glewlwyd_resource_config->jwt_alg = JWT_ALG_HS384;
-						} else if (cur_key_size == 512) {
-							config->glewlwyd_resource_config->jwt_alg = JWT_ALG_HS512;
-						}
-					} else {
-						config_destroy(&cfg);
-						fprintf(stderr, "Error, sha_secret incorrect\n");
-						return 0;
-					}
-				} else {
-					config_destroy(&cfg);
-					fprintf(stderr, "Error, no jwt algorithm selected\n");
-					return 0;
-				}
-			} else {
-				config_destroy(&cfg);
-				fprintf(stderr, "Error, key_size incorrect, values available are 256, 384 or 512\n");
-				return 0;
-			}
+      config_setting_lookup_bool(jwt, "use_rsa", &cur_use_rsa);
+      config_setting_lookup_bool(jwt, "use_ecdsa", &cur_use_ecdsa);
+      config_setting_lookup_bool(jwt, "use_sha", &cur_use_sha);
+      config_setting_lookup_int(jwt, "key_size", &cur_key_size);
+      if (cur_key_size == 256 || cur_key_size == 384 || cur_key_size == 512) {
+        if (cur_use_rsa) {
+          config_setting_lookup_string(jwt, "rsa_pub_file", &cur_rsa_pub_file);
+          if (cur_rsa_pub_file != NULL) {
+            config->glewlwyd_resource_config->jwt_decode_key = get_file_content(cur_rsa_pub_file);
+            if (cur_key_size == 256) {
+              config->glewlwyd_resource_config->jwt_alg = JWT_ALG_RS256;
+            } else if (cur_key_size == 384) {
+              config->glewlwyd_resource_config->jwt_alg = JWT_ALG_RS384;
+            } else if (cur_key_size == 512) {
+              config->glewlwyd_resource_config->jwt_alg = JWT_ALG_RS512;
+            }
+            if (config->glewlwyd_resource_config->jwt_decode_key == NULL) {
+              config_destroy(&cfg);
+              fprintf(stderr, "Error, rsa_pub_file content incorrect\n");
+              return 0;
+            }
+          } else {
+            config_destroy(&cfg);
+            fprintf(stderr, "Error, rsa_pub_file incorrect\n");
+            return 0;
+          }
+        } else if (cur_use_ecdsa) {
+          config_setting_lookup_string(jwt, "ecdsa_pub_file", &cur_ecdsa_pub_file);
+          if (cur_ecdsa_pub_file != NULL) {
+            config->glewlwyd_resource_config->jwt_decode_key = get_file_content(cur_ecdsa_pub_file);
+            if (cur_key_size == 256) {
+              config->glewlwyd_resource_config->jwt_alg = JWT_ALG_ES256;
+            } else if (cur_key_size == 384) {
+              config->glewlwyd_resource_config->jwt_alg = JWT_ALG_ES384;
+            } else if (cur_key_size == 512) {
+              config->glewlwyd_resource_config->jwt_alg = JWT_ALG_ES512;
+            }
+            if (config->glewlwyd_resource_config->jwt_decode_key == NULL) {
+              config_destroy(&cfg);
+              fprintf(stderr, "Error, ecdsa_pub_file content incorrect\n");
+              return 0;
+            }
+          } else {
+            config_destroy(&cfg);
+            fprintf(stderr, "Error, ecdsa_pub_file incorrect\n");
+            return 0;
+          }
+        } else if (cur_use_sha) {
+          config_setting_lookup_string(jwt, "sha_secret", &cur_sha_secret);
+          if (cur_sha_secret != NULL) {
+            config->glewlwyd_resource_config->jwt_decode_key = o_strdup(cur_sha_secret);
+            if (cur_key_size == 256) {
+              config->glewlwyd_resource_config->jwt_alg = JWT_ALG_HS256;
+            } else if (cur_key_size == 384) {
+              config->glewlwyd_resource_config->jwt_alg = JWT_ALG_HS384;
+            } else if (cur_key_size == 512) {
+              config->glewlwyd_resource_config->jwt_alg = JWT_ALG_HS512;
+            }
+          } else {
+            config_destroy(&cfg);
+            fprintf(stderr, "Error, sha_secret incorrect\n");
+            return 0;
+          }
+        } else {
+          config_destroy(&cfg);
+          fprintf(stderr, "Error, no jwt algorithm selected\n");
+          return 0;
+        }
+      } else {
+        config_destroy(&cfg);
+        fprintf(stderr, "Error, key_size incorrect, values available are 256, 384 or 512\n");
+        return 0;
+      }
     }
   }
   

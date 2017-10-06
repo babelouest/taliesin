@@ -40,8 +40,8 @@ json_t * playlist_search(struct config_elements * config, const char * username_
                           "raw",
                           "value",
                           clause_where,
-											"limit",
-											TALIESIN_MEDIA_LIMIT_DEFAULT);
+                      "limit",
+                      TALIESIN_MEDIA_LIMIT_DEFAULT);
   o_free(clause_where);
   res = h_select(config->conn, j_query, &j_result, NULL);
   json_decref(j_query);
@@ -171,9 +171,9 @@ json_t * media_simple_search(struct config_elements * config, const char * usern
       if (search_category == TALIESIN_SEARCH_CATEGORY_NONE || search_category == TALIESIN_SEARCH_CATEGORY_FOLDER) {
         j_result = folder_search(config, username_escape, search_pattern_escape);
         if (check_result_value(j_result, T_OK)) {
-					if (json_array_size(json_object_get(j_result, "folder")) > 0) {
-						json_object_set(json_object_get(j_return, "search"), "folder", json_object_get(j_result, "folder"));
-					}
+          if (json_array_size(json_object_get(j_result, "folder")) > 0) {
+            json_object_set(json_object_get(j_return, "search"), "folder", json_object_get(j_result, "folder"));
+          }
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "media_simple_search - Error folder_search");
         }
@@ -188,9 +188,9 @@ json_t * media_simple_search(struct config_elements * config, const char * usern
           search_category == TALIESIN_SEARCH_CATEGORY_GENRE) {
         j_result = media_search(config, username_escape, search_pattern_escape, search_category);
         if (check_result_value(j_result, T_OK)) {
-					if (json_array_size(json_object_get(j_result, "media")) > 0) {
-						json_object_set(json_object_get(j_return, "search"), "media", json_object_get(j_result, "media"));
-					}
+          if (json_array_size(json_object_get(j_result, "media")) > 0) {
+            json_object_set(json_object_get(j_return, "search"), "media", json_object_get(j_result, "media"));
+          }
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "media_simple_search - Error media_search");
         }
@@ -217,21 +217,21 @@ json_t * is_valid_media_advanced_search(struct config_elements * config, const c
     if (search_criteria == NULL || !json_is_object(search_criteria)) {
       json_array_append_new(j_return, json_pack("{ss}", "search_criteria", "search_criteria must be a JSON object"));
     } else {
-			if (json_object_get(search_criteria, "query") != NULL && (!json_is_string(json_object_get(search_criteria, "query")) || json_string_length(json_object_get(search_criteria, "query")) == 0)) {
-				json_array_append_new(j_return, json_pack("{ss}", "query", "query is optional and must be a non null JSON string"));
-			}
-			if (json_object_get(search_criteria, "type") != NULL && (!json_is_string(json_object_get(search_criteria, "type")) || 
-					(
-					o_strcmp(json_string_value(json_object_get(search_criteria, "type")), "audio") != 0 && 
-					o_strcmp(json_string_value(json_object_get(search_criteria, "type")), "video") != 0 && 
-					o_strcmp(json_string_value(json_object_get(search_criteria, "type")), "image") != 0 && 
-					o_strcmp(json_string_value(json_object_get(search_criteria, "type")), "subtitle") != 0 && 
-					o_strcmp(json_string_value(json_object_get(search_criteria, "type")), "other") != 0 && 
-					o_strcmp(json_string_value(json_object_get(search_criteria, "type")), "unknown") != 0
-					)
-					)) {
-				json_array_append_new(j_return, json_pack("{ss}", "type", "type is optional and must be a JSON string with one of the following values: 'audio', 'video', 'image', 'subtitle', 'other', 'unknown'"));
-			}
+      if (json_object_get(search_criteria, "query") != NULL && (!json_is_string(json_object_get(search_criteria, "query")) || json_string_length(json_object_get(search_criteria, "query")) == 0)) {
+        json_array_append_new(j_return, json_pack("{ss}", "query", "query is optional and must be a non null JSON string"));
+      }
+      if (json_object_get(search_criteria, "type") != NULL && (!json_is_string(json_object_get(search_criteria, "type")) || 
+          (
+          o_strcmp(json_string_value(json_object_get(search_criteria, "type")), "audio") != 0 && 
+          o_strcmp(json_string_value(json_object_get(search_criteria, "type")), "video") != 0 && 
+          o_strcmp(json_string_value(json_object_get(search_criteria, "type")), "image") != 0 && 
+          o_strcmp(json_string_value(json_object_get(search_criteria, "type")), "subtitle") != 0 && 
+          o_strcmp(json_string_value(json_object_get(search_criteria, "type")), "other") != 0 && 
+          o_strcmp(json_string_value(json_object_get(search_criteria, "type")), "unknown") != 0
+          )
+          )) {
+        json_array_append_new(j_return, json_pack("{ss}", "type", "type is optional and must be a JSON string with one of the following values: 'audio', 'video', 'image', 'subtitle', 'other', 'unknown'"));
+      }
       if (json_object_get(search_criteria, "limit") != NULL && (!json_is_integer(json_object_get(search_criteria, "limit")) || json_integer_value(json_object_get(search_criteria, "limit")) < 0)) {
         json_array_append_new(j_return, json_pack("{ss}", "limit", "limit is optional and must be a positive or zero integer"));
       }
@@ -241,18 +241,18 @@ json_t * is_valid_media_advanced_search(struct config_elements * config, const c
       if (json_object_get(search_criteria, "data_source") != NULL && !json_is_array(json_object_get(search_criteria, "data_source"))) {
         json_array_append_new(j_return, json_pack("{ss}", "data_source", "data_source is optional and must be a JSON array"));
       } else {
-				json_array_foreach(json_object_get(search_criteria, "data_source"), index, j_element) {
-					if (!json_is_string(j_element)) {
-						json_array_append_new(j_return, json_pack("{ss}", "data_source", "data_source element must be a JSON string"));
-					} else {
-						j_result = data_source_get(config, username, json_string_value(j_element), 1);
-						if (check_result_value(j_result, T_ERROR_NOT_FOUND)) {
-							json_array_append_new(j_return, json_pack("{ss}", "data_source", "data_source does not exist"));
-						}
-						json_decref(j_result);
-					}
-				}
-			}
+        json_array_foreach(json_object_get(search_criteria, "data_source"), index, j_element) {
+          if (!json_is_string(j_element)) {
+            json_array_append_new(j_return, json_pack("{ss}", "data_source", "data_source element must be a JSON string"));
+          } else {
+            j_result = data_source_get(config, username, json_string_value(j_element), 1);
+            if (check_result_value(j_result, T_ERROR_NOT_FOUND)) {
+              json_array_append_new(j_return, json_pack("{ss}", "data_source", "data_source does not exist"));
+            }
+            json_decref(j_result);
+          }
+        }
+      }
       if (json_object_get(search_criteria, "tags") != NULL && !json_is_array(json_object_get(search_criteria, "tags"))) {
         json_array_append_new(j_return, json_pack("{ss}", "tags", "tags is optional and must be a JSON array"));
       } else {
@@ -354,7 +354,7 @@ json_t * is_valid_media_advanced_search(struct config_elements * config, const c
       }
     }
   } else {
-		y_log_message(Y_LOG_LEVEL_ERROR, "media_category_list - Error allocating resources for j_return");
+    y_log_message(Y_LOG_LEVEL_ERROR, "is_valid_media_advanced_search - Error allocating resources for j_return");
   }
   return j_return;
 }
@@ -371,43 +371,43 @@ json_t * media_advanced_search(struct config_elements * config, const char * use
   int res;
   size_t index;
   
-	escape = h_escape_string(config->conn, username);
+  escape = h_escape_string(config->conn, username);
   query = msprintf("SELECT `"TALIESIN_TABLE_MEDIA"`.`tm_type` AS `type`, `"TALIESIN_TABLE_MEDIA"`.`tm_name` AS `name`, `"TALIESIN_TABLE_MEDIA"`.`tm_path` AS `path`, `"TALIESIN_TABLE_DATA_SOURCE"`.`tds_name` AS `data_source`, "
-									 "(SELECT COUNT(`tmh_id`) FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE `"TALIESIN_TABLE_MEDIA_HISTORY"`.`tm_id`=`"TALIESIN_TABLE_MEDIA"`.`tm_id`) AS `nb_play`,"
-									 "(SELECT %s FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE `"TALIESIN_TABLE_MEDIA_HISTORY"`.`tm_id`=`"TALIESIN_TABLE_MEDIA"`.`tm_id` ORDER BY `tmh_datestamp` DESC LIMIT 1) AS `last_played` "
+                   "(SELECT COUNT(`tmh_id`) FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE `"TALIESIN_TABLE_MEDIA_HISTORY"`.`tm_id`=`"TALIESIN_TABLE_MEDIA"`.`tm_id`) AS `nb_play`,"
+                   "(SELECT %s FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE `"TALIESIN_TABLE_MEDIA_HISTORY"`.`tm_id`=`"TALIESIN_TABLE_MEDIA"`.`tm_id` ORDER BY `tmh_datestamp` DESC LIMIT 1) AS `last_played` "
                    "FROM `"TALIESIN_TABLE_MEDIA"`, `"TALIESIN_TABLE_DATA_SOURCE"` "
                    "WHERE `"TALIESIN_TABLE_MEDIA"`.`tds_id`=`"TALIESIN_TABLE_DATA_SOURCE"`.`tds_id` "
-									 "AND (`"TALIESIN_TABLE_DATA_SOURCE"`.`tds_username` IS NULL OR `"TALIESIN_TABLE_DATA_SOURCE"`.`tds_username`='%s') AND `"TALIESIN_TABLE_DATA_SOURCE"`.`tds_refresh_status`=%d",
-									 (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), escape, DATA_SOURCE_REFRESH_STATUS_NOT_RUNNING);
+                   "AND (`"TALIESIN_TABLE_DATA_SOURCE"`.`tds_username` IS NULL OR `"TALIESIN_TABLE_DATA_SOURCE"`.`tds_username`='%s') AND `"TALIESIN_TABLE_DATA_SOURCE"`.`tds_refresh_status`=%d",
+                   (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), escape, DATA_SOURCE_REFRESH_STATUS_NOT_RUNNING);
   o_free(escape);
-	
-	if (json_object_get(search_criteria, "data_source") != NULL) {
-		json_array_foreach(json_object_get(search_criteria, "data_source"), index, j_element) {
-			escape = h_escape_string(config->conn, json_string_value(j_element));
-			tmp = msprintf("%s AND `"TALIESIN_TABLE_DATA_SOURCE"`.`tds_name`='%s'", query, escape);
-			o_free(escape);
-			o_free(query);
-			query = tmp;
-		}
-	}
-	
-	if (json_object_get(search_criteria, "query") != NULL) {
-		escape = h_escape_string(config->conn, json_string_value(json_object_get(search_criteria, "query")));
-		tmp = msprintf("%s AND (`"TALIESIN_TABLE_MEDIA"`.`tm_name` LIKE '%%%s%%' OR `"TALIESIN_TABLE_MEDIA"`.`tm_path` LIKE '%%%s%%' OR `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_META_DATA"` WHERE `tmd_value` LIKE '%%%s%%'))", query, escape, escape, escape);
-		o_free(escape);
-		o_free(query);
-		query = tmp;
-	}
-	
-	if (json_object_get(search_criteria, "type") != NULL) {
-		escape = h_escape_string(config->conn, json_string_value(json_object_get(search_criteria, "type")));
-		tmp = msprintf("%s AND `"TALIESIN_TABLE_MEDIA"`.`tm_name` LIKE '%s'", query, escape);
-		o_free(escape);
-		o_free(query);
-		query = tmp;
-	}
-	
-	if (json_object_get(search_criteria, "tags") != NULL) {
+  
+  if (json_object_get(search_criteria, "data_source") != NULL) {
+    json_array_foreach(json_object_get(search_criteria, "data_source"), index, j_element) {
+      escape = h_escape_string(config->conn, json_string_value(j_element));
+      tmp = msprintf("%s AND `"TALIESIN_TABLE_DATA_SOURCE"`.`tds_name`='%s'", query, escape);
+      o_free(escape);
+      o_free(query);
+      query = tmp;
+    }
+  }
+  
+  if (json_object_get(search_criteria, "query") != NULL) {
+    escape = h_escape_string(config->conn, json_string_value(json_object_get(search_criteria, "query")));
+    tmp = msprintf("%s AND (`"TALIESIN_TABLE_MEDIA"`.`tm_name` LIKE '%%%s%%' OR `"TALIESIN_TABLE_MEDIA"`.`tm_path` LIKE '%%%s%%' OR `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_META_DATA"` WHERE `tmd_value` LIKE '%%%s%%'))", query, escape, escape, escape);
+    o_free(escape);
+    o_free(query);
+    query = tmp;
+  }
+  
+  if (json_object_get(search_criteria, "type") != NULL) {
+    escape = h_escape_string(config->conn, json_string_value(json_object_get(search_criteria, "type")));
+    tmp = msprintf("%s AND `"TALIESIN_TABLE_MEDIA"`.`tm_name` LIKE '%s'", query, escape);
+    o_free(escape);
+    o_free(query);
+    query = tmp;
+  }
+  
+  if (json_object_get(search_criteria, "tags") != NULL) {
     json_array_foreach(json_object_get(search_criteria, "tags"), index, j_element) {
       if (0 == o_strcmp(json_string_value(json_object_get(j_element, "operator")), "equals")) {
         escape_key = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "key")));
@@ -726,22 +726,22 @@ json_t * media_advanced_search(struct config_elements * config, const char * use
   }
   
   if (json_object_get(search_criteria, "limit") != NULL) {
-		if (json_integer_value(json_object_get(search_criteria, "limit")) > 0) {
-			tmp = msprintf("%s LIMIT %"JSON_INTEGER_FORMAT, query, json_integer_value(json_object_get(search_criteria, "limit")));
-			o_free(query);
-			query = tmp;
-		}
+    if (json_integer_value(json_object_get(search_criteria, "limit")) > 0) {
+      tmp = msprintf("%s LIMIT %"JSON_INTEGER_FORMAT, query, json_integer_value(json_object_get(search_criteria, "limit")));
+      o_free(query);
+      query = tmp;
+    }
   } else {
-		tmp = msprintf("%s LIMIT %d", query, TALIESIN_MEDIA_LIMIT_DEFAULT);
-		o_free(query);
-		query = tmp;
-	}
+    tmp = msprintf("%s LIMIT %d", query, TALIESIN_MEDIA_LIMIT_DEFAULT);
+    o_free(query);
+    query = tmp;
+  }
   
   if (json_object_get(search_criteria, "offset") != NULL) {
     tmp = msprintf("%s OFFSET %"JSON_INTEGER_FORMAT, query, json_integer_value(json_object_get(search_criteria, "offset")));
     o_free(query);
     query = tmp;
-	}
+  }
 
   res = h_execute_query_json(config->conn, query, &j_result);
   o_free(query);

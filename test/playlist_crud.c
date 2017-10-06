@@ -46,14 +46,11 @@ END_TEST
 START_TEST(test_create_playlist_ok)
 {
   char * url = msprintf("%s/playlist", TALIESIN_SERVER_URI);
-  json_t * j_playlist = json_pack("{ss ss ss ss s{ss ss} s[{ssss}{ssss}]}",
+  json_t * j_playlist = json_pack("{ss ss ss ss s[{ssss}{ssss}]}",
 																	"name", PLAYLIST_USER_VALID,
 																	"description", "description for "PLAYLIST_USER_VALID,
 																	"scope", "me",
 																	"cover", IMAGE_BASE64,
-                                  "webradio_startup",
-                                    "status", "no random",
-                                    "format", "vorbis",
 																	"media",
 																		"data_source", DATA_SOURCE_VALID,
 																		"path", "/fss/free-software-song.ogg",
@@ -168,28 +165,6 @@ START_TEST(test_create_playlist_error_input_name_exist)
 }
 END_TEST
 
-START_TEST(test_create_playlist_error_webradio_startup)
-{
-  char * url = msprintf("%s/playlist", TALIESIN_SERVER_URI);
-  json_t * j_playlist = json_pack("{sssssssss[{ssss}{ssss}]}",
-																	"name", PLAYLIST_USER_INVALID,
-																	"description", "description for "PLAYLIST_USER_VALID,
-																	"scope", "all",
-																	"cover", IMAGE_BASE64,
-                                  "webradio_startup", "invalid",
-																	"media",
-																		"data_source", DATA_SOURCE_VALID,
-																		"path", "/fss/free-software-song.ogg",
-																		"data_source", DATA_SOURCE_VALID,
-																		"path", "/fss/FreeSWSong.ogg");
-	
-  int res = run_simple_authenticated_test(&user_req, "POST", url, j_playlist, NULL, 400, NULL, NULL, NULL);
-  free(url);
-	json_decref(j_playlist);
-	ck_assert_int_eq(res, 1);
-}
-END_TEST
-
 START_TEST(test_create_playlist_adm_ok)
 {
   char * url = msprintf("%s/playlist", TALIESIN_SERVER_URI);
@@ -213,17 +188,11 @@ END_TEST
 START_TEST(test_get_playlist_ok)
 {
   char * url = msprintf("%s/playlist/%s", TALIESIN_SERVER_URI, PLAYLIST_USER_VALID);
-  json_t * j_playlist = json_pack("{sssssssis{sssssisisi}s[{ssss}{ssss}]s[]}",
+  json_t * j_playlist = json_pack("{sssssssis[{ssss}{ssss}]s[]}",
 																	"name", PLAYLIST_USER_VALID,
 																	"description", "description for "PLAYLIST_USER_VALID,
 																	"scope", "me",
                                   "elements", 2,
-                                  "webradio_startup",
-                                    "status", "no random",
-                                    "format", "vorbis",
-                                    "channels", 2,
-                                    "sample_rate", 44100,
-                                    "bitrate", 128000,
 																	"media",
 																		"data_source", DATA_SOURCE_VALID,
 																		"path", "/fss/free-software-song.ogg",
@@ -271,12 +240,8 @@ END_TEST
 START_TEST(test_set_playlist_ok)
 {
   char * url = msprintf("%s/playlist/%s", TALIESIN_SERVER_URI, PLAYLIST_USER_VALID);
-  json_t * j_playlist = json_pack("{sss{sssssi}s[{ssss}]}",
+  json_t * j_playlist = json_pack("{sss[{ssss}]}",
 																	"description", "new description for "PLAYLIST_USER_VALID,
-                                  "webradio_startup",
-                                    "status", "no random",
-                                    "format", "vorbis",
-                                    "channels", 1,
 																	"media",
 																		"data_source", DATA_SOURCE_VALID,
 																		"path", "/fss/FreeSWSong.ogg");
@@ -466,7 +431,6 @@ static Suite *taliesin_suite(void)
 	tcase_add_test(tc_core, test_create_playlist_error_input_description_type);
 	tcase_add_test(tc_core, test_create_playlist_error_input_media_empty);
 	tcase_add_test(tc_core, test_create_playlist_error_input_name_exist);
-	tcase_add_test(tc_core, test_create_playlist_error_webradio_startup);
 	tcase_add_test(tc_core, test_create_playlist_adm_ok);
 	tcase_add_test(tc_core, test_get_playlist_ok);
 	tcase_add_test(tc_core, test_get_playlist_not_found);

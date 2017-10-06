@@ -247,7 +247,7 @@ int read_decode_convert_and_store(AVAudioFifo *fifo,
   uint8_t ** converted_input_samples = NULL;
   int data_present, out_linesize, out_samples;
   int ret = AVERROR_EXIT;
-	
+  
   if (!init_input_frame(&input_frame)) {
     if (!decode_audio_frame(input_frame, input_format_context, input_codec_context, &data_present, finished)) {
       if (*finished && !data_present) {
@@ -317,7 +317,7 @@ int init_output_frame(AVFrame **frame,
 int my_encode(AVCodecContext *output_codec_context, AVPacket *output_packet, AVFrame *frame, int * data_present) {
   int ret;
 
-	//y_log_message(Y_LOG_LEVEL_DEBUG, "avcodec_send_frame for %p %p", output_codec_context, frame->data);
+  //y_log_message(Y_LOG_LEVEL_DEBUG, "avcodec_send_frame for %p %p", output_codec_context, frame->data);
   ret = avcodec_send_frame(output_codec_context, frame);
   if (ret < 0) {
     return ret;
@@ -339,14 +339,14 @@ int my_encode(AVCodecContext *output_codec_context, AVPacket *output_packet, AVF
 
 int encode_audio_frame_and_return(AVFrame * frame,
                                   AVCodecContext * output_codec_context,
-																	AVFormatContext * output_format_context,
+                                  AVFormatContext * output_format_context,
                                   int64_t * pts,
                                   int * data_present) {
   int error;
   AVPacket output_packet;
   init_packet(&output_packet);
   
-	//y_log_message(Y_LOG_LEVEL_DEBUG, "inside encode_audio_frame_and_return");
+  //y_log_message(Y_LOG_LEVEL_DEBUG, "inside encode_audio_frame_and_return");
   if (frame) {
     frame->pts = *pts;
     *pts += frame->nb_samples;
@@ -383,7 +383,7 @@ int encode_audio_frame_and_return(AVFrame * frame,
 
 int load_encode_and_return(AVAudioFifo * fifo,
                            AVCodecContext * output_codec_context,
-													 AVFormatContext * output_format_context,
+                           AVFormatContext * output_format_context,
                            int64_t * pts,
                            int * data_present) {
   AVFrame *output_frame;
@@ -405,12 +405,12 @@ int load_encode_and_return(AVAudioFifo * fifo,
 }
 
 static int write_packet_webradio(void *opaque, uint8_t *buf, int buf_size) {
-	struct _audio_stream * audio_stream = (struct _audio_stream *)opaque;
+  struct _audio_stream * audio_stream = (struct _audio_stream *)opaque;
 
-	if (audio_stream_add_data(audio_stream, buf, buf_size)) {
-		y_log_message(Y_LOG_LEVEL_ERROR, "Error adding data to audio_stream");
-	}
-	return buf_size;
+  if (audio_stream_add_data(audio_stream, buf, buf_size)) {
+    y_log_message(Y_LOG_LEVEL_ERROR, "Error adding data to audio_stream");
+  }
+  return buf_size;
 }
 
 int webradio_open_output_buffer(struct _audio_stream * audio_stream) {
@@ -510,117 +510,117 @@ int webradio_open_output_buffer(struct _audio_stream * audio_stream) {
 }
 
 struct _decoded_image {
-	size_t context_size;
-	size_t size;
-	unsigned char * buffer;
+  size_t context_size;
+  size_t size;
+  unsigned char * buffer;
 };
 
 static int read_image_packet(void * opaque, uint8_t * buf, int buf_size) {
-	struct _decoded_image * image = (struct _decoded_image *)opaque;
-	
-	buf_size = FFMIN(buf_size, (image->size-image->context_size));
-	if (buf_size)
-	memcpy(buf, (image->buffer + image->context_size), buf_size);
-	image->context_size += buf_size;
-	
-	return buf_size;
+  struct _decoded_image * image = (struct _decoded_image *)opaque;
+  
+  buf_size = FFMIN(buf_size, (image->size-image->context_size));
+  if (buf_size)
+  memcpy(buf, (image->buffer + image->context_size), buf_size);
+  image->context_size += buf_size;
+  
+  return buf_size;
 }
 
 int open_input_buffer(const unsigned char * base64_buffer, AVFormatContext **image_format_context, AVCodecContext **image_codec_context, int * codec_index, int type) {
   AVIOContext    *          input_io_context = NULL;
-	AVCodecContext *                     avctx = NULL;
+  AVCodecContext *                     avctx = NULL;
   AVCodec        *               input_codec = NULL;
   uint8_t        *           avio_ctx_buffer = NULL;
   size_t                avio_ctx_buffer_size = 4096;
-	struct _decoded_image image;
-	int                   error, my_codec_index;
-	int ret = T_OK;
+  struct _decoded_image image;
+  int                   error, my_codec_index;
+  int ret = T_OK;
 
-	image.context_size = 0;
-	if ((image.buffer = o_malloc(strlen((const char *)base64_buffer))) == NULL) {
-		y_log_message(Y_LOG_LEVEL_ERROR, "get_image_from_buffer - Error malloc image.buffer");
-		ret = T_ERROR_MEMORY;
-	} else if (!o_base64_decode(base64_buffer, strlen((const char *)base64_buffer), image.buffer, &image.size)) {
-		ret = T_ERROR;
+  image.context_size = 0;
+  if ((image.buffer = o_malloc(strlen((const char *)base64_buffer))) == NULL) {
+    y_log_message(Y_LOG_LEVEL_ERROR, "get_image_from_buffer - Error malloc image.buffer");
+    ret = T_ERROR_MEMORY;
+  } else if (!o_base64_decode(base64_buffer, strlen((const char *)base64_buffer), image.buffer, &image.size)) {
+    ret = T_ERROR;
   } else if ((avio_ctx_buffer = av_malloc(avio_ctx_buffer_size)) == NULL) {
-		y_log_message(Y_LOG_LEVEL_ERROR, "get_image_from_buffer - Error malloc avio_ctx_buffer");
-		ret = T_ERROR_MEMORY;
-	} else if ((input_io_context = avio_alloc_context(avio_ctx_buffer, avio_ctx_buffer_size, 0, &image, &read_image_packet, NULL, NULL)) == NULL) {
-		y_log_message(Y_LOG_LEVEL_ERROR, "get_image_from_buffer - Error avio_alloc_context");
-		ret = T_ERROR_MEMORY;
-	} else if (((*image_format_context) = avformat_alloc_context()) == NULL) {
-		y_log_message(Y_LOG_LEVEL_ERROR, "get_image_from_buffer - Error avio_alloc_context");
-		ret = T_ERROR_MEMORY;
-	} else {
-		// Set pb to the input_io_context that will read the buffer from memory instead of a file
-		(*image_format_context)->pb = input_io_context;
-		
-		/* Open the input file to read from it. */
-		if ((error = avformat_open_input(image_format_context, NULL, NULL, NULL)) < 0) {
-			y_log_message(Y_LOG_LEVEL_ERROR, "Could not open format (error '%s')", get_error_text(error));
-			ret = T_ERROR;
-		} else if ((error = avformat_find_stream_info(*image_format_context, NULL)) < 0) {
-			y_log_message(Y_LOG_LEVEL_ERROR, "Could not open find stream info (error '%s')", get_error_text(error));
-			ret = T_ERROR;
-		} else {
-			if ((*image_format_context)->nb_streams != 1) {
-				my_codec_index = av_find_best_stream((*image_format_context), type, -1, -1, &input_codec, 0);
-			} else {
-				my_codec_index = 0;
-				input_codec = avcodec_find_decoder((*image_format_context)->streams[my_codec_index]->codecpar->codec_id);
-			}
-			
-			/* Find a decoder for the audio stream. */
-			if (input_codec == NULL) {
-				y_log_message(Y_LOG_LEVEL_ERROR, "Could not find input codec");
-				ret = T_ERROR;
-			} else if ((avctx = avcodec_alloc_context3(input_codec)) == NULL) {
-				y_log_message(Y_LOG_LEVEL_ERROR, "Could not allocate a decoding context");
-				ret = T_ERROR;
-			} else if ((avcodec_parameters_to_context(avctx, (*image_format_context)->streams[my_codec_index]->codecpar)) < 0) {
-				avcodec_free_context(&avctx);
-				ret = T_ERROR;
-			} else if ((error = avcodec_open2(avctx, input_codec, NULL)) < 0) {
-				y_log_message(Y_LOG_LEVEL_ERROR, "Could not open input codec (error '%s')", get_error_text(error));
-				avcodec_free_context(&avctx);
-				ret = T_ERROR;
-			}
-			if (codec_index != NULL) {
-				*codec_index = my_codec_index;
-			}
-			/* Save the decoder context for easier access later. */
-			*image_codec_context = avctx;
-			
-		}
-	}
-	o_free(image.buffer);
-	if (ret != T_OK) {
-		if (*image_codec_context) {
-			avcodec_flush_buffers(*image_codec_context);
-			avcodec_close(*image_codec_context);
-			avcodec_free_context(image_codec_context);
-			*image_codec_context = NULL;
-		}
-		if (*image_format_context) {
-			avio_flush((*image_format_context)->pb);
-			av_free((*image_format_context)->pb->buffer);
-			(*image_format_context)->pb->buffer = NULL;
-			av_free((*image_format_context)->pb);
-			(*image_format_context)->pb = NULL;
-			avformat_close_input(image_format_context);
-			*image_format_context = NULL;
-		}
-	}
-	return ret;
+    y_log_message(Y_LOG_LEVEL_ERROR, "get_image_from_buffer - Error malloc avio_ctx_buffer");
+    ret = T_ERROR_MEMORY;
+  } else if ((input_io_context = avio_alloc_context(avio_ctx_buffer, avio_ctx_buffer_size, 0, &image, &read_image_packet, NULL, NULL)) == NULL) {
+    y_log_message(Y_LOG_LEVEL_ERROR, "get_image_from_buffer - Error avio_alloc_context");
+    ret = T_ERROR_MEMORY;
+  } else if (((*image_format_context) = avformat_alloc_context()) == NULL) {
+    y_log_message(Y_LOG_LEVEL_ERROR, "get_image_from_buffer - Error avio_alloc_context");
+    ret = T_ERROR_MEMORY;
+  } else {
+    // Set pb to the input_io_context that will read the buffer from memory instead of a file
+    (*image_format_context)->pb = input_io_context;
+    
+    /* Open the input file to read from it. */
+    if ((error = avformat_open_input(image_format_context, NULL, NULL, NULL)) < 0) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "Could not open format (error '%s')", get_error_text(error));
+      ret = T_ERROR;
+    } else if ((error = avformat_find_stream_info(*image_format_context, NULL)) < 0) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "Could not open find stream info (error '%s')", get_error_text(error));
+      ret = T_ERROR;
+    } else {
+      if ((*image_format_context)->nb_streams != 1) {
+        my_codec_index = av_find_best_stream((*image_format_context), type, -1, -1, &input_codec, 0);
+      } else {
+        my_codec_index = 0;
+        input_codec = avcodec_find_decoder((*image_format_context)->streams[my_codec_index]->codecpar->codec_id);
+      }
+      
+      /* Find a decoder for the audio stream. */
+      if (input_codec == NULL) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "Could not find input codec");
+        ret = T_ERROR;
+      } else if ((avctx = avcodec_alloc_context3(input_codec)) == NULL) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "Could not allocate a decoding context");
+        ret = T_ERROR;
+      } else if ((avcodec_parameters_to_context(avctx, (*image_format_context)->streams[my_codec_index]->codecpar)) < 0) {
+        avcodec_free_context(&avctx);
+        ret = T_ERROR;
+      } else if ((error = avcodec_open2(avctx, input_codec, NULL)) < 0) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "Could not open input codec (error '%s')", get_error_text(error));
+        avcodec_free_context(&avctx);
+        ret = T_ERROR;
+      }
+      if (codec_index != NULL) {
+        *codec_index = my_codec_index;
+      }
+      /* Save the decoder context for easier access later. */
+      *image_codec_context = avctx;
+      
+    }
+  }
+  o_free(image.buffer);
+  if (ret != T_OK) {
+    if (*image_codec_context) {
+      avcodec_flush_buffers(*image_codec_context);
+      avcodec_close(*image_codec_context);
+      avcodec_free_context(image_codec_context);
+      *image_codec_context = NULL;
+    }
+    if (*image_format_context) {
+      avio_flush((*image_format_context)->pb);
+      av_free((*image_format_context)->pb->buffer);
+      (*image_format_context)->pb->buffer = NULL;
+      av_free((*image_format_context)->pb);
+      (*image_format_context)->pb = NULL;
+      avformat_close_input(image_format_context);
+      *image_format_context = NULL;
+    }
+  }
+  return ret;
 }
 
 static int write_packet_playlist(void * opaque, uint8_t * buf, int buf_size) {
-	struct _jukebox_audio_buffer * jukebox_audio_buffer = (struct _jukebox_audio_buffer *)opaque;
-	
-	if (jukebox_audio_buffer_add_data(jukebox_audio_buffer, buf, buf_size)) {
-		y_log_message(Y_LOG_LEVEL_ERROR, "Error adding data to jukebox_audio_buffer");
-	}
-	return buf_size;
+  struct _jukebox_audio_buffer * jukebox_audio_buffer = (struct _jukebox_audio_buffer *)opaque;
+  
+  if (jukebox_audio_buffer_add_data(jukebox_audio_buffer, buf, buf_size)) {
+    y_log_message(Y_LOG_LEVEL_ERROR, "Error adding data to jukebox_audio_buffer");
+  }
+  return buf_size;
 }
 
 int open_output_buffer_playlist(struct _jukebox_audio_buffer * jukebox_audio_buffer, AVFormatContext ** output_format_context, AVCodecContext ** output_codec_context, AVAudioFifo ** fifo) {
@@ -672,7 +672,7 @@ int open_output_buffer_playlist(struct _jukebox_audio_buffer * jukebox_audio_buf
         y_log_message(Y_LOG_LEVEL_ERROR, "Could not find output format '%s'", format);
         error = AVERROR(ENOMEM);
       } else {
-				//y_log_message(Y_LOG_LEVEL_DEBUG, "stream parameters are format: %s channels: %d sample_rate: %d bitrate: %d", jukebox_audio_buffer->jukebox->stream_format, jukebox_audio_buffer->jukebox->stream_channels, jukebox_audio_buffer->jukebox->stream_sample_rate, jukebox_audio_buffer->jukebox->stream_bitrate);
+        //y_log_message(Y_LOG_LEVEL_DEBUG, "stream parameters are format: %s channels: %d sample_rate: %d bitrate: %d", jukebox_audio_buffer->jukebox->stream_format, jukebox_audio_buffer->jukebox->stream_channels, jukebox_audio_buffer->jukebox->stream_sample_rate, jukebox_audio_buffer->jukebox->stream_bitrate);
         avctx->channels       = jukebox_audio_buffer->jukebox->stream_channels;
         avctx->channel_layout = av_get_default_channel_layout(jukebox_audio_buffer->jukebox->stream_channels);
         avctx->sample_rate    = jukebox_audio_buffer->jukebox->stream_sample_rate;
@@ -692,11 +692,11 @@ int open_output_buffer_playlist(struct _jukebox_audio_buffer * jukebox_audio_buf
           if ((avcodec_parameters_from_context(stream->codecpar, avctx)) < 0) {
             y_log_message(Y_LOG_LEVEL_ERROR, "Could not initialize stream parameters");
           } else {
-						if ((error = avformat_write_header((*output_format_context), NULL)) < 0) {
-							y_log_message(Y_LOG_LEVEL_ERROR, "Error avformat_write_header %s", get_error_text(error));
-						} else {
-							error = 0;
-						}
+            if ((error = avformat_write_header((*output_format_context), NULL)) < 0) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "Error avformat_write_header %s", get_error_text(error));
+            } else {
+              error = 0;
+            }
           }
         }
       }
@@ -716,47 +716,47 @@ int open_output_buffer_playlist(struct _jukebox_audio_buffer * jukebox_audio_buf
 }
 
 int init_output_jpeg_image(AVCodecContext ** image_codec_context, int dst_width, int dst_height) {
-	AVCodec * output_codec = NULL;
-	int ret = T_ERROR;
-	char * err;
-	
-	if ((output_codec = avcodec_find_encoder(AV_CODEC_ID_MJPEG)) == NULL) {
-		y_log_message(Y_LOG_LEVEL_ERROR, "init_output_jpeg_image - error avcodec_find_encoder");
-	} else if (((*image_codec_context) = avcodec_alloc_context3(output_codec)) == NULL) {
-		y_log_message(Y_LOG_LEVEL_ERROR, "init_output_jpeg_image - error avcodec_alloc_context3");
-	} else {
-		(*image_codec_context)->bit_rate = 0;
-		(*image_codec_context)->width = dst_width;
-		(*image_codec_context)->height = dst_height;
-		//(*image_codec_context)->pkt_timebase.num = 0;
-		//(*image_codec_context)->pkt_timebase.den = 0;
-		(*image_codec_context)->time_base.num = 1;
-		(*image_codec_context)->time_base.den = 30;
-		(*image_codec_context)->pix_fmt = AV_PIX_FMT_YUVJ420P;
-		if ((ret = avcodec_open2((*image_codec_context), output_codec, NULL)) < 0) {
-			err = get_error_text(ret);
-			y_log_message(Y_LOG_LEVEL_ERROR, "init_output_jpeg_image - error avcodec_open2 (%s)", err);
-			ret = T_ERROR;
-		} else {
-			ret = T_OK;
-		}
-	}
-	return ret;
+  AVCodec * output_codec = NULL;
+  int ret = T_ERROR;
+  char * err;
+  
+  if ((output_codec = avcodec_find_encoder(AV_CODEC_ID_MJPEG)) == NULL) {
+    y_log_message(Y_LOG_LEVEL_ERROR, "init_output_jpeg_image - error avcodec_find_encoder");
+  } else if (((*image_codec_context) = avcodec_alloc_context3(output_codec)) == NULL) {
+    y_log_message(Y_LOG_LEVEL_ERROR, "init_output_jpeg_image - error avcodec_alloc_context3");
+  } else {
+    (*image_codec_context)->bit_rate = 0;
+    (*image_codec_context)->width = dst_width;
+    (*image_codec_context)->height = dst_height;
+    //(*image_codec_context)->pkt_timebase.num = 0;
+    //(*image_codec_context)->pkt_timebase.den = 0;
+    (*image_codec_context)->time_base.num = 1;
+    (*image_codec_context)->time_base.den = 30;
+    (*image_codec_context)->pix_fmt = AV_PIX_FMT_YUVJ420P;
+    if ((ret = avcodec_open2((*image_codec_context), output_codec, NULL)) < 0) {
+      err = get_error_text(ret);
+      y_log_message(Y_LOG_LEVEL_ERROR, "init_output_jpeg_image - error avcodec_open2 (%s)", err);
+      ret = T_ERROR;
+    } else {
+      ret = T_OK;
+    }
+  }
+  return ret;
 }
 
 int resize_image(AVCodecContext * original_image_codec_context, AVCodecContext * resized_image_codec_context, AVPacket * original_image_cover_packet, AVPacket * resized_image_cover_packet, int resized_width, int resized_height) {
   int ret = -1, data_present, err;
   AVFrame * input_frame = av_frame_alloc(), * output_frame = av_frame_alloc();
-	struct SwsContext * sws_c;
-	
+  struct SwsContext * sws_c;
+  
   if (input_frame != NULL && output_frame != NULL) {
     if (!my_decode(original_image_codec_context, input_frame, &data_present, original_image_cover_packet)) {
-			if (!resized_width) {
-				resized_width = input_frame->width;
-			}
-			if (!resized_height) {
-				resized_height = input_frame->height;
-			}
+      if (!resized_width) {
+        resized_width = input_frame->width;
+      }
+      if (!resized_height) {
+        resized_height = input_frame->height;
+      }
       sws_c = sws_getContext(input_frame->width, input_frame->height, original_image_codec_context->pix_fmt, resized_width, resized_height, AV_PIX_FMT_YUV420P, SWS_BICUBIC, NULL, NULL, NULL);
       if (sws_c != NULL) {
         av_image_alloc(output_frame->data, output_frame->linesize, resized_width, resized_height, original_image_codec_context->pix_fmt, 32);
@@ -764,12 +764,12 @@ int resize_image(AVCodecContext * original_image_codec_context, AVCodecContext *
         output_frame->height = resized_height;
         output_frame->format = AV_PIX_FMT_YUV420P;
         if ((err = sws_scale(sws_c, (const uint8_t * const*)input_frame->data, input_frame->linesize, 0, input_frame->height, output_frame->data, output_frame->linesize)) < 0) {
-					y_log_message(Y_LOG_LEVEL_ERROR, "Error sws_scale: %d", err);
-					ret = -1;
-				} else if (err > 0) {
-					ret = my_encode(resized_image_codec_context, resized_image_cover_packet, output_frame, &data_present);
-					//y_log_message(Y_LOG_LEVEL_DEBUG, "my_encode for %d %p %p %d %p => %d", ret, resized_image_codec_context, resized_image_cover_packet->size, output_frame->data, ret);
-				}
+          y_log_message(Y_LOG_LEVEL_ERROR, "Error sws_scale: %d", err);
+          ret = -1;
+        } else if (err > 0) {
+          ret = my_encode(resized_image_codec_context, resized_image_cover_packet, output_frame, &data_present);
+          //y_log_message(Y_LOG_LEVEL_DEBUG, "my_encode for %d %p %p %d %p => %d", ret, resized_image_codec_context, resized_image_cover_packet->size, output_frame->data, ret);
+        }
         sws_freeContext(sws_c);
       } else {
         y_log_message(Y_LOG_LEVEL_ERROR, "Error sws_getContext");

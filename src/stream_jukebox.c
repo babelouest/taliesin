@@ -124,9 +124,187 @@ void jukebox_audio_buffer_clean (struct _jukebox_audio_buffer * jukebox_audio_bu
   }
 }
 
+static int jukebox_update_db_stream_media_list(struct config_elements * config, struct _t_jukebox * jukebox) {
+  json_t * j_query, * j_result;
+  json_int_t ts_id;
+  int res, ret;
+  struct _t_file * file;
+  
+  j_query = json_pack("{sss[s]s{ss}}",
+                      "table",
+                      TALIESIN_TABLE_STREAM,
+                      "columns",
+                        "ts_id",
+                      "where",
+                        "ts_name",
+                        jukebox->name);
+  res = h_select(config->conn, j_query, &j_result, NULL);
+  json_decref(j_query);
+  if (res == H_OK) {
+    if (json_array_size(j_result) > 0) {
+      ts_id = json_integer_value(json_object_get(json_array_get(j_result, 0), "ts_id"));
+      j_query = json_pack("{sss{sI}}",
+                          "table",
+                          TALIESIN_TABLE_STREAM_ELEMENT,
+                          "where",
+                            "ts_id",
+                            ts_id);
+      res = h_delete(config->conn, j_query, NULL);
+      json_decref(j_query);
+      if (res == H_OK) {
+        j_query = json_pack("{sss[]}",
+                            "table",
+                            TALIESIN_TABLE_STREAM_ELEMENT,
+                            "values");
+        if (j_query != NULL) {
+          file = jukebox->file_list->start;
+          while (file != NULL) {
+            json_array_append_new(json_object_get(j_query, "values"), json_pack("{sIsI}", "ts_id", ts_id, "tm_id", file->tm_id));
+            file = file->next;
+          }
+          res = h_insert(config->conn, j_query, NULL);
+          json_decref(j_query);
+          if (res == H_OK) {
+            ret = T_OK;
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_update_db_stream_media_list - Error executing j_query (3)");
+            ret = T_ERROR_DB;
+          }
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_update_db_stream_media_list - Error allocatinng resources for j_query");
+          ret = T_ERROR_MEMORY;
+        }
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_update_db_stream_media_list - Error executing j_query (2)");
+        ret = T_ERROR_DB;
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_update_db_stream_media_list - stream not found");
+      ret = T_ERROR_NOT_FOUND;
+    }
+    json_decref(j_result);
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_update_db_stream_media_list - Error executing j_query (1)");
+    ret = T_ERROR_DB;
+  }
+  return ret;
+}
+
+static int jukebox_add_db_stream(struct config_elements * config, struct _t_jukebox * jukebox) {
+  json_t * j_query, * j_last_id;
+  int res, ret;
+  json_int_t ts_id;
+  struct _t_file * file;
+  
+  j_query = json_pack("{sss{sosssssososssisisi}}",
+                      "table",
+                      TALIESIN_TABLE_STREAM,
+                      "values",
+                        "ts_username",
+                        jukebox->username!=NULL?json_string(jukebox->username):json_null(),
+                        "ts_name",
+                        jukebox->name,
+                        "ts_display_name",
+                        jukebox->display_name,
+                        "tpl_id",
+                        jukebox->tpl_id?json_integer(jukebox->tpl_id):json_null(),
+                        "ts_webradio",
+                        json_false(),
+                        "ts_format",
+                        jukebox->stream_format,
+                        "ts_channels",
+                        jukebox->stream_channels,
+                        "ts_sample_rate",
+                        jukebox->stream_sample_rate,
+                        "ts_bitrate",
+                        jukebox->stream_bitrate);
+  res = h_insert(config->conn, j_query, NULL);
+  json_decref(j_query);
+  if (res == H_OK) {
+    j_last_id = h_last_insert_id(config->conn);
+    if (j_last_id != NULL) {
+      ts_id = json_integer_value(j_last_id);
+      json_decref(j_last_id);
+      j_query = json_pack("{sss[]}",
+                          "table",
+                          TALIESIN_TABLE_STREAM_ELEMENT,
+                          "values");
+      if (j_query != NULL) {
+        file = jukebox->file_list->start;
+        while (file != NULL) {
+          json_array_append_new(json_object_get(j_query, "values"), json_pack("{sIsI}", "ts_id", ts_id, "tm_id", file->tm_id));
+          file = file->next;
+        }
+        res = h_insert(config->conn, j_query, NULL);
+        json_decref(j_query);
+        if (res == H_OK) {
+          ret = T_OK;
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_add_db_stream - Error executing j_query (2)");
+          ret = T_ERROR_DB;
+        }
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_add_db_stream - Error allocating resources for j_query");
+        ret = T_ERROR_MEMORY;
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_add_db_stream - Error getting last id");
+      ret = T_ERROR_DB;
+    }
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_add_db_stream - Error executing j_query (1)");
+    ret = T_ERROR_DB;
+  }
+  return ret;
+}
+
+static int jukebox_set_display_name_db_stream(struct config_elements * config, const char * name, const char * display_name) {
+  json_t * j_query;
+  int res;
+  
+  j_query = json_pack("{sss{ss}s{ss}}",
+                      "table",
+                      TALIESIN_TABLE_STREAM,
+                      "set",
+                        "ts_display_name",
+                        display_name,
+                      "where",
+                        "ts_name",
+                        name);
+  res = h_update(config->conn, j_query, NULL);
+  json_decref(j_query);
+  if (res == H_OK) {
+    return T_OK;
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_set_display_name_db_stream - Error executing j_query");
+    return T_ERROR_DB;
+  }
+}
+
+static int jukebox_remove_db_stream(struct config_elements * config, const char * name) {
+  json_t * j_query;
+  int res;
+  
+  j_query = json_pack("{sss{ss}}",
+                      "table",
+                      TALIESIN_TABLE_STREAM,
+                      "where",
+                        "ts_name",
+                        name);
+  res = h_delete(config->conn, j_query, NULL);
+  json_decref(j_query);
+  if (res == H_OK) {
+    return T_OK;
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_remove_db_stream - Error executing j_query");
+    return T_ERROR_DB;
+  }
+}
+
 json_t * add_jukebox_from_path(struct config_elements * config, json_t * j_data_source, const char * path, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, int recursive) {
   json_t * j_result = NULL, * j_media_list, * j_element;
   size_t index;
+  int jukebox_index;
   
   j_media_list = scan_path(config, j_data_source, path, recursive);
   if (j_media_list != NULL && json_array_size(json_object_get(j_media_list, "media_list")) > 0) {
@@ -134,39 +312,45 @@ json_t * add_jukebox_from_path(struct config_elements * config, json_t * j_data_
       //y_log_message(Y_LOG_LEVEL_DEBUG, "realloc playlist_set at %d", (config->nb_jukebox + 1));
       config->jukebox_set = o_realloc(config->jukebox_set, (config->nb_jukebox + 1) * sizeof(struct _t_jukebox *));
       if (config->jukebox_set != NULL) {
-        config->jukebox_set[config->nb_jukebox] = o_malloc(sizeof(struct _t_jukebox));
-        if (config->jukebox_set[config->nb_jukebox] != NULL) {
-          if (jukebox_init(config->jukebox_set[config->nb_jukebox], format, channels, sample_rate, bit_rate) == T_OK) {
-            config->jukebox_set[config->nb_jukebox]->config = config;
-            config->jukebox_set[config->nb_jukebox]->username = o_strdup(username);
-            config->jukebox_set[config->nb_jukebox]->display_name = o_strdup(strrchr(path, '/')!=NULL?(strrchr(path, '/') + 1):path);
+        jukebox_index = config->nb_jukebox;
+        config->nb_jukebox++;
+        config->jukebox_set[jukebox_index] = o_malloc(sizeof(struct _t_jukebox));
+        if (config->jukebox_set[jukebox_index] != NULL) {
+          if (jukebox_init(config->jukebox_set[jukebox_index], format, channels, sample_rate, bit_rate) == T_OK) {
+            config->jukebox_set[jukebox_index]->config = config;
+            config->jukebox_set[jukebox_index]->username = o_strdup(username);
+            config->jukebox_set[jukebox_index]->display_name = o_strdup(strrchr(path, '/')!=NULL?(strrchr(path, '/') + 1):path);
             json_array_foreach(json_object_get(j_media_list, "media_list"), index, j_element) {
-              if (file_list_enqueue_new_file(config->jukebox_set[config->nb_jukebox]->file_list, json_string_value(json_object_get(j_element, "full_path")), json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
+              if (file_list_enqueue_new_file(config->jukebox_set[jukebox_index]->file_list, json_string_value(json_object_get(j_element, "full_path")), json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
                 y_log_message(Y_LOG_LEVEL_ERROR, "add_jukebox_from_path - Error adding file %s", json_string_value(json_object_get(j_element, "full_path")));
               }
             }
-            j_result = json_pack("{sis{sssssssssisiso}}",
-                                  "result",
-                                  T_OK,
-                                  "stream",
-                                    "name",
-                                    config->jukebox_set[config->nb_jukebox]->name,
-                                    "display_name",
-                                    config->jukebox_set[config->nb_jukebox]->display_name,
-                                    "format",
-                                    format,
-                                    "channels",
-                                    channels==1?"mono":"stereo",
-                                    "sample_rate",
-                                    sample_rate,
-                                    "bitrate",
-                                    bit_rate,
-                                    "webradio",
-                                    json_false());
-            config->nb_jukebox++;
+            if (jukebox_add_db_stream(config, config->jukebox_set[jukebox_index]) == T_OK) {
+              j_result = json_pack("{sis{sssssssssisiso}}",
+                                    "result",
+                                    T_OK,
+                                    "stream",
+                                      "name",
+                                      config->jukebox_set[jukebox_index]->name,
+                                      "display_name",
+                                      config->jukebox_set[jukebox_index]->display_name,
+                                      "format",
+                                      format,
+                                      "channels",
+                                      channels==1?"mono":"stereo",
+                                      "sample_rate",
+                                      sample_rate,
+                                      "bitrate",
+                                      bit_rate,
+                                      "webradio",
+                                      json_false());
+            } else {
+              y_log_message(Y_LOG_LEVEL_ERROR, "add_jukebox_from_path - Error jukebox_add_db_stream");
+              j_result = json_pack("{si}", "result", T_ERROR);
+            }
           } else {
-            jukebox_clean(config->jukebox_set[config->nb_jukebox]);
-            o_free(config->jukebox_set[config->nb_jukebox]);
+            jukebox_clean(config->jukebox_set[jukebox_index]);
+            o_free(config->jukebox_set[jukebox_index]);
             y_log_message(Y_LOG_LEVEL_ERROR, "add_jukebox_from_path - Error webradio_init");
             j_result = json_pack("{si}", "result", T_ERROR);
           }
@@ -175,8 +359,6 @@ json_t * add_jukebox_from_path(struct config_elements * config, json_t * j_data_
           j_result = json_pack("{si}", "result", T_ERROR_MEMORY);
         }
       } else {
-        jukebox_clean(config->jukebox_set[config->nb_jukebox]);
-        o_free(config->jukebox_set[config->nb_jukebox]);
         y_log_message(Y_LOG_LEVEL_ERROR, "add_jukebox_from_path - Error realloc playlist_set");
         j_result = json_pack("{si}", "result", T_ERROR_MEMORY);
       }
@@ -198,48 +380,55 @@ json_t * add_jukebox_from_playlist(struct config_elements * config, json_t * j_p
   json_t * j_result = NULL, * j_element;
   size_t index;
   char * full_path;
+  int jukebox_index;
   
   if (!pthread_mutex_lock(&config->playlist_lock)) {
     //y_log_message(Y_LOG_LEVEL_DEBUG, "realloc playlist_set at %d", (config->nb_jukebox + 1));
     config->jukebox_set = o_realloc(config->jukebox_set, (config->nb_jukebox + 1) * sizeof(struct _t_jukebox *));
     if (config->jukebox_set != NULL) {
-      config->jukebox_set[config->nb_jukebox] = o_malloc(sizeof(struct _t_jukebox));
-      if (config->jukebox_set[config->nb_jukebox] != NULL) {
-        if (jukebox_init(config->jukebox_set[config->nb_jukebox], format, channels, sample_rate, bit_rate) == T_OK) {
-          config->jukebox_set[config->nb_jukebox]->config = config;
-          config->jukebox_set[config->nb_jukebox]->username = o_strdup(username);
-          config->jukebox_set[config->nb_jukebox]->display_name = o_strdup(json_string_value(json_object_get(j_playlist, "description")));
-          config->jukebox_set[config->nb_jukebox]->playlist_name = o_strdup(json_string_value(json_object_get(j_playlist, "name")));
-          config->jukebox_set[config->nb_jukebox]->tpl_id = json_integer_value(json_object_get(j_playlist, "tpl_id"));
+      jukebox_index = config->nb_jukebox;
+      config->nb_jukebox++;
+      config->jukebox_set[jukebox_index] = o_malloc(sizeof(struct _t_jukebox));
+      if (config->jukebox_set[jukebox_index] != NULL) {
+        if (jukebox_init(config->jukebox_set[jukebox_index], format, channels, sample_rate, bit_rate) == T_OK) {
+          config->jukebox_set[jukebox_index]->config = config;
+          config->jukebox_set[jukebox_index]->username = o_strdup(username);
+          config->jukebox_set[jukebox_index]->display_name = o_strdup(json_string_value(json_object_get(j_playlist, "description")));
+          config->jukebox_set[jukebox_index]->playlist_name = o_strdup(json_string_value(json_object_get(j_playlist, "name")));
+          config->jukebox_set[jukebox_index]->tpl_id = json_integer_value(json_object_get(j_playlist, "tpl_id"));
           json_array_foreach(json_object_get(j_playlist, "media"), index, j_element) {
             full_path = msprintf("%s/%s", json_string_value(json_object_get(j_element, "tds_path")), json_string_value(json_object_get(j_element, "path")));
-            if (file_list_enqueue_new_file(config->jukebox_set[config->nb_jukebox]->file_list, full_path, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
+            if (file_list_enqueue_new_file(config->jukebox_set[jukebox_index]->file_list, full_path, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
               y_log_message(Y_LOG_LEVEL_ERROR, "add_jukebox_from_playlist - Error adding file %s", json_string_value(json_object_get(j_element, "full_path")));
             }
             o_free(full_path);
           }
-          j_result = json_pack("{sis{sssssssssisiso}}",
-                                "result",
-                                T_OK,
-                                "stream",
-                                  "name",
-                                  config->jukebox_set[config->nb_jukebox]->name,
-																	"display_name",
-																	config->jukebox_set[config->nb_jukebox]->playlist_name,
-                                  "format",
-                                  format,
-                                  "channels",
-                                  channels==1?"mono":"stereo",
-                                  "sample_rate",
-                                  sample_rate,
-                                  "bitrate",
-                                  bit_rate,
-                                  "webradio",
-                                  json_false());
-          config->nb_jukebox++;
+          if (jukebox_add_db_stream(config, config->jukebox_set[jukebox_index]) == T_OK) {
+            j_result = json_pack("{sis{sssssssssisiso}}",
+                                  "result",
+                                  T_OK,
+                                  "stream",
+                                    "name",
+                                    config->jukebox_set[jukebox_index]->name,
+                                    "display_name",
+                                    config->jukebox_set[jukebox_index]->playlist_name,
+                                    "format",
+                                    format,
+                                    "channels",
+                                    channels==1?"mono":"stereo",
+                                    "sample_rate",
+                                    sample_rate,
+                                    "bitrate",
+                                    bit_rate,
+                                    "webradio",
+                                    json_false());
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "add_jukebox_from_playlist - Error jukebox_add_db_stream");
+            j_result = json_pack("{si}", "result", T_ERROR);
+          }
         } else {
-          jukebox_clean(config->jukebox_set[config->nb_jukebox]);
-          o_free(config->jukebox_set[config->nb_jukebox]);
+          jukebox_clean(config->jukebox_set[jukebox_index]);
+          o_free(config->jukebox_set[jukebox_index]);
           y_log_message(Y_LOG_LEVEL_ERROR, "add_jukebox_from_playlist - Error webradio_init");
           j_result = json_pack("{si}", "result", T_ERROR);
         }
@@ -248,8 +437,6 @@ json_t * add_jukebox_from_playlist(struct config_elements * config, json_t * j_p
         j_result = json_pack("{si}", "result", T_ERROR_MEMORY);
       }
     } else {
-      jukebox_clean(config->jukebox_set[config->nb_jukebox]);
-      o_free(config->jukebox_set[config->nb_jukebox]);
       y_log_message(Y_LOG_LEVEL_ERROR, "add_jukebox_from_playlist - Error realloc playlist_set");
       j_result = json_pack("{si}", "result", T_ERROR_MEMORY);
     }
@@ -258,6 +445,63 @@ json_t * add_jukebox_from_playlist(struct config_elements * config, json_t * j_p
     j_result = json_pack("{si}", "result", T_ERROR);
   }
   return j_result;
+}
+
+int add_jukebox_from_db_stream(struct config_elements * config, json_t * j_stream) {
+  json_t * j_element, * j_playlist;
+  size_t index;
+  char * full_path;
+  int jukebox_index, ret;
+  
+  if (!pthread_mutex_lock(&config->playlist_lock)) {
+    //y_log_message(Y_LOG_LEVEL_DEBUG, "realloc playlist_set at %d", (config->nb_jukebox + 1));
+    config->jukebox_set = o_realloc(config->jukebox_set, (config->nb_jukebox + 1) * sizeof(struct _t_jukebox *));
+    if (config->jukebox_set != NULL) {
+      jukebox_index = config->nb_jukebox;
+      config->nb_jukebox++;
+      config->jukebox_set[jukebox_index] = o_malloc(sizeof(struct _t_jukebox));
+      if (config->jukebox_set[jukebox_index] != NULL) {
+        if (jukebox_init(config->jukebox_set[jukebox_index], json_string_value(json_object_get(j_stream, "format")), json_integer_value(json_object_get(j_stream, "channels")), json_integer_value(json_object_get(j_stream, "sample_rate")), json_integer_value(json_object_get(j_stream, "bitrate"))) == T_OK) {
+          config->jukebox_set[jukebox_index]->config = config;
+          config->jukebox_set[jukebox_index]->username = json_object_get(j_stream, "username")!=json_null()?o_strdup(json_string_value(json_object_get(j_stream, "username"))):NULL;
+          o_strcpy(config->jukebox_set[jukebox_index]->name, json_string_value(json_object_get(j_stream, "name")));
+          config->jukebox_set[jukebox_index]->display_name = o_strdup(json_string_value(json_object_get(j_stream, "display_name")));
+          config->jukebox_set[jukebox_index]->playlist_name = o_strdup(json_string_value(json_object_get(j_stream, "name")));
+          config->jukebox_set[jukebox_index]->tpl_id = json_object_get(j_stream, "tpl_id")!=json_null()?json_integer_value(json_object_get(j_stream, "tpl_id")):0;
+          if (config->jukebox_set[jukebox_index]->tpl_id) {
+            j_playlist = playlist_get_by_id(config, config->jukebox_set[jukebox_index]->tpl_id);
+            if (check_result_value(j_playlist, T_OK)) {
+              config->jukebox_set[jukebox_index]->playlist_name = o_strdup(json_string_value(json_object_get(json_object_get(j_playlist, "playlist"), "name")));
+            }
+            json_decref(j_playlist);
+          }
+          json_array_foreach(json_object_get(j_stream, "media"), index, j_element) {
+            full_path = msprintf("%s/%s", json_string_value(json_object_get(j_element, "tds_path")), json_string_value(json_object_get(j_element, "path")));
+            if (file_list_enqueue_new_file(config->jukebox_set[jukebox_index]->file_list, full_path, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "add_jukebox_from_db_stream - Error adding file %s", json_string_value(json_object_get(j_element, "full_path")));
+            }
+            o_free(full_path);
+          }
+          ret = T_OK;
+        } else {
+          jukebox_clean(config->jukebox_set[jukebox_index]);
+          o_free(config->jukebox_set[jukebox_index]);
+          y_log_message(Y_LOG_LEVEL_ERROR, "add_jukebox_from_db_stream - Error webradio_init");
+          ret = T_ERROR;
+        }
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "add_jukebox_from_db_stream - Error malloc new jukebox");
+        ret = T_ERROR_MEMORY;
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "add_jukebox_from_db_stream - Error realloc playlist_set");
+      ret = T_ERROR_MEMORY;
+    }
+    pthread_mutex_unlock(&config->playlist_lock);
+  } else {
+    ret = T_ERROR;
+  }
+  return ret;
 }
 
 int jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukebox, char ** m3u_data) {
@@ -298,7 +542,7 @@ int jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukeb
         y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_build_m3u - Error getting media %"JSON_INTEGER_FORMAT, file->tm_id);
       }
       i++;
-			json_decref(j_media);
+      json_decref(j_media);
     }
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_build_m3u - Error allocating resources for m3u_data");
@@ -556,6 +800,10 @@ int is_valid_jukebox_element_parameter(struct config_elements * config, json_t *
 
 void * run_thread_close_playlist(void * args) {
   struct _close_jukebox * jukebox = (struct _close_jukebox *)args;
+  
+  if (jukebox_remove_db_stream(jukebox->config, jukebox->jukebox->name) != T_OK) {
+    y_log_message(Y_LOG_LEVEL_ERROR, "run_thread_close_playlist - Error jukebox_remove_db_stream");
+  }
 
   if (jukebox_close(jukebox->config, jukebox->jukebox) != T_OK) {
     y_log_message(Y_LOG_LEVEL_ERROR, "Error running jukebox_close");
@@ -585,7 +833,8 @@ json_t * is_jukebox_command_valid(struct config_elements * config, json_t * j_co
                  0 != o_strcmp(str_command, "move") &&
                  0 != o_strcmp(str_command, "attach_playlist") &&
                  0 != o_strcmp(str_command, "reload") &&
-                 0 != o_strcmp(str_command, "rename")) {
+                 0 != o_strcmp(str_command, "rename") &&
+								 0 != o_strcmp(str_command, "reset_url")) {
         json_array_append_new(j_result, json_pack("{ss}", "command", "invalid command"));
       }
       if (o_strcmp(str_command, "history") == 0 ||
@@ -651,11 +900,11 @@ json_t * is_jukebox_command_valid(struct config_elements * config, json_t * j_co
             json_array_append_new(j_result, json_pack("{ss}", "parameters", "target must ba a positive integer"));
           }
         } else if (o_strcmp(str_command, "rename") == 0) {
-					if (!json_is_object(json_object_get(j_command, "parameters"))) {
-						json_array_append_new(j_result, json_pack("{ss}", "parameters", "parameter must be a JSON object"));
-					} else if (json_object_get(json_object_get(j_command, "parameters"), "name") == NULL || !json_is_string(json_object_get(json_object_get(j_command, "parameters"), "name")) || json_string_length(json_object_get(json_object_get(j_command, "parameters"), "name")) == 0 || json_string_length(json_object_get(json_object_get(j_command, "parameters"), "name")) > 512) {
-						json_array_append_new(j_result, json_pack("{ss}", "parameters", "parameter name must be a non empty JSON string of maximum 512 characters"));
-					}
+          if (!json_is_object(json_object_get(j_command, "parameters"))) {
+            json_array_append_new(j_result, json_pack("{ss}", "parameters", "parameter must be a JSON object"));
+          } else if (json_object_get(json_object_get(j_command, "parameters"), "name") == NULL || !json_is_string(json_object_get(json_object_get(j_command, "parameters"), "name")) || json_string_length(json_object_get(json_object_get(j_command, "parameters"), "name")) == 0 || json_string_length(json_object_get(json_object_get(j_command, "parameters"), "name")) > 512) {
+            json_array_append_new(j_result, json_pack("{ss}", "parameters", "parameter name must be a non empty JSON string of maximum 512 characters"));
+          }
         }
       }
     }
@@ -674,15 +923,15 @@ json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * ju
   struct _t_file * file;
   int ret_thread_close_playlist = 0, detach_thread_close_playlist = 0;
   pthread_t thread_close_playlist;
-  struct _close_jukebox * close_playlist;
+  struct _close_jukebox * close_jukebox;
   char * full_path;
   
   if (0 == o_strcmp(str_command, "stop")) {
-    close_playlist = o_malloc(sizeof(struct _close_jukebox));
-    if (close_playlist != NULL) {
-      close_playlist->config = config;
-      close_playlist->jukebox = jukebox;
-      ret_thread_close_playlist = pthread_create(&thread_close_playlist, NULL, run_thread_close_playlist, (void *)close_playlist);
+    close_jukebox = o_malloc(sizeof(struct _close_jukebox));
+    if (close_jukebox != NULL) {
+      close_jukebox->config = config;
+      close_jukebox->jukebox = jukebox;
+      ret_thread_close_playlist = pthread_create(&thread_close_playlist, NULL, run_thread_close_playlist, (void *)close_jukebox);
       detach_thread_close_playlist = pthread_detach(thread_close_playlist);
       if (ret_thread_close_playlist || detach_thread_close_playlist) {
         y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread run_thread_close_playlist");
@@ -691,9 +940,12 @@ json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * ju
         j_return = json_pack("{si}", "result", T_OK);
       }
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "Error allocating resources for close_playlist");
+      y_log_message(Y_LOG_LEVEL_ERROR, "Error allocating resources for close_jukebox");
       j_return = json_pack("{si}", "result", T_ERROR_MEMORY);
     }
+  } else if (0 == o_strcmp(str_command, "reset_url")) {
+		rand_string(jukebox->name, TALIESIN_PLAYLIST_NAME_LENGTH);
+		j_return = json_pack("{si}", "result", T_OK);
   } else if (0 == o_strcmp(str_command, "history")) {
     if (json_object_get(json_object_get(j_command, "parameters"), "offset") != NULL) {
       offset = json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "offset"));
@@ -747,41 +999,62 @@ json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * ju
       //y_log_message(Y_LOG_LEVEL_DEBUG, "Append to list %s", json_string_value(json_object_get(j_element, "path")));
       if (file_list_add_media(config, jukebox->file_list, username, json_string_value(json_object_get(j_element, "data_source")), json_string_value(json_object_get(j_element, "path")), (json_object_get(j_element, "recursive") == json_true())) != T_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error appending %s/%s to jukebox", json_string_value(json_object_get(j_element, "data_source")), json_string_value(json_object_get(j_element, "path")));
+        j_return = json_pack("{si}", "result", T_ERROR);
       } else {
-        ret = T_OK;
+        if (jukebox_update_db_stream_media_list(config, jukebox) == T_OK) {
+          j_return = json_pack("{si}", "result", T_OK);
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error jukebox_update_db_stream_media_list");
+          j_return = json_pack("{si}", "result", T_ERROR);
+        }
       }
     }
     j_return = json_pack("{si}", "result", ret);
   } else if (0 == o_strcmp(str_command, "remove_list")) {
-    j_return = json_pack("{si}", "result", jukebox_remove_media_by_index(jukebox, json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "index"))));
+    if (jukebox_remove_media_by_index(jukebox, json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "index"))) == T_OK) {
+      if (jukebox_update_db_stream_media_list(config, jukebox) == T_OK) {
+        j_return = json_pack("{si}", "result", T_OK);
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error jukebox_update_db_stream_media_list");
+        j_return = json_pack("{si}", "result", T_ERROR);
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error jukebox_remove_media_by_index");
+      j_return = json_pack("{si}", "result", T_ERROR);
+    }
   } else if (0 == o_strcmp(str_command, "reload")) {
     if (jukebox->tpl_id) {
       j_playlist = playlist_get_by_id(config, jukebox->tpl_id);
       if (check_result_value(j_playlist, T_OK)) {
-				if (pthread_mutex_lock(&jukebox->file_list->file_lock)) {
-					j_return = json_pack("{si}", "result", T_ERROR);
-					y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error lock mutex file_list");
-				} else {
-					if (jukebox->file_list->start != NULL) {
-						file_list_clean_file(jukebox->file_list->start);
-						jukebox->file_list->start = NULL;
-						jukebox->file_list->nb_files = 0;
-					}
-					pthread_mutex_unlock(&jukebox->file_list->file_lock);
-					json_array_foreach(json_object_get(json_object_get(j_playlist, "playlist"), "media"), index, j_element) {
-						full_path = msprintf("%s/%s", json_string_value(json_object_get(j_element, "tds_path")), json_string_value(json_object_get(j_element, "path")));
-						if (file_list_enqueue_new_file(jukebox->file_list, full_path, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
-							y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error adding file %s", json_string_value(json_object_get(j_element, "full_path")));
-						}
-						o_free(full_path);
-					}
-					j_return = json_pack("{si}", "result", T_OK);
-				}
+        if (pthread_mutex_lock(&jukebox->file_list->file_lock)) {
+          j_return = json_pack("{si}", "result", T_ERROR);
+          y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error lock mutex file_list");
+        } else {
+          if (jukebox->file_list->start != NULL) {
+            file_list_clean_file(jukebox->file_list->start);
+            jukebox->file_list->start = NULL;
+            jukebox->file_list->nb_files = 0;
+          }
+          pthread_mutex_unlock(&jukebox->file_list->file_lock);
+          json_array_foreach(json_object_get(json_object_get(j_playlist, "playlist"), "media"), index, j_element) {
+            full_path = msprintf("%s/%s", json_string_value(json_object_get(j_element, "tds_path")), json_string_value(json_object_get(j_element, "path")));
+            if (file_list_enqueue_new_file(jukebox->file_list, full_path, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error adding file %s", json_string_value(json_object_get(j_element, "full_path")));
+            }
+            o_free(full_path);
+          }
+          if (jukebox_update_db_stream_media_list(config, jukebox) == T_OK) {
+            j_return = json_pack("{si}", "result", T_OK);
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error jukebox_update_db_stream_media_list");
+            j_return = json_pack("{si}", "result", T_ERROR);
+          }
+        }
       } else {
-				y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error playlist_get_by_id");
+        y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error playlist_get_by_id");
         j_return = json_pack("{si}", "result", T_ERROR);
       }
-			json_decref(j_playlist);
+      json_decref(j_playlist);
     } else {
       j_return = json_pack("{si}", "result", T_ERROR_PARAM);
     }
@@ -790,24 +1063,29 @@ json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * ju
     if (check_result_value(j_playlist, T_OK)) {
       jukebox->tpl_id = json_integer_value(json_object_get(json_object_get(j_playlist, "playlist"), "tpl_id"));
       jukebox->playlist_name = o_strdup(json_string_value(json_object_get(json_object_get(j_playlist, "playlist"), "name")));
-			j_return = json_pack("{si}", "result", T_OK);
+      j_return = json_pack("{si}", "result", T_OK);
     } else if (check_result_value(j_playlist, T_ERROR_NOT_FOUND)) {
       j_return = json_pack("{si}", "result", T_ERROR_NOT_FOUND);
     } else {
-			y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error playlist_get");
+      y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error playlist_get");
       j_return = json_pack("{si}", "result", T_ERROR);
     }
     json_decref(j_playlist);
   } else if (0 == o_strcmp(str_command, "move")) {
-		move_index = json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "index"));
-		move_target = json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "target"));
-		if (move_index < move_target) {
-			move_target--;
-		}
+    move_index = json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "index"));
+    move_target = json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "target"));
+    if (move_index < move_target) {
+      move_target--;
+    }
     file = file_list_dequeue_file(jukebox->file_list, move_index);
     if (file != NULL) {
       if ((ret = file_list_insert_file_at(jukebox->file_list, file, move_target)) == T_OK) {
-        j_return = json_pack("{si}", "result", T_OK);
+        if (jukebox_update_db_stream_media_list(config, jukebox) == T_OK) {
+          j_return = json_pack("{si}", "result", T_OK);
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error jukebox_update_db_stream_media_list");
+          j_return = json_pack("{si}", "result", T_ERROR);
+        }
       } else {
         file_list_clean_file(file);
         j_return = json_pack("{si}", "result", ret);
@@ -816,9 +1094,13 @@ json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * ju
       j_return = json_pack("{si}", "result", T_ERROR);
     }
   } else if (0 == o_strcmp(str_command, "rename")) {
-		o_free(jukebox->display_name);
-		jukebox->display_name = o_strdup(json_string_value(json_object_get(json_object_get(j_command, "parameters"), "name")));
-		j_return = json_pack("{si}", "result", T_OK);
+    o_free(jukebox->display_name);
+    jukebox->display_name = o_strdup(json_string_value(json_object_get(json_object_get(j_command, "parameters"), "name")));
+    if (jukebox_set_display_name_db_stream(config, jukebox->name, jukebox->display_name) == T_OK) {
+      j_return = json_pack("{si}", "result", T_OK);
+    } else {
+      j_return = json_pack("{si}", "result", T_ERROR);
+    }
   } else {
     j_return = json_pack("{si}", "result", T_ERROR_PARAM);
   }
@@ -872,9 +1154,9 @@ void * jukebox_run_thread(void * args) {
         client_data_playlist->audio_buffer->title = o_strdup(client_data_playlist->jukebox->display_name);
       }
       json_decref(j_media);
-			if (media_add_history(config, client_data_playlist->jukebox->name, client_data_playlist->jukebox->tpl_id, client_data_playlist->audio_buffer->file->tm_id) != T_OK) {
-				y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_run_thread - Error media_add_history");
-			}
+      if (media_add_history(config, client_data_playlist->jukebox->name, client_data_playlist->jukebox->tpl_id, client_data_playlist->audio_buffer->file->tm_id) != T_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_run_thread - Error media_add_history");
+      }
       while (client_data_playlist->audio_buffer->status != TALIESIN_STREAM_STATUS_STOPPED) {
         output_frame_size = output_codec_context->frame_size;
         finished          = 0;

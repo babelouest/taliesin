@@ -484,6 +484,28 @@ START_TEST(test_webradio_command_rename_ok)
 }
 END_TEST
 
+START_TEST(test_webradio_command_reset_url_ok)
+{
+	char ols_stream_name[33] = {0};
+  if (get_stream_name()) {
+		strcpy(ols_stream_name, valid_stream_name);
+		char * url;
+		json_t * j_command = json_pack("{ss}", "command", "reset_url");
+		int res;
+		
+		url = msprintf(TALIESIN_SERVER_URI "/stream/%s/manage", valid_stream_name);
+		res = run_simple_authenticated_test(&user_req, "PUT", url, j_command, NULL, 200, NULL, NULL, NULL);
+		
+		ck_assert_int_eq(res, 1);
+
+		json_decref(j_command);
+		ck_assert_int_ne(get_stream_name(), 0);
+		
+		ck_assert_str_ne(ols_stream_name, valid_stream_name);
+	}
+}
+END_TEST
+
 START_TEST(test_webradio_play_not_found)
 {
   if (get_stream_name()) {
@@ -499,12 +521,10 @@ END_TEST
 START_TEST(test_create_db_playlist_ok)
 {
   char * url = msprintf("%s/playlist", TALIESIN_SERVER_URI);
-  json_t * j_playlist = json_pack("{ss ss ss s{ss} s[{ssss}{ssss}]}",
+  json_t * j_playlist = json_pack("{ss ss ss s[{ssss}{ssss}]}",
 																	"name", PLAYLIST_USER_VALID,
 																	"description", "description for "PLAYLIST_USER_VALID,
 																	"scope", "me",
-                                  "webradio_startup",
-                                    "status", "off",
 																	"media",
 																		"data_source", DATA_SOURCE_VALID,
 																		"path", "/fss/free-software-song.ogg",
@@ -595,13 +615,11 @@ START_TEST(test_get_playlist_ok)
 {
 	if (get_stream_name()) {
 		char * url = msprintf("%s/playlist/%s", TALIESIN_SERVER_URI, PLAYLIST_USER_VALID);
-		json_t * j_playlist = json_pack("{sssssssis{ss}s[{ssss}{ssss}]s[{ssssso}]}",
+		json_t * j_playlist = json_pack("{sssssssis[{ssss}{ssss}]s[{ssssso}]}",
 																		"name", PLAYLIST_USER_VALID,
 																		"description", "description for "PLAYLIST_USER_VALID,
 																		"scope", "me",
 																		"elements", 2,
-																		"webradio_startup",
-																			"status", "off",
 																		"media",
 																			"data_source", DATA_SOURCE_VALID,
 																			"path", "/fss/free-software-song.ogg",
@@ -687,6 +705,7 @@ static Suite *taliesin_suite(void)
 	tcase_add_test(tc_core, test_webradio_command_remove_list_ok);
 	tcase_add_test(tc_core, test_webradio_command_move_ok);
 	tcase_add_test(tc_core, test_webradio_command_rename_ok);
+	tcase_add_test(tc_core, test_webradio_command_reset_url_ok);
 	tcase_add_test(tc_core, test_webradio_play_not_found);
 	tcase_add_test(tc_core, test_create_db_playlist_ok);
 	tcase_add_test(tc_core, test_webradio_command_attach_playlist_ok);

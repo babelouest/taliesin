@@ -159,27 +159,6 @@ json_t * playlist_list(struct config_elements * config, const char * username) {
       } else {
         json_object_set_new(j_element, "scope", json_string(TALIESIN_SCOPE_ALL));
       }
-      json_object_set_new(j_element, "webradio_startup", json_object());
-      if (json_integer_value(json_object_get(j_element, "tpl_webradio_startup")) == TALIESIN_STORED_PLAYLIST_WEBRADIO_STARTUP_NO_RANDOM) {
-        json_object_set_new(json_object_get(j_element, "webradio_startup"), "status", json_string("no random"));
-        json_object_set(json_object_get(j_element, "webradio_startup"), "format", json_object_get(j_element, "tpl_webradio_startup_format"));
-        json_object_set(json_object_get(j_element, "webradio_startup"), "channels", json_object_get(j_element, "tpl_webradio_startup_channels"));
-        json_object_set(json_object_get(j_element, "webradio_startup"), "sample_rate", json_object_get(j_element, "tpl_webradio_startup_sample_rate"));
-        json_object_set(json_object_get(j_element, "webradio_startup"), "bitrate", json_object_get(j_element, "tpl_webradio_startup_bit_rate"));
-      } else if (json_integer_value(json_object_get(j_element, "tpl_webradio_startup")) == TALIESIN_STORED_PLAYLIST_WEBRADIO_STARTUP_RANDOM) {
-        json_object_set_new(json_object_get(j_element, "webradio_startup"), "status", json_string("random"));
-        json_object_set(json_object_get(j_element, "webradio_startup"), "format", json_object_get(j_element, "tpl_webradio_startup_format"));
-        json_object_set(json_object_get(j_element, "webradio_startup"), "channels", json_object_get(j_element, "tpl_webradio_startup_channels"));
-        json_object_set(json_object_get(j_element, "webradio_startup"), "sample_rate", json_object_get(j_element, "tpl_webradio_startup_sample_rate"));
-        json_object_set(json_object_get(j_element, "webradio_startup"), "bitrate", json_object_get(j_element, "tpl_webradio_startup_bit_rate"));
-      } else {
-        json_object_set_new(json_object_get(j_element, "webradio_startup"), "status", json_string("off"));
-      }
-      json_object_del(j_element, "tpl_webradio_startup");
-      json_object_del(j_element, "webradio_startup_format");
-      json_object_del(j_element, "webradio_startup_channels");
-      json_object_del(j_element, "webradio_startup_sample_rate");
-      json_object_del(j_element, "webradio_startup_bit_rate");
       json_object_del(j_element, "tpl_id");
       json_object_del(j_element, "tpl_username");
     }
@@ -242,31 +221,10 @@ json_t * playlist_get(struct config_elements * config, const char * username, co
       } else {
         json_object_set_new(json_array_get(j_result, 0), "scope", json_string(TALIESIN_SCOPE_ALL));
       }
-      json_object_set_new(json_array_get(j_result, 0), "webradio_startup", json_object());
-      if (json_integer_value(json_object_get(json_array_get(j_result, 0), "tpl_webradio_startup")) == TALIESIN_STORED_PLAYLIST_WEBRADIO_STARTUP_NO_RANDOM) {
-        json_object_set_new(json_object_get(json_array_get(j_result, 0), "webradio_startup"), "status", json_string("no random"));
-        json_object_set(json_object_get(json_array_get(j_result, 0), "webradio_startup"), "format", json_object_get(json_array_get(j_result, 0), "tpl_webradio_startup_format"));
-        json_object_set(json_object_get(json_array_get(j_result, 0), "webradio_startup"), "channels", json_object_get(json_array_get(j_result, 0), "tpl_webradio_startup_channels"));
-        json_object_set(json_object_get(json_array_get(j_result, 0), "webradio_startup"), "sample_rate", json_object_get(json_array_get(j_result, 0), "tpl_webradio_startup_sample_rate"));
-        json_object_set(json_object_get(json_array_get(j_result, 0), "webradio_startup"), "bitrate", json_object_get(json_array_get(j_result, 0), "tpl_webradio_startup_bit_rate"));
-      } else if (json_integer_value(json_object_get(json_array_get(j_result, 0), "tpl_webradio_startup")) == TALIESIN_STORED_PLAYLIST_WEBRADIO_STARTUP_RANDOM) {
-        json_object_set_new(json_object_get(json_array_get(j_result, 0), "webradio_startup"), "status", json_string("random"));
-        json_object_set(json_object_get(json_array_get(j_result, 0), "webradio_startup"), "format", json_object_get(json_array_get(j_result, 0), "tpl_webradio_startup_format"));
-        json_object_set(json_object_get(json_array_get(j_result, 0), "webradio_startup"), "channels", json_object_get(json_array_get(j_result, 0), "tpl_webradio_startup_channels"));
-        json_object_set(json_object_get(json_array_get(j_result, 0), "webradio_startup"), "sample_rate", json_object_get(json_array_get(j_result, 0), "tpl_webradio_startup_sample_rate"));
-        json_object_set(json_object_get(json_array_get(j_result, 0), "webradio_startup"), "bitrate", json_object_get(json_array_get(j_result, 0), "tpl_webradio_startup_bit_rate"));
-      } else {
-        json_object_set_new(json_object_get(json_array_get(j_result, 0), "webradio_startup"), "status", json_string("off"));
-      }
       json_decref(j_media);
       if (!with_id) {
         json_object_del(json_array_get(j_result, 0), "tpl_id");
       }
-      json_object_del(json_array_get(j_result, 0), "tpl_webradio_startup");
-      json_object_del(json_array_get(j_result, 0), "tpl_webradio_startup_format");
-      json_object_del(json_array_get(j_result, 0), "tpl_webradio_startup_channels");
-      json_object_del(json_array_get(j_result, 0), "tpl_webradio_startup_sample_rate");
-      json_object_del(json_array_get(j_result, 0), "tpl_webradio_startup_bit_rate");
       json_object_del(json_array_get(j_result, 0), "tpl_username");
       j_return = json_pack("{sisO}", "result", T_OK, "playlist", json_array_get(j_result, 0));
     } else {
@@ -344,7 +302,7 @@ json_t * is_playlist_element_list_valid(struct config_elements * config, int is_
   return j_return;
 }
 
-json_t * is_playlist_valid(struct config_elements * config, const char * username, int is_admin, json_t * j_playlist, int update) {
+json_t * is_playlist_valid(struct config_elements * config, const char * username, int is_admin, json_t * j_playlist, int update, int with_media) {
   json_t * j_return = json_array(), * j_element = NULL;
   size_t index;
   
@@ -374,12 +332,14 @@ json_t * is_playlist_valid(struct config_elements * config, const char * usernam
         json_array_append_new(j_return, json_pack("{ss}", "cover", "cover is not a valid image encoded in base64"));
       }
       
-      if (json_object_get(j_playlist, "media") == NULL || !json_is_array(json_object_get(j_playlist, "media")) || !json_array_size(json_object_get(j_playlist, "media"))) {
-        json_array_append_new(j_return, json_pack("{ss}", "media", "You must set at least one media of format {data_source, path}"));
-      } else {
-        json_array_foreach(json_object_get(j_playlist, "media"), index, j_element) {
-          if (!is_valid_jukebox_element_parameter(config, j_element, username, is_admin)) {
-            json_array_append_new(j_return, json_pack("{ss}", "media", "media is not a valid {data_source, path} object or does not exist"));
+      if (with_media) {
+        if (json_object_get(j_playlist, "media") == NULL || !json_is_array(json_object_get(j_playlist, "media")) || !json_array_size(json_object_get(j_playlist, "media"))) {
+          json_array_append_new(j_return, json_pack("{ss}", "media", "You must set at least one media of format {data_source, path}"));
+        } else {
+          json_array_foreach(json_object_get(j_playlist, "media"), index, j_element) {
+            if (!is_valid_jukebox_element_parameter(config, j_element, username, is_admin)) {
+              json_array_append_new(j_return, json_pack("{ss}", "media", "media is not a valid {data_source, path} object or does not exist"));
+            }
           }
         }
       }
@@ -403,7 +363,7 @@ json_t * is_playlist_valid(struct config_elements * config, const char * usernam
   return j_return;
 }
 
-int db_playlist_replace_element_list(struct config_elements * config, json_int_t tpl_id, json_t * j_playlist) {
+int playlist_replace_element_list(struct config_elements * config, json_int_t tpl_id, json_t * j_playlist) {
   json_t * j_query, * j_element;
   int res, ret;
   size_t index;
@@ -430,26 +390,27 @@ int db_playlist_replace_element_list(struct config_elements * config, json_int_t
       res = h_insert(config->conn, j_query, NULL);
       json_decref(j_query);
       if (res != H_OK) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "db_playlist_replace_element_list - Error executing j_query (2)");
+        y_log_message(Y_LOG_LEVEL_ERROR, "playlist_replace_element_list - Error executing j_query (2)");
         ret = T_ERROR_DB;
       } else {
         ret = T_OK;
       }
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "db_playlist_replace_element_list - Error allocating resources for j_query");
+      y_log_message(Y_LOG_LEVEL_ERROR, "playlist_replace_element_list - Error allocating resources for j_query");
       ret = T_ERROR_MEMORY;
     }
   } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "db_playlist_replace_element_list - Error executing j_query (1)");
+    y_log_message(Y_LOG_LEVEL_ERROR, "playlist_replace_element_list - Error executing j_query (1)");
     ret = T_ERROR_DB;
   }
   return ret;
 }
 
-int playlist_add(struct config_elements * config, const char * username, json_t * j_playlist) {
+int playlist_add(struct config_elements * config, const char * username, json_t * j_playlist, struct _t_file_list * file_list) {
   json_t * j_query, * j_last_id;
   json_int_t tic_id = 0, tpl_id;
   int res, ret;
+  struct _t_file * file;
   
   if (json_object_get(j_playlist, "cover") != NULL) {
     tic_id = media_cover_save(config, 0, (const unsigned char *)json_string_value(json_object_get(j_playlist, "cover")));
@@ -474,11 +435,33 @@ int playlist_add(struct config_elements * config, const char * username, json_t 
     j_last_id = h_last_insert_id(config->conn);
     tpl_id = json_integer_value(j_last_id);
     if (tpl_id) {
-      if (db_playlist_replace_element_list(config, tpl_id, j_playlist) != T_OK) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add - Error insert playlist elements");
-        ret = T_ERROR;
+      if (file_list == NULL) {
+        if (playlist_replace_element_list(config, tpl_id, j_playlist) != T_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add - Error insert playlist elements");
+          ret = T_ERROR;
+        } else {
+          ret = T_OK;
+        }
       } else {
-        ret = T_OK;
+        j_query = json_pack("{sss[]}", "table", TALIESIN_TABLE_PLAYLIST_ELEMENT, "values");
+        if (j_query != NULL) {
+          file = file_list->start;
+          while (file != NULL) {
+            json_array_append_new(json_object_get(j_query, "values"), json_pack("{sIsI}", "tpl_id", tpl_id, "tm_id", file->tm_id));
+            file = file->next;
+          }
+          res = h_insert(config->conn, j_query, NULL);
+          json_decref(j_query);
+          if (res == H_OK) {
+            ret = T_OK;
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add - Error executing j_query (2)");
+            ret = T_ERROR_DB;
+          }
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add - Error allocating resources for j_query");
+          ret = T_ERROR_MEMORY;
+        }
       }
     } else {
       y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add - Error getting last id");
@@ -519,7 +502,7 @@ int playlist_set(struct config_elements * config, json_int_t tpl_id, json_t * j_
   res = h_update(config->conn, j_query, NULL);
   json_decref(j_query);
   if (res == H_OK) {
-    if (db_playlist_replace_element_list(config, tpl_id, j_playlist) != T_OK) {
+    if (playlist_replace_element_list(config, tpl_id, j_playlist) != T_OK) {
       y_log_message(Y_LOG_LEVEL_ERROR, "playlist_set - Error replace playlist elements");
       ret = T_ERROR;
     } else {

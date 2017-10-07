@@ -1879,10 +1879,10 @@ int callback_taliesin_playlist_add (const struct _u_request * request, struct _u
   json_t * j_body = ulfius_get_json_body_request(request, NULL), * j_is_valid;
   int res = U_CALLBACK_CONTINUE;
   
-  j_is_valid = is_playlist_valid(config, get_username(request, response, config), has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin), j_body, 0);
+  j_is_valid = is_playlist_valid(config, get_username(request, response, config), has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin), j_body, 0, 1);
   if (j_is_valid != NULL) {
     if (json_array_size(j_is_valid) == 0) {
-      if (playlist_add(config, get_username(request, response, config), j_body) != T_OK) {
+      if (playlist_add(config, get_username(request, response, config), j_body, NULL) != T_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_playlist_add - Error playlist_add");
         res = U_CALLBACK_ERROR;
       }
@@ -1909,7 +1909,7 @@ int callback_taliesin_playlist_set (const struct _u_request * request, struct _u
   j_playlist = playlist_get(config, get_username(request, response, config), u_map_get(request->map_url, "playlist"), 1, 0, 1);
   if (check_result_value(j_playlist, T_OK)) {
     if (playlist_can_update(json_object_get(j_playlist, "playlist"), is_admin)) {
-        j_is_valid = is_playlist_valid(config, get_username(request, response, config), is_admin, j_body, 1);
+        j_is_valid = is_playlist_valid(config, get_username(request, response, config), is_admin, j_body, 1, 1);
         if (j_is_valid != NULL) {
           if (json_array_size(j_is_valid) == 0) {
             if (playlist_set(config, json_integer_value(json_object_get(json_object_get(j_playlist, "playlist"), "tpl_id")), j_body) != T_OK) {
@@ -2107,7 +2107,6 @@ int callback_taliesin_playlist_load (const struct _u_request * request, struct _
             y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio");
             response->status = 500;
           } else {
-            json_object_set_new(json_object_get(j_stream_info, "stream"), "media", json_deep_copy(json_object_get(json_object_get(j_playlist, "playlist"), "media")));
             ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
           }
         } else {

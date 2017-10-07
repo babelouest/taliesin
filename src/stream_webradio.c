@@ -1010,6 +1010,7 @@ json_t * is_webradio_command_valid(struct config_elements * config, json_t * j_c
                  0 != o_strcmp(str_command, "attach_playlist") &&
                  0 != o_strcmp(str_command, "reload") &&
                  0 != o_strcmp(str_command, "rename") &&
+                 0 != o_strcmp(str_command, "save") &&
                  0 != o_strcmp(str_command, "reset_url")) {
         json_array_append_new(j_result, json_pack("{ss}", "command", "invalid command"));
       }
@@ -1076,6 +1077,10 @@ json_t * is_webradio_command_valid(struct config_elements * config, json_t * j_c
                               json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "target")) < 0) {
             json_array_append_new(j_result, json_pack("{ss}", "parameters", "target must ba a positive integer"));
           }
+        } else if (o_strcmp(str_command, "save") == 0) {
+          j_element = is_playlist_valid(config, username, is_admin, json_object_get(j_command, "parameters"), 0, 0);
+          json_array_extend(j_result, j_element);
+          json_decref(j_element);
         } else if (o_strcmp(str_command, "rename") == 0) {
           if (!json_is_object(json_object_get(j_command, "parameters"))) {
             json_array_append_new(j_result, json_pack("{ss}", "parameters", "parameter must be a JSON object"));
@@ -1314,6 +1319,12 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
         file_list_clean_file(file);
         j_return = json_pack("{si}", "result", ret);
       }
+    } else {
+      j_return = json_pack("{si}", "result", T_ERROR);
+    }
+  } else if (0 == o_strcmp(str_command, "save")) {
+    if (playlist_add(config, username, json_object_get(j_command, "parameters"), webradio->file_list) == T_OK) {
+      j_return = json_pack("{si}", "result", T_OK);
     } else {
       j_return = json_pack("{si}", "result", T_ERROR);
     }

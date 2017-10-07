@@ -1027,32 +1027,12 @@
   });
   
   $("#modal-playlist-save").click(function () {
-    var mediaList = [];
-    for (var i in currentList) {
-      mediaList.push({data_source: currentList[i].data_source, path: currentList[i].path});
-    }
+    console.log("plop");
     var playlist = {
       name: $("#modal-playlist-name").val(),
-      description: $("#modal-playlist-description").val(),
-      media: mediaList
+      description: $("#modal-playlist-description").val()
     }
-		$.ajax({
-			type: (updatePlaylist?"PUT":"POST"),
-			url: "../api/playlist/" + (updatePlaylist?currentPlaylist.name:""),
-      data: JSON.stringify(playlist),
-			beforeSend: function(request) {
-				request.setRequestHeader("Authorization", "Bearer " + $("#oauth-token-value").val());
-        request.setRequestHeader("content-type", "application/json");
-			},
-			success: function (result, status, request) {
-        $("#modal-playlist").modal("hide");
-        refreshPlaylistList();
-				showMessage("info", "playlist saved");
-			},
-			error: function (error) {
-			  showMessage("warning", "Error saving playlist: " + error.status + " - " + error.statusText);
-			}
-		});
+    runCommand(currentStream.name, "save", playlist);
   });
 	
 	$("#stream-current-refresh").click(function () {

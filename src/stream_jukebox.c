@@ -834,6 +834,7 @@ json_t * is_jukebox_command_valid(struct config_elements * config, json_t * j_co
                  0 != o_strcmp(str_command, "attach_playlist") &&
                  0 != o_strcmp(str_command, "reload") &&
                  0 != o_strcmp(str_command, "rename") &&
+                 0 != o_strcmp(str_command, "save") &&
 								 0 != o_strcmp(str_command, "reset_url")) {
         json_array_append_new(j_result, json_pack("{ss}", "command", "invalid command"));
       }
@@ -905,6 +906,10 @@ json_t * is_jukebox_command_valid(struct config_elements * config, json_t * j_co
           } else if (json_object_get(json_object_get(j_command, "parameters"), "name") == NULL || !json_is_string(json_object_get(json_object_get(j_command, "parameters"), "name")) || json_string_length(json_object_get(json_object_get(j_command, "parameters"), "name")) == 0 || json_string_length(json_object_get(json_object_get(j_command, "parameters"), "name")) > 512) {
             json_array_append_new(j_result, json_pack("{ss}", "parameters", "parameter name must be a non empty JSON string of maximum 512 characters"));
           }
+        } else if (o_strcmp(str_command, "save") == 0) {
+          j_element = is_playlist_valid(config, username, is_admin, json_object_get(j_command, "parameters"), 0, 0);
+          json_array_extend(j_result, j_element);
+          json_decref(j_element);
         }
       }
     }
@@ -1097,6 +1102,12 @@ json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * ju
     o_free(jukebox->display_name);
     jukebox->display_name = o_strdup(json_string_value(json_object_get(json_object_get(j_command, "parameters"), "name")));
     if (jukebox_set_display_name_db_stream(config, jukebox->name, jukebox->display_name) == T_OK) {
+      j_return = json_pack("{si}", "result", T_OK);
+    } else {
+      j_return = json_pack("{si}", "result", T_ERROR);
+    }
+  } else if (0 == o_strcmp(str_command, "save")) {
+    if (playlist_add(config, username, json_object_get(j_command, "parameters"), jukebox->file_list) == T_OK) {
       j_return = json_pack("{si}", "result", T_OK);
     } else {
       j_return = json_pack("{si}", "result", T_ERROR);

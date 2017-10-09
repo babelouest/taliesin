@@ -23,12 +23,10 @@
 #define TALIESIN_SERVER_URI "http://localhost:8576/api"
 
 #define DATA_SOURCE_VALID       "dataSourceTest"
-#define DATA_SOURCE_ADM_VALID   "dataSourceTestAdm"
-#define DATA_SOURCE_ALL_VALID   "dataSourceTestAll"
-#define DATA_SOURCE_INVALID     "dataSourceTestInvalid"
+#define DATA_SOURCE_PATH        "/tmp/media"
 
 struct _u_request user_req, admin_req;
-char * user_login = NULL, * admin_login = NULL;
+char * user_login = NULL, * admin_login = NULL, * data_source_path;
 
 START_TEST(test_get_config_user_audio_extension_ok)
 {
@@ -224,6 +222,53 @@ START_TEST(test_set_config_admin_original_ok)
 }
 END_TEST
 
+START_TEST(test_create_data_source_user_ok)
+{
+  char * url = msprintf("%s/data_source/", TALIESIN_SERVER_URI);
+	json_t * j_data_source = json_pack("{ssssssssss}",
+																		 "name", DATA_SOURCE_VALID,
+																		 "description", "description for " DATA_SOURCE_VALID,
+																		 "scope", "me",
+																		 "path", data_source_path,
+																		 "icon", "testIcon");
+	
+  int res = run_simple_authenticated_test(&admin_req, "POST", url, j_data_source, NULL, 200, NULL, NULL, NULL);
+  free(url);
+	json_decref(j_data_source);
+	ck_assert_int_eq(res, 1);
+}
+END_TEST
+
+START_TEST(test_get_username_list_ok)
+{
+  char * url = TALIESIN_SERVER_URI "/users";
+  json_t * j_body = json_string(ADMIN_LOGIN);
+  
+  int res = run_simple_authenticated_test(&admin_req, "GET", url, j_body, NULL, 200, NULL, NULL, NULL);
+  json_decref(j_body);
+	ck_assert_int_eq(res, 1);
+}
+END_TEST
+
+START_TEST(test_get_username_list_unauthorized)
+{
+  char * url = TALIESIN_SERVER_URI "/users";
+  
+  int res = run_simple_authenticated_test(&user_req, "GET", url, NULL, NULL, 401, NULL, NULL, NULL);
+	ck_assert_int_eq(res, 1);
+}
+END_TEST
+
+START_TEST(test_delete_data_source_user_ok)
+{
+  char * url = msprintf("%s/data_source/%s", TALIESIN_SERVER_URI, DATA_SOURCE_VALID);
+	
+  int res = run_simple_authenticated_test(&admin_req, "DELETE", url, NULL, NULL, 200, NULL, NULL, NULL);
+  free(url);
+	ck_assert_int_eq(res, 1);
+}
+END_TEST
+
 static Suite *taliesin_suite(void)
 {
 	Suite *s;
@@ -250,6 +295,10 @@ static Suite *taliesin_suite(void)
 	tcase_add_test(tc_core, test_set_config_admin_invalid_category);
 	tcase_add_test(tc_core, test_set_config_admin_original_ok);
 	tcase_add_test(tc_core, test_get_config_user_audio_extension_ok);
+	tcase_add_test(tc_core, test_create_data_source_user_ok);
+	tcase_add_test(tc_core, test_get_username_list_ok);
+	tcase_add_test(tc_core, test_get_username_list_unauthorized);
+	tcase_add_test(tc_core, test_delete_data_source_user_ok);
 	tcase_set_timeout(tc_core, 30);
 	suite_add_tcase(s, tc_core);
 
@@ -264,6 +313,8 @@ int main(int argc, char *argv[])
   struct _u_request auth_req;
   struct _u_response auth_resp;
   int res;
+  
+  data_source_path = argc>8?argv[8]:DATA_SOURCE_PATH;
   
   y_init_logs("Taliesin test", Y_LOG_MODE_CONSOLE, Y_LOG_LEVEL_DEBUG, NULL, "Starting Taliesin test");
   

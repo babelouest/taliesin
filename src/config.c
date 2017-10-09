@@ -58,7 +58,7 @@ json_t * config_get_db_values(struct config_elements * config, const char * conf
                         "tc_type",
                         config_type,
                       "order_by",
-                      "tc_order");
+                      "tc_order, tc_id");
   if (j_query != NULL) {
     res = h_select(config->conn, j_query, &j_result, NULL);
     json_decref(j_query);
@@ -344,4 +344,29 @@ int config_get_type_from_path(struct config_elements * config, const char * path
   
   o_free(save_path);
   return ret;
+}
+
+/**
+ * Return the different usernames that have been connected to the application
+ */
+json_t * username_get_list(struct config_elements * config) {
+  json_t * j_result;
+  int res;
+  char * query;
+  
+  query = msprintf("SELECT DISTINCT(`username`) AS `username` FROM (\
+SELECT DISTINCT(`tds_username`) AS `username` FROM " TALIESIN_TABLE_DATA_SOURCE " WHERE `tds_username` IS NOT NULL"
+" UNION ALL \
+SELECT DISTINCT(`tpl_username`) AS `username` FROM " TALIESIN_TABLE_PLAYLIST " WHERE `tpl_username` IS NOT NULL"
+" UNION ALL \
+SELECT DISTINCT(`ts_username`) AS `username` FROM " TALIESIN_TABLE_STREAM " WHERE `ts_username` IS NOT NULL"
+") AS `t_username` ORDER BY `username`");
+  res = h_execute_query_json(config->conn, query, &j_result);
+  o_free(query);
+  if (res == H_OK) {
+    return json_pack("{siso}", "result", T_OK, "username", j_result);
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "username_get_list - Error executing query");
+    return json_pack("{si}", "result", T_ERROR_DB);
+  }
 }

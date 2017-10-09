@@ -202,9 +202,11 @@ int main (int argc, char ** argv) {
   
   
   // Config endpoints
+  ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/users/", TALIESIN_CALLBACK_PRIORITY_AUTHENTICATION, &callback_taliesin_check_admin_access, (void*)config);
+  ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/users/", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_username_get_list, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/config/:type/", TALIESIN_CALLBACK_PRIORITY_AUTHENTICATION, &callback_taliesin_check_access, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/config/:type/", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_config_type_get, (void*)config);
-  ulfius_add_endpoint_by_val(config->instance, "PUT", config->api_prefix, "/config/:type", TALIESIN_CALLBACK_PRIORITY_AUTHENTICATION, &callback_taliesin_check_admin_access, (void*)config);
+  ulfius_add_endpoint_by_val(config->instance, "PUT", config->api_prefix, "/config/:type/", TALIESIN_CALLBACK_PRIORITY_AUTHENTICATION, &callback_taliesin_check_admin_access, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "PUT", config->api_prefix, "/config/:type/", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_config_type_set, (void*)config);
   
   // Streaming endpoint

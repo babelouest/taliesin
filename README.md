@@ -2,11 +2,11 @@
 
 Audio media server with a REST API.
 
-Beta version, still work in progress. Not yet easy user ready, but the API is almost done.
+Beta version, still work in progress. Not yet easy user ready, but the API is almost complete.
 
 ## Install
 
-Requires a recent version of libav or ffmpeg, as in Debian Stretch/Ubuntu 17.04 version for example, I'm not sure about the version number, maybe 11 at least, requires [ulfius](https://github.com/babelouest/ulfius), [hoel](https://github.com/babelouest/hoel), [libjwt](https://github.com/benmcollins/libjwt), libconfig and their dependencies.
+Requires a recent version of libav or ffmpeg, as in Debian Stretch or Ubuntu 17.04 version for example, I'm not sure about the version number, maybe 11 at least. Requires [ulfius](https://github.com/babelouest/ulfius), [hoel](https://github.com/babelouest/hoel), [libjwt](https://github.com/benmcollins/libjwt), libconfig and their dependencies.
 
 ```shell
 $ apt install -y libjansson-dev libavfilter-dev libavcodec-dev libavformat-dev libavresample-dev libavutil-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libsqlite3-dev libmariadbclient-dev libconfig8-dev
@@ -54,4 +54,4 @@ $ sudo systemctl enable taliesin.service
 $ sudo service taliesin start
 ```
 
-The open [http://localhost:8576/app/](http://localhost:8576/app/).
+Then open [http://localhost:8576/app/](http://localhost:8576/app/).

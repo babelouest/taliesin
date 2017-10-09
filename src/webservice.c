@@ -2222,6 +2222,23 @@ int callback_taliesin_advanced_search (const struct _u_request * request, struct
 /**
  * Config callbacks
  */
+int callback_taliesin_username_get_list (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  struct config_elements * config = (struct config_elements *)user_data;
+  json_t * j_result = username_get_list(config);
+  
+  if (check_result_value(j_result, T_OK)) {
+    if (ulfius_set_json_body_response(response, 200, json_object_get(j_result, "username")) != U_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_username_get_list - Error ulfius_set_json_body_response");
+      response->status = 500;
+    }
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_username_get_list - Error username_get_list");
+    response->status = 500;
+  }
+  json_decref(j_result);
+  return U_CALLBACK_CONTINUE;
+}
+
 int callback_taliesin_config_type_get (const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct config_elements * config = (struct config_elements *)user_data;
   json_t * j_result = NULL;

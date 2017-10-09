@@ -19,7 +19,7 @@
 #define USER_SCOPE_LIST     "taliesin"
 #define TALIESIN_SERVER_URI "http://localhost:8576/api"
 
-#define DATA_SOURCE_VALID "dataSourceTest"
+#define DATA_SOURCE_VALID   "dataSourceTest"
 
 struct _u_request user_req;
 char * user_login = NULL;

@@ -479,6 +479,7 @@ int      config_get_type_from_path(struct config_elements * config, const char *
 json_t * config_get_values(struct config_elements * config, const char * config_type);
 json_t * is_valid_config_elements(json_t * j_config_values);
 int      config_set_values(struct config_elements * config, const char * config_type, json_t * j_config_values);
+json_t * username_get_list(struct config_elements * config);
 
 // Data source functions
 json_t   * data_source_list(struct config_elements * config, const char * username);
@@ -694,6 +695,7 @@ void callback_websocket_stream_incoming_message (const struct _u_request * reque
 
 int callback_taliesin_search (const struct _u_request * request, struct _u_response * response, void * user_data);
 
+int callback_taliesin_username_get_list (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_config_type_get (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_config_type_set (const struct _u_request * request, struct _u_response * response, void * user_data);
 

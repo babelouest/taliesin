@@ -364,6 +364,29 @@ static int webradio_set_display_name_db_stream(struct config_elements * config, 
   }
 }
 
+static int webradio_set_name_db_stream(struct config_elements * config, const char * old_name, const char * new_name) {
+  json_t * j_query;
+  int res;
+  
+  j_query = json_pack("{sss{ss}s{ss}}",
+                      "table",
+                      TALIESIN_TABLE_STREAM,
+                      "set",
+                        "ts_name",
+                        new_name,
+                      "where",
+                        "ts_name",
+                        old_name);
+  res = h_update(config->conn, j_query, NULL);
+  json_decref(j_query);
+  if (res == H_OK) {
+    return T_OK;
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "webradio_set_name_db_stream - Error executing j_query");
+    return T_ERROR_DB;
+  }
+}
+
 static int webradio_remove_db_stream(struct config_elements * config, const char * name) {
   json_t * j_query;
   int res;
@@ -1104,7 +1127,7 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
   size_t index;
   struct _audio_buffer * audio_buffer;
   struct _t_file * file;
-  char * full_path;
+  char * full_path, old_name[TALIESIN_PLAYLIST_NAME_LENGTH + 1] = {0};
   
   if (0 == o_strcmp(str_command, "stop")) {
     if (webradio_remove_db_stream(config, webradio->name) != T_OK) {
@@ -1118,8 +1141,13 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
     }
     j_return = json_pack("{si}", "result", T_OK);
   } else if (0 == o_strcmp(str_command, "reset_url")) {
+    strcpy(old_name, webradio->name);
 		rand_string(webradio->name, TALIESIN_PLAYLIST_NAME_LENGTH);
-		j_return = json_pack("{si}", "result", T_OK);
+    if (webradio_set_name_db_stream(config, old_name, webradio->name) == T_OK) {
+      j_return = json_pack("{si}", "result", T_OK);
+    } else {
+      j_return = json_pack("{si}", "result", T_ERROR);
+    }
   } else if (0 == o_strcmp(str_command, "replay")) {
     for (i=0; i<webradio->audio_stream->nb_client_connected; i++) {
       webradio->audio_stream->client_list[i]->command = TALIESIN_STREAM_COMMAND_PREVIOUS;
@@ -1225,16 +1253,14 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
     }
     json_decref(j_result);
   } else if (0 == o_strcmp(str_command, "append_list")) {
-    ret = T_ERROR_PARAM;
+    ret = T_OK;
     json_array_foreach(json_object_get(j_command, "parameters"), index, j_element) {
       if (file_list_add_media(config, webradio->file_list, username, json_string_value(json_object_get(j_element, "data_source")), json_string_value(json_object_get(j_element, "path")), (json_object_get(j_element, "recursive") == json_true())) != T_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error appending %s/%s to webradio", json_string_value(json_object_get(j_element, "data_source")), json_string_value(json_object_get(j_element, "path")));
       } else {
-        if (webradio_update_db_stream_media_list(config, webradio) == T_OK) {
-          j_return = json_pack("{si}", "result", T_OK);
-        } else {
+        if (webradio_update_db_stream_media_list(config, webradio) != T_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error webradio_update_db_stream_media_list");
-          j_return = json_pack("{si}", "result", T_ERROR);
+          ret = T_ERROR;
         }
       }
     }

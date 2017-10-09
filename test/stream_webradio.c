@@ -23,6 +23,7 @@
 #define STREAM_DISPLAY_NAME_ORIG  "short"
 #define STREAM_DISPLAY_NAME_MODIF "taliesin short"
 #define PLAYLIST_USER_VALID       "playlistTest"
+#define PLAYLIST_SAVE_VALID       "saveTest"
 
 struct _u_request user_req;
 char * user_login = NULL, valid_stream_name[33] = {0};
@@ -682,6 +683,59 @@ START_TEST(test_webradio_command_delete_stream_ok)
 }
 END_TEST
 
+START_TEST(test_webradio_command_save_as_playlist_ok)
+{
+  if (get_stream_name()) {
+		char * url;
+		json_t * j_command = json_pack("{sss{ssss}}", "command", "save", "parameters", "name", PLAYLIST_SAVE_VALID, "description", "description for "PLAYLIST_SAVE_VALID);
+		int res;
+		
+		url = msprintf(TALIESIN_SERVER_URI "/stream/%s/manage", valid_stream_name);
+		res = run_simple_authenticated_test(&user_req, "PUT", url, j_command, NULL, 200, NULL, NULL, NULL);
+		
+		ck_assert_int_eq(res, 1);
+
+		json_decref(j_command);
+	}
+}
+END_TEST
+
+START_TEST(test_webradio_get_playlist_saved_ok)
+{
+	if (get_stream_name()) {
+		char * url = msprintf("%s/playlist/%s", TALIESIN_SERVER_URI, PLAYLIST_SAVE_VALID);
+		
+		int res = run_simple_authenticated_test(&user_req, "GET", url, NULL, NULL, 200, NULL, NULL, NULL);
+		free(url);
+		ck_assert_int_eq(res, 1);
+	}
+}
+END_TEST
+
+START_TEST(test_webradio_delete_playlist_saved_ok)
+{
+	if (get_stream_name()) {
+		char * url = msprintf("%s/playlist/%s", TALIESIN_SERVER_URI, PLAYLIST_SAVE_VALID);
+		
+		int res = run_simple_authenticated_test(&user_req, "DELETE", url, NULL, NULL, 200, NULL, NULL, NULL);
+		free(url);
+		ck_assert_int_eq(res, 1);
+	}
+}
+END_TEST
+
+START_TEST(test_stream_list_empty)
+{
+  char * url = msprintf("%s/stream", TALIESIN_SERVER_URI);
+  json_t * j_result = json_array();
+	
+  int res = run_simple_authenticated_test(&user_req, "GET", url, NULL, NULL, 200, j_result, NULL, NULL);
+  free(url);
+  json_decref(j_result);
+	ck_assert_int_eq(res, 1);
+}
+END_TEST
+
 static Suite *taliesin_suite(void)
 {
 	Suite *s;
@@ -707,6 +761,9 @@ static Suite *taliesin_suite(void)
 	tcase_add_test(tc_core, test_webradio_command_rename_ok);
 	tcase_add_test(tc_core, test_webradio_command_reset_url_ok);
 	tcase_add_test(tc_core, test_webradio_play_not_found);
+	tcase_add_test(tc_core, test_webradio_command_save_as_playlist_ok);
+	tcase_add_test(tc_core, test_webradio_get_playlist_saved_ok);
+	tcase_add_test(tc_core, test_webradio_delete_playlist_saved_ok);
 	tcase_add_test(tc_core, test_create_db_playlist_ok);
 	tcase_add_test(tc_core, test_webradio_command_attach_playlist_ok);
 	tcase_add_test(tc_core, test_webradio_command_reload_playlist_ok);
@@ -714,6 +771,7 @@ static Suite *taliesin_suite(void)
 	tcase_add_test(tc_core, test_delete_db_playlist_ok);
 	
 	tcase_add_test(tc_core, test_webradio_command_delete_stream_ok);
+	tcase_add_test(tc_core, test_stream_list_empty);
 	tcase_set_timeout(tc_core, 30);
 	suite_add_tcase(s, tc_core);
 

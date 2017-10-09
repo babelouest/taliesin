@@ -44,74 +44,74 @@ config: config.c unit-tests.o
 	@$(CC) $(CFLAGS) config.c unit-tests.o -o config $(LIBS)
 
 test_config: config
-	./run_test.sh ./config $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL) $(PARAM_MEDIA_FOLDER)
+	-./run_test.sh ./config $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL) $(PARAM_MEDIA_FOLDER)
 
 data_source_crud: data_source_crud.c unit-tests.o
 	@$(CC) $(CFLAGS) data_source_crud.c unit-tests.o -o data_source_crud $(LIBS)
 
 test_data_source_crud: data_source_crud
-	@-./run_test.sh ./data_source_crud $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL) $(PARAM_MEDIA_FOLDER)
+	-./run_test.sh ./data_source_crud $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL) $(PARAM_MEDIA_FOLDER)
 
 data_source_refresh: data_source_refresh.c unit-tests.o
 	@$(CC) $(CFLAGS) data_source_refresh.c unit-tests.o -o data_source_refresh $(LIBS)
 
 test_data_source_refresh: data_source_refresh
-	@-./run_test.sh ./data_source_refresh $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL) $(PARAM_MEDIA_FOLDER)
+	-./run_test.sh ./data_source_refresh $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL) $(PARAM_MEDIA_FOLDER)
 
 data_source_create_test_environment: data_source_create_test_environment.c unit-tests.o
 	@$(CC) $(CFLAGS) data_source_create_test_environment.c unit-tests.o -o data_source_create_test_environment $(LIBS)
 
 test_data_source_create_test_environment: data_source_create_test_environment
-	@-./run_test.sh ./data_source_create_test_environment $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL) $(PARAM_MEDIA_FOLDER)
+	-./run_test.sh ./data_source_create_test_environment $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL) $(PARAM_MEDIA_FOLDER)
 
 data_source_browse_path: data_source_browse_path.c unit-tests.o
 	@$(CC) $(CFLAGS) data_source_browse_path.c unit-tests.o -o data_source_browse_path $(LIBS)
 
 test_data_source_browse_path: data_source_browse_path
-	@-./run_test.sh ./data_source_browse_path $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL)
+	-./run_test.sh ./data_source_browse_path $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL)
 
 data_source_browse_category: data_source_browse_category.c unit-tests.o
 	@$(CC) $(CFLAGS) data_source_browse_category.c unit-tests.o -o data_source_browse_category $(LIBS)
 
 test_data_source_browse_category: data_source_browse_category
-	@-./run_test.sh ./data_source_browse_category $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL)
+	-./run_test.sh ./data_source_browse_category $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL)
 
 playlist_crud: playlist_crud.c unit-tests.o
 	@$(CC) $(CFLAGS) playlist_crud.c unit-tests.o -o playlist_crud $(LIBS)
 
 test_playlist_crud: playlist_crud
-	@-./run_test.sh ./playlist_crud $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL)
+	-./run_test.sh ./playlist_crud $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL)
 
 search_simple: search_simple.c unit-tests.o
 	@$(CC) $(CFLAGS) search_simple.c unit-tests.o -o search_simple $(LIBS)
 
 test_search_simple: search_simple
-	@-./run_test.sh ./search_simple $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL)
+	-./run_test.sh ./search_simple $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL)
 
 search_advanced: search_advanced.c unit-tests.o
 	@$(CC) $(CFLAGS) search_advanced.c unit-tests.o -o search_advanced $(LIBS)
 
 test_search_advanced: search_advanced
-	@-./run_test.sh ./search_advanced $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL)
+	-./run_test.sh ./search_advanced $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL)
 
 stream_webradio: stream_webradio.c unit-tests.o
 	@$(CC) $(CFLAGS) stream_webradio.c unit-tests.o -o stream_webradio $(LIBS)
 
 test_stream_webradio: stream_webradio
-	@-./run_test.sh ./stream_webradio $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL)
+	-./run_test.sh ./stream_webradio $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL)
 
 stream_jukebox: stream_jukebox.c unit-tests.o
 	@$(CC) $(CFLAGS) stream_jukebox.c unit-tests.o -o stream_jukebox $(LIBS)
 
 test_stream_jukebox: stream_jukebox
-	@-./run_test.sh ./stream_jukebox $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL)
+	-./run_test.sh ./stream_jukebox $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL)
 
 data_source_delete_test_environment: data_source_delete_test_environment.c unit-tests.o
 	@$(CC) $(CFLAGS) data_source_delete_test_environment.c unit-tests.o -o data_source_delete_test_environment $(LIBS)
 
 test_data_source_delete_test_environment: data_source_delete_test_environment
-	@-./run_test.sh ./data_source_delete_test_environment $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL)
+	-./run_test.sh ./data_source_delete_test_environment $(PARAM_USER) $(PARAM_PASSWORD) $(PARAM_SCOPE) $(PARAM_ADM_USER) $(PARAM_ADM_PASSWORD) $(PARAM_ADM_SCOPE) $(PARAM_GLEWLWYD_URL)
 
 build: config data_source_crud data_source_refresh data_source_create_test_environment data_source_browse_path data_source_browse_category playlist_crud search_simple search_advanced stream_webradio stream_jukebox data_source_delete_test_environment
 
-test: test_config test_data_source_crud test_data_source_refresh test_data_source_create_test_environment test_data_source_browse_path test_data_source_browse_category test_playlist_crud test_search_simple test_search_advanced test_stream_webradio test_stream_jukebox test_data_source_delete_test_environment
+test: build test_config test_data_source_crud test_data_source_refresh test_data_source_create_test_environment test_data_source_browse_path test_data_source_browse_category test_playlist_crud test_search_simple test_search_advanced test_stream_webradio test_stream_jukebox test_data_source_delete_test_environment

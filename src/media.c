@@ -936,6 +936,46 @@ json_t * scan_path(struct config_elements * config, json_t * j_data_source, cons
   return j_result;
 }
 
+json_t * media_get_file_list_from_path(struct config_elements * config, json_t * j_data_source, const char * path, int recursive) {
+  json_t * j_result = media_get_full(config, j_data_source, path), * j_sub_result, * j_return, * j_element;
+  size_t index;
+  char * sub_path;
+  
+  if (check_result_value(j_result, T_OK)) {
+    if (json_is_array(json_object_get(j_result, "media"))) {
+      j_return = json_pack("{sis[]}", "result", T_OK, "media");
+      if (j_return != NULL) {
+        json_array_foreach(json_object_get(j_result, "media"), index, j_element) {
+          if (recursive && 0 == o_strcmp("folder", json_string_value(json_object_get(j_element, "type")))) {
+            sub_path = msprintf("%s/%s", path, json_string_value(json_object_get(j_element, "name")));;
+            j_sub_result = media_get_file_list_from_path(config, j_data_source, sub_path, recursive);
+            if (check_result_value(j_sub_result, T_OK)) {
+              json_array_extend(json_object_get(j_return, "media"), json_object_get(j_sub_result, "media"));
+            } else {
+              y_log_message(Y_LOG_LEVEL_ERROR, "media_get_file_list_from_path - Error media_get_file_list_from_path for sub_path %s", sub_path);
+            }
+            json_decref(j_sub_result);
+            o_free(sub_path);
+          } else {
+            json_object_set(j_element, "data_source_path", json_object_get(j_data_source, "path"));
+            json_array_append(json_object_get(j_return, "media"), j_element);
+          }
+        }
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "media_get_file_list_from_path - Error allocating resources for j_return");
+      }
+    } else {
+      j_return = json_pack("{sis[O]}", "result", T_OK, "media", json_object_get(j_result, "media"));
+      json_object_set(json_array_get(json_object_get(j_return, "media"), 0), "data_source_path", json_object_get(j_data_source, "path"));
+    }
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "media_get_file_list_from_path - Error media_get_full");
+    j_return = json_pack("{si}", "result", T_ERROR);
+  }
+  json_decref(j_result);
+  return j_return;
+}
+
 json_t * media_get_full(struct config_elements * config, json_t * j_data_source, const char * path) {
   json_t * j_query, * j_result_folders, * j_result = NULL, * j_result_files, * j_element;
   json_int_t tf_id = 0;

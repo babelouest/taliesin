@@ -208,6 +208,7 @@ struct _audio_buffer {
   uint8_t              * data;
   size_t               * offset_list;
   unsigned int           nb_offset;
+  size_t                 last_offset;
   
   unsigned int           nb_client;
   struct timespec        start;
@@ -505,7 +506,7 @@ struct _t_file * file_list_get_file(struct _t_file_list * file_list, unsigned lo
 int              file_list_init(struct _t_file_list * file_list);
 void             file_list_clean(struct _t_file_list * file_list);
 void             file_list_clean_file(struct _t_file * file);
-int              file_list_add_media(struct config_elements * config, struct _t_file_list * file_list, const char * username, const char * data_source, const char * path, int recursive);
+int              file_list_add_media_list(struct config_elements * config, struct _t_file_list * file_list, json_t * media_list);
 
 // Jukebox audio buffer
 json_t * is_stream_parameters_valid(const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate);
@@ -525,7 +526,7 @@ struct _t_file * webradio_get_next_file(struct _t_webradio * webradio, unsigned 
 json_t         * webradio_get_clients(struct _t_webradio * webradio);
 json_t         * webradio_get_info(struct _t_webradio * webradio);
 json_t         * webradio_get_file_list(struct config_elements * config, struct _t_webradio * webradio, json_int_t offset, json_int_t limit);
-int              webradio_remove_media_by_index(struct _t_webradio * webradio, int index);
+int              webradio_remove_media_by_index(struct _t_webradio * webradio, int index, json_int_t * tm_id);
 
 int                  webradio_open_output_buffer(struct _audio_stream * audio_stream);
 ssize_t              webradio_buffer_metadata(char * buf, size_t max, struct _client_data_webradio * client_data);
@@ -569,12 +570,13 @@ void     jukebox_clean(struct _t_jukebox * jukebox);
 json_t * jukebox_get_info(struct _t_jukebox * jukebox);
 json_t * jukebox_get_clients(struct _t_jukebox * jukebox);
 json_t * jukebox_get_file_list(struct config_elements * config, struct _t_jukebox * jukebox, json_int_t offset, json_int_t limit);
-int      jukebox_remove_media_by_index(struct _t_jukebox * jukebox, int index);
+int      jukebox_remove_media_by_index(struct _t_jukebox * jukebox, int index, json_int_t * tm_id);
 
 // Media functions
 json_t   * media_get(struct config_elements * config, json_t * j_data_source, const char * path);
 json_t   * media_get_by_id(struct config_elements * config, json_int_t tm_id);
 json_t   * media_get_full(struct config_elements * config, json_t * j_data_source, const char * path);
+json_t   * media_get_file_list_from_path(struct config_elements * config, json_t * j_data_source, const char * path, int recursive);
 json_t   * media_cover_get(struct config_elements * config, json_t * j_data_source, const char * path, int thumbnail);
 json_t   * media_cover_get_by_id(struct config_elements * config, json_int_t tm_id, int thumbnail);
 json_t   * media_list_folder(struct config_elements * config, json_t * j_data_source, json_int_t tf_id, int get_id);

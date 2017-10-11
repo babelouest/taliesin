@@ -212,54 +212,21 @@ void file_list_clean(struct _t_file_list * file_list) {
   }
 }
 
-int file_list_add_media(struct config_elements * config, struct _t_file_list * file_list, const char * username, const char * data_source, const char * path, int recursive) {
-  json_t * j_data_source, * j_media, * j_element;
-  int res = T_OK;
-  char * full_path, * save_path, * sub_path;
+int file_list_add_media_list(struct config_elements * config, struct _t_file_list * file_list, json_t * media_list) {
+  json_t * j_media;
   size_t index;
+  int ret = T_OK;
+  char * full_path;
   
-  j_data_source = data_source_get(config, username, data_source, 1);
-  if (check_result_value(j_data_source, T_OK)) {
-    save_path = (char *)path;
-    while (save_path != NULL && save_path[0] != '\0' && save_path[0] == '/') {
-      save_path++;
+  json_array_foreach(media_list, index, j_media) {
+    full_path = msprintf("%s/%s", json_string_value(json_object_get(j_media, "data_source_path")), json_string_value(json_object_get(j_media, "path")));
+		//y_log_message(Y_LOG_LEVEL_DEBUG, "Add media to list %s",json_dumps(j_media, JSON_ENCODE_ANY));
+    if (file_list_enqueue_new_file(file_list, full_path, json_integer_value(json_object_get(j_media, "id"))) != T_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "file_list_add_media_list - Error file_list_enqueue_new_file for %s", full_path);
+      ret = T_ERROR;
+      break;
     }
-    j_media = media_get_full(config, json_object_get(j_data_source, "data_source"), save_path);
-    if (check_result_value(j_media, T_OK)) {
-      if (!json_is_array(json_object_get(j_media, "media"))) {
-        full_path = msprintf("%s/%s", json_string_value(json_object_get(json_object_get(j_data_source, "data_source"), "path")), path);
-        if (file_list_enqueue_new_file(file_list, full_path, json_integer_value(json_object_get(json_object_get(j_media, "media"), "id"))) != T_OK) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "file_list_add_media - Error file_list_enqueue_new_file for %s", full_path);
-          res = T_ERROR;
-        }
-        o_free(full_path);
-      } else {
-        json_array_foreach(json_object_get(j_media, "media"), index, j_element) {
-          if (0 == o_strcmp(json_string_value(json_object_get(j_element, "type")), "folder") && recursive) {
-            sub_path = msprintf("%s/%s", path, json_string_value(json_object_get(j_element, "name")));
-            if (file_list_add_media(config, file_list, username, data_source, sub_path, recursive) != T_OK) {
-              y_log_message(Y_LOG_LEVEL_ERROR, "file_list_add_media - Error add subfolder %s", sub_path);
-            }
-            o_free(sub_path);
-          } else if (0 == o_strcmp(json_string_value(json_object_get(j_element, "type")), "audio")) {
-            full_path = msprintf("%s/%s/%s", json_string_value(json_object_get(json_object_get(j_data_source, "data_source"), "path")), path, json_string_value(json_object_get(j_element, "name")));
-            if (file_list_enqueue_new_file(file_list, full_path, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
-              y_log_message(Y_LOG_LEVEL_ERROR, "file_list_add_media - Error file_list_enqueue_new_file for %s", full_path);
-              res = T_ERROR;
-            }
-            o_free(full_path);
-          }
-        }
-      }
-    } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "file_list_add_media - Error media_get_full %s/%s", json_string_value(json_object_get(json_object_get(j_data_source, "data_source"), "path")), path);
-      res = T_ERROR;
-    }
-    json_decref(j_media);
-  } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "file_list_add_media - Error data_source_get");
-    res = T_ERROR;
+    o_free(full_path);
   }
-  json_decref(j_data_source);
-  return res;
+  return ret;
 }

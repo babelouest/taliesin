@@ -1133,11 +1133,19 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
               client_data_webradio->first_buffer_counter = 0;
             }
             if (client_data_webradio->audio_stream->first_buffer != NULL) {
-              clock_gettime(CLOCK_MONOTONIC_RAW, &now);
-              time_delta = (((uint64_t)now.tv_sec * 1000000000 + (uint64_t)now.tv_nsec) - ((uint64_t)client_data_webradio->audio_stream->first_buffer->start.tv_sec * 1000000000 + (uint64_t)client_data_webradio->audio_stream->first_buffer->start.tv_nsec));
-              //y_log_message(Y_LOG_LEVEL_DEBUG, "time_delta is %zu", time_delta);
-              //client_data_webradio->buffer_offset = time_offset - (time_offset % client_data_webradio->audio_stream->output_codec_context->frame
-              time_offset = ((time_delta * (client_data_webradio->audio_stream->stream_bitrate / 8)) / 1000000000);
+              if (client_data_webradio->audio_stream->nb_client_connected == 1) {
+                // First client to connect, jump to last_offset
+                time_offset = client_data_webradio->audio_stream->first_buffer->last_offset;
+                //y_log_message(Y_LOG_LEVEL_DEBUG, "get last_offset");
+              } else {
+                // Not the first client to connect, calculate offset to jump to
+                clock_gettime(CLOCK_MONOTONIC_RAW, &now);
+                time_delta = (((uint64_t)now.tv_sec * 1000000000 + (uint64_t)now.tv_nsec) - ((uint64_t)client_data_webradio->audio_stream->first_buffer->start.tv_sec * 1000000000 + (uint64_t)client_data_webradio->audio_stream->first_buffer->start.tv_nsec));
+                //y_log_message(Y_LOG_LEVEL_DEBUG, "time_delta is %zu", time_delta);
+                //client_data_webradio->buffer_offset = time_offset - (time_offset % client_data_webradio->audio_stream->output_codec_context->frame
+                time_offset = ((time_delta * (client_data_webradio->audio_stream->stream_bitrate / 8)) / 1000000000);
+                //y_log_message(Y_LOG_LEVEL_DEBUG, "Calculat time offset");
+              }
               i=0;
               while (i < client_data_webradio->audio_stream->first_buffer->nb_offset && client_data_webradio->audio_stream->first_buffer->offset_list[i] < time_offset) {
                 i++;
@@ -1149,7 +1157,7 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
                 // This shouldn't happen
                 client_data_webradio->buffer_offset = 0;
               }
-              y_log_message(Y_LOG_LEVEL_DEBUG, "jump to offset %zu while buffer_size is %zu", client_data_webradio->buffer_offset, client_data_webradio->audio_stream->first_buffer->size);
+              //y_log_message(Y_LOG_LEVEL_DEBUG, "jump to offset %zu while buffer_size is %zu", client_data_webradio->buffer_offset, client_data_webradio->audio_stream->first_buffer->size);
             } else {
               client_data_webradio->buffer_offset = 0;
             }

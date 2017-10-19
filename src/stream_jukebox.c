@@ -212,7 +212,7 @@ static int jukebox_add_db_stream_media_list(struct config_elements * config, str
       j_query = json_pack("{sss[]}", "table", TALIESIN_TABLE_STREAM_ELEMENT, "values");
       if (j_query != NULL) {
         json_array_foreach(j_media, index, j_element) {
-          json_array_append_new(json_object_get(j_query, "values"), json_pack("{sIsI}", "ts_id", ts_id, "tm_id", json_integer_value(json_object_get(j_element, "tm_id"))));
+          json_array_append_new(json_object_get(j_query, "values"), json_pack("{sIsI}", "ts_id", ts_id, "tm_id", json_integer_value(json_object_get(j_element, "id"))));
         }
         res = h_insert(config->conn, j_query, NULL);
         json_decref(j_query);

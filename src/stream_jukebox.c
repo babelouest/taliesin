@@ -1268,8 +1268,8 @@ void clean_client_data_jukebox(struct _client_data_jukebox * client_data) {
 }
 
 void * jukebox_run_thread(void * args) {
-  struct _client_data_jukebox * client_data_playlist = (struct _client_data_jukebox *)args;
-  struct config_elements * config               = client_data_playlist->jukebox->config;
+  struct _client_data_jukebox * client_data_jukebox = (struct _client_data_jukebox *)args;
+  struct config_elements * config               = client_data_jukebox->jukebox->config;
   AVFormatContext        * input_format_context = NULL, * output_format_context = NULL;
   AVCodecContext         * input_codec_context  = NULL, * output_codec_context  = NULL;
   AVAudioResampleContext * resample_context     = NULL;
@@ -1278,20 +1278,20 @@ void * jukebox_run_thread(void * args) {
   int64_t pts = 0;
   int output_frame_size, finished = 0, error, data_present = 0, data_written = 0;
   
-  if (!open_output_buffer_playlist(client_data_playlist->audio_buffer, &output_format_context, &output_codec_context, &fifo)) {
-    if (!open_input_file(client_data_playlist->audio_buffer->file->path, &input_format_context, &input_codec_context, AVMEDIA_TYPE_AUDIO) && !init_resampler(input_codec_context, output_codec_context, &resample_context)) {
-      y_log_message(Y_LOG_LEVEL_INFO, "Processing file '%s', duration: %" PRId64, client_data_playlist->audio_buffer->file->path, (input_format_context->duration/AV_TIME_BASE));
-      j_media = media_get_by_id(config, client_data_playlist->audio_buffer->file->tm_id);
+  if (!open_output_buffer_playlist(client_data_jukebox->audio_buffer, &output_format_context, &output_codec_context, &fifo)) {
+    if (!open_input_file(client_data_jukebox->audio_buffer->file->path, &input_format_context, &input_codec_context, AVMEDIA_TYPE_AUDIO) && !init_resampler(input_codec_context, output_codec_context, &resample_context)) {
+      y_log_message(Y_LOG_LEVEL_INFO, "Processing file '%s', duration: %" PRId64, client_data_jukebox->audio_buffer->file->path, (input_format_context->duration/AV_TIME_BASE));
+      j_media = media_get_by_id(config, client_data_jukebox->audio_buffer->file->tm_id);
       if (check_result_value(j_media, T_OK)) {
-        client_data_playlist->audio_buffer->title = build_icy_title(json_object_get(j_media, "media"));
+        client_data_jukebox->audio_buffer->title = build_icy_title(json_object_get(j_media, "media"));
       } else {
-        client_data_playlist->audio_buffer->title = o_strdup(client_data_playlist->jukebox->display_name);
+        client_data_jukebox->audio_buffer->title = o_strdup(client_data_jukebox->jukebox->display_name);
       }
       json_decref(j_media);
-      if (media_add_history(config, client_data_playlist->jukebox->name, client_data_playlist->jukebox->tpl_id, client_data_playlist->audio_buffer->file->tm_id) != T_OK) {
+      if (media_add_history(config, client_data_jukebox->jukebox->name, client_data_jukebox->jukebox->tpl_id, client_data_jukebox->audio_buffer->file->tm_id) != T_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_run_thread - Error media_add_history");
       }
-      while (client_data_playlist->audio_buffer->status != TALIESIN_STREAM_STATUS_STOPPED) {
+      while (client_data_jukebox->audio_buffer->status != TALIESIN_STREAM_STATUS_STOPPED) {
         output_frame_size = output_codec_context->frame_size;
         finished          = 0;
         error             = 0;
@@ -1318,14 +1318,14 @@ void * jukebox_run_thread(void * args) {
         }
       }
       y_log_message(Y_LOG_LEVEL_INFO, "End processing file");
-      if (client_data_playlist->audio_buffer->status != TALIESIN_STREAM_STATUS_STOPPED) {
+      if (client_data_jukebox->audio_buffer->status != TALIESIN_STREAM_STATUS_STOPPED) {
         if (av_write_trailer(output_format_context)) {
           y_log_message(Y_LOG_LEVEL_ERROR, "Error av_write_trailer");
         }
       }
-      client_data_playlist->audio_buffer->complete = 1;
+      client_data_jukebox->audio_buffer->complete = 1;
       avcodec_flush_buffers(output_codec_context);
-      client_data_playlist->audio_buffer->status = TALIESIN_STREAM_STATUS_COMPLETED;
+      client_data_jukebox->audio_buffer->status = TALIESIN_STREAM_STATUS_COMPLETED;
     } else {
       y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_run_thread - Error opening input file or resample context");
     }
@@ -1355,34 +1355,34 @@ void * jukebox_run_thread(void * args) {
       avformat_free_context(output_format_context);
     }
     av_audio_fifo_free(fifo);
-    pthread_mutex_lock(&client_data_playlist->audio_buffer->buffer_lock);
-    pthread_cond_wait(&client_data_playlist->audio_buffer->buffer_cond, &client_data_playlist->audio_buffer->buffer_lock);
-    pthread_mutex_unlock(&client_data_playlist->audio_buffer->buffer_lock);
+    pthread_mutex_lock(&client_data_jukebox->audio_buffer->buffer_lock);
+    pthread_cond_wait(&client_data_jukebox->audio_buffer->buffer_cond, &client_data_jukebox->audio_buffer->buffer_lock);
+    pthread_mutex_unlock(&client_data_jukebox->audio_buffer->buffer_lock);
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_run_thread - Error opening output buffer");
   }
-  jukebox_audio_buffer_clean(client_data_playlist->audio_buffer);
-  o_free(client_data_playlist);
+  jukebox_audio_buffer_clean(client_data_jukebox->audio_buffer);
+  o_free(client_data_jukebox);
   return NULL;
 }
 
 ssize_t u_jukebox_stream (void * cls, uint64_t pos, char * buf, size_t max) {
-  struct _client_data_jukebox * client_data_playlist = (struct _client_data_jukebox *)cls;
+  struct _client_data_jukebox * client_data_jukebox = (struct _client_data_jukebox *)cls;
   size_t len;
   
   //y_log_message(Y_LOG_LEVEL_DEBUG, "u_jukebox_stream - start");
-  if (client_data_playlist->audio_buffer->status != TALIESIN_STREAM_STATUS_STOPPED || (client_data_playlist->buffer_offset >= client_data_playlist->audio_buffer->size && client_data_playlist->audio_buffer->status == TALIESIN_STREAM_STATUS_COMPLETED)) {
-    while (client_data_playlist->buffer_offset + max > client_data_playlist->audio_buffer->size && client_data_playlist->audio_buffer->status == TALIESIN_STREAM_STATUS_STARTED) {
+  if (client_data_jukebox->audio_buffer->status != TALIESIN_STREAM_STATUS_STOPPED || (client_data_jukebox->buffer_offset >= client_data_jukebox->audio_buffer->size && client_data_jukebox->audio_buffer->status == TALIESIN_STREAM_STATUS_COMPLETED)) {
+    while (client_data_jukebox->buffer_offset + max > client_data_jukebox->audio_buffer->size && client_data_jukebox->audio_buffer->status == TALIESIN_STREAM_STATUS_STARTED) {
       usleep(50000);
     }
-    if (client_data_playlist->buffer_offset + max > client_data_playlist->audio_buffer->size) {
-      len = (client_data_playlist->audio_buffer->size - client_data_playlist->buffer_offset);
+    if (client_data_jukebox->buffer_offset + max > client_data_jukebox->audio_buffer->size) {
+      len = (client_data_jukebox->audio_buffer->size - client_data_jukebox->buffer_offset);
     } else {
       len = max;
     }
     
-    memcpy(buf, client_data_playlist->audio_buffer->data + client_data_playlist->buffer_offset, len);
-    client_data_playlist->buffer_offset += len;
+    memcpy(buf, client_data_jukebox->audio_buffer->data + client_data_jukebox->buffer_offset, len);
+    client_data_jukebox->buffer_offset += len;
     return len;
   } else {
     return U_STREAM_END;
@@ -1390,17 +1390,17 @@ ssize_t u_jukebox_stream (void * cls, uint64_t pos, char * buf, size_t max) {
 }
 
 void u_jukebox_stream_free(void * cls) {
-  struct _client_data_jukebox * client_data_playlist = (struct _client_data_jukebox *)cls;
+  struct _client_data_jukebox * client_data_jukebox = (struct _client_data_jukebox *)cls;
   
-  client_data_playlist->client_present = 0;
-  client_data_playlist->jukebox->nb_client--;
-  time(&client_data_playlist->jukebox->last_seen);
+  client_data_jukebox->client_present = 0;
+  client_data_jukebox->jukebox->nb_client--;
+  time(&client_data_jukebox->jukebox->last_seen);
   
-  if (client_data_playlist->audio_buffer->status == TALIESIN_STREAM_STATUS_STARTED) {
-    client_data_playlist->audio_buffer->status = TALIESIN_STREAM_STATUS_STOPPED;
+  if (client_data_jukebox->audio_buffer->status == TALIESIN_STREAM_STATUS_STARTED) {
+    client_data_jukebox->audio_buffer->status = TALIESIN_STREAM_STATUS_STOPPED;
   }
-  pthread_mutex_lock(&client_data_playlist->audio_buffer->buffer_lock);
-  pthread_cond_signal(&client_data_playlist->audio_buffer->buffer_cond);
-  pthread_mutex_unlock(&client_data_playlist->audio_buffer->buffer_lock);
+  pthread_mutex_lock(&client_data_jukebox->audio_buffer->buffer_lock);
+  pthread_cond_signal(&client_data_jukebox->audio_buffer->buffer_cond);
+  pthread_mutex_unlock(&client_data_jukebox->audio_buffer->buffer_lock);
   //y_log_message(Y_LOG_LEVEL_DEBUG, "u_jukebox_stream_free");
 }

@@ -713,6 +713,7 @@ void * thread_run_refresh_data_source(void * data) {
   AVCodecContext  * thumbnail_cover_codec_context = NULL;
   json_int_t tds_id = json_integer_value(json_object_get(refresh_config->j_data_source, "id"));
   int i;
+  char * root_path;
 
   // Wait for previous scans to be completed
   while (refresh_config->index && refresh_config->refresh_status == DATA_SOURCE_REFRESH_STATUS_PENDING) {
@@ -732,7 +733,9 @@ void * thread_run_refresh_data_source(void * data) {
             y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error setting data source refresh status");
           }
         } else {
-          refresh_config->nb_files_total = fs_directory_count_files_recursive(json_string_value(json_object_get(refresh_config->j_data_source, "path")));
+          root_path = msprintf("%s/%s", json_string_value(json_object_get(refresh_config->j_data_source, "path")), refresh_config->path);
+          refresh_config->nb_files_total = fs_directory_count_files_recursive(root_path);
+          o_free(root_path);
           y_log_message(Y_LOG_LEVEL_DEBUG, "count total files: %zd", refresh_config->nb_files_total);
           if (refresh_config->nb_files_total >= 0) {
             y_log_message(Y_LOG_LEVEL_DEBUG, "start scan for data_source %s in path %s", json_string_value(json_object_get(refresh_config->j_data_source, "name")), refresh_config->path);

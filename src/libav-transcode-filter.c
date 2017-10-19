@@ -428,9 +428,6 @@ int webradio_open_output_buffer(struct _audio_stream * audio_stream) {
   if (0 == o_strcasecmp("vorbis", audio_stream->stream_format)) {
     codec_id = AV_CODEC_ID_VORBIS;
     o_strcpy(format, "ogg");
-  } else if (0 == o_strcasecmp("aac", audio_stream->stream_format)) {
-    codec_id = AV_CODEC_ID_AAC;
-    o_strcpy(format, "ipod");
   } else if (0 == o_strcasecmp("flac", audio_stream->stream_format)) {
     codec_id = AV_CODEC_ID_FLAC;
     o_strcpy(format, "flac");
@@ -637,9 +634,6 @@ int open_output_buffer_playlist(struct _jukebox_audio_buffer * jukebox_audio_buf
   if (0 == o_strcasecmp("vorbis", jukebox_audio_buffer->jukebox->stream_format)) {
     codec_id = AV_CODEC_ID_VORBIS;
     o_strcpy(format, "ogg");
-  } else if (0 == o_strcasecmp("aac", jukebox_audio_buffer->jukebox->stream_format)) {
-    codec_id = AV_CODEC_ID_AAC;
-    o_strcpy(format, "ipod");
   } else if (0 == o_strcasecmp("flac", jukebox_audio_buffer->jukebox->stream_format)) {
     codec_id = AV_CODEC_ID_FLAC;
     o_strcpy(format, "flac");

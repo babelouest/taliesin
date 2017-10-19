@@ -581,6 +581,7 @@ json_t   * media_cover_get(struct config_elements * config, json_t * j_data_sour
 json_t   * media_cover_get_by_id(struct config_elements * config, json_int_t tm_id, int thumbnail);
 json_t   * media_list_folder(struct config_elements * config, json_t * j_data_source, json_int_t tf_id, int get_id);
 int        media_add(struct config_elements * config, json_int_t tds_id, json_int_t tf_id, const char * path, json_t * j_media);
+int        media_update(struct config_elements * config, json_int_t tm_id, json_t * j_media);
 json_t   * media_folder_get_cover(struct config_elements * config, json_t * j_data_source, const char * path);
 json_t   * media_folder_detect_cover_by_id(struct config_elements * config, json_t * j_data_source, json_int_t tf_id, const char * path);
 json_t   * media_cover_get_all(struct config_elements * config, json_t * j_data_source, const char * path);

@@ -660,7 +660,7 @@ int callback_taliesin_data_source_refresh_stop (const struct _u_request * reques
 int callback_taliesin_data_source_clean (const struct _u_request * request, struct _u_response * response, void * user_data);
 
 int callback_taliesin_media_list_folder (const struct _u_request * request, struct _u_response * response, void * user_data);
-int callback_taliesin_media_get (const struct _u_request * request, struct _u_response * response, void * user_data);
+int callback_taliesin_media_get_path (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_category_get (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_category_list (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_category_get_info (const struct _u_request * request, struct _u_response * response, void * user_data);

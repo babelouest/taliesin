@@ -180,7 +180,7 @@ int main (int argc, char ** argv) {
   ulfius_add_endpoint_by_val(config->instance, "POST", config->api_prefix, "/data_source/:data_source/clean", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_data_source_clean, (void*)config);
   
   // Browse media endpoints
-  ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/data_source/:data_source/browse/path/*", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_media_get, (void*)config);
+  ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/data_source/:data_source/browse/path/*", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_media_get_path, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/data_source/:data_source/browse/category/:level", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_category_get, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/data_source/:data_source/browse/category/:level/:category/", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_category_list, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/data_source/:data_source/info/category/:level/:category", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_category_get_info, (void*)config);

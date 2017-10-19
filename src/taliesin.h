@@ -509,7 +509,7 @@ void             file_list_clean_file(struct _t_file * file);
 int              file_list_add_media_list(struct config_elements * config, struct _t_file_list * file_list, json_t * media_list);
 
 // Jukebox audio buffer
-json_t * is_stream_parameters_valid(const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate);
+json_t * is_stream_parameters_valid(int webradio, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate);
 void     audio_stream_clean (struct _audio_stream * audio_stream);
 int      jukebox_audio_buffer_init (struct _jukebox_audio_buffer * jukebox_audio_buffer);
 void     jukebox_audio_buffer_clean (struct _jukebox_audio_buffer * jukebox_audio_buffer);

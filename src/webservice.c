@@ -529,7 +529,7 @@ int callback_taliesin_media_get (const struct _u_request * request, struct _u_re
             if (!bit_rate) {
               bit_rate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
             }
-            j_valid = is_stream_parameters_valid(format, channels, sample_rate, bit_rate);
+            j_valid = is_stream_parameters_valid((u_map_get(request->map_url, "webradio") != NULL), format, channels, sample_rate, bit_rate);
             if (j_valid != NULL && json_array_size(j_valid) == 0) {
               if (u_map_get(request->map_url, "webradio") != NULL) {
                 j_stream_info = add_webradio_from_path(config, json_object_get(j_data_source, "data_source"), decode_path, get_username(request, response, config), format, channels, sample_rate, bit_rate, (u_map_get(request->map_url, "recursive")!=NULL), (u_map_get(request->map_url, "random")!=NULL), &webradio);
@@ -841,7 +841,7 @@ int callback_taliesin_category_list (const struct _u_request * request, struct _
             if (!bit_rate) {
               bit_rate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
             }
-            j_valid = is_stream_parameters_valid(format, channels, sample_rate, bit_rate);
+            j_valid = is_stream_parameters_valid((u_map_get(request->map_url, "webradio") != NULL), format, channels, sample_rate, bit_rate);
             if (j_valid != NULL && json_array_size(j_valid) == 0) {
               if (u_map_get(request->map_url, "webradio") != NULL) {
                 j_fake_jukebox = json_pack("{sssssisO}", "description", u_map_get(request->map_url, "category"), "name", u_map_get(request->map_url, "category"), "tpl_id", 0, "media", json_object_get(j_result, "list"));
@@ -998,7 +998,7 @@ int callback_taliesin_subcategory_list (const struct _u_request * request, struc
               if (!bit_rate) {
                 bit_rate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
               }
-              j_valid = is_stream_parameters_valid(format, channels, sample_rate, bit_rate);
+              j_valid = is_stream_parameters_valid((u_map_get(request->map_url, "webradio") != NULL), format, channels, sample_rate, bit_rate);
               if (j_valid != NULL && json_array_size(j_valid) == 0) {
                 if (u_map_get(request->map_url, "webradio") != NULL) {
                   j_fake_jukebox = json_pack("{sssssiso}", "description", u_map_get(request->map_url, "category"), "name", u_map_get(request->map_url, "category"), "tpl_id", 0, "media", json_object_get(j_result, "list"));
@@ -2104,7 +2104,7 @@ int callback_taliesin_playlist_load (const struct _u_request * request, struct _
     if (!bit_rate) {
       bit_rate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
     }
-    j_valid = is_stream_parameters_valid(format, channels, sample_rate, bit_rate);
+    j_valid = is_stream_parameters_valid((u_map_get(request->map_url, "webradio") != NULL), format, channels, sample_rate, bit_rate);
     if (j_valid != NULL && json_array_size(j_valid) == 0) {
       if (u_map_get(request->map_url, "webradio") != NULL) {
         j_stream_info = add_webradio_from_playlist(config, json_object_get(j_playlist, "playlist"), get_username(request, response, config), format, channels, sample_rate, bit_rate, (u_map_get(request->map_url, "random")!=NULL), &playlist);

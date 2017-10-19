@@ -83,7 +83,7 @@ json_t * stream_list(struct config_elements * config, const char * username) {
   return j_result;
 }
 
-json_t * is_stream_parameters_valid(const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate) {
+json_t * is_stream_parameters_valid(int webradio, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate) {
   json_t * j_result = json_array();
   
   if (j_result != NULL) {
@@ -93,6 +93,10 @@ json_t * is_stream_parameters_valid(const char * format, unsigned short channels
       json_array_append_new(j_result, json_pack("{ss}", "format", "formats available are 'mp3', 'vorbis' or 'flac'"));
     }
     
+    if (webradio && 0 != o_strcasecmp("mp3", format)) {
+      json_array_append_new(j_result, json_pack("{ss}", "format", "webradio allows only 'mp3' format"));
+    }
+
     if (channels > 2) {
       json_array_append_new(j_result, json_pack("{ss}", "channels", "channels can be 1 (mono) or 2 (stereo)"));
     }

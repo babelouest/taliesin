@@ -245,7 +245,7 @@ json_t * get_format(struct config_elements * config, AVFormatContext *fmt_ctx, c
   return j_format;
 }
 
-json_t * fs_get_metadata(struct config_elements * config, AVCodecContext * thumbnail_cover_codec_context, const char * path) {
+json_t * media_get_metadata(struct config_elements * config, AVCodecContext * thumbnail_cover_codec_context, const char * path) {
   AVFormatContext * full_size_cover_format_context = NULL;
   json_t * j_metadata = json_object(), * j_format;
   AVCodecContext  * full_size_cover_codec_context  = NULL;
@@ -283,10 +283,10 @@ json_t * fs_get_metadata(struct config_elements * config, AVCodecContext * thumb
                   o_free(cover_b64);
                 }
               } else {
-                y_log_message(Y_LOG_LEVEL_ERROR, "fs_get_metadata - Error resize_image for %s", path);
+                y_log_message(Y_LOG_LEVEL_ERROR, "media_get_metadata - Error resize_image for %s", path);
               }
             } else if (ret != T_ERROR_NOT_FOUND) {
-              y_log_message(Y_LOG_LEVEL_ERROR, "fs_get_metadata - Error get_media_cover for %s", path);
+              y_log_message(Y_LOG_LEVEL_ERROR, "media_get_metadata - Error get_media_cover for %s", path);
             }
             av_packet_unref(&full_size_cover_packet);
             av_packet_unref(&thumbnail_cover_packet);
@@ -303,7 +303,7 @@ json_t * fs_get_metadata(struct config_elements * config, AVCodecContext * thumb
         avformat_close_input(&full_size_cover_format_context);
         full_size_cover_format_context = NULL;
       } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "fs_get_metadata - Error avformat_open_input for %s", path);
+        y_log_message(Y_LOG_LEVEL_ERROR, "media_get_metadata - Error avformat_open_input for %s", path);
       }
     }
   }

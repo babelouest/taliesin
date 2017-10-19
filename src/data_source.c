@@ -567,7 +567,7 @@ int scan_directory(struct config_elements * config, struct _refresh_config * ref
                 j_media = media_get_full(config, j_data_source, relative_path);
                 if (check_result_value(j_media, T_ERROR_NOT_FOUND)) {
                   //y_log_message(Y_LOG_LEVEL_DEBUG, "insert %s", file_path);
-                  json_object_set_new(j_element, "metadata", fs_get_metadata(config, thumbnail_cover_codec_context, file_path));
+                  json_object_set_new(j_element, "metadata", media_get_metadata(config, thumbnail_cover_codec_context, file_path));
                   if (media_add(config, tds_id, tf_id, relative_path, j_element) != T_OK) {
                     y_log_message(Y_LOG_LEVEL_ERROR, "scan_directory - Error insert new media %s", json_string_value(json_object_get(j_element, "name")));
                   }
@@ -578,7 +578,7 @@ int scan_directory(struct config_elements * config, struct _refresh_config * ref
                     if (0 == o_strcmp("audio", json_string_value(json_object_get(json_object_get(j_media, "media"), "type"))) ||
                         0 == o_strcmp("video", json_string_value(json_object_get(json_object_get(j_media, "media"), "type"))) ||
                         0 == o_strcmp("image", json_string_value(json_object_get(json_object_get(j_media, "media"), "type")))) {
-                      json_object_set_new(j_element, "metadata", fs_get_metadata(config, thumbnail_cover_codec_context, file_path));
+                      json_object_set_new(j_element, "metadata", media_get_metadata(config, thumbnail_cover_codec_context, file_path));
                     }
                     //y_log_message(Y_LOG_LEVEL_DEBUG, "update %s", file_path);
                     if (media_update(config, json_integer_value(json_object_get(json_object_get(j_media, "media"), "id")), j_element) != T_OK) {

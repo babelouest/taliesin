@@ -471,7 +471,7 @@ char * get_ip_source(const struct _u_request * request);
 // Filesystem functions
 int      is_fs_directory_readable(const char * path);
 json_t * fs_directory_read(const char * path);
-json_t * fs_get_metadata(struct config_elements * config, AVCodecContext  * thumbnail_cover_codec_context, const char * path);
+json_t * media_get_metadata(struct config_elements * config, AVCodecContext  * thumbnail_cover_codec_context, const char * path);
 ssize_t  fs_directory_count_files_recursive(const char * path);
 
 // Config functions

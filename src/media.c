@@ -245,7 +245,7 @@ json_t * get_format(struct config_elements * config, AVFormatContext *fmt_ctx, c
   return j_format;
 }
 
-json_t * fs_get_metadata(struct config_elements * config, AVCodecContext * thumbnail_cover_codec_context, const char * path) {
+json_t * media_get_metadata(struct config_elements * config, AVCodecContext * thumbnail_cover_codec_context, const char * path) {
   AVFormatContext * full_size_cover_format_context = NULL;
   json_t * j_metadata = json_object(), * j_format;
   AVCodecContext  * full_size_cover_codec_context  = NULL;
@@ -259,51 +259,58 @@ json_t * fs_get_metadata(struct config_elements * config, AVCodecContext * thumb
     if (file_type == TALIESIN_FILE_TYPE_AUDIO || file_type == TALIESIN_FILE_TYPE_VIDEO || file_type == TALIESIN_FILE_TYPE_IMAGE) {
       if (!avformat_open_input(&full_size_cover_format_context, path, NULL, NULL)) {
         //y_log_message(Y_LOG_LEVEL_DEBUG, "path is %s, pb is %p", path, full_size_cover_format_context->pb);
-        json_object_set_new(j_metadata, "tags", get_tags(full_size_cover_format_context));
-        j_format = get_format(config, full_size_cover_format_context, path);
-        if (j_format != NULL) {
-          if (0 == o_strcmp("audio", json_string_value(json_object_get(j_format, "media"))) || 0 == o_strcmp("image", json_string_value(json_object_get(j_format, "media")))) {
-            av_init_packet(&full_size_cover_packet);
-            av_init_packet(&thumbnail_cover_packet);
-            if ((ret = get_media_cover(full_size_cover_format_context, &full_size_cover_codec_context, &full_size_cover_packet)) == T_OK) {
-              //y_log_message(Y_LOG_LEVEL_DEBUG, "cover found: %d of %s", full_size_cover_packet.size, path);
-              if (resize_image(full_size_cover_codec_context, thumbnail_cover_codec_context, &full_size_cover_packet, &thumbnail_cover_packet, TALIESIN_COVER_THUMB_WIDTH, TALIESIN_COVER_THUMB_HEIGHT) >= 0) {
-                cover_b64 = o_malloc(2 * full_size_cover_packet.size * sizeof(char));
-                if (cover_b64 != NULL) {
-                  if (o_base64_encode(full_size_cover_packet.data, full_size_cover_packet.size, cover_b64, &cover_b64_len)) {
-                    json_object_set_new(j_metadata, "cover", json_stringn((const char *)cover_b64, cover_b64_len));
+        /* Get information on the input file (number of streams etc.). */
+        if (!avformat_find_stream_info(full_size_cover_format_context, NULL)) {
+          json_object_set_new(j_metadata, "tags", get_tags(full_size_cover_format_context));
+          //y_log_message(Y_LOG_LEVEL_DEBUG, "path is %s, duration is %"PRId64", stored is %"PRId64, path, full_size_cover_format_context->duration, ((full_size_cover_format_context->duration*1000)/AV_TIME_BASE));
+          json_object_set_new(j_metadata, "duration", json_integer(((full_size_cover_format_context->duration*1000)/AV_TIME_BASE)));
+          j_format = get_format(config, full_size_cover_format_context, path);
+          if (j_format != NULL) {
+            if (0 == o_strcmp("audio", json_string_value(json_object_get(j_format, "media"))) || 0 == o_strcmp("image", json_string_value(json_object_get(j_format, "media")))) {
+              av_init_packet(&full_size_cover_packet);
+              av_init_packet(&thumbnail_cover_packet);
+              if ((ret = get_media_cover(full_size_cover_format_context, &full_size_cover_codec_context, &full_size_cover_packet)) == T_OK) {
+                //y_log_message(Y_LOG_LEVEL_DEBUG, "cover found: %d of %s", full_size_cover_packet.size, path);
+                if (resize_image(full_size_cover_codec_context, thumbnail_cover_codec_context, &full_size_cover_packet, &thumbnail_cover_packet, TALIESIN_COVER_THUMB_WIDTH, TALIESIN_COVER_THUMB_HEIGHT) >= 0) {
+                  cover_b64 = o_malloc(2 * full_size_cover_packet.size * sizeof(char));
+                  if (cover_b64 != NULL) {
+                    if (o_base64_encode(full_size_cover_packet.data, full_size_cover_packet.size, cover_b64, &cover_b64_len)) {
+                      json_object_set_new(j_metadata, "cover", json_stringn((const char *)cover_b64, cover_b64_len));
+                    }
+                    o_free(cover_b64);
                   }
-                  o_free(cover_b64);
-                }
-                cover_b64 = o_malloc(2 * thumbnail_cover_packet.size * sizeof(char));
-                if (cover_b64 != NULL) {
-                  if (o_base64_encode(thumbnail_cover_packet.data, thumbnail_cover_packet.size, cover_b64, &cover_b64_len)) {
-                    json_object_set_new(j_metadata, "cover_thumbnail", json_stringn((const char *)cover_b64, cover_b64_len));
+                  cover_b64 = o_malloc(2 * thumbnail_cover_packet.size * sizeof(char));
+                  if (cover_b64 != NULL) {
+                    if (o_base64_encode(thumbnail_cover_packet.data, thumbnail_cover_packet.size, cover_b64, &cover_b64_len)) {
+                      json_object_set_new(j_metadata, "cover_thumbnail", json_stringn((const char *)cover_b64, cover_b64_len));
+                    }
+                    o_free(cover_b64);
                   }
-                  o_free(cover_b64);
+                } else {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "media_get_metadata - Error resize_image for %s", path);
                 }
-              } else {
-                y_log_message(Y_LOG_LEVEL_ERROR, "fs_get_metadata - Error resize_image for %s", path);
+              } else if (ret != T_ERROR_NOT_FOUND) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "media_get_metadata - Error get_media_cover for %s", path);
               }
-            } else if (ret != T_ERROR_NOT_FOUND) {
-              y_log_message(Y_LOG_LEVEL_ERROR, "fs_get_metadata - Error get_media_cover for %s", path);
+              av_packet_unref(&full_size_cover_packet);
+              av_packet_unref(&thumbnail_cover_packet);
+              avcodec_free_context(&full_size_cover_codec_context);
             }
-            av_packet_unref(&full_size_cover_packet);
-            av_packet_unref(&thumbnail_cover_packet);
-            avcodec_free_context(&full_size_cover_codec_context);
+            json_object_set_new(j_metadata, "format", j_format);
           }
-          json_object_set_new(j_metadata, "format", j_format);
+          /*if (full_size_cover_format_context->pb != NULL) {
+            avio_flush(full_size_cover_format_context->pb);
+            avio_close(full_size_cover_format_context->pb);
+            av_free(full_size_cover_format_context->pb);
+          }
+          avformat_free_context(full_size_cover_format_context);*/
+          avformat_close_input(&full_size_cover_format_context);
+          full_size_cover_format_context = NULL;
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "media_get_metadata - Error avformat_find_stream_info for %s", path);
         }
-        /*if (full_size_cover_format_context->pb != NULL) {
-          avio_flush(full_size_cover_format_context->pb);
-          avio_close(full_size_cover_format_context->pb);
-          av_free(full_size_cover_format_context->pb);
-        }
-        avformat_free_context(full_size_cover_format_context);*/
-        avformat_close_input(&full_size_cover_format_context);
-        full_size_cover_format_context = NULL;
       } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "fs_get_metadata - Error avformat_open_input for %s", path);
+        y_log_message(Y_LOG_LEVEL_ERROR, "media_get_metadata - Error avformat_open_input for %s", path);
       }
     }
   }
@@ -374,7 +381,7 @@ json_t * media_get_by_id(struct config_elements * config, json_int_t tm_id) {
   int res;
   size_t index_tag;
   
-  j_query = json_pack("{sss[ssssss]s{sI}}",
+  j_query = json_pack("{sss[sssssss]s{sI}}",
                       "table",
                       TALIESIN_TABLE_MEDIA,
                       "columns",
@@ -383,6 +390,7 @@ json_t * media_get_by_id(struct config_elements * config, json_int_t tm_id) {
                         "tm_path AS path",
                         "tm_name AS name",
                         "tm_type AS type",
+                        "tm_duration AS duration",
                         config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(tm_last_updated) AS last_updated":"tm_last_updated AS last_updated",
                       "where",
                         "tm_id",
@@ -455,7 +463,7 @@ json_t * media_get_file(struct config_elements * config, json_t * j_data_source,
   int res;
   size_t index_tag;
   
-  j_query = json_pack("{sss[sssss]s{sIsoss}}",
+  j_query = json_pack("{sss[ssssss]s{sIsoss}}",
                       "table",
                       TALIESIN_TABLE_MEDIA,
                       "columns",
@@ -463,6 +471,7 @@ json_t * media_get_file(struct config_elements * config, json_t * j_data_source,
                         "tm_name AS name",
                         "tm_type AS type",
                         "tm_path AS path",
+                        "tm_duration AS duration",
                         config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(tm_last_updated) AS last_updated":"tm_last_updated AS last_updated",
                       "where",
                         "tds_id",
@@ -525,7 +534,7 @@ json_t * media_list_folder(struct config_elements * config, json_t * j_data_sour
   int res;
   size_t index, index_tag;
   
-  j_query = json_pack("{sss[sssss]s{sIso}ss}",
+  j_query = json_pack("{sss[ssssss]s{sIso}ss}",
                       "table",
                       TALIESIN_TABLE_MEDIA,
                       "columns",
@@ -533,6 +542,7 @@ json_t * media_list_folder(struct config_elements * config, json_t * j_data_sour
                         "tm_name AS name",
                         "tm_type AS type",
                         "tm_path AS path",
+                        "tm_duration AS duration",
                         config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(tm_last_updated) AS last_updated":"tm_last_updated AS last_updated",
                       "where",
                         "tds_id",
@@ -769,7 +779,7 @@ int media_add(struct config_elements * config, json_int_t tds_id, json_int_t tf_
   if (media_type == NULL) {
     media_type = "unknown";
   }
-  j_query = json_pack("{sss{sssss{ss}sIsoss}}",
+  j_query = json_pack("{sss{sssss{ss}sIsosssI}}",
                       "table",
                       TALIESIN_TABLE_MEDIA,
                       "values",
@@ -785,7 +795,9 @@ int media_add(struct config_elements * config, json_int_t tds_id, json_int_t tf_
                         "tic_id",
                         tic_id?json_integer(tic_id):json_null(),
                         "tm_path",
-                        path);
+                        path,
+                        "tm_duration",
+                        json_object_get(json_object_get(j_media, "metadata"), "duration")!=NULL?json_integer_value(json_object_get(json_object_get(j_media, "metadata"), "duration")):0);
   o_free(clause_last_updated);
   if (j_query != NULL) {
     if (tf_id > 0) {
@@ -827,6 +839,150 @@ int media_add(struct config_elements * config, json_int_t tds_id, json_int_t tf_
     }
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "media_add - error allocating resources for j_query");
+    ret = T_ERROR_MEMORY;
+  }
+  return ret;
+}
+
+/**
+ * Data Source scan and refresh data source functions
+ */
+int media_update(struct config_elements * config, json_int_t tm_id, json_t * j_media) {
+  json_t * j_query, * j_last_id, * j_tag, * j_result;
+  int res, ret = T_OK;
+  char * clause_last_updated;
+  json_int_t tic_id = 0;
+  const char * key, * media_type, * cover, * cover_thumbnail;
+  unsigned long cover_crc = crc32(0L, Z_NULL, 0);
+  char cover_crc_str[16] = {0};
+  
+  // Insert media cover and thumbnail
+  if (json_object_get(json_object_get(j_media, "metadata"), "cover")) {
+    cover = json_string_value(json_object_get(json_object_get(j_media, "metadata"), "cover"));
+    cover_thumbnail = json_string_value(json_object_get(json_object_get(j_media, "metadata"), "cover_thumbnail"));
+    cover_crc = crc32(cover_crc, (const unsigned char *)cover, strlen(cover));
+    sprintf(cover_crc_str, "0x%08lx", cover_crc);
+    j_query = json_pack("{sss[s]s{ss}}",
+                        "table",
+                        TALIESIN_TABLE_IMAGE_COVER,
+                        "columns",
+                          "tic_id",
+                        "where",
+                          "tic_fingerprint",
+                          cover_crc_str);
+    if (j_query != NULL) {
+      res = h_select(config->conn, j_query, &j_result, NULL);
+      json_decref(j_query);
+      if (res == H_OK) {
+        if (json_array_size(j_result) > 0) {
+          tic_id = json_integer_value(json_object_get(json_array_get(j_result, 0), "tic_id"));
+        } else {
+          // There's no cover with this crc, so we add it
+          //y_log_message(Y_LOG_LEVEL_DEBUG, "Add new cover image for %s", json_string_value(json_object_get(j_media, "name")));
+          j_query = json_pack("{sss{ssssss}}",
+                              "table",
+                              TALIESIN_TABLE_IMAGE_COVER,
+                              "values",
+                                "tic_cover_original",
+                                cover,
+                                "tic_cover_thumbnail",
+                                cover_thumbnail,
+                                "tic_fingerprint",
+                                cover_crc_str);
+          res = h_insert(config->conn, j_query, NULL);
+          json_decref(j_query);
+          if (res == H_OK) {
+            j_last_id = h_last_insert_id(config->conn);
+            if (j_last_id != NULL) {
+              // Insert media metadata
+              tic_id = json_integer_value(j_last_id);
+              json_decref(j_last_id);
+            }
+          }
+        }
+        json_decref(j_result);
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "media_update - error executing j_query (3)");
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "media_update - error allocating resources for j_query (3)");
+    }
+  }
+  
+  if (config->conn->type == HOEL_DB_TYPE_MARIADB) {
+    clause_last_updated = msprintf("FROM_UNIXTIME(%" JSON_INTEGER_FORMAT ")", json_integer_value(json_object_get(j_media, "last_modified")));
+  } else {
+    clause_last_updated = msprintf("%" JSON_INTEGER_FORMAT, json_integer_value(json_object_get(j_media, "last_modified")));
+  }
+  
+  media_type = json_string_value(json_object_get(json_object_get(json_object_get(j_media, "metadata"), "format"), "media"));
+  if (media_type == NULL) {
+    media_type = "unknown";
+  }
+  j_query = json_pack("{sss{sis{ss}sosI}s{sI}}",
+                      "table",
+                      TALIESIN_TABLE_MEDIA,
+                      "set",
+                        "tm_refresh_status",
+                        DATA_SOURCE_REFRESH_MODE_PROCESSED,
+                        "tm_last_updated",
+                          "raw",
+                          clause_last_updated,
+                        "tic_id",
+                        tic_id?json_integer(tic_id):json_null(),
+                        "tm_duration",
+                        json_object_get(json_object_get(j_media, "metadata"), "duration")!=NULL?json_integer_value(json_object_get(json_object_get(j_media, "metadata"), "duration")):0,
+                      "where",
+                        "tm_id",
+                        tm_id);
+  o_free(clause_last_updated);
+  if (j_query != NULL) {
+    res = h_update(config->conn, j_query, NULL);
+    json_decref(j_query);
+    if (res == H_OK) {
+      if (json_object_get(json_object_get(j_media, "metadata"), "tags") != NULL) {
+        // delete media metadata
+        j_query = json_pack("{sss{sI}}",
+                            "table",
+                            TALIESIN_TABLE_META_DATA,
+                            "where",
+                              "tm_id",
+                              tm_id);
+        res = h_delete(config->conn, j_query, NULL);
+        json_decref(j_query);
+        if (res == H_OK) {
+          // Insert media metadata
+          j_query = json_pack("{sss[]}",
+                              "table",
+                              TALIESIN_TABLE_META_DATA,
+                              "values");
+          if (j_query != NULL) {
+            json_object_foreach(json_object_get(json_object_get(j_media, "metadata"), "tags"), key, j_tag) {
+              json_array_append_new(json_object_get(j_query, "values"), json_pack("{sIssss}", "tm_id", tm_id, "tmd_key", key, "tmd_value", json_string_value(j_tag)));
+            }
+            res = h_insert(config->conn, j_query, NULL);
+            json_decref(j_query);
+            if (res != H_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "media_update - error insert media metadata in database");
+              ret = T_ERROR_DB;
+            }
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "media_update - error allocating resources for j_query (2)");
+            ret = T_ERROR_MEMORY;
+          }
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "media_update - error delete media metadata in database");
+          ret = T_ERROR_DB;
+        }
+      } else {
+        ret = T_OK;
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "media_update - error insert media in database");
+      ret = T_ERROR_DB;
+    }
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "media_update - error allocating resources for j_query");
     ret = T_ERROR_MEMORY;
   }
   return ret;
@@ -1387,7 +1543,7 @@ json_t * media_category_list(struct config_elements * config, json_t * j_data_so
   } else if (o_strcmp(level, "genre") == 0) {
     clause_category = msprintf("`tm_id` IN (SELECT `tm_id` FROM " TALIESIN_TABLE_META_DATA " WHERE `tmd_key`='genre' AND TRIM(`tmd_value`)='%s')", escape_category);
   }
-  j_query = json_pack("{sss[ssss]s{s{ssss}s{ssss}}ss}",
+  j_query = json_pack("{sss[sssss]s{s{ssss}s{ssss}}ss}",
                       "table",
                       TALIESIN_TABLE_MEDIA,
                       "columns",
@@ -1395,6 +1551,7 @@ json_t * media_category_list(struct config_elements * config, json_t * j_data_so
                         "`tm_name` AS name",
                         "`tm_path` AS path",
                         "'media' AS type",
+                        "`tm_duration` AS duration",
                       "where",
                         "  ",
                           "operator",
@@ -1579,7 +1736,7 @@ json_t * media_subcategory_list(struct config_elements * config, json_t * j_data
     clause_subcategory = msprintf("`tm_id` IN (SELECT `tm_id` FROM " TALIESIN_TABLE_META_DATA " WHERE `tmd_key`='genre' AND TRIM(`tmd_value`)='%s')", escape_subcategory);
   }
   clause_data_source = msprintf("`tm_id` IN (SELECT `tm_id` FROM `%s` WHERE `tds_id`=%" JSON_INTEGER_FORMAT ")", TALIESIN_TABLE_MEDIA, tds_id);
-  j_query = json_pack("{sss[ssss]s{s{ssss}s{ssss}s{ssss}}ss}",
+  j_query = json_pack("{sss[sssss]s{s{ssss}s{ssss}s{ssss}}ss}",
                       "table",
                       TALIESIN_TABLE_MEDIA,
                       "columns",
@@ -1587,6 +1744,7 @@ json_t * media_subcategory_list(struct config_elements * config, json_t * j_data
                         "`tm_name` AS name",
                         "`tm_path` AS path",
                         "'media' AS type",
+                        "`tm_duration` AS duration",
                       "where",
                         "   ",
                           "operator",

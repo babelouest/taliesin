@@ -87,8 +87,8 @@
 #define TALIESIN_MEDIUMBLOB_MAX_SIZE 16777215
 
 #define TALIESIN_PLAYLIST_NAME_LENGTH 32
-#define TALIESIN_TAG_KEY_LENGTH   128
-#define TALIESIN_TAG_VALUE_LENGTH 1024
+#define TALIESIN_TAG_KEY_LENGTH       128
+#define TALIESIN_TAG_VALUE_LENGTH     1024
 
 #define TALIESIN_STREAM_DEFAULT_FORMAT               "mp3"
 #define TALIESIN_STREAM_DEFAULT_CHANNELS             2
@@ -153,9 +153,9 @@
 #define TALIESIN_PLAYLIST_MESSAGE_TYPE_TRASH     4
 
 #define TALIESIN_STORED_PLAYLIST_WEBRADIO_STARTUP_NO_UPDATE -1
-#define TALIESIN_STORED_PLAYLIST_WEBRADIO_STARTUP_OFF       0
-#define TALIESIN_STORED_PLAYLIST_WEBRADIO_STARTUP_NO_RANDOM 1
-#define TALIESIN_STORED_PLAYLIST_WEBRADIO_STARTUP_RANDOM    2
+#define TALIESIN_STORED_PLAYLIST_WEBRADIO_STARTUP_OFF        0
+#define TALIESIN_STORED_PLAYLIST_WEBRADIO_STARTUP_NO_RANDOM  1
+#define TALIESIN_STORED_PLAYLIST_WEBRADIO_STARTUP_RANDOM     2
 
 #define TALIESIN_WEBSOCKET_PLAYLIST_STATUS_OPEN    0
 #define TALIESIN_WEBSOCKET_PLAYLIST_STATUS_CLOSING 1
@@ -318,12 +318,6 @@ struct _client_data_jukebox {
   struct _t_jukebox             * jukebox;
   size_t                          buffer_offset;
   
-  int                             metadata_send;
-  size_t                          metadata_offset;
-  size_t                          metadata_len;
-  size_t                          metadata_current_offset;
-  char *                          metadata_buffer;
-  
   char                            stream_name[TALIESIN_PLAYLIST_NAME_LENGTH + 1];
   short unsigned int              command;
   short unsigned int              client_present;
@@ -342,6 +336,7 @@ struct _jukebox_audio_buffer {
   char               * title;
   char               * client_address;
   char               * user_agent;
+  uint64_t             duration;
   
   short                status;
   pthread_mutex_t      buffer_lock;
@@ -471,7 +466,7 @@ char * get_ip_source(const struct _u_request * request);
 // Filesystem functions
 int      is_fs_directory_readable(const char * path);
 json_t * fs_directory_read(const char * path);
-json_t * fs_get_metadata(struct config_elements * config, AVCodecContext  * thumbnail_cover_codec_context, const char * path);
+json_t * media_get_metadata(struct config_elements * config, AVCodecContext  * thumbnail_cover_codec_context, const char * path);
 ssize_t  fs_directory_count_files_recursive(const char * path);
 
 // Config functions
@@ -509,7 +504,7 @@ void             file_list_clean_file(struct _t_file * file);
 int              file_list_add_media_list(struct config_elements * config, struct _t_file_list * file_list, json_t * media_list);
 
 // Jukebox audio buffer
-json_t * is_stream_parameters_valid(const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate);
+json_t * is_stream_parameters_valid(int webradio, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate);
 void     audio_stream_clean (struct _audio_stream * audio_stream);
 int      jukebox_audio_buffer_init (struct _jukebox_audio_buffer * jukebox_audio_buffer);
 void     jukebox_audio_buffer_clean (struct _jukebox_audio_buffer * jukebox_audio_buffer);
@@ -550,7 +545,6 @@ void    u_webradio_stream_free(void * cls);
 struct _t_jukebox * jukebox_get_stream(struct config_elements * config, const char * stream_name, const char * username, int is_admin);
 json_t            * is_jukebox_command_valid(struct config_elements * config, json_t * j_command, const char * username, int is_admin);
 json_t            * jukebox_command(struct config_elements * config, struct _t_jukebox * jukebox, const char * username, json_t * j_command);
-ssize_t             jukebox_buffer_metadata(char * buf, size_t max, struct _client_data_jukebox * client_data);
 int                 jukebox_close(struct config_elements * config, struct _t_jukebox * jukebox);
 int                 jukebox_audio_buffer_add_data(struct _jukebox_audio_buffer * jukebox_audio_buffer, uint8_t *buf, int buf_size);
 int                 jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukebox, char ** m3u_data);
@@ -581,6 +575,7 @@ json_t   * media_cover_get(struct config_elements * config, json_t * j_data_sour
 json_t   * media_cover_get_by_id(struct config_elements * config, json_int_t tm_id, int thumbnail);
 json_t   * media_list_folder(struct config_elements * config, json_t * j_data_source, json_int_t tf_id, int get_id);
 int        media_add(struct config_elements * config, json_int_t tds_id, json_int_t tf_id, const char * path, json_t * j_media);
+int        media_update(struct config_elements * config, json_int_t tm_id, json_t * j_media);
 json_t   * media_folder_get_cover(struct config_elements * config, json_t * j_data_source, const char * path);
 json_t   * media_folder_detect_cover_by_id(struct config_elements * config, json_t * j_data_source, json_int_t tf_id, const char * path);
 json_t   * media_cover_get_all(struct config_elements * config, json_t * j_data_source, const char * path);
@@ -666,7 +661,7 @@ int callback_taliesin_data_source_refresh_stop (const struct _u_request * reques
 int callback_taliesin_data_source_clean (const struct _u_request * request, struct _u_response * response, void * user_data);
 
 int callback_taliesin_media_list_folder (const struct _u_request * request, struct _u_response * response, void * user_data);
-int callback_taliesin_media_get (const struct _u_request * request, struct _u_response * response, void * user_data);
+int callback_taliesin_media_get_path (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_category_get (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_category_list (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_category_get_info (const struct _u_request * request, struct _u_response * response, void * user_data);

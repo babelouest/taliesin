@@ -1204,7 +1204,6 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
             o_strcpy(client_data_jukebox->stream_name, u_map_get(request->map_url, "stream_name"));
             client_data_jukebox->server_remote_address = config->server_remote_address;
             client_data_jukebox->api_prefix = config->api_prefix;
-            client_data_jukebox->metadata_send = o_strcasecmp("1", u_map_get_case(request->map_header, "Icy-MetaData"))?-1:0;
             client_data_jukebox->audio_buffer = o_malloc(sizeof(struct _jukebox_audio_buffer));
             if (client_data_jukebox->audio_buffer != NULL && jukebox_audio_buffer_init(client_data_jukebox->audio_buffer) == T_OK) {
               client_data_jukebox->audio_buffer->client_address = get_ip_source(request);
@@ -1228,10 +1227,6 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
                     u_map_put(response->map_header, "Content-Type", "audio/flac");
                   } else {
                     u_map_put(response->map_header, "Content-Type", "audio/mpeg");
-                  }
-                  if (!client_data_jukebox->metadata_send) {
-                    snprintf(metaint, 16, "%d", current_jukebox->stream_bitrate / 8 * TALIESIN_STREAM_METADATA_INTERVAL);
-                    u_map_put(response->map_header, "icy-metaint", metaint);
                   }
                 } else {
                   client_data_jukebox->client_present = 0;

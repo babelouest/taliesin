@@ -1250,11 +1250,6 @@ int init_client_data_jukebox(struct _client_data_jukebox * client_data) {
   if (client_data != NULL) {
     client_data->audio_buffer = NULL;
     client_data->buffer_offset = 0;
-    client_data->metadata_send = 0;
-    client_data->metadata_offset = 0;
-    client_data->metadata_len = 0;
-    client_data->metadata_current_offset = 0;
-    client_data->metadata_buffer = NULL;
     client_data->server_remote_address = NULL;
     client_data->api_prefix = NULL;
     client_data->command = TALIESIN_PLAYLIST_MESSAGE_TYPE_NONE;
@@ -1377,36 +1372,17 @@ ssize_t u_jukebox_stream (void * cls, uint64_t pos, char * buf, size_t max) {
   
   //y_log_message(Y_LOG_LEVEL_DEBUG, "u_jukebox_stream - start");
   if (client_data_playlist->audio_buffer->status != TALIESIN_STREAM_STATUS_STOPPED || (client_data_playlist->buffer_offset >= client_data_playlist->audio_buffer->size && client_data_playlist->audio_buffer->status == TALIESIN_STREAM_STATUS_COMPLETED)) {
-    if (client_data_playlist->metadata_send != -1 && client_data_playlist->metadata_send) {
-      // Send metadata if flag is set
-      if ((len = jukebox_buffer_metadata(buf, max, client_data_playlist)) <= 0) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "Error sending metadata");
-      }
-      //y_log_message(Y_LOG_LEVEL_DEBUG, "Send metadata of len %zu", len);
-    } else {
-      while (client_data_playlist->buffer_offset + max > client_data_playlist->audio_buffer->size && client_data_playlist->audio_buffer->status == TALIESIN_STREAM_STATUS_STARTED) {
-        usleep(50000);
-      }
-      if (client_data_playlist->buffer_offset + max > client_data_playlist->audio_buffer->size) {
-        len = (client_data_playlist->audio_buffer->size - client_data_playlist->buffer_offset);
-      } else {
-        len = max;
-      }
-      
-      // Calculate if we're supposed to send metadata
-      if (client_data_playlist->metadata_send == 0 && client_data_playlist->metadata_offset + len >= (client_data_playlist->jukebox->stream_bitrate / 8 * TALIESIN_STREAM_METADATA_INTERVAL)) {
-        // Send metadata in next round
-        len = (client_data_playlist->jukebox->stream_bitrate / 8 * TALIESIN_STREAM_METADATA_INTERVAL) - client_data_playlist->metadata_offset;
-        client_data_playlist->metadata_send = 1;
-      } else {
-        client_data_playlist->metadata_offset += len;
-      }
-
-      memcpy(buf, client_data_playlist->audio_buffer->data + client_data_playlist->buffer_offset, len);
-      client_data_playlist->buffer_offset += len;
+    while (client_data_playlist->buffer_offset + max > client_data_playlist->audio_buffer->size && client_data_playlist->audio_buffer->status == TALIESIN_STREAM_STATUS_STARTED) {
+      usleep(50000);
     }
-
+    if (client_data_playlist->buffer_offset + max > client_data_playlist->audio_buffer->size) {
+      len = (client_data_playlist->audio_buffer->size - client_data_playlist->buffer_offset);
+    } else {
+      len = max;
+    }
     
+    memcpy(buf, client_data_playlist->audio_buffer->data + client_data_playlist->buffer_offset, len);
+    client_data_playlist->buffer_offset += len;
     return len;
   } else {
     return U_STREAM_END;
@@ -1423,53 +1399,8 @@ void u_jukebox_stream_free(void * cls) {
   if (client_data_playlist->audio_buffer->status == TALIESIN_STREAM_STATUS_STARTED) {
     client_data_playlist->audio_buffer->status = TALIESIN_STREAM_STATUS_STOPPED;
   }
-  o_free(client_data_playlist->metadata_buffer);
   pthread_mutex_lock(&client_data_playlist->audio_buffer->buffer_lock);
   pthread_cond_signal(&client_data_playlist->audio_buffer->buffer_cond);
   pthread_mutex_unlock(&client_data_playlist->audio_buffer->buffer_lock);
   //y_log_message(Y_LOG_LEVEL_DEBUG, "u_jukebox_stream_free");
-}
-
-ssize_t jukebox_buffer_metadata(char * buf, size_t max, struct _client_data_jukebox * client_data) {
-  char * str_metadata = NULL;
-  size_t block_len;
-  ssize_t len = -1;
-  
-  if (buf != NULL && client_data != NULL) {
-    if (client_data->metadata_buffer == NULL) {
-      str_metadata = msprintf("StreamTitle='%s';StreamUrl='%s/%s/stream/%s/cover';", client_data->audio_buffer->title, client_data->server_remote_address, client_data->api_prefix, client_data->stream_name);
-      block_len = o_strlen(str_metadata);
-      if (block_len % 16) {
-        block_len += (16 - (block_len % 16));
-      }
-      client_data->metadata_len = block_len + 1;
-      client_data->metadata_buffer = o_malloc(client_data->metadata_len);
-      if (client_data->metadata_buffer != NULL) {
-        block_len = block_len / 16;
-        memcpy(client_data->metadata_buffer, &block_len, 1);
-        memcpy(client_data->metadata_buffer + 1, str_metadata, o_strlen(str_metadata));
-        memset(client_data->metadata_buffer + 1 + o_strlen(str_metadata) + 1, 0, (block_len * 16) - o_strlen(str_metadata));
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "set_buffer_metadata - Error allocating resources for client_data->metadata_buffer");
-        o_free(str_metadata);
-        return -1;
-      }
-      client_data->metadata_current_offset = 0;
-      o_free(str_metadata);
-    }
-    if (client_data->metadata_len - client_data->metadata_current_offset <= max) {
-      memcpy(buf, client_data->metadata_buffer + client_data->metadata_current_offset, (client_data->metadata_len - client_data->metadata_current_offset));
-      client_data->metadata_send = 0;
-      client_data->metadata_offset = 0;
-      o_free(client_data->metadata_buffer);
-      client_data->metadata_buffer = NULL;
-      len = client_data->metadata_len - client_data->metadata_current_offset;
-      client_data->metadata_current_offset = client_data->metadata_len;
-    } else {
-      memcpy(buf, client_data->metadata_buffer + client_data->metadata_current_offset, max);
-      client_data->metadata_current_offset += max;
-      len = max;
-    }
-  }
-  return len;
 }

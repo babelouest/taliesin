@@ -318,12 +318,6 @@ struct _client_data_jukebox {
   struct _t_jukebox             * jukebox;
   size_t                          buffer_offset;
   
-  int                             metadata_send;
-  size_t                          metadata_offset;
-  size_t                          metadata_len;
-  size_t                          metadata_current_offset;
-  char *                          metadata_buffer;
-  
   char                            stream_name[TALIESIN_PLAYLIST_NAME_LENGTH + 1];
   short unsigned int              command;
   short unsigned int              client_present;
@@ -550,7 +544,6 @@ void    u_webradio_stream_free(void * cls);
 struct _t_jukebox * jukebox_get_stream(struct config_elements * config, const char * stream_name, const char * username, int is_admin);
 json_t            * is_jukebox_command_valid(struct config_elements * config, json_t * j_command, const char * username, int is_admin);
 json_t            * jukebox_command(struct config_elements * config, struct _t_jukebox * jukebox, const char * username, json_t * j_command);
-ssize_t             jukebox_buffer_metadata(char * buf, size_t max, struct _client_data_jukebox * client_data);
 int                 jukebox_close(struct config_elements * config, struct _t_jukebox * jukebox);
 int                 jukebox_audio_buffer_add_data(struct _jukebox_audio_buffer * jukebox_audio_buffer, uint8_t *buf, int buf_size);
 int                 jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukebox, char ** m3u_data);

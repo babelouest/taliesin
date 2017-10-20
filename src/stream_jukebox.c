@@ -627,7 +627,8 @@ int jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukeb
       if (check_result_value(j_media, T_OK)) {
         icy_title = build_icy_title(json_object_get(j_media, "media"));
         if (icy_title != NULL) {
-          m3u_song = msprintf("#EXTINF:0,%s\n%s/%s/stream/%s?index=%d\n",
+          m3u_song = msprintf("#EXTINF:%"JSON_INTEGER_FORMAT",%s\n%s/%s/stream/%s?index=%d\n",
+                              (json_integer_value(json_object_get(json_object_get(j_media, "media"), "duration"))/1000),
                               icy_title,
                               config->server_remote_address,
                               config->api_prefix,

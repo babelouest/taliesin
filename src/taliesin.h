@@ -336,6 +336,7 @@ struct _jukebox_audio_buffer {
   char               * title;
   char               * client_address;
   char               * user_agent;
+  uint64_t             duration;
   
   short                status;
   pthread_mutex_t      buffer_lock;

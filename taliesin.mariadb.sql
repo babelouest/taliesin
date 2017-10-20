@@ -59,6 +59,7 @@ CREATE TABLE `t_media` (
   `tds_id` INT(11) NOT NULL,
   `tm_name` VARCHAR(255) NOT NULL, -- According to NAME_MAX
   `tm_path` VARCHAR(4096) NOT NULL, -- According to PATH_MAX
+  `tm_duration` INT(11) DEFAULT 0,
   `tf_id` INT(11),
   `tm_type` VARCHAR(128),
   `tm_last_updated` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

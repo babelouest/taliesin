@@ -521,7 +521,7 @@ int data_source_scan_directory(struct config_elements * config, struct _refresh_
               new_tf_id = folder_get_id(config, j_data_source, tf_id, json_string_value(json_object_get(j_element, "name")));
               if (new_tf_id < 0) {
                 // Folder does not exist yet, we create it
-                if (sub_path != NULL) {
+                if (sub_path != NULL && o_strlen(sub_path)) {
                   new_sub_path = msprintf("%s/%s", sub_path, json_string_value(json_object_get(j_element, "name")));
                 } else {
                   new_sub_path = o_strdup(json_string_value(json_object_get(j_element, "name")));
@@ -535,7 +535,7 @@ int data_source_scan_directory(struct config_elements * config, struct _refresh_
                 }
               }
               if (new_tf_id > 0) {
-                if (sub_path != NULL) {
+                if (sub_path != NULL && o_strlen(sub_path)) {
                   new_sub_path = msprintf("%s/%s", sub_path, json_string_value(json_object_get(j_element, "name")));
                 } else {
                   new_sub_path = o_strdup(json_string_value(json_object_get(j_element, "name")));

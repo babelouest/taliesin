@@ -478,7 +478,7 @@ START_TEST(test_jukebox_get_m3u)
   if (get_stream_name()) {
     char * url = msprintf(TALIESIN_SERVER_URI "/stream/%s", valid_stream_name);
     
-    int res = run_simple_authenticated_test(&user_req, "GET", url, NULL, NULL, 200, NULL, "#EXTINF:0", NULL);
+    int res = run_simple_authenticated_test(&user_req, "GET", url, NULL, NULL, 200, NULL, "#EXTINF:", NULL);
     free(url);
     ck_assert_int_eq(res, 1);
   }

@@ -489,7 +489,7 @@ json_t   * data_source_get_refresh_status(struct config_elements * config, json_
 int        data_source_set_refresh_status(struct config_elements * config, json_int_t tds_id, int new_status);
 int        data_source_clean(struct config_elements * config, json_int_t tds_id);
 int        data_source_can_update(json_t * j_data_source, int is_admin);
-json_t *   scan_path(struct config_elements * config, json_t * j_data_source, const char * path, int recursive);
+json_t *   media_scan_path(struct config_elements * config, json_t * j_data_source, const char * path, int recursive);
 
 // struct _t_file_list functions
 int              file_list_enqueue_new_file(struct _t_file_list * file_list, const char * path, json_int_t tm_id);

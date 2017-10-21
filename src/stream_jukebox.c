@@ -210,7 +210,7 @@ static int jukebox_add_db_stream_media_list(struct config_elements * config, str
       j_query = json_pack("{sss[]}", "table", TALIESIN_TABLE_STREAM_ELEMENT, "values");
       if (j_query != NULL) {
         json_array_foreach(j_media, index, j_element) {
-          json_array_append_new(json_object_get(j_query, "values"), json_pack("{sIsI}", "ts_id", ts_id, "tm_id", json_integer_value(json_object_get(j_element, "id"))));
+          json_array_append_new(json_object_get(j_query, "values"), json_pack("{sIsI}", "ts_id", ts_id, "tm_id", json_integer_value(json_object_get(j_element, "tm_id"))));
         }
         res = h_insert(config->conn, j_query, NULL);
         json_decref(j_query);
@@ -414,7 +414,7 @@ json_t * add_jukebox_from_path(struct config_elements * config, json_t * j_data_
   size_t index;
   int jukebox_index;
   
-  j_media_list = scan_path(config, j_data_source, path, recursive);
+  j_media_list = media_scan_path(config, j_data_source, path, recursive);
   if (j_media_list != NULL && json_array_size(json_object_get(j_media_list, "media_list")) > 0) {
     if (!pthread_mutex_lock(&config->playlist_lock)) {
       //y_log_message(Y_LOG_LEVEL_DEBUG, "realloc playlist_set at %d", (config->nb_jukebox + 1));

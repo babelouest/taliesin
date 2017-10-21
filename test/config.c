@@ -232,7 +232,9 @@ START_TEST(test_create_data_source_user_ok)
 																		 "path", data_source_path,
 																		 "icon", "testIcon");
 	
+  y_log_message(Y_LOG_LEVEL_DEBUG, "grut 0");
   int res = run_simple_authenticated_test(&admin_req, "POST", url, j_data_source, NULL, 200, NULL, NULL, NULL);
+  y_log_message(Y_LOG_LEVEL_DEBUG, "grut 1");
   free(url);
 	json_decref(j_data_source);
 	ck_assert_int_eq(res, 1);
@@ -242,9 +244,9 @@ END_TEST
 START_TEST(test_get_username_list_ok)
 {
   char * url = TALIESIN_SERVER_URI "/users";
-  json_t * j_body = json_string(ADMIN_LOGIN);
+  json_t * j_body = json_pack("{ss}", "username", ADMIN_LOGIN);
   
-  int res = run_simple_authenticated_test(&admin_req, "GET", url, j_body, NULL, 200, NULL, NULL, NULL);
+  int res = run_simple_authenticated_test(&admin_req, "GET", url, NULL, NULL, 200, j_body, NULL, NULL);
   json_decref(j_body);
 	ck_assert_int_eq(res, 1);
 }

@@ -1040,7 +1040,7 @@ int scan_path_to_webradio(struct config_elements * config, json_t * j_data_sourc
   return res;
 }
 
-json_t * scan_path(struct config_elements * config, json_t * j_data_source, const char * path, int recursive) {
+json_t * media_scan_path(struct config_elements * config, json_t * j_data_source, const char * path, int recursive) {
   json_t * j_media = media_get_full(config, j_data_source, path), * j_element, * j_result = NULL, * j_temp_result;
   char * new_path, * full_path;
   size_t index;
@@ -1056,7 +1056,7 @@ json_t * scan_path(struct config_elements * config, json_t * j_data_source, cons
             new_path = o_strdup(json_string_value(json_object_get(j_element, "name")));
           }
           if (0 == o_strcmp(json_string_value(json_object_get(j_element, "type")), "folder") && recursive) {
-            j_temp_result = scan_path(config, j_data_source, new_path, recursive);
+            j_temp_result = media_scan_path(config, j_data_source, new_path, recursive);
             if (j_temp_result != NULL) {
               json_array_extend(json_object_get(j_result, "media_list"), json_object_get(j_temp_result, "media_list"));
             }
@@ -1074,10 +1074,10 @@ json_t * scan_path(struct config_elements * config, json_t * j_data_source, cons
         o_free(full_path);
       }
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "scan_path - Error allocating resources for j_result");
+      y_log_message(Y_LOG_LEVEL_ERROR, "media_scan_path - Error allocating resources for j_result");
     }
   } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "scan_path - Error scanning path '%s' in data_source %s", path, json_string_value(json_object_get(j_data_source, "name")));
+    y_log_message(Y_LOG_LEVEL_ERROR, "media_scan_path - Error scanning path '%s' in data_source %s", path, json_string_value(json_object_get(j_data_source, "name")));
   }
   json_decref(j_media);
   return j_result;
@@ -1165,7 +1165,7 @@ json_t * media_get_full(struct config_elements * config, json_t * j_data_source,
                             "tf_parent_id",
                             tf_id==0?json_null():json_integer(tf_id),
                             "tds_id",
-                            json_integer_value(json_object_get(j_data_source, "tm_id")));
+                            json_integer_value(json_object_get(j_data_source, "tds_id")));
       if (j_query != NULL) {
         res = h_select(config->conn, j_query, &j_result_folders, NULL);
         json_decref(j_query);

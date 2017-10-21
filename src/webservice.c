@@ -389,7 +389,7 @@ int callback_taliesin_data_source_refresh_status (const struct _u_request * requ
   
   j_data_source = data_source_get(config, get_username(request, response, config), u_map_get(request->map_url, "data_source"), 1);
   if (check_result_value(j_data_source, T_OK)) {
-    j_status = data_source_get_refresh_status(config, json_integer_value(json_object_get(json_object_get(j_data_source, "data_source"), "id")));
+    j_status = data_source_get_refresh_status(config, json_integer_value(json_object_get(json_object_get(j_data_source, "data_source"), "tds_id")));
     if (check_result_value(j_status, T_OK)) {
       if (ulfius_set_json_body_response(response, 200, json_object_get(j_status, "refresh")) != U_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_data_source_refresh_status - error ulfius_set_json_body_response");
@@ -1441,7 +1441,7 @@ void callback_websocket_stream_manager (const struct _u_request * request, struc
         if (ws_stream->webradio->message_type == TALIESIN_PLAYLIST_MESSAGE_TYPE_NEW_MEDIA) {
           j_result = media_get_by_id(ws_stream->config, ws_stream->webradio->audio_stream->first_buffer->file->tm_id);
           if (check_result_value(j_result, T_OK)) {
-            json_object_del(json_object_get(j_result, "media"), "id");
+            json_object_del(json_object_get(j_result, "media"), "tm_id");
             j_message = json_pack("{sssO}", "command", "now", "result", json_object_get(j_result, "media"));
             message = json_dumps(j_message, JSON_COMPACT);
             if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {

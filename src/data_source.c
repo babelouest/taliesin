@@ -117,7 +117,7 @@ json_t * data_source_get(struct config_elements * config, const char * username,
   if (j_query != NULL) {
     if (get_id) {
       json_array_append_new(json_object_get(j_query, "columns"), json_string("tds_username AS username"));
-      json_array_append_new(json_object_get(j_query, "columns"), json_string("tds_id AS id"));
+      json_array_append_new(json_object_get(j_query, "columns"), json_string("tds_id"));
       json_array_append_new(json_object_get(j_query, "columns"), json_string("tds_refresh_status AS refresh_status"));
       json_array_append_new(json_object_get(j_query, "columns"), json_string("tds_path AS path"));
     }
@@ -581,12 +581,12 @@ int data_source_scan_directory(struct config_elements * config, struct _refresh_
                       json_object_set_new(j_element, "metadata", media_get_metadata(config, thumbnail_cover_codec_context, file_path));
                     }
                     //y_log_message(Y_LOG_LEVEL_DEBUG, "update %s", file_path);
-                    if (media_update(config, json_integer_value(json_object_get(json_object_get(j_media, "media"), "id")), j_element) != T_OK) {
+                    if (media_update(config, json_integer_value(json_object_get(json_object_get(j_media, "media"), "tm_id")), j_element) != T_OK) {
                       y_log_message(Y_LOG_LEVEL_ERROR, "data_source_scan_directory - Error update media %s", json_string_value(json_object_get(j_element, "name")));
                     }
                   } else {
                     //y_log_message(Y_LOG_LEVEL_DEBUG, "do not update %s", file_path);
-                    if (media_set_refresh_status(config, json_integer_value(json_object_get(json_object_get(j_media, "media"), "id")), DATA_SOURCE_REFRESH_MODE_PROCESSED) != T_OK) {
+                    if (media_set_refresh_status(config, json_integer_value(json_object_get(json_object_get(j_media, "media"), "tm_id")), DATA_SOURCE_REFRESH_MODE_PROCESSED) != T_OK) {
                       y_log_message(Y_LOG_LEVEL_ERROR, "data_source_scan_directory - Error updating media status");
                     }
                   }
@@ -711,7 +711,7 @@ void * thread_run_refresh_data_source(void * data) {
   struct _refresh_config * refresh_config = (struct _refresh_config *)data;
   struct config_elements * config = refresh_config->config;
   AVCodecContext  * thumbnail_cover_codec_context = NULL;
-  json_int_t tds_id = json_integer_value(json_object_get(refresh_config->j_data_source, "id"));
+  json_int_t tds_id = json_integer_value(json_object_get(refresh_config->j_data_source, "tds_id"));
   int i;
   char * root_path;
 
@@ -777,7 +777,7 @@ void * thread_run_refresh_data_source(void * data) {
     y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error getting tds_id");
   }
   for (i=0; i<config->nb_refresh_status - 1; i++) {
-    if (json_integer_value(json_object_get(config->refresh_status_list[i]->j_data_source, "id")) == tds_id) {
+    if (json_integer_value(json_object_get(config->refresh_status_list[i]->j_data_source, "tds_id")) == tds_id) {
       break;
     }
   }
@@ -806,7 +806,7 @@ void * thread_run_refresh_data_source(void * data) {
 int data_source_refresh_run(struct config_elements * config, json_t * j_data_source, const char * path, int clean) {
   int thread_refresh_ret, thread_refresh_detach, ret, index;
   pthread_t thread_refresh;
-  json_int_t tds_id = json_integer_value(json_object_get(j_data_source, "id"));
+  json_int_t tds_id = json_integer_value(json_object_get(j_data_source, "tds_id"));
   json_t * j_status;
   struct _refresh_config * refresh_config;
   
@@ -864,10 +864,10 @@ int data_source_refresh_run(struct config_elements * config, json_t * j_data_sou
 
 int data_source_refresh_stop(struct config_elements * config, json_t * j_data_source) {
   int i;
-  json_int_t tds_id = json_integer_value(json_object_get(j_data_source, "id"));
+  json_int_t tds_id = json_integer_value(json_object_get(j_data_source, "tds_id"));
   
   for (i=0; i<config->nb_refresh_status; i++) {
-    if (json_integer_value(json_object_get(config->refresh_status_list[i]->j_data_source, "id")) == tds_id) {
+    if (json_integer_value(json_object_get(config->refresh_status_list[i]->j_data_source, "tds_id")) == tds_id) {
       config->refresh_status_list[i]->refresh_status = DATA_SOURCE_REFRESH_STATUS_STOP;
     }
   }
@@ -895,7 +895,7 @@ json_t * data_source_get_refresh_status(struct config_elements * config, json_in
       status = json_integer_value(json_object_get(json_array_get(j_result, 0), "tds_refresh_status"));
       if (status == DATA_SOURCE_REFRESH_STATUS_RUNNING) {
         for (i=0; i<config->nb_refresh_status; i++) {
-          if (json_integer_value(json_object_get(config->refresh_status_list[i]->j_data_source, "id")) == tds_id) {
+          if (json_integer_value(json_object_get(config->refresh_status_list[i]->j_data_source, "tds_id")) == tds_id) {
             j_return = json_pack("{sis{sssisi}}", "result", T_OK, "refresh", "status", "running", "read", config->refresh_status_list[i]->nb_files_read, "total", config->refresh_status_list[i]->nb_files_total);
           }
         }

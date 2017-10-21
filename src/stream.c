@@ -146,7 +146,7 @@ json_t * db_stream_list(struct config_elements * config) {
                       "table",
                       TALIESIN_TABLE_STREAM,
                       "columns",
-                        "ts_id AS id",
+                        "ts_id",
                         "ts_username AS username",
                         "ts_name AS name",
                         "ts_display_name AS display_name",
@@ -162,7 +162,7 @@ json_t * db_stream_list(struct config_elements * config) {
   json_decref(j_query);
   if (res == H_OK) {
     json_array_foreach(j_result, index, j_element) {
-      j_media = db_stream_get_media_list(config, json_integer_value(json_object_get(j_element, "id")));
+      j_media = db_stream_get_media_list(config, json_integer_value(json_object_get(j_element, "ts_id")));
       if (check_result_value(j_media, T_OK)) {
         json_object_set(j_element, "media", json_object_get(j_media, "media"));
       }

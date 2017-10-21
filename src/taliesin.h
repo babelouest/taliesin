@@ -333,7 +333,6 @@ struct _jukebox_audio_buffer {
   uint8_t            * data;
   
   struct _t_file     * file;
-  char               * title;
   char               * client_address;
   char               * user_agent;
   uint64_t             duration;

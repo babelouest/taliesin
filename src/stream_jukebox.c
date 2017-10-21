@@ -98,7 +98,6 @@ int jukebox_audio_buffer_init (struct _jukebox_audio_buffer * jukebox_audio_buff
     jukebox_audio_buffer->complete = 0;
     jukebox_audio_buffer->data = NULL;
     jukebox_audio_buffer->file = NULL;
-    jukebox_audio_buffer->title = NULL;
     jukebox_audio_buffer->jukebox = NULL;
     jukebox_audio_buffer->client_address = NULL;
     jukebox_audio_buffer->user_agent = NULL;
@@ -117,7 +116,6 @@ int jukebox_audio_buffer_init (struct _jukebox_audio_buffer * jukebox_audio_buff
 void jukebox_audio_buffer_clean (struct _jukebox_audio_buffer * jukebox_audio_buffer) {
   if (jukebox_audio_buffer != NULL) {
     o_free(jukebox_audio_buffer->data);
-    o_free(jukebox_audio_buffer->title);
     o_free(jukebox_audio_buffer->client_address);
     o_free(jukebox_audio_buffer->user_agent);
     o_free(jukebox_audio_buffer);

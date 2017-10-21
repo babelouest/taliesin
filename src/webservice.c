@@ -1084,7 +1084,6 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
   uint64_t time_delta, time_offset;
   int ret_thread_jukebox = 0, detach_thread_jukebox = 0;
   pthread_t thread_jukebox;
-  json_t * j_media;
   
   for (i=0; i<config->nb_webradio; i++) {
     if (0 == o_strcmp(u_map_get(request->map_url, "stream_name"), config->webradio_set[i]->name)) {
@@ -1219,13 +1218,6 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
               } else {
                 client_data_jukebox->client_present = 1;
                 client_data_jukebox->audio_buffer->status = TALIESIN_STREAM_TRANSCODE_STATUS_STARTED;
-                j_media = media_get_by_id(config, client_data_jukebox->audio_buffer->file->tm_id);
-                if (check_result_value(j_media, T_OK)) {
-                  client_data_jukebox->audio_buffer->title = build_icy_title(json_object_get(j_media, "media"));
-                } else {
-                  client_data_jukebox->audio_buffer->title = o_strdup(client_data_jukebox->jukebox->display_name);
-                }
-                json_decref(j_media);
                 if (ulfius_set_stream_response(response, 200, u_jukebox_stream, u_jukebox_stream_free, U_STREAM_SIZE_UNKOWN, current_jukebox->stream_bitrate / 8, client_data_jukebox) == U_OK) {
                   current_jukebox->nb_client++;
                   time(&current_jukebox->last_seen);

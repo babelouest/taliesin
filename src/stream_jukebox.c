@@ -219,7 +219,7 @@ static int jukebox_add_db_stream_media_list(struct config_elements * config, str
         if (res == H_OK) {
           ret = T_OK;
         } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_update_db_stream_media_list - Error executing j_query (2)");
+          y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_add_db_stream_media_list - Error executing j_query (2)");
           ret = T_ERROR_DB;
         }
       } else {
@@ -227,12 +227,12 @@ static int jukebox_add_db_stream_media_list(struct config_elements * config, str
         ret = T_ERROR_MEMORY;
       }
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_update_db_stream_media_list - stream not found");
+      y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_add_db_stream_media_list - stream not found");
       ret = T_ERROR_NOT_FOUND;
     }
     json_decref(j_result);
   } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_update_db_stream_media_list - Error executing j_query (1)");
+    y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_add_db_stream_media_list - Error executing j_query (1)");
     ret = T_ERROR_DB;
   }
   return ret;
@@ -752,7 +752,7 @@ json_t * jukebox_get_file_list(struct config_elements * config, struct _t_jukebo
           if (cur_offset >= offset) {
             j_media = media_get_by_id(config, file->tm_id);
             if (check_result_value(j_media, T_OK)) {
-              json_object_del(json_object_get(j_media, "media"), "id");
+              json_object_del(json_object_get(j_media, "media"), "tm_id");
               json_array_append(json_object_get(j_return, "list"), json_object_get(j_media, "media"));
             } else {
               y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_get_file_list - Error media_get_by_id: %"JSON_INTEGER_FORMAT, file->tm_id);
@@ -898,7 +898,7 @@ int is_valid_jukebox_element_parameter(struct config_elements * config, json_t *
       if (!res && !check_result_value(j_media, T_ERROR_NOT_FOUND)) {
         y_log_message(Y_LOG_LEVEL_ERROR, "Error get media %s/%s: %d", json_string_value(json_object_get(jukebox_element, "data_source")), json_string_value(json_object_get(jukebox_element, "path")), res);
       } else {
-        json_object_set(jukebox_element, "tm_id", json_object_get(json_object_get(j_media, "media"), "id"));
+        json_object_set(jukebox_element, "tm_id", json_object_get(json_object_get(j_media, "media"), "tm_id"));
       }
       json_decref(j_media);
     } else if (!check_result_value(j_data_source, T_ERROR_NOT_FOUND)) {
@@ -1266,9 +1266,9 @@ int init_client_data_jukebox(struct _client_data_jukebox * client_data_jukebox) 
   }
 }
 
-void clean_client_data_jukebox(struct _client_data_jukebox * client_data) {
-  if (client_data != NULL) {
-    o_free(client_data);
+void clean_client_data_jukebox(struct _client_data_jukebox * client_data_jukebox) {
+  if (client_data_jukebox != NULL) {
+    o_free(client_data_jukebox);
   }
 }
 
@@ -1359,7 +1359,7 @@ void * jukebox_run_thread(void * args) {
     y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_run_thread - Error opening output buffer");
   }
   jukebox_audio_buffer_clean(client_data_jukebox->audio_buffer);
-  o_free(client_data_jukebox);
+  clean_client_data_jukebox(client_data_jukebox);
   return NULL;
 }
 

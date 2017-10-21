@@ -221,7 +221,7 @@ int file_list_add_media_list(struct config_elements * config, struct _t_file_lis
   json_array_foreach(media_list, index, j_media) {
     full_path = msprintf("%s/%s", json_string_value(json_object_get(j_media, "data_source_path")), json_string_value(json_object_get(j_media, "path")));
     //y_log_message(Y_LOG_LEVEL_DEBUG, "Add media to list %s",json_dumps(j_media, JSON_ENCODE_ANY));
-    if (file_list_enqueue_new_file(file_list, full_path, json_integer_value(json_object_get(j_media, "id"))) != T_OK) {
+    if (file_list_enqueue_new_file(file_list, full_path, json_integer_value(json_object_get(j_media, "tm_id"))) != T_OK) {
       y_log_message(Y_LOG_LEVEL_ERROR, "file_list_add_media_list - Error file_list_enqueue_new_file for %s", full_path);
       ret = T_ERROR;
       break;

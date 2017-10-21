@@ -34,7 +34,7 @@
 #include "taliesin.h"
 #include "static_file_callback.h"
 
-json_t * get_tags(AVFormatContext * fmt_ctx) {
+json_t * media_get_tags(AVFormatContext * fmt_ctx) {
   AVDictionaryEntry * tag = NULL;
   json_t * to_return = json_object();
   char * key, * value;
@@ -52,7 +52,7 @@ json_t * get_tags(AVFormatContext * fmt_ctx) {
       o_free(value);
     }
   } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "get_tags - Error allocating resources for to_return");
+    y_log_message(Y_LOG_LEVEL_ERROR, "media_get_tags - Error allocating resources for to_return");
   }
   return to_return;
 }
@@ -261,7 +261,7 @@ json_t * media_get_metadata(struct config_elements * config, AVCodecContext * th
         //y_log_message(Y_LOG_LEVEL_DEBUG, "path is %s, pb is %p", path, full_size_cover_format_context->pb);
         /* Get information on the input file (number of streams etc.). */
         if (!avformat_find_stream_info(full_size_cover_format_context, NULL)) {
-          json_object_set_new(j_metadata, "tags", get_tags(full_size_cover_format_context));
+          json_object_set_new(j_metadata, "tags", media_get_tags(full_size_cover_format_context));
           //y_log_message(Y_LOG_LEVEL_DEBUG, "path is %s, duration is %"PRId64", stored is %"PRId64, path, full_size_cover_format_context->duration, ((full_size_cover_format_context->duration*1000)/AV_TIME_BASE));
           json_object_set_new(j_metadata, "duration", json_integer(((full_size_cover_format_context->duration*1000)/AV_TIME_BASE)));
           j_format = get_format(config, full_size_cover_format_context, path);
@@ -298,19 +298,13 @@ json_t * media_get_metadata(struct config_elements * config, AVCodecContext * th
             }
             json_object_set_new(j_metadata, "format", j_format);
           }
-          /*if (full_size_cover_format_context->pb != NULL) {
-            avio_flush(full_size_cover_format_context->pb);
-            avio_close(full_size_cover_format_context->pb);
-            av_free(full_size_cover_format_context->pb);
-          }
-          avformat_free_context(full_size_cover_format_context);*/
           avformat_close_input(&full_size_cover_format_context);
           full_size_cover_format_context = NULL;
         } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "media_get_metadata - Error avformat_find_stream_info for %s", path);
+          y_log_message(Y_LOG_LEVEL_ERROR, "media_get_metadata - Error avformat_open_input for %s", path);
         }
       } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "media_get_metadata - Error avformat_open_input for %s", path);
+        y_log_message(Y_LOG_LEVEL_ERROR, "media_get_metadata - Error avformat_find_stream_info");
       }
     }
   }
@@ -339,7 +333,7 @@ json_int_t folder_get_id(struct config_elements * config, json_t * j_data_source
                             "tf_name",
                             sub_path,
                             "tds_id",
-                            json_integer_value(json_object_get(j_data_source, "id")));
+                            json_integer_value(json_object_get(j_data_source, "tds_id")));
       if (j_query != NULL) {
         if (tf_parent_id > 0) {
           json_object_set_new(json_object_get(j_query, "where"), "tf_parent_id", json_integer(tf_parent_id));
@@ -385,7 +379,7 @@ json_t * media_get_by_id(struct config_elements * config, json_int_t tm_id) {
                       "table",
                       TALIESIN_TABLE_MEDIA,
                       "columns",
-                        "tm_id AS id",
+                        "tm_id",
                         "tds_id",
                         "tm_path AS path",
                         "tm_name AS name",
@@ -409,7 +403,7 @@ json_t * media_get_by_id(struct config_elements * config, json_int_t tm_id) {
                               "tmd_value",
                             "where",
                               "tm_id",
-                              json_integer_value(json_object_get(j_element, "id")));
+                              json_integer_value(json_object_get(j_element, "tm_id")));
         json_object_set_new(j_element, "tags", json_object());
         if (j_query != NULL) {
           res = h_select(config->conn, j_query, &j_result_tag, NULL);
@@ -467,7 +461,7 @@ json_t * media_get_file(struct config_elements * config, json_t * j_data_source,
                       "table",
                       TALIESIN_TABLE_MEDIA,
                       "columns",
-                        "tm_id AS id",
+                        "tm_id",
                         "tm_name AS name",
                         "tm_type AS type",
                         "tm_path AS path",
@@ -475,7 +469,7 @@ json_t * media_get_file(struct config_elements * config, json_t * j_data_source,
                         config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(tm_last_updated) AS last_updated":"tm_last_updated AS last_updated",
                       "where",
                         "tds_id",
-                        json_integer_value(json_object_get(j_data_source, "id")),
+                        json_integer_value(json_object_get(j_data_source, "tds_id")),
                         "tf_id",
                         tf_id==0?json_null():json_integer(tf_id),
                         "tm_name",
@@ -494,10 +488,10 @@ json_t * media_get_file(struct config_elements * config, json_t * j_data_source,
                               "tmd_value",
                             "where",
                               "tm_id",
-                              json_integer_value(json_object_get(j_element, "id")));
+                              json_integer_value(json_object_get(j_element, "tm_id")));
         json_object_set_new(j_element, "tags", json_object());
         if (!get_id) {
-          json_object_del(j_element, "id");
+          json_object_del(j_element, "tm_id");
         }
         if (j_query != NULL) {
           res = h_select(config->conn, j_query, &j_result_tag, NULL);
@@ -546,7 +540,7 @@ json_t * media_list_folder(struct config_elements * config, json_t * j_data_sour
                         config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(tm_last_updated) AS last_updated":"tm_last_updated AS last_updated",
                       "where",
                         "tds_id",
-                        json_integer_value(json_object_get(j_data_source, "id")),
+                        json_integer_value(json_object_get(j_data_source, "tds_id")),
                         "tf_id",
                         tf_id==0?json_null():json_integer(tf_id),
                       "order_by",
@@ -633,7 +627,7 @@ json_t * media_get(struct config_elements * config, json_t * j_data_source, cons
                             "tf_parent_id",
                             tf_id==0?json_null():json_integer(tf_id),
                             "tds_id",
-                            json_integer_value(json_object_get(j_data_source, "id")),
+                            json_integer_value(json_object_get(j_data_source, "tds_id")),
                           "order_by",
                           "path");
       if (j_query != NULL) {
@@ -844,9 +838,6 @@ int media_add(struct config_elements * config, json_int_t tds_id, json_int_t tf_
   return ret;
 }
 
-/**
- * Data Source scan and refresh data source functions
- */
 int media_update(struct config_elements * config, json_int_t tm_id, json_t * j_media) {
   json_t * j_query, * j_last_id, * j_tag, * j_result;
   int res, ret = T_OK;
@@ -1028,7 +1019,7 @@ int scan_path_to_webradio(struct config_elements * config, json_t * j_data_sourc
           }
         } else if (0 == o_strcmp(json_string_value(json_object_get(j_element, "type")), "audio")) {
           full_path = msprintf("%s/%s", json_string_value(json_object_get(j_data_source, "path")), new_path);
-          if (file_list_enqueue_new_file(webradio->file_list, full_path, json_integer_value(json_object_get(j_element, "id"))) != T_OK) {
+          if (file_list_enqueue_new_file(webradio->file_list, full_path, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
             y_log_message(Y_LOG_LEVEL_ERROR, "scan_path_to_webradio - Error adding file %s", new_path);
           }
           o_free(full_path);
@@ -1038,7 +1029,7 @@ int scan_path_to_webradio(struct config_elements * config, json_t * j_data_sourc
       res = T_OK;
     } else {
       full_path = msprintf("%s/%s", json_string_value(json_object_get(j_data_source, "path")), path);
-      res = file_list_enqueue_new_file(webradio->file_list, full_path, json_integer_value(json_object_get(json_object_get(j_media, "media"), "id")));
+      res = file_list_enqueue_new_file(webradio->file_list, full_path, json_integer_value(json_object_get(json_object_get(j_media, "media"), "tm_id")));
       o_free(full_path);
     }
   } else {
@@ -1079,7 +1070,7 @@ json_t * scan_path(struct config_elements * config, json_t * j_data_source, cons
         }
       } else {
         full_path = msprintf("%s/%s", json_string_value(json_object_get(j_data_source, "path")), path);
-        json_array_append_new(json_object_get(j_result, "media_list"), json_pack("{sIssss}", "tm_id", json_integer_value(json_object_get(json_object_get(j_media, "media"), "id")), "path", path, "full_path", full_path));
+        json_array_append_new(json_object_get(j_result, "media_list"), json_pack("{sIssss}", "tm_id", json_integer_value(json_object_get(json_object_get(j_media, "media"), "tm_id")), "path", path, "full_path", full_path));
         o_free(full_path);
       }
     } else {
@@ -1169,12 +1160,12 @@ json_t * media_get_full(struct config_elements * config, json_t * j_data_source,
                           TALIESIN_TABLE_FOLDER,
                             "columns",
                               "tf_name AS name",
-                              "tf_id AS id",
+                              "tf_id",
                           "where",
                             "tf_parent_id",
                             tf_id==0?json_null():json_integer(tf_id),
                             "tds_id",
-                            json_integer_value(json_object_get(j_data_source, "id")));
+                            json_integer_value(json_object_get(j_data_source, "tm_id")));
       if (j_query != NULL) {
         res = h_select(config->conn, j_query, &j_result_folders, NULL);
         json_decref(j_query);
@@ -1228,7 +1219,7 @@ json_t * media_cover_get_all(struct config_elements * config, json_t * j_data_so
       tf_id = folder_get_id(config, j_data_source, 0, path);
       clause_where = msprintf("= (SELECT `tic_id` FROM `%s` WHERE `tf_id`=%" JSON_INTEGER_FORMAT ")", TALIESIN_TABLE_FOLDER, tf_id);
     } else {
-      clause_where = msprintf("= (SELECT `tic_id` FROM `%s` WHERE `tm_id`=%" JSON_INTEGER_FORMAT ")", TALIESIN_TABLE_MEDIA, json_integer_value(json_object_get(json_object_get(j_media, "media"), "id")));
+      clause_where = msprintf("= (SELECT `tic_id` FROM `%s` WHERE `tm_id`=%" JSON_INTEGER_FORMAT ")", TALIESIN_TABLE_MEDIA, json_integer_value(json_object_get(json_object_get(j_media, "media"), "tm_id")));
     }
     j_query = json_pack("{sss[sss]s{s{ssss}}}",
                         "table",
@@ -1440,7 +1431,7 @@ json_t * media_category_get(struct config_elements * config, json_t * j_data_sou
   json_t * j_result, * j_return, * j_query;
   int res = H_ERROR;
   char * query, * clause_data_source;
-  json_int_t tds_id = json_integer_value(json_object_get(j_data_source, "id"));
+  json_int_t tds_id = json_integer_value(json_object_get(j_data_source, "tds_id"));
   
   if (o_strcmp(level, "artist") == 0) {
     query = msprintf("SELECT DISTINCT(`name`) AS `name`, 'artist' AS `type` \
@@ -1530,7 +1521,7 @@ json_t * media_category_list(struct config_elements * config, json_t * j_data_so
   json_t * j_result, * j_return, * j_query;
   int res = H_ERROR;
   char * clause_data_source, * escape_category = NULL, * clause_category = NULL;
-  json_int_t tds_id = json_integer_value(json_object_get(j_data_source, "id"));
+  json_int_t tds_id = json_integer_value(json_object_get(j_data_source, "tds_id"));
   
   clause_data_source = msprintf("`tm_id` IN (SELECT `tm_id` FROM `%s` WHERE `tds_id`=%" JSON_INTEGER_FORMAT ")", TALIESIN_TABLE_MEDIA, tds_id);
   escape_category = h_escape_string(config->conn, category);
@@ -1588,7 +1579,7 @@ json_t * media_subcategory_get(struct config_elements * config, json_t * j_data_
   json_t * j_result, * j_return, * j_query;
   int res = H_ERROR;
   char * query, * clause_data_source, * escape_category, * clause_category = NULL;
-  json_int_t tds_id = json_integer_value(json_object_get(j_data_source, "id"));
+  json_int_t tds_id = json_integer_value(json_object_get(j_data_source, "tds_id"));
   
   escape_category = h_escape_string(config->conn, category);
   if (o_strcmp(level, "artist") == 0) {
@@ -1711,7 +1702,7 @@ json_t * media_subcategory_list(struct config_elements * config, json_t * j_data
   json_t * j_result, * j_return, * j_query;
   int res = H_ERROR;
   char * clause_data_source, * escape_category = NULL, * clause_category = NULL, * escape_subcategory = NULL, * clause_subcategory = NULL;
-  json_int_t tds_id = json_integer_value(json_object_get(j_data_source, "id"));
+  json_int_t tds_id = json_integer_value(json_object_get(j_data_source, "tds_id"));
   
   escape_category = h_escape_string(config->conn, category);
   if (o_strcmp(level, "artist") == 0) {
@@ -1798,7 +1789,7 @@ json_t * media_category_get_info(struct config_elements * config, json_t * j_dat
                         "tci_category",
                         category,
                         "tds_id",
-                        json_integer_value(json_object_get(j_data_source, "id")));
+                        json_integer_value(json_object_get(j_data_source, "tds_id")));
   res = h_select(config->conn, j_query, &j_result, NULL);
   json_decref(j_query);
   if (res == H_OK) {
@@ -1865,11 +1856,11 @@ int media_category_delete_info(struct config_elements * config, json_t * j_data_
                         "tci_category",
                         category,
                         "tds_id",
-                        json_integer_value(json_object_get(j_data_source, "id")));
+                        json_integer_value(json_object_get(j_data_source, "tds_id")));
   res = h_delete(config->conn, j_query, NULL);
   json_decref(j_query);
   if (res == H_OK) {
-    ret = media_image_cover_clean_orphan(config, json_integer_value(json_object_get(j_data_source, "id")));
+    ret = media_image_cover_clean_orphan(config, json_integer_value(json_object_get(j_data_source, "tds_id")));
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "media_category_delete_info - Error executing j_query");
     ret = T_ERROR_DB;
@@ -1973,7 +1964,7 @@ json_int_t media_cover_save(struct config_elements * config, json_int_t tds_id, 
 int media_category_set_info(struct config_elements * config, json_t * j_data_source, const char * level, const char * category, json_t * j_info) {
   json_t * j_query, * j_result;
   int res, ret;
-  json_int_t tic_id = media_cover_save(config, json_integer_value(json_object_get(j_data_source, "id")), (const unsigned char *)json_string_value(json_object_get(j_info, "cover")));
+  json_int_t tic_id = media_cover_save(config, json_integer_value(json_object_get(j_data_source, "tds_id")), (const unsigned char *)json_string_value(json_object_get(j_info, "cover")));
   
   j_query = json_pack("{sss[s]s{sIssss}}",
                       "table",
@@ -1982,7 +1973,7 @@ int media_category_set_info(struct config_elements * config, json_t * j_data_sou
                         "tci_id",
                       "where",
                         "tds_id",
-                        json_integer_value(json_object_get(j_data_source, "id")),
+                        json_integer_value(json_object_get(j_data_source, "tds_id")),
                         "tci_level",
                         level,
                         "tci_category",
@@ -2006,7 +1997,7 @@ int media_category_set_info(struct config_elements * config, json_t * j_data_sou
       res = h_update(config->conn, j_query, NULL);
       json_decref(j_query);
       if (res == H_OK) {
-        ret = media_image_cover_clean_orphan(config, json_integer_value(json_object_get(j_data_source, "id")));
+        ret = media_image_cover_clean_orphan(config, json_integer_value(json_object_get(j_data_source, "tds_id")));
       } else {
         y_log_message(Y_LOG_LEVEL_ERROR, "media_category_set_info - Error executing j_query (2)");
         ret = T_ERROR_DB;
@@ -2019,7 +2010,7 @@ int media_category_set_info(struct config_elements * config, json_t * j_data_sou
                             "tci_content",
                             json_string_value(json_object_get(j_info, "content")),
                             "tds_id",
-                            json_integer_value(json_object_get(j_data_source, "id")),
+                            json_integer_value(json_object_get(j_data_source, "tds_id")),
                             "tci_level",
                             level,
                             "tci_category",

@@ -781,7 +781,7 @@ json_t * webradio_get_file_list(struct config_elements * config, struct _t_webra
           if (cur_offset >= offset) {
             j_media = media_get_by_id(config, file->tm_id);
             if (check_result_value(j_media, T_OK)) {
-              json_object_del(json_object_get(j_media, "media"), "id");
+              json_object_del(json_object_get(j_media, "media"), "tm_id");
               json_array_append(json_object_get(j_return, "list"), json_object_get(j_media, "media"));
             } else {
               y_log_message(Y_LOG_LEVEL_ERROR, "webradio_get_file_list - Error media_get_by_id");
@@ -852,7 +852,7 @@ int webradio_add_media(struct config_elements * config, struct _t_webradio * web
     j_media = media_get_full(config, json_object_get(j_data_source, "data_source"), save_path);
     if (check_result_value(j_media, T_OK)) {
       full_path = msprintf("%s/%s", json_string_value(json_object_get(json_object_get(j_data_source, "data_source"), "path")), path);
-      if (file_list_enqueue_new_file(webradio->file_list, full_path, json_integer_value(json_object_get(json_object_get(j_media, "media"), "id"))) != T_OK) {
+      if (file_list_enqueue_new_file(webradio->file_list, full_path, json_integer_value(json_object_get(json_object_get(j_media, "media"), "tm_id"))) != T_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "webradio_add_media - Error file_list_enqueue_new_file for %s", full_path);
         res = T_ERROR;
       }
@@ -1290,7 +1290,7 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
       if (audio_buffer != NULL && !audio_buffer->skip && audio_buffer->file != NULL) {
         j_result = media_get_by_id(config, audio_buffer->file->tm_id);
         if (check_result_value(j_result, T_OK)) {
-          json_object_del(json_object_get(j_result, "media"), "id");
+          json_object_del(json_object_get(j_result, "media"), "tm_id");
           json_object_set_new(json_object_get(j_result, "media"), "index", json_integer(audio_buffer->index));
           j_return = json_pack("{sisO}", "result", T_OK, "command", json_object_get(j_result, "media"));
         } else {
@@ -1313,7 +1313,7 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
       if (audio_buffer != NULL && !audio_buffer->skip && audio_buffer->file != NULL) {
         j_result = media_get_by_id(config, audio_buffer->file->tm_id);
         if (check_result_value(j_result, T_OK)) {
-          json_object_del(json_object_get(j_result, "media"), "id");
+          json_object_del(json_object_get(j_result, "media"), "tm_id");
           json_object_set_new(json_object_get(j_result, "media"), "index", json_integer(audio_buffer->index));
           j_return = json_pack("{sisO}", "result", T_OK, "command", json_object_get(j_result, "media"));
         } else {

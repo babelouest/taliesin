@@ -554,8 +554,8 @@ json_t            * add_jukebox_from_path(struct config_elements * config, json_
 json_t            * add_jukebox_from_playlist(struct config_elements * config, json_t * j_playlist, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate);
 int                 add_jukebox_from_db_stream(struct config_elements * config, json_t * j_stream);
 
-int     init_client_data_jukebox(struct _client_data_jukebox * client_data);
-void    clean_client_data_jukebox(struct _client_data_jukebox * client_data);
+int     init_client_data_jukebox(struct _client_data_jukebox * client_data_jukebox);
+void    clean_client_data_jukebox(struct _client_data_jukebox * client_data_jukebox);
 ssize_t u_jukebox_stream (void * cls, uint64_t pos, char * buf, size_t max);
 void    u_jukebox_stream_free(void * cls);
 

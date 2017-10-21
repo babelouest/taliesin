@@ -195,9 +195,9 @@ START_TEST(test_get_playlist_ok)
                                   "elements", 2,
 																	"media",
 																		"data_source", DATA_SOURCE_VALID,
-																		"path", "/fss/free-software-song.ogg",
+																		"path", "fss/free-software-song.ogg",
 																		"data_source", DATA_SOURCE_VALID,
-																		"path", "/fss/FreeSWSong.ogg",
+																		"path", "fss/FreeSWSong.ogg",
 																	"stream");
 	
   int res = run_simple_authenticated_test(&user_req, "GET", url, NULL, NULL, 200, j_playlist, NULL, NULL);
@@ -295,7 +295,7 @@ START_TEST(test_get_updated_playlist_ok)
                                   "elements", 1,
 																	"media",
 																		"data_source", DATA_SOURCE_VALID,
-																		"path", "/fss/FreeSWSong.ogg",
+																		"path", "fss/FreeSWSong.ogg",
 																	"stream");
 	
   int res = run_simple_authenticated_test(&user_req, "GET", url, NULL, NULL, 200, j_playlist, NULL, NULL);

@@ -236,7 +236,7 @@ START_TEST(test_jukebox_command_list_ok)
   ck_assert_int_eq(resp.status, 200);
   ck_assert_int_eq(json_array_size(j_result), 31);
   ck_assert_str_eq(json_string_value(json_object_get(json_array_get(j_result, 0), "data_source")), DATA_SOURCE_VALID);
-  ck_assert_str_eq(json_string_value(json_object_get(json_array_get(j_result, 0), "path")), "/Kimiko Ishizaka/J.S. Bach: \"Open\" Goldberg Variations, BWV 988 (Piano)/Kimiko Ishizaka - J.S. Bach- -Open- Goldberg Variations, BWV 988 (Piano) - 01 Aria.mp3");
+  ck_assert_str_eq(json_string_value(json_object_get(json_array_get(j_result, 0), "path")), "Kimiko Ishizaka/J.S. Bach: \"Open\" Goldberg Variations, BWV 988 (Piano)/Kimiko Ishizaka - J.S. Bach- -Open- Goldberg Variations, BWV 988 (Piano) - 01 Aria.mp3");
   ck_assert_str_eq(json_string_value(json_object_get(json_array_get(j_result, 0), "name")), "Kimiko Ishizaka - J.S. Bach- -Open- Goldberg Variations, BWV 988 (Piano) - 01 Aria.mp3");
   ck_assert_str_eq(json_string_value(json_object_get(json_array_get(j_result, 0), "type")), "audio");
 
@@ -285,7 +285,7 @@ START_TEST(test_jukebox_command_append_list_ok)
     ck_assert_int_eq(resp.status, 200);
     ck_assert_int_eq(json_array_size(j_result), 32);
     ck_assert_str_eq(json_string_value(json_object_get(json_array_get(j_result, 31), "data_source")), DATA_SOURCE_VALID);
-    ck_assert_str_eq(json_string_value(json_object_get(json_array_get(j_result, 31), "path")), "/fss/FreeSWSong.ogg");
+    ck_assert_str_eq(json_string_value(json_object_get(json_array_get(j_result, 31), "path")), "fss/FreeSWSong.ogg");
 
     json_decref(j_command);
     json_decref(j_result);
@@ -607,7 +607,7 @@ START_TEST(test_jukebox_command_reload_playlist_ok)
     
     ck_assert_int_eq(resp.status, 200);
     ck_assert_int_eq(json_array_size(j_result), 2);
-    ck_assert_str_eq(json_string_value(json_object_get(json_array_get(j_result, 0), "path")), "/fss/free-software-song.ogg");
+    ck_assert_str_eq(json_string_value(json_object_get(json_array_get(j_result, 0), "path")), "fss/free-software-song.ogg");
 
     json_decref(j_command);
     json_decref(j_result);
@@ -627,9 +627,9 @@ START_TEST(test_get_playlist_ok)
                                     "elements", 2,
                                     "media",
                                       "data_source", DATA_SOURCE_VALID,
-                                      "path", "/fss/free-software-song.ogg",
+                                      "path", "fss/free-software-song.ogg",
                                       "data_source", DATA_SOURCE_VALID,
-                                      "path", "/fss/FreeSWSong.ogg",
+                                      "path", "fss/FreeSWSong.ogg",
                                     "stream",
                                       "name", valid_stream_name,
                                       "display_name", STREAM_DISPLAY_NAME_MODIF,

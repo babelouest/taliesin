@@ -258,10 +258,12 @@ json_t * media_get_metadata(struct config_elements * config, AVCodecContext * th
   if (j_metadata != NULL) {
     if (file_type == TALIESIN_FILE_TYPE_AUDIO || file_type == TALIESIN_FILE_TYPE_VIDEO || file_type == TALIESIN_FILE_TYPE_IMAGE) {
       if (!avformat_open_input(&full_size_cover_format_context, path, NULL, NULL)) {
-        if (avformat_find_stream_info(full_size_cover_format_context, NULL) >= 0) {
-          json_object_set_new(j_metadata, "duration", json_integer(full_size_cover_format_context->duration*1000/AV_TIME_BASE));
-          //y_log_message(Y_LOG_LEVEL_DEBUG, "path is %s, pb is %p", path, full_size_cover_format_context->pb);
+        //y_log_message(Y_LOG_LEVEL_DEBUG, "path is %s, pb is %p", path, full_size_cover_format_context->pb);
+        /* Get information on the input file (number of streams etc.). */
+        if (!avformat_find_stream_info(full_size_cover_format_context, NULL)) {
           json_object_set_new(j_metadata, "tags", media_get_tags(full_size_cover_format_context));
+          //y_log_message(Y_LOG_LEVEL_DEBUG, "path is %s, duration is %"PRId64", stored is %"PRId64, path, full_size_cover_format_context->duration, ((full_size_cover_format_context->duration*1000)/AV_TIME_BASE));
+          json_object_set_new(j_metadata, "duration", json_integer(((full_size_cover_format_context->duration*1000)/AV_TIME_BASE)));
           j_format = get_format(config, full_size_cover_format_context, path);
           if (j_format != NULL) {
             if (0 == o_strcmp("audio", json_string_value(json_object_get(j_format, "media"))) || 0 == o_strcmp("image", json_string_value(json_object_get(j_format, "media")))) {
@@ -789,7 +791,7 @@ int media_add(struct config_elements * config, json_int_t tds_id, json_int_t tf_
                         "tm_path",
                         path,
                         "tm_duration",
-                        json_integer_value(json_object_get(json_object_get(j_media, "metadata"), "duration")));
+                        json_object_get(json_object_get(j_media, "metadata"), "duration")!=NULL?json_integer_value(json_object_get(json_object_get(j_media, "metadata"), "duration")):0);
   o_free(clause_last_updated);
   if (j_query != NULL) {
     if (tf_id > 0) {
@@ -920,7 +922,7 @@ int media_update(struct config_elements * config, json_int_t tm_id, json_t * j_m
                         "tic_id",
                         tic_id?json_integer(tic_id):json_null(),
                         "tm_duration",
-                        json_integer_value(json_object_get(json_object_get(j_media, "metadata"), "duration")),
+                        json_object_get(json_object_get(j_media, "metadata"), "duration")!=NULL?json_integer_value(json_object_get(json_object_get(j_media, "metadata"), "duration")):0,
                       "where",
                         "tm_id",
                         tm_id);
@@ -1532,7 +1534,7 @@ json_t * media_category_list(struct config_elements * config, json_t * j_data_so
   } else if (o_strcmp(level, "genre") == 0) {
     clause_category = msprintf("`tm_id` IN (SELECT `tm_id` FROM " TALIESIN_TABLE_META_DATA " WHERE `tmd_key`='genre' AND TRIM(`tmd_value`)='%s')", escape_category);
   }
-  j_query = json_pack("{sss[ssss]s{s{ssss}s{ssss}}ss}",
+  j_query = json_pack("{sss[sssss]s{s{ssss}s{ssss}}ss}",
                       "table",
                       TALIESIN_TABLE_MEDIA,
                       "columns",
@@ -1540,6 +1542,7 @@ json_t * media_category_list(struct config_elements * config, json_t * j_data_so
                         "`tm_name` AS name",
                         "`tm_path` AS path",
                         "'media' AS type",
+                        "`tm_duration` AS duration",
                       "where",
                         "  ",
                           "operator",
@@ -1724,7 +1727,7 @@ json_t * media_subcategory_list(struct config_elements * config, json_t * j_data
     clause_subcategory = msprintf("`tm_id` IN (SELECT `tm_id` FROM " TALIESIN_TABLE_META_DATA " WHERE `tmd_key`='genre' AND TRIM(`tmd_value`)='%s')", escape_subcategory);
   }
   clause_data_source = msprintf("`tm_id` IN (SELECT `tm_id` FROM `%s` WHERE `tds_id`=%" JSON_INTEGER_FORMAT ")", TALIESIN_TABLE_MEDIA, tds_id);
-  j_query = json_pack("{sss[ssss]s{s{ssss}s{ssss}s{ssss}}ss}",
+  j_query = json_pack("{sss[sssss]s{s{ssss}s{ssss}s{ssss}}ss}",
                       "table",
                       TALIESIN_TABLE_MEDIA,
                       "columns",
@@ -1732,6 +1735,7 @@ json_t * media_subcategory_list(struct config_elements * config, json_t * j_data
                         "`tm_name` AS name",
                         "`tm_path` AS path",
                         "'media' AS type",
+                        "`tm_duration` AS duration",
                       "where",
                         "   ",
                           "operator",

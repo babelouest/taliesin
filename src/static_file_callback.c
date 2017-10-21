@@ -42,20 +42,20 @@ const char * get_filename_ext(const char *path) {
  * Streaming callback function to ease sending large files
  */
 static ssize_t callback_static_file_stream(void * cls, uint64_t pos, char * buf, size_t max) {
-	if (cls != NULL) {
-		return fread (buf, 1, max, (FILE *)cls);
-	} else {
-		return U_STREAM_END;
-	}
+  if (cls != NULL) {
+    return fread (buf, 1, max, (FILE *)cls);
+  } else {
+    return U_STREAM_END;
+  }
 }
 
 /**
  * Cleanup FILE* structure when streaming is complete
  */
 static void callback_static_file_stream_free(void * cls) {
-	if (cls != NULL) {
-		fclose((FILE *)cls);
-	}
+  if (cls != NULL) {
+    fclose((FILE *)cls);
+  }
 }
 
 /**
@@ -100,17 +100,17 @@ int callback_static_file (const struct _u_request * request, struct _u_response 
         fseek (f, 0, SEEK_END);
         length = ftell (f);
         fseek (f, 0, SEEK_SET);
-				
+        
         content_type = u_map_get_case(((struct _static_file_config *)user_data)->mime_types, get_filename_ext(file_requested));
         if (content_type == NULL) {
           content_type = u_map_get(((struct _static_file_config *)user_data)->mime_types, "*");
           y_log_message(Y_LOG_LEVEL_WARNING, "Static File Server - Unknown mime type for extension %s", get_filename_ext(file_requested));
         }
         u_map_put(response->map_header, "Content-Type", content_type);
-				
-				if (ulfius_set_stream_response(response, 200, callback_static_file_stream, callback_static_file_stream_free, length, STATIC_FILE_CHUNK, f) != U_OK) {
-					y_log_message(Y_LOG_LEVEL_ERROR, "callback_static_file - Error ulfius_set_stream_response");
-				}
+        
+        if (ulfius_set_stream_response(response, 200, callback_static_file_stream, callback_static_file_stream_free, length, STATIC_FILE_CHUNK, f) != U_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "callback_static_file - Error ulfius_set_stream_response");
+        }
       }
     } else {
       ulfius_set_string_body_response(response, 404, "File not found");

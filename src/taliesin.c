@@ -676,7 +676,7 @@ int build_config_from_file(struct config_elements * config) {
               y_log_message(Y_LOG_LEVEL_ERROR, "Error executing sqlite3 query 'PRAGMA foreign_keys = ON;'");
               config_destroy(&cfg);
               return 0;
-            }           
+            }
           }
         } else {
           config_destroy(&cfg);
@@ -863,7 +863,7 @@ int build_config_from_file(struct config_elements * config) {
   }
   
   if (config_lookup_string(&cfg, "stream_format", &cur_stream_format)) {
-    if (0 == o_strcasecmp(cur_stream_format, "mp3") || 0 == o_strcasecmp(cur_stream_format, "aac") || 0 == o_strcasecmp(cur_stream_format, "ogg") || 0 == o_strcasecmp(cur_stream_format, "flac")) {
+    if (0 == o_strcasecmp(cur_stream_format, "mp3") || 0 == o_strcasecmp(cur_stream_format, "ogg") || 0 == o_strcasecmp(cur_stream_format, "flac")) {
       o_free(config->stream_format);
       config->stream_format = o_strdup(cur_stream_format);
       if (config->stream_format == NULL) {
@@ -872,7 +872,7 @@ int build_config_from_file(struct config_elements * config) {
         return 0;
       }
     } else {
-      fprintf(stderr, "Error stream_format unknown, use values 'mp3', 'ogg', 'aac' or 'flac', exiting\n");
+      fprintf(stderr, "Error stream_format unknown, use values 'mp3', 'ogg' or 'flac', exiting\n");
       config_destroy(&cfg);
       return 0;
     }

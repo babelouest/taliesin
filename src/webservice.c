@@ -1084,6 +1084,7 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
   uint64_t time_delta, time_offset;
   int ret_thread_jukebox = 0, detach_thread_jukebox = 0;
   pthread_t thread_jukebox;
+  json_t * j_media;
   
   for (i=0; i<config->nb_webradio; i++) {
     if (0 == o_strcmp(u_map_get(request->map_url, "stream_name"), config->webradio_set[i]->name)) {
@@ -1115,7 +1116,7 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
         client_data_webradio->api_prefix = config->api_prefix;
         client_data_webradio->audio_stream = current_webradio->audio_stream;
         client_data_webradio->current_buffer = client_data_webradio->audio_stream->header_buffer;
-        client_data_webradio->metadata_send = o_strcasecmp("1", u_map_get_case(request->map_header, "Icy-MetaData"))?-1:0;
+        client_data_webradio->metadata_send = (0 == o_strcmp(client_data_webradio->audio_stream->stream_format, "mp3") && o_strcasecmp("1", u_map_get_case(request->map_header, "Icy-MetaData")))?-1:0;
         client_data_webradio->client_address = get_ip_source(request);
         client_data_webradio->user_agent = o_strdup(u_map_get_case(request->map_header, "User-Agent"));
         if (client_data_webradio->audio_stream->nb_client_connected >= TALIESIN_PLAYLIST_CLIENT_MAX) {
@@ -1218,6 +1219,13 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
               } else {
                 client_data_jukebox->client_present = 1;
                 client_data_jukebox->audio_buffer->status = TALIESIN_STREAM_TRANSCODE_STATUS_STARTED;
+                j_media = media_get_by_id(config, client_data_jukebox->audio_buffer->file->tm_id);
+                if (check_result_value(j_media, T_OK)) {
+                  client_data_jukebox->audio_buffer->title = build_icy_title(json_object_get(j_media, "media"));
+                } else {
+                  client_data_jukebox->audio_buffer->title = o_strdup(client_data_jukebox->jukebox->display_name);
+                }
+                json_decref(j_media);
                 if (ulfius_set_stream_response(response, 200, u_jukebox_stream, u_jukebox_stream_free, U_STREAM_SIZE_UNKOWN, current_jukebox->stream_bitrate / 8, client_data_jukebox) == U_OK) {
                   current_jukebox->nb_client++;
                   time(&current_jukebox->last_seen);
@@ -2072,7 +2080,7 @@ int callback_taliesin_playlist_load (const struct _u_request * request, struct _
   const char * format;
   unsigned short int channels;
   unsigned int sample_rate, bit_rate;
-  struct _t_webradio * playlist;
+  struct _t_webradio * webradio;
   int ret_thread_webradio = 0, detach_thread_webradio = 0;
   pthread_t thread_webradio;
   
@@ -2102,9 +2110,9 @@ int callback_taliesin_playlist_load (const struct _u_request * request, struct _
     j_valid = is_stream_parameters_valid((u_map_get(request->map_url, "webradio") != NULL), format, channels, sample_rate, bit_rate);
     if (j_valid != NULL && json_array_size(j_valid) == 0) {
       if (u_map_get(request->map_url, "webradio") != NULL) {
-        j_stream_info = add_webradio_from_playlist(config, json_object_get(j_playlist, "playlist"), get_username(request, response, config), format, channels, sample_rate, bit_rate, (u_map_get(request->map_url, "random")!=NULL), &playlist);
+        j_stream_info = add_webradio_from_playlist(config, json_object_get(j_playlist, "playlist"), get_username(request, response, config), format, channels, sample_rate, bit_rate, (u_map_get(request->map_url, "random")!=NULL), &webradio);
         if (check_result_value(j_stream_info, T_OK)) {
-          ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)playlist);
+          ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
           detach_thread_webradio = pthread_detach(thread_webradio);
           if (ret_thread_webradio || detach_thread_webradio) {
             y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio");

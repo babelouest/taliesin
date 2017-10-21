@@ -87,6 +87,10 @@ json_t * is_stream_parameters_valid(int webradio, const char * format, unsigned 
   json_t * j_result = json_array();
   
   if (j_result != NULL) {
+    if (webradio && 0 != o_strcasecmp("mp3", format)) {
+      json_array_append_new(j_result, json_pack("{ss}", "format", "webradio allows only 'mp3' format"));
+    }
+    
     if (0 != o_strcasecmp("mp3", format) &&
         0 != o_strcasecmp("vorbis", format) &&
         0 != o_strcasecmp("flac", format)) {

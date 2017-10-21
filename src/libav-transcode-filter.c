@@ -468,6 +468,7 @@ int webradio_open_output_buffer(struct _audio_stream * audio_stream) {
           avctx->bit_rate     = audio_stream->stream_bitrate;
         }
         avctx->strict_std_compliance = FF_COMPLIANCE_NORMAL;
+        avctx->refcounted_frames     = 0;
         stream->time_base.den = audio_stream->stream_sample_rate;
         stream->time_base.num = 1;
 

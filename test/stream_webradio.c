@@ -124,6 +124,16 @@ START_TEST(test_create_webradio_path_error_empty)
 }
 END_TEST
 
+START_TEST(test_create_webradio_path_error_no_audio)
+{
+  char * url = msprintf(TALIESIN_SERVER_URI "/data_source/" DATA_SOURCE_VALID "/browse/path/folder_cover/?webradio");
+  
+  int res = run_simple_authenticated_test(&user_req, "GET", url, NULL, NULL, 404, NULL, NULL, NULL);
+  free(url);
+  ck_assert_int_eq(res, 1);
+}
+END_TEST
+
 START_TEST(test_create_webradio_path_error_invalid_format_parameter)
 {
   char * url = msprintf(TALIESIN_SERVER_URI "/data_source/" DATA_SOURCE_VALID "/browse/path/Kimiko Ishizaka/J.S. Bach: \"Open\" Goldberg Variations, BWV 988 (Piano)/?webradio&format=invalid");
@@ -747,6 +757,7 @@ static Suite *taliesin_suite(void)
   tcase_add_test(tc_core, test_webradio_play_ok);
   tcase_add_test(tc_core, test_create_webradio_path_error_not_found);
   tcase_add_test(tc_core, test_create_webradio_path_error_empty);
+  tcase_add_test(tc_core, test_create_webradio_path_error_no_audio);
   tcase_add_test(tc_core, test_create_webradio_path_error_invalid_format_parameter);
   tcase_add_test(tc_core, test_create_webradio_path_error_invalid_bitrate_parameter);
   tcase_add_test(tc_core, test_webradio_command_invalid);

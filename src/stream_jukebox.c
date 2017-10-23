@@ -1126,9 +1126,11 @@ json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * ju
       if (check_result_value(j_data_source, T_OK)) {
         j_result = media_get_file_list_from_path(config, json_object_get(j_data_source, "data_source"), json_string_value(json_object_get(j_element, "path")), (json_object_get(j_element, "recursive") == json_true()));
         if (check_result_value(j_result, T_OK)) {
-          if (file_list_add_media_list(config, jukebox->file_list, json_object_get(j_result, "media")) != T_OK) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error appending %s/%s to jukebox", json_string_value(json_object_get(j_element, "data_source")), json_string_value(json_object_get(j_element, "path")));
-            ret = T_ERROR;
+          if (0 == o_strcmp("audio", json_string_value(json_object_get(json_object_get(j_result, "media"), "type")))) {
+            if (file_list_add_media_list(config, jukebox->file_list, json_object_get(j_result, "media")) != T_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error appending %s/%s to jukebox", json_string_value(json_object_get(j_element, "data_source")), json_string_value(json_object_get(j_element, "path")));
+              ret = T_ERROR;
+            }
           }
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error media_get_file_list_from_path");

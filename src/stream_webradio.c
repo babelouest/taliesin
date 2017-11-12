@@ -522,7 +522,7 @@ json_t * add_webradio_from_path(struct config_elements * config, json_t * j_data
               *new_webradio = config->webradio_set[webradio_index];
             }
             if (webradio_add_db_stream(config, config->webradio_set[webradio_index]) == T_OK) {
-              j_result = json_pack("{sis{sssssssssisiso}}",
+              j_result = json_pack("{sis{sssssssssisisosis[]}}",
                                     "result",
                                     T_OK,
                                     "stream",
@@ -539,7 +539,10 @@ json_t * add_webradio_from_path(struct config_elements * config, json_t * j_data
                                       "bitrate",
                                       bit_rate,
                                       "webradio",
-                                      json_true());
+                                      json_true(),
+                                      "elements",
+                                      config->webradio_set[webradio_index]->file_list->nb_files,
+                                      "clients");
             } else {
               y_log_message(Y_LOG_LEVEL_ERROR, "add_webradio_from_path - Error webradio_add_db_stream");
               j_result = json_pack("{si}", "result", T_ERROR);
@@ -601,7 +604,7 @@ json_t * add_webradio_from_playlist(struct config_elements * config, json_t * j_
             *new_webradio = config->webradio_set[webradio_index];
           }
           if (webradio_add_db_stream(config, config->webradio_set[webradio_index]) == T_OK) {
-            j_result = json_pack("{sis{sssssssssisiso}}",
+            j_result = json_pack("{sis{sssssssssisisosis[]}}",
                                   "result",
                                   T_OK,
                                   "stream",
@@ -618,7 +621,10 @@ json_t * add_webradio_from_playlist(struct config_elements * config, json_t * j_
                                     "bitrate",
                                     bit_rate,
                                     "webradio",
-                                    json_true());
+                                    json_true(),
+                                    "elements",
+                                    config->webradio_set[webradio_index]->file_list->nb_files,
+                                    "clients");
           } else {
             y_log_message(Y_LOG_LEVEL_ERROR, "add_webradio_from_playlist - Error webradio_add_db_stream");
             j_result = json_pack("{si}", "result", T_ERROR);

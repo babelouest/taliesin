@@ -1,0 +1,31 @@
+{
+  "name": "taliesin-react",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "bootstrap": "^3.3.7",
+    "font-awesome": "^4.7.0",
+    "jquery": "^3.2.1",
+    "js-cookie": "~2.1.4",
+    "react": "^15.6.1",
+    "react-audio-player": "^0.6.2",
+    "react-bootstrap": "^0.31.3",
+    "react-dom": "^15.6.1",
+    "react-fontawesome": "^1.6.1",
+    "react-lazyload": "^2.3.0",
+    "react-notification-system": "^0.2.16",
+    "react-redux": "^5.0.6",
+    "react-scripts": "1.0.13",
+    "react-visibility-sensor": "^3.11.0",
+    "redux": "^3.7.2"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "devDependencies": {
+    "redux-devtools": "^3.4.0"
+  }
+}

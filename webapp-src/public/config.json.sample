@@ -1,0 +1,14 @@
+{
+  "taliesinApiUrl": "https://taliesin.url/api",
+  "angharadApiUrl": "https://angharad.url/api/",
+  "oauth2Config": {
+    "storageType": "local", 
+    "responseType": "code", 
+    "serverUrl": "https://glewlwyd.url/api", 
+    "authUrl": "auth", 
+    "tokenUrl": "token", 
+    "clientId": "taliesin", 
+    "redirectUri": "https://client.url/", 
+    "scope": "taliesin taliesin_admin angharad"
+  }
+}

@@ -18,4 +18,4 @@ stream_webradio
 webapp-react
 config
 test/media/
-webapp-src/public/config.json
+config.json

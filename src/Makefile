@@ -50,7 +50,7 @@ memcheck: debug
 	valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all ./taliesin --config-file=$(CONFIG_FILE) 2>valgrind.txt
 
 test-debug: debug
-	./taliesin --config-file=$(CONFIG_FILE)
+	./taliesin --config-file=$(CONFIG_FILE) -mconsole
 
 install: taliesin
 	cp -f taliesin $(PREFIX)/bin

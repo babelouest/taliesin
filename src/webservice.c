@@ -532,7 +532,7 @@ int callback_taliesin_media_get_path (const struct _u_request * request, struct 
             j_valid = is_stream_parameters_valid((u_map_get(request->map_url, "webradio") != NULL), format, channels, sample_rate, bit_rate);
             if (j_valid != NULL && json_array_size(j_valid) == 0) {
               if (u_map_get(request->map_url, "webradio") != NULL) {
-                j_stream_info = add_webradio_from_path(config, json_object_get(j_data_source, "data_source"), decode_path, get_username(request, response, config), format, channels, sample_rate, bit_rate, (u_map_get(request->map_url, "recursive")!=NULL), (u_map_get(request->map_url, "random")!=NULL), &webradio);
+                j_stream_info = add_webradio_from_path(config, json_object_get(j_data_source, "data_source"), decode_path, get_username(request, response, config), format, channels, sample_rate, bit_rate, (u_map_get(request->map_url, "recursive")!=NULL), (u_map_get(request->map_url, "random")!=NULL), u_map_get(request->map_url, "name"), &webradio);
                 if (check_result_value(j_stream_info, T_OK)) {
                   ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
                   detach_thread_webradio = pthread_detach(thread_webradio);
@@ -552,7 +552,7 @@ int callback_taliesin_media_get_path (const struct _u_request * request, struct 
                 json_decref(j_stream_info);
               } else if (u_map_get(request->map_url, "jukebox") != NULL) {
                 //y_log_message(Y_LOG_LEVEL_DEBUG, "Start jukebox");
-                j_stream_info = add_jukebox_from_path(config, json_object_get(j_data_source, "data_source"), decode_path, get_username(request, response, config), format, channels, sample_rate, bit_rate, (u_map_get(request->map_url, "recursive")!=NULL));
+                j_stream_info = add_jukebox_from_path(config, json_object_get(j_data_source, "data_source"), decode_path, get_username(request, response, config), format, channels, sample_rate, bit_rate, (u_map_get(request->map_url, "recursive")!=NULL), u_map_get(request->map_url, "name"));
                 if (check_result_value(j_stream_info, T_OK)) {
                   json_object_set_new(json_object_get(j_stream_info, "stream"), "media", json_deep_copy(json_object_get(j_result, "media")));
                   ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
@@ -845,7 +845,7 @@ int callback_taliesin_category_list (const struct _u_request * request, struct _
             if (j_valid != NULL && json_array_size(j_valid) == 0) {
               if (u_map_get(request->map_url, "webradio") != NULL) {
                 j_fake_jukebox = json_pack("{sssssisO}", "description", u_map_get(request->map_url, "category"), "name", u_map_get(request->map_url, "category"), "tpl_id", 0, "media", json_object_get(j_result, "list"));
-                j_stream_info = add_webradio_from_playlist(config, j_fake_jukebox, get_username(request, response, config), format, channels, sample_rate, bit_rate, (u_map_get(request->map_url, "random")!=NULL), &webradio);
+                j_stream_info = add_webradio_from_playlist(config, j_fake_jukebox, get_username(request, response, config), format, channels, sample_rate, bit_rate, (u_map_get(request->map_url, "random")!=NULL), u_map_get(request->map_url, "name"), &webradio);
                 if (check_result_value(j_stream_info, T_OK)) {
                   ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
                   detach_thread_webradio = pthread_detach(thread_webradio);
@@ -864,7 +864,7 @@ int callback_taliesin_category_list (const struct _u_request * request, struct _
                 json_decref(j_fake_jukebox);
               } else if (u_map_get(request->map_url, "jukebox") != NULL) {
                 j_fake_jukebox = json_pack("{sssssisO}", "description", u_map_get(request->map_url, "category"), "name", u_map_get(request->map_url, "category"), "tpl_id", 0, "media", json_object_get(j_result, "list"));
-                j_stream_info = add_jukebox_from_playlist(config, j_fake_jukebox, get_username(request, response, config), format, channels, sample_rate, bit_rate);
+                j_stream_info = add_jukebox_from_playlist(config, j_fake_jukebox, get_username(request, response, config), format, channels, sample_rate, bit_rate, u_map_get(request->map_url, "name"));
                 if (check_result_value(j_stream_info, T_OK)) {
                   json_object_set_new(json_object_get(j_stream_info, "stream"), "media", json_deep_copy(json_object_get(j_result, "media")));
                   ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
@@ -1002,7 +1002,7 @@ int callback_taliesin_subcategory_list (const struct _u_request * request, struc
               if (j_valid != NULL && json_array_size(j_valid) == 0) {
                 if (u_map_get(request->map_url, "webradio") != NULL) {
                   j_fake_jukebox = json_pack("{sssssiso}", "description", u_map_get(request->map_url, "category"), "name", u_map_get(request->map_url, "category"), "tpl_id", 0, "media", json_object_get(j_result, "list"));
-                  j_stream_info = add_webradio_from_playlist(config, j_fake_jukebox, get_username(request, response, config), format, channels, sample_rate, bit_rate, (u_map_get(request->map_url, "random")!=NULL), &webradio);
+                  j_stream_info = add_webradio_from_playlist(config, j_fake_jukebox, get_username(request, response, config), format, channels, sample_rate, bit_rate, (u_map_get(request->map_url, "random")!=NULL), u_map_get(request->map_url, "name"), &webradio);
                   if (check_result_value(j_stream_info, T_OK)) {
                     ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
                     detach_thread_webradio = pthread_detach(thread_webradio);
@@ -1021,7 +1021,7 @@ int callback_taliesin_subcategory_list (const struct _u_request * request, struc
                   json_decref(j_fake_jukebox);
                 } else if (u_map_get(request->map_url, "jukebox") != NULL) {
                   j_fake_jukebox = json_pack("{sssssiso}", "description", u_map_get(request->map_url, "category"), "name", u_map_get(request->map_url, "category"), "tpl_id", 0, "media", json_object_get(j_result, "list"));
-                  j_stream_info = add_jukebox_from_playlist(config, j_fake_jukebox, get_username(request, response, config), format, channels, sample_rate, bit_rate);
+                  j_stream_info = add_jukebox_from_playlist(config, j_fake_jukebox, get_username(request, response, config), format, channels, sample_rate, bit_rate, u_map_get(request->map_url, "name"));
                   if (check_result_value(j_stream_info, T_OK)) {
                     json_object_set_new(json_object_get(j_stream_info, "stream"), "media", json_deep_copy(json_object_get(j_result, "media")));
                     ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
@@ -2102,7 +2102,7 @@ int callback_taliesin_playlist_load (const struct _u_request * request, struct _
     j_valid = is_stream_parameters_valid((u_map_get(request->map_url, "webradio") != NULL), format, channels, sample_rate, bit_rate);
     if (j_valid != NULL && json_array_size(j_valid) == 0) {
       if (u_map_get(request->map_url, "webradio") != NULL) {
-        j_stream_info = add_webradio_from_playlist(config, json_object_get(j_playlist, "playlist"), get_username(request, response, config), format, channels, sample_rate, bit_rate, (u_map_get(request->map_url, "random")!=NULL), &webradio);
+        j_stream_info = add_webradio_from_playlist(config, json_object_get(j_playlist, "playlist"), get_username(request, response, config), format, channels, sample_rate, bit_rate, (u_map_get(request->map_url, "random")!=NULL), u_map_get(request->map_url, "name"), &webradio);
         if (check_result_value(j_stream_info, T_OK)) {
           ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
           detach_thread_webradio = pthread_detach(thread_webradio);
@@ -2118,7 +2118,7 @@ int callback_taliesin_playlist_load (const struct _u_request * request, struct _
         }
         json_decref(j_stream_info);
       } else {
-        j_stream_info = add_jukebox_from_playlist(config, json_object_get(j_playlist, "playlist"), get_username(request, response, config), format, channels, sample_rate, bit_rate);
+        j_stream_info = add_jukebox_from_playlist(config, json_object_get(j_playlist, "playlist"), get_username(request, response, config), format, channels, sample_rate, bit_rate, u_map_get(request->map_url, "name"));
         if (check_result_value(j_stream_info, T_OK)) {
           json_object_set_new(json_object_get(j_stream_info, "stream"), "media", json_deep_copy(json_object_get(json_object_get(j_playlist, "playlist"), "media")));
           ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
@@ -2250,7 +2250,8 @@ int callback_taliesin_config_type_get (const struct _u_request * request, struct
       0 == o_strcmp(TALIESIN_CONFIG_VIDEO_FILE_EXTENSION, u_map_get_case(request->map_url, "type")) ||
       0 == o_strcmp(TALIESIN_CONFIG_SUBTITLE_FILE_EXTENSION, u_map_get_case(request->map_url, "type")) ||
       0 == o_strcmp(TALIESIN_CONFIG_IMAGE_FILE_EXTENSION, u_map_get_case(request->map_url, "type")) ||
-      0 == o_strcmp(TALIESIN_CONFIG_COVER_FILE_PATTERN, u_map_get_case(request->map_url, "type"))) {
+      0 == o_strcmp(TALIESIN_CONFIG_COVER_FILE_PATTERN, u_map_get_case(request->map_url, "type")) ||
+      0 == o_strcmp(TALIESIN_CONFIG_EXTERNAL_PLAYER, u_map_get_case(request->map_url, "type"))) {
     j_result = config_get_values(config, u_map_get_case(request->map_url, "type"));
     if (check_result_value(j_result, T_OK)) {
       if (ulfius_set_json_body_response(response, 200, json_object_get(j_result, "config")) != U_OK) {
@@ -2276,7 +2277,8 @@ int callback_taliesin_config_type_set (const struct _u_request * request, struct
       0 == o_strcmp(TALIESIN_CONFIG_VIDEO_FILE_EXTENSION, u_map_get_case(request->map_url, "type")) ||
       0 == o_strcmp(TALIESIN_CONFIG_SUBTITLE_FILE_EXTENSION, u_map_get_case(request->map_url, "type")) ||
       0 == o_strcmp(TALIESIN_CONFIG_IMAGE_FILE_EXTENSION, u_map_get_case(request->map_url, "type")) ||
-      0 == o_strcmp(TALIESIN_CONFIG_COVER_FILE_PATTERN, u_map_get_case(request->map_url, "type"))) {
+      0 == o_strcmp(TALIESIN_CONFIG_COVER_FILE_PATTERN, u_map_get_case(request->map_url, "type")) ||
+      0 == o_strcmp(TALIESIN_CONFIG_EXTERNAL_PLAYER, u_map_get_case(request->map_url, "type"))) {
     j_body = ulfius_get_json_body_request(request, NULL);
     j_is_valid = is_valid_config_elements(j_body);
     if (j_is_valid != NULL && json_array_size(j_is_valid) == 0) {

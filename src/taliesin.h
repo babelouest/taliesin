@@ -139,6 +139,7 @@
 #define TALIESIN_CONFIG_SUBTITLE_FILE_EXTENSION "subtitle_file_extension"
 #define TALIESIN_CONFIG_IMAGE_FILE_EXTENSION    "image_file_extension"
 #define TALIESIN_CONFIG_COVER_FILE_PATTERN      "cover_file_pattern"
+#define TALIESIN_CONFIG_EXTERNAL_PLAYER         "external_player"
 
 #define TALIESIN_FILE_TYPE_UNKNOWN  0
 #define TALIESIN_FILE_TYPE_AUDIO    1
@@ -441,6 +442,7 @@ struct config_elements {
   char                            ** subtitle_file_extension;
   char                            ** image_file_extension;
   char                            ** cover_file_pattern;
+  char                            ** external_player;
 };
 
 /**
@@ -530,8 +532,8 @@ void               * webradio_run_thread(void * args);
 struct _t_webradio * webradio_get_stream(struct config_elements * config, const char * stream_name, const char * username, int is_admin);
 json_t             * is_webradio_command_valid(struct config_elements * config, json_t * j_command, const char * username, int is_admin);
 json_t             * webradio_command(struct config_elements * config, struct _t_webradio * webradio, const char * username, json_t * j_command);
-json_t             * add_webradio_from_path(struct config_elements * config, json_t * j_data_source, const char * path, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, int recursive, short int random, struct _t_webradio ** new_webradio);
-json_t             * add_webradio_from_playlist(struct config_elements * config, json_t * j_playlist, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, short int random, struct _t_webradio ** new_webradio);
+json_t             * add_webradio_from_path(struct config_elements * config, json_t * j_data_source, const char * path, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, int recursive, short int random, const char * name, struct _t_webradio ** new_webradio);
+json_t             * add_webradio_from_playlist(struct config_elements * config, json_t * j_playlist, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, short int random, const char * name, struct _t_webradio ** new_webradio);
 int                  add_webradio_from_db_stream(struct config_elements * config, json_t * j_stream, struct _t_webradio ** new_webradio);
 int                  scan_path_to_webradio(struct config_elements * config, json_t * j_data_source, const char * path, int recursive, struct _t_webradio * webradio);
 
@@ -549,8 +551,8 @@ int                 jukebox_audio_buffer_add_data(struct _jukebox_audio_buffer *
 int                 jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukebox, char ** m3u_data);
 int                 is_valid_jukebox_element_parameter(struct config_elements * config, json_t * jukebox_element, const char * username, int is_admin);
 void              * jukebox_run_thread(void * args);
-json_t            * add_jukebox_from_path(struct config_elements * config, json_t * j_data_source, const char * path, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, int recursive);
-json_t            * add_jukebox_from_playlist(struct config_elements * config, json_t * j_playlist, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate);
+json_t            * add_jukebox_from_path(struct config_elements * config, json_t * j_data_source, const char * path, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, int recursive, const char * name);
+json_t            * add_jukebox_from_playlist(struct config_elements * config, json_t * j_playlist, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, const char * name);
 int                 add_jukebox_from_db_stream(struct config_elements * config, json_t * j_stream);
 
 int     init_client_data_jukebox(struct _client_data_jukebox * client_data_jukebox);

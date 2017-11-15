@@ -177,6 +177,10 @@ int config_set_values(struct config_elements * config, const char * config_type,
             free_string_array(config->cover_file_pattern);
             config->cover_file_pattern = new_config_array;
             ret = T_OK;
+          } else if (0 == o_strcmp(config_type, TALIESIN_CONFIG_EXTERNAL_PLAYER)) {
+            free_string_array(config->external_player);
+            config->external_player = new_config_array;
+            ret = T_OK;
           } else {
             y_log_message(Y_LOG_LEVEL_ERROR, "config_get_db_values - Error config_type (this shouldn't happen)");
             ret = T_ERROR_PARAM;
@@ -296,6 +300,26 @@ int load_config_values(struct config_elements * config) {
         config->cover_file_pattern[json_array_size(json_object_get(j_result, "config"))] = NULL;
       } else {
         y_log_message(Y_LOG_LEVEL_ERROR, "load_config_values - Error allocating resources for config->cover_file_pattern");
+        ret = T_ERROR_MEMORY;
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "load_config_values - Error config_get_db_values for audio file extension");
+      ret = T_ERROR_DB;
+    }
+    json_decref(j_result);
+  }
+  
+  if (ret == T_OK) {
+    j_result = config_get_db_values(config, TALIESIN_CONFIG_EXTERNAL_PLAYER);
+    if (check_result_value(j_result, T_OK)) {
+      config->external_player = o_malloc((json_array_size(json_object_get(j_result, "config")) + 1) * sizeof (char*));
+      if (config->external_player != NULL) {
+        json_array_foreach(json_object_get(j_result, "config"), index, j_element) {
+          config->external_player[index] = o_strdup(json_string_value(json_object_get(j_element, "conf_value")));
+        }
+        config->external_player[json_array_size(json_object_get(j_result, "config"))] = NULL;
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "load_config_values - Error allocating resources for config->external_player");
         ret = T_ERROR_MEMORY;
       }
     } else {

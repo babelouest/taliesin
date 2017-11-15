@@ -494,10 +494,11 @@ static int webradio_remove_db_stream(struct config_elements * config, const char
   }
 }
 
-json_t * add_webradio_from_path(struct config_elements * config, json_t * j_data_source, const char * path, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, int recursive, short int random, struct _t_webradio ** new_webradio) {
+json_t * add_webradio_from_path(struct config_elements * config, json_t * j_data_source, const char * path, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, int recursive, short int random, const char * name, struct _t_webradio ** new_webradio) {
   json_t * j_result = NULL, * j_media_list, * j_element;
   size_t index;
   int webradio_index;
+  const char * display_name;
   
   j_media_list = media_scan_path(config, j_data_source, path, recursive);
   if (j_media_list != NULL && json_array_size(json_object_get(j_media_list, "media_list")) > 0) {
@@ -508,11 +509,19 @@ json_t * add_webradio_from_path(struct config_elements * config, json_t * j_data
         config->nb_webradio++;
         config->webradio_set[webradio_index] = o_malloc(sizeof(struct _t_webradio));
         if (config->webradio_set[webradio_index] != NULL) {
+					if (name == NULL) {
+						display_name = strrchr(path, '/')!=NULL?(strrchr(path, '/') + 1):path;
+					} else {
+						display_name = name;
+					}
+          if (o_strlen(display_name) <= 0) {
+            display_name = json_string_value(json_object_get(j_data_source, "name"));
+          }
           if (webradio_init(config->webradio_set[webradio_index], format, channels, sample_rate, bit_rate) == T_OK) {
             config->webradio_set[webradio_index]->config = config;
             config->webradio_set[webradio_index]->username = o_strdup(username);
             config->webradio_set[webradio_index]->random = random;
-            config->webradio_set[webradio_index]->display_name = o_strdup(strrchr(path, '/')!=NULL?(strrchr(path, '/') + 1):path);
+            config->webradio_set[webradio_index]->display_name = o_strdup(display_name);
             json_array_foreach(json_object_get(j_media_list, "media_list"), index, j_element) {
               if (file_list_enqueue_new_file(config->webradio_set[webradio_index]->file_list, json_string_value(json_object_get(j_element, "full_path")), json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
                 y_log_message(Y_LOG_LEVEL_ERROR, "add_webradio_from_path - Error adding file %s", json_string_value(json_object_get(j_element, "full_path")));
@@ -573,7 +582,7 @@ json_t * add_webradio_from_path(struct config_elements * config, json_t * j_data
   return j_result;
 }
 
-json_t * add_webradio_from_playlist(struct config_elements * config, json_t * j_playlist, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, short int random, struct _t_webradio ** new_webradio) {
+json_t * add_webradio_from_playlist(struct config_elements * config, json_t * j_playlist, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, short int random, const char * name, struct _t_webradio ** new_webradio) {
   json_t * j_result = NULL, * j_element;
   size_t index;
   char * full_path;
@@ -590,7 +599,11 @@ json_t * add_webradio_from_playlist(struct config_elements * config, json_t * j_
           config->webradio_set[webradio_index]->config = config;
           config->webradio_set[webradio_index]->username = o_strdup(username);
           config->webradio_set[webradio_index]->random = random;
-          config->webradio_set[webradio_index]->display_name = o_strdup(json_string_value(json_object_get(j_playlist, "description")));
+					if (name == NULL) {
+						config->webradio_set[webradio_index]->display_name = o_strdup(json_string_value(json_object_get(j_playlist, "description")));
+					} else {
+						config->webradio_set[webradio_index]->display_name = name;
+					}
           config->webradio_set[webradio_index]->playlist_name = o_strdup(json_string_value(json_object_get(j_playlist, "name")));
           config->webradio_set[webradio_index]->tpl_id = json_integer_value(json_object_get(j_playlist, "tpl_id"));
           json_array_foreach(json_object_get(j_playlist, "media"), index, j_element) {

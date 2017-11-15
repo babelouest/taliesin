@@ -1219,7 +1219,7 @@ json_t * media_cover_get_all(struct config_elements * config, json_t * j_data_so
       tf_id = folder_get_id(config, j_data_source, 0, path);
       clause_where = msprintf("= (SELECT `tic_id` FROM `%s` WHERE `tf_id`=%" JSON_INTEGER_FORMAT ")", TALIESIN_TABLE_FOLDER, tf_id);
     } else {
-      clause_where = msprintf("= (SELECT `tic_id` FROM `%s` WHERE `tm_id`=%" JSON_INTEGER_FORMAT ")", TALIESIN_TABLE_MEDIA, json_integer_value(json_object_get(json_object_get(j_media, "media"), "tm_id")));
+      clause_where = msprintf("= (SELECT `tic_id` FROM `%s` WHERE `tm_id`=%" JSON_INTEGER_FORMAT ") OR `tic_id` = (SELECT `tic_id` FROM `%s` WHERE `tf_id`=(SELECT `tf_id` FROM `%s` WHERE `tm_id`=%" JSON_INTEGER_FORMAT "))", TALIESIN_TABLE_MEDIA, json_integer_value(json_object_get(json_object_get(j_media, "media"), "tm_id")), TALIESIN_TABLE_FOLDER, TALIESIN_TABLE_MEDIA, json_integer_value(json_object_get(json_object_get(j_media, "media"), "tm_id")));
     }
     j_query = json_pack("{sss[sss]s{s{ssss}}}",
                         "table",

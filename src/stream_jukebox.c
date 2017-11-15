@@ -409,10 +409,11 @@ static int jukebox_remove_db_stream(struct config_elements * config, const char 
   }
 }
 
-json_t * add_jukebox_from_path(struct config_elements * config, json_t * j_data_source, const char * path, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, int recursive) {
+json_t * add_jukebox_from_path(struct config_elements * config, json_t * j_data_source, const char * path, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, int recursive, const char * name) {
   json_t * j_result = NULL, * j_media_list, * j_element;
   size_t index;
   int jukebox_index;
+  const char * display_name;
   
   j_media_list = media_scan_path(config, j_data_source, path, recursive);
   if (j_media_list != NULL && json_array_size(json_object_get(j_media_list, "media_list")) > 0) {
@@ -425,9 +426,17 @@ json_t * add_jukebox_from_path(struct config_elements * config, json_t * j_data_
         config->jukebox_set[jukebox_index] = o_malloc(sizeof(struct _t_jukebox));
         if (config->jukebox_set[jukebox_index] != NULL) {
           if (jukebox_init(config->jukebox_set[jukebox_index], format, channels, sample_rate, bit_rate) == T_OK) {
+						if (name == NULL) {
+							display_name = strrchr(path, '/')!=NULL?(strrchr(path, '/') + 1):path;
+						} else {
+							display_name = name;
+						}
+            if (o_strlen(display_name) <= 0) {
+              display_name = json_string_value(json_object_get(j_data_source, "name"));
+            }
             config->jukebox_set[jukebox_index]->config = config;
             config->jukebox_set[jukebox_index]->username = o_strdup(username);
-            config->jukebox_set[jukebox_index]->display_name = o_strdup(strrchr(path, '/')!=NULL?(strrchr(path, '/') + 1):path);
+            config->jukebox_set[jukebox_index]->display_name = o_strdup(display_name);
             json_array_foreach(json_object_get(j_media_list, "media_list"), index, j_element) {
               if (file_list_enqueue_new_file(config->jukebox_set[jukebox_index]->file_list, json_string_value(json_object_get(j_element, "full_path")), json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
                 y_log_message(Y_LOG_LEVEL_ERROR, "add_jukebox_from_path - Error adding file %s", json_string_value(json_object_get(j_element, "full_path")));
@@ -487,7 +496,7 @@ json_t * add_jukebox_from_path(struct config_elements * config, json_t * j_data_
   return j_result;
 }
 
-json_t * add_jukebox_from_playlist(struct config_elements * config, json_t * j_playlist, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate) {
+json_t * add_jukebox_from_playlist(struct config_elements * config, json_t * j_playlist, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, const char * name) {
   json_t * j_result = NULL, * j_element;
   size_t index;
   char * full_path;
@@ -504,7 +513,11 @@ json_t * add_jukebox_from_playlist(struct config_elements * config, json_t * j_p
         if (jukebox_init(config->jukebox_set[jukebox_index], format, channels, sample_rate, bit_rate) == T_OK) {
           config->jukebox_set[jukebox_index]->config = config;
           config->jukebox_set[jukebox_index]->username = o_strdup(username);
-          config->jukebox_set[jukebox_index]->display_name = o_strdup(json_string_value(json_object_get(j_playlist, "description")));
+					if (name == NULL) {
+						config->jukebox_set[jukebox_index]->display_name = o_strdup(json_string_value(json_object_get(j_playlist, "description")));
+					} else {
+						config->jukebox_set[jukebox_index]->display_name = name;
+					}
           config->jukebox_set[jukebox_index]->playlist_name = o_strdup(json_string_value(json_object_get(j_playlist, "name")));
           config->jukebox_set[jukebox_index]->tpl_id = json_integer_value(json_object_get(j_playlist, "tpl_id"));
           json_array_foreach(json_object_get(j_playlist, "media"), index, j_element) {

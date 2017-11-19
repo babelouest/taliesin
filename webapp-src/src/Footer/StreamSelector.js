@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Row, Col, DropdownButton, MenuItem, ButtonGroup, Button } from 'react-bootstrap';
+import { DropdownButton, MenuItem, Button } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
 import StateStore from '../lib/StateStore';
 
@@ -10,10 +10,16 @@ class StreamSelector extends Component {
 		this.handleSelectStream = this.handleSelectStream.bind(this);
 		this.handleManageStreams = this.handleManageStreams.bind(this);
 		this.handleLoadStream = this.handleLoadStream.bind(this);
+		this.handleDetailsStream = this.handleDetailsStream.bind(this);
 	}
 	
 	componentWillReceiveProps(nextProps) {
     this.setState({streamList: nextProps.streamList, selectedStream: nextProps.stream});
+	}
+	
+	handleDetailsStream() {
+    StateStore.dispatch({type: "setStreamDetails", stream: this.state.selectedStream});
+    StateStore.dispatch({type: "setCurrentBrowse", browse: "streamDetails"});
 	}
   
   handleLoadStream() {
@@ -43,23 +49,19 @@ class StreamSelector extends Component {
       streamName = this.state.selectedStream.display_name||"no name";
     }
 		return (
-			<Row>
-				<Col md={4} className="hidden-xs hidden-sm">
-					<label>Stream:</label>
-				</Col>
-				<Col md={8} sm={12} xs={12}>
-          <ButtonGroup>
-            <DropdownButton title={streamName} id="streamList">
-              {currentList}
-              <MenuItem divider />
-              <MenuItem onClick={this.handleManageStreams}>Manage Streams</MenuItem>
-            </DropdownButton>
-            <Button title="Load" onClick={this.handleLoadStream}>
-							<FontAwesome name={"arrow-circle-right"} />
-            </Button>
-          </ButtonGroup>
-				</Col>
-			</Row>
+			<div>
+				<DropdownButton title={streamName} id="streamList">
+					{currentList}
+					<MenuItem divider />
+					<MenuItem onClick={this.handleManageStreams}>Manage Streams</MenuItem>
+				</DropdownButton>
+				<Button title="Load" onClick={this.handleLoadStream}>
+					<FontAwesome name={"arrow-circle-right"} />
+				</Button>
+				<Button title="Details" onClick={this.handleDetailsStream}>
+					<FontAwesome name={"eye"} />
+				</Button>
+			</div>
 		);
   }
 }

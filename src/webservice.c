@@ -59,22 +59,6 @@ int set_response_json_body_and_clean(struct _u_response * response, uint status,
 }
 
 /**
- * root endpoint
- * redirects to static files address
- */
-int callback_taliesin_root (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  char * url = msprintf("%s/", ((struct config_elements *)user_data)->static_file_config->url_prefix);
-  if (url != NULL) {
-    response->status = 301;
-    ulfius_add_header_to_response(response, "Location", url);
-    o_free(url);
-  } else {
-    response->status = 500;
-  }
-  return U_CALLBACK_CONTINUE;
-};
-
-/**
  * default callback endpoint
  * return an error 404
  */

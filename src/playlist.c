@@ -406,10 +406,10 @@ int playlist_replace_element_list(struct config_elements * config, json_int_t tp
   return ret;
 }
 
-int playlist_add(struct config_elements * config, const char * username, json_t * j_playlist, struct _t_file_list * file_list) {
+json_int_t playlist_add(struct config_elements * config, const char * username, json_t * j_playlist, struct _t_file_list * file_list) {
   json_t * j_query, * j_last_id;
-  json_int_t tic_id = 0, tpl_id;
-  int res, ret;
+  json_int_t tic_id = 0, tpl_id = -1;
+  int res;
   struct _t_file * file;
   
   if (json_object_get(j_playlist, "cover") != NULL) {
@@ -438,9 +438,6 @@ int playlist_add(struct config_elements * config, const char * username, json_t 
       if (file_list == NULL) {
         if (playlist_replace_element_list(config, tpl_id, j_playlist) != T_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add - Error insert playlist elements");
-          ret = T_ERROR;
-        } else {
-          ret = T_OK;
         }
       } else {
         j_query = json_pack("{sss[]}", "table", TALIESIN_TABLE_PLAYLIST_ELEMENT, "values");
@@ -452,27 +449,21 @@ int playlist_add(struct config_elements * config, const char * username, json_t 
           }
           res = h_insert(config->conn, j_query, NULL);
           json_decref(j_query);
-          if (res == H_OK) {
-            ret = T_OK;
-          } else {
+          if (res != H_OK) {
             y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add - Error executing j_query (2)");
-            ret = T_ERROR_DB;
           }
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add - Error allocating resources for j_query");
-          ret = T_ERROR_MEMORY;
         }
       }
     } else {
       y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add - Error getting last id");
-      ret = T_ERROR_DB;
     }
     json_decref(j_last_id);
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add - Error executing j_query (1)");
-    ret = T_ERROR_DB;
   }
-  return ret;
+  return tpl_id;
 }
 
 int playlist_can_update(json_t * j_playlist, int is_admin) {

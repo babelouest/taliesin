@@ -21,7 +21,8 @@ class Footer extends Component {
 			mediaNow: StateStore.getState().profile.mediaNow,
 			mediaNext: StateStore.getState().profile.mediaNext,
 			folded: true, 
-			currentPlayer: StateStore.getState().profile.currentPlayer
+			currentPlayer: StateStore.getState().profile.currentPlayer,
+			play: false
 		};
 		
 		StateStore.subscribe(() => {
@@ -34,6 +35,8 @@ class Footer extends Component {
 				this.setState({currentPlayer: StateStore.getState().profile.currentPlayer});
 			} else if (reduxState.lastAction === "loadStream") {
 				this.setState({stream: StateStore.getState().profile.stream});
+			} else if (reduxState.lastAction === "loadStreamAndPlay") {
+				this.setState({stream: StateStore.getState().profile.stream, play: true});
 			} else if (reduxState.lastAction === "setJukeboxIndex") {
 				this.setState({jukeboxIndex: StateStore.getState().profile.jukeboxIndex});
 			} else if (reduxState.lastAction === "setMediaNow") {
@@ -64,23 +67,25 @@ class Footer extends Component {
 			}
 		}
 		streamSelector =
-			<Col md={2} xs={4}>
-				<StreamSelector streamList={this.state.streamList} stream={this.state.stream} />
-				<PlayerSelector currentList={this.state.playerList} />
+			<Col md={2} sm={4} xs={4}>
+				<ButtonGroup>
+					<StreamSelector streamList={this.state.streamList} stream={this.state.stream} />
+					<PlayerSelector currentList={this.state.playerList} />
+				</ButtonGroup>
 			</Col>;
 		if (this.state.currentPlayer) {
 			audioPlayer =
-				<Col md={3} xs={6} className="player-box">
-					<MPDController player={this.state.currentPlayer} stream={this.state.stream} />
+				<Col md={3} sm={6} xs={6} className="player-box">
+					<MPDController player={this.state.currentPlayer} stream={this.state.stream} play={this.state.play} />
 				</Col>;
 		} else {
 			audioPlayer =
-				<Col md={3} xs={6} className="player-box">
-					<AudioPlayer stream={this.state.stream} />
+				<Col md={3} sm={6} xs={6} className="player-box">
+					<AudioPlayer stream={this.state.stream} play={this.state.play} />
 				</Col>;
 		}
 		middleButtons =
-			<Col md={2} xs={2} className="text-center">
+			<Col md={2} sm={2} xs={2} className="text-center">
         <ButtonGroup>
           <Button onClick={ ()=> this.setState({ folded: !this.state.folded })}>
             <FontAwesome name={this.state.folded?"chevron-circle-up":"chevron-circle-down"} />

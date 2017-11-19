@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Row, Col, DropdownButton, MenuItem } from 'react-bootstrap';
+import { DropdownButton, MenuItem } from 'react-bootstrap';
 import StateStore from '../lib/StateStore';
 
 class PlayerSelector extends Component {
@@ -44,18 +44,13 @@ class PlayerSelector extends Component {
 			manager = <MenuItem onClick={this.handleManagePlayers}>Manage Players</MenuItem>;
 		}
 		return (
-			<Row>
-				<Col md={4} className="hidden-xs hidden-sm">
-					<label>Player:</label>
-				</Col>
-				<Col md={8} sm={12} xs={12}>
-					<DropdownButton title={playerName} id="playerList">
-						{playerList}
-						{separator}
-						{manager}
-					</DropdownButton>
-				</Col>
-			</Row>
+			<div>
+				<DropdownButton title={playerName} id="playerList">
+					{playerList}
+					{separator}
+					{manager}
+				</DropdownButton>
+			</div>
 		);
   }
 }

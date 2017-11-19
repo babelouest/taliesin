@@ -12,16 +12,16 @@ import StateStore from './lib/StateStore';
 
 config.fetchConfig()
 .then(function () {
-	var curCoauth2Config = config.getConfigValue("oauth2Config");
+	var curOauth2Config = config.getConfigValue("oauth2Config");
 	var oauth2Connector = new OAuth2Connector({
-		storageType: curCoauth2Config.storageType, 
-		responseType: curCoauth2Config.responseType, 
-		serverUrl: curCoauth2Config.serverUrl, 
-		authUrl: curCoauth2Config.authUrl, 
-		tokenUrl: curCoauth2Config.tokenUrl, 
-		clientId: curCoauth2Config.clientId, 
-		redirectUri: curCoauth2Config.redirectUri, 
-		scope: curCoauth2Config.scope,
+		storageType: curOauth2Config.storageType, 
+		responseType: curOauth2Config.responseType, 
+		serverUrl: curOauth2Config.serverUrl, 
+		authUrl: curOauth2Config.authUrl, 
+		tokenUrl: curOauth2Config.tokenUrl, 
+		clientId: curOauth2Config.clientId, 
+		redirectUri: curOauth2Config.redirectUri, 
+		scope: curOauth2Config.scope,
 		changeStatusCb: function (newStatus, token) {
 			if (newStatus === "connected") {
 				StateStore.dispatch({ type: 'connection', status: newStatus, token: token, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), angharadApiUrl: config.getConfigValue("angharadApiUrl") });
@@ -39,12 +39,13 @@ config.fetchConfig()
 
 StateStore.subscribe(() => {
 	if (StateStore.getState().lastAction === "connection") {
-		// Check if user is admin or not
+		// Check if user is admin or not by getting users list
 		StateStore.getState().APIManager.taliesinApiRequest("GET", "/users")
 		.then((users) => {
 			StateStore.dispatch({ type: 'setUserList', userList: users, isAdmin: true });
 		});
 		
+		// Get external players list
 		StateStore.getState().APIManager.taliesinApiRequest("GET", "/config/external_player")
 		.then((externalPlayerList) => {
 			var parsedList = [];
@@ -52,6 +53,7 @@ StateStore.subscribe(() => {
 			StateStore.dispatch({ type: 'setExternalPlayerList', externalPlayerList: parsedList });
 		});
 		
+		// Get current stream list
 		StateStore.getState().APIManager.taliesinApiRequest("GET", "/stream")
 		.then((result) => {
 			StateStore.dispatch({type: "setStreamList", streamList: result});
@@ -60,12 +62,22 @@ StateStore.subscribe(() => {
 			StateStore.dispatch({type: "setStreamList", streamList: []});
 		});
 		
+		// Get data source list
 		StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source")
 		.then((result) => {
-			StateStore.dispatch({type: "setDataSource", dataSourceList: result, currentDataSource: (result.length>0?result[0].name:false)});
+			StateStore.dispatch({type: "setDataSource", dataSourceList: result, currentDataSource: (result.length?result[0]:false)});
 		})
 		.fail((result) => {
 			StateStore.dispatch({type: "setDataSource", dataSourceList: [], currentDataSource: false});
+		});
+		
+		// Get server default config
+		StateStore.getState().APIManager.taliesinApiRequest("GET", "/../config")
+		.then((result) => {
+			StateStore.dispatch({type: "setServerConfig", config: result});
+		})
+		.fail((result) => {
+			StateStore.dispatch({type: "setServerConfig", config: {}});
 		});
 	}
 });

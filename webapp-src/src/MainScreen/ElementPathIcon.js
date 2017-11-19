@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 import FontAwesome from 'react-fontawesome';
-import { Image, Col, DropdownButton, MenuItem, ButtonGroup } from 'react-bootstrap';
+import { Image, Col } from 'react-bootstrap';
 import VisibilitySensor from 'react-visibility-sensor';
 import StateStore from '../lib/StateStore';
+import ElementButtons from './ElementButtons';
 
 class ElementPathIcon extends Component {
   constructor(props) {
@@ -50,7 +51,6 @@ class ElementPathIcon extends Component {
 	
 	render() {
 		var icon = "";
-		var menu = "";
 		if (!this.state.thumbLoaded) {
 			icon = 
 				<div>
@@ -160,42 +160,8 @@ class ElementPathIcon extends Component {
 				}
 			}
 		}
-		if (this.state.element.type === "folder") {
-			menu = 
-				<ButtonGroup>
-					<DropdownButton id={"play"-this.state.element.name} title={
-						<span><i className="fa fa-play"></i></span>
-					}>
-						<MenuItem eventKey="1">As a webradio (no random)</MenuItem>
-						<MenuItem eventKey="2">As a webradio (random)</MenuItem>
-						<MenuItem eventKey="3">As a jukebox</MenuItem>
-					</DropdownButton>
-					<DropdownButton id={"add"-this.state.element.name} title={
-						<span><i className="fa fa-plus"></i></span>
-					}>
-						<MenuItem eventKey="1">Add to playlist</MenuItem>
-						<MenuItem eventKey="2">Add to stream</MenuItem>
-					</DropdownButton>
-				</ButtonGroup>
-		} else if (this.state.element.type === "audio") {
-			menu = 
-				<ButtonGroup>
-					<DropdownButton id={"play"-this.state.element.name} title={
-						<span><i className="fa fa-play"></i></span>
-					}>
-						<MenuItem eventKey="1">As a webradio</MenuItem>
-						<MenuItem eventKey="3">As a jukebox</MenuItem>
-					</DropdownButton>
-					<DropdownButton id={"add"-this.state.element.name} title={
-						<span><i className="fa fa-plus"></i></span>
-					}>
-						<MenuItem eventKey="1">Add to playlist</MenuItem>
-						<MenuItem eventKey="2">Add to stream</MenuItem>
-					</DropdownButton>
-				</ButtonGroup>
-		}
 		return (
-			<Col xs={3} md={2} className="panel panel-default">
+			<Col md={3} sm={3} xs={6} className="panel panel-default">
         <VisibilitySensor
           scrollCheck
           scrollThrottle={100}
@@ -206,7 +172,7 @@ class ElementPathIcon extends Component {
 					{icon}
 				</VisibilitySensor>
 				<div className="text-center">
-					{menu}
+					<ElementButtons dataSource={this.state.dataSource} path={this.state.path} element={this.state.element}/>
 				</div>
 			</Col>
 		);

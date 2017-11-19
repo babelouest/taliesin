@@ -15,11 +15,13 @@ var defaultState = {
 	dataSourceList: [],
 	externalPlayerList: [],
   streamList: [],
+	serverConfig: {},
 	profile: {
 		isAdmin: false,
 		dataSource: false, 
 		path: "",
 		stream: false, 
+		streamDetails: false,
 		localStream: false,
 		playlist: false,
 		mediaNow: false,
@@ -54,6 +56,9 @@ function stateStoreManager(state = defaultState, action) {
 		case "newNotificationManager":
 			state.NotificationManager = action.notificationManager;
 			break;
+		case "setServerConfig":
+			state.serverConfig = action.config;
+			break;
 		case "setDataSource":
 			state.dataSourceList = action.dataSourceList
 			state.profile.dataSource = action.currentDataSource;
@@ -67,6 +72,7 @@ function stateStoreManager(state = defaultState, action) {
 			state.streamList = action.streamList;
 			break;
 		case "loadStream":
+		case "loadStreamAndPlay":
 			state.profile.stream = action.stream;
 			break;
 		case "setLocalStream":
@@ -99,6 +105,9 @@ function stateStoreManager(state = defaultState, action) {
 			break;
 		case "setCurrentView":
 			state.profile.view = action.view;
+			break;
+		case "setStreamDetails":
+			state.profile.streamDetails = action.stream;
 			break;
 		default:
 			break;

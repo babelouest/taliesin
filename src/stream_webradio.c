@@ -474,6 +474,29 @@ static int webradio_set_name_db_stream(struct config_elements * config, const ch
   }
 }
 
+static int webradio_set_playlist_db_stream(struct config_elements * config, const char * name, json_int_t tpl_id) {
+  json_t * j_query;
+  int res;
+  
+  j_query = json_pack("{sss{sI}s{ss}}",
+                      "table",
+                      TALIESIN_TABLE_STREAM,
+                      "set",
+                        "tpl_id",
+                        tpl_id,
+                      "where",
+                        "ts_name",
+                        name);
+  res = h_update(config->conn, j_query, NULL);
+  json_decref(j_query);
+  if (res == H_OK) {
+    return T_OK;
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "webradio_set_playlist_db_stream - Error executing j_query");
+    return T_ERROR_DB;
+  }
+}
+
 static int webradio_remove_db_stream(struct config_elements * config, const char * name) {
   json_t * j_query;
   int res;
@@ -602,7 +625,7 @@ json_t * add_webradio_from_playlist(struct config_elements * config, json_t * j_
 					if (name == NULL) {
 						config->webradio_set[webradio_index]->display_name = o_strdup(json_string_value(json_object_get(j_playlist, "description")));
 					} else {
-						config->webradio_set[webradio_index]->display_name = name;
+						config->webradio_set[webradio_index]->display_name = o_strdup(name);
 					}
           config->webradio_set[webradio_index]->playlist_name = o_strdup(json_string_value(json_object_get(j_playlist, "name")));
           config->webradio_set[webradio_index]->tpl_id = json_integer_value(json_object_get(j_playlist, "tpl_id"));
@@ -1236,7 +1259,7 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
   const char * str_command = json_string_value(json_object_get(j_command, "command"));
   int i, ret;
   json_t * j_return = NULL, * j_result, * j_element, * j_playlist, * j_data_source;
-  json_int_t offset, limit, move_index, move_target, tm_id;
+  json_int_t offset, limit, move_index, move_target, tm_id, tpl_id;
   size_t index;
   struct _audio_buffer * audio_buffer;
   struct _t_file * file;
@@ -1257,7 +1280,7 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
     strcpy(old_name, webradio->name);
     rand_string(webradio->name, TALIESIN_PLAYLIST_NAME_LENGTH);
     if (webradio_set_name_db_stream(config, old_name, webradio->name) == T_OK) {
-      j_return = json_pack("{si}", "result", T_OK);
+      j_return = json_pack("{sis{ss}}", "result", T_OK, "command", "name", webradio->name);
     } else {
       j_return = json_pack("{si}", "result", T_ERROR);
     }
@@ -1478,8 +1501,12 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
       j_return = json_pack("{si}", "result", T_ERROR);
     }
   } else if (0 == o_strcmp(str_command, "save")) {
-    if (playlist_add(config, username, json_object_get(j_command, "parameters"), webradio->file_list) == T_OK) {
-      j_return = json_pack("{si}", "result", T_OK);
+    if ((tpl_id = playlist_add(config, username, json_object_get(j_command, "parameters"), webradio->file_list)) != -1) {
+			if (webradio_set_playlist_db_stream(config, webradio->name, tpl_id) == T_OK) {
+				j_return = json_pack("{sis{ss}}", "result", T_OK, "command", "name", json_string_value(json_object_get(json_object_get(j_command, "parameters"), "name")));
+			} else {
+				j_return = json_pack("{si}", "result", T_ERROR);
+			}
     } else {
       j_return = json_pack("{si}", "result", T_ERROR);
     }

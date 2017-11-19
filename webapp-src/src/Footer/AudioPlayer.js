@@ -247,7 +247,7 @@ class AudioPlayer extends Component {
     var playButton, duration, volume, metadata;
 		metadata = 
 			<div>
-				<label>Current stream:&nbsp;</label>
+				<label className="hidden-xs">Current stream:&nbsp;</label>
 				<span>{this.state.stream?(this.state.stream.display_name||"no name"):"None"}</span>
 			</div>;
     if (this.state.play) {

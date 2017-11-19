@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { DropdownButton, Button, ButtonGroup, MenuItem } from 'react-bootstrap';
+import { Table, DropdownButton, Button, ButtonGroup, MenuItem } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
 import StateStore from '../lib/StateStore';
 import ModalConfirm from '../Modal/ModalConfirm';
@@ -9,7 +9,16 @@ class ManageStream extends Component {
   constructor(props) {
     super(props);
 		
-		this.state = {streamList: StateStore.getState().streamList, modalConfirmShow: false, modalRenameShow: false, modalTitle: "", modalMessage: "", curStream: false};
+		this.state = {
+			streamList: StateStore.getState().streamList, 
+			modalConfirmShow: false, 
+			modalRenameShow: false, 
+			modalSaveShow: false, 
+			modalTitle: "", 
+			modalMessage: "", 
+			modalValue: "",
+			curStream: false
+		};
 
 		this.deleteStream = this.deleteStream.bind(this);
 		this.renameStream = this.renameStream.bind(this);
@@ -19,10 +28,21 @@ class ManageStream extends Component {
 		this.resetStream = this.resetStream.bind(this);
 		this.confirmDelete = this.confirmDelete.bind(this);
 		this.confirmRename = this.confirmRename.bind(this);
+		this.confirmSave = this.confirmSave.bind(this);
+		this.reloadStreamList = this.reloadStreamList.bind(this);
 	}
   
 	componentWillReceiveProps(nextProps) {
-		this.setState({streamList: StateStore.getState().streamList, modalConfirmShow: false, modalRenameShow: false, modalTitle: "", modalMessage: "", curStream: false});
+		this.setState({
+			streamList: StateStore.getState().streamList, 
+			modalConfirmShow: false, 
+			modalRenameShow: false, 
+			modalSaveShow: false, 
+			modalTitle: "", 
+			modalMessage: "", 
+			modalValue: "",
+			curStream: false
+		});
 	}
 
   deleteStream(stream) {
@@ -30,19 +50,57 @@ class ManageStream extends Component {
   }
 	
   renameStream(stream) {
-		this.setState({modalRenameShow: true, modalTitle: "Rename stream", modalMessage: ("Enter the new name for the stream '" + (stream.display_name||"no name") + "'"), curStream: stream});
+		this.setState({modalRenameShow: true, modalTitle: "Rename stream", modalMessage: ("Enter the new name for the stream '" + (stream.display_name||"no name") + "'"), modalValue: stream.display_name, curStream: stream});
   }
   
   saveStream(stream) {
+		this.setState({modalSaveShow: true, modalTitle: "Save stream as playlist", modalMessage: ("Enter the name for the new playlist fromthe stream '" + (stream.display_name||"no name") + "'"), modalValue: stream.display_name, curStream: stream});
   }
 	
 	detailsStream(stream) {
+		StateStore.dispatch({type: "setStreamDetails", stream: stream});
+		StateStore.dispatch({type: "setCurrentBrowse", browse: "streamDetails"});
 	}
 	
 	reloadStream(stream) {
+		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(stream.name) + "/manage", {command: "reload"})
+		.then(() => {
+			StateStore.getState().NotificationManager.addNotification({
+				message: 'Stream reloaded',
+				level: 'info'
+			});
+		})
+		.fail(() => {
+			StateStore.getState().NotificationManager.addNotification({
+				message: 'Error reload stream',
+				level: 'error'
+			});
+		});
 	}
 	
 	resetStream(stream) {
+		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(stream.name) + "/manage", {command: "reset_url"})
+		.then((result) => {
+			var streamList = StateStore.getState().streamList;
+			for (var i in streamList) {
+				if (streamList[i].name === stream.name) {
+					streamList[i].name = result.name;
+					break;
+				}
+			}
+			StateStore.dispatch({type: "setStreamList", streamList: streamList});
+			this.setState({streamList: streamList});
+			StateStore.getState().NotificationManager.addNotification({
+				message: 'Stream URL reset',
+				level: 'info'
+			});
+		})
+		.fail(() => {
+			StateStore.getState().NotificationManager.addNotification({
+				message: 'Error reset stream URL',
+				level: 'error'
+			});
+		});
 	}
 	
 	confirmDelete(confirm) {
@@ -61,12 +119,17 @@ class ManageStream extends Component {
 					StateStore.dispatch({type: "loadStream", stream: false});
 				}
 				this.setState({streamList: streamList, modalConfirmShow: false});
+				StateStore.getState().NotificationManager.addNotification({
+					message: 'Stream deleted',
+					level: 'info'
+				});
 			})
 			.fail(() => {
 				StateStore.getState().NotificationManager.addNotification({
 					message: 'Error delete stream',
 					level: 'error'
 				});
+				this.setState({modalConfirmShow: false});
 			});
 		}
 	}
@@ -83,6 +146,10 @@ class ManageStream extends Component {
 					}
 				}
 				StateStore.dispatch({type: "setStreamList", streamList: streamList});
+				StateStore.getState().NotificationManager.addNotification({
+					message: 'Stream renamed',
+					level: 'info'
+				});
 				this.setState({streamList: streamList, modalRenameShow: false});
 			})
 			.fail(() => {
@@ -90,8 +157,47 @@ class ManageStream extends Component {
 					message: 'Error rename stream',
 					level: 'error'
 				});
+				this.setState({modalRenameShow: false});
 			});
 		}
+	}
+  
+	confirmSave(name) {
+		if (name) {
+			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.curStream.name) + "/manage", {command: "save", parameters: {name: name}})
+			.then(() => {
+				StateStore.getState().NotificationManager.addNotification({
+					message: 'Stream saved',
+					level: 'info'
+				});
+				this.setState({modalSaveShow: false});
+			})
+			.fail(() => {
+				StateStore.getState().NotificationManager.addNotification({
+					message: 'Error save stream',
+					level: 'error'
+				});
+				this.setState({modalSaveShow: false});
+			});
+		}
+	}
+	
+	reloadStreamList() {
+		StateStore.getState().APIManager.taliesinApiRequest("GET", "/stream")
+		.then((result) => {
+			StateStore.dispatch({type: "setStreamList", streamList: result});
+			this.setState({streamList: result});
+			StateStore.getState().NotificationManager.addNotification({
+				message: 'Stream list reloaded',
+				level: 'info'
+			});
+		})
+		.fail((result) => {
+			StateStore.getState().NotificationManager.addNotification({
+				message: 'Error reload stream list',
+				level: 'error'
+			});
+		});
 	}
   
   render() {
@@ -126,9 +232,9 @@ class ManageStream extends Component {
                 <FontAwesome name={"eye"} />
               </Button>
               <Button title="Reload" onClick={() => this.reloadStream(stream)}>
-                <FontAwesome name={"refresh"} />
+                <FontAwesome name={"exchange"} />
               </Button>
-              <Button title="Rest URL" onClick={() => this.resetStream(stream)}>
+              <Button title="Reset URL" onClick={() => this.resetStream(stream)}>
                 <FontAwesome name={"unlock-alt"} />
               </Button>
               <Button title="Close and delete" onClick={() => this.deleteStream(stream)}>
@@ -151,7 +257,7 @@ class ManageStream extends Component {
 								Details
 							</MenuItem>
 							<MenuItem onClick={() => this.reloadStream(stream)}>
-								<FontAwesome name={"refresh"} />&nbsp;
+								<FontAwesome name={"exchange"} />&nbsp;
 								Reload
 							</MenuItem>
 							<MenuItem onClick={() => this.resetStream(stream)}>
@@ -168,25 +274,30 @@ class ManageStream extends Component {
       );
     });
 		return (
-		<div>
-			<table className="table">
-				<thead>
-					<tr>
-						<td>Name</td>
-						<td>Type</td>
-						<td>Elements</td>
-						<td>Format</td>
-						<td>Clients</td>
-						<td></td>
-					</tr>
-				</thead>
-				<tbody>
-          {rows}
-				</tbody>
-			</table>
-			<ModalConfirm show={this.state.modalConfirmShow} title={this.state.modalTitle} message={this.state.modalMessage} cb={this.confirmDelete} />
-			<ModalEdit show={this.state.modalRenameShow} title={this.state.modalTitle} message={this.state.modalMessage} cb={this.confirmRename} value={this.state.curStream.display_name} />
-		</div>);
+			<div>
+				<Button title="Reload" onClick={this.reloadStreamList}>
+					<FontAwesome name={"refresh"} />
+				</Button>
+				<Table striped bordered condensed hover responsive>
+					<thead>
+						<tr>
+							<td>Name</td>
+							<td>Type</td>
+							<td>Elements</td>
+							<td>Format</td>
+							<td>Clients</td>
+							<td></td>
+						</tr>
+					</thead>
+					<tbody>
+						{rows}
+					</tbody>
+				</Table>
+				<ModalConfirm show={this.state.modalConfirmShow} title={this.state.modalTitle} message={this.state.modalMessage} cb={this.confirmDelete} />
+				<ModalEdit show={this.state.modalRenameShow} title={this.state.modalTitle} message={this.state.modalMessage} cb={this.confirmRename} value={this.state.modalValue} />
+				<ModalEdit show={this.state.modalSaveShow} title={this.state.modalTitle} message={this.state.modalMessage} cb={this.confirmSave} value={this.state.modalValue} />
+			</div>
+		);
 	}
 }
 

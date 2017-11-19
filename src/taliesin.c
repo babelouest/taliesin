@@ -226,12 +226,10 @@ int main (int argc, char ** argv) {
   ulfius_add_endpoint_by_val(config->instance, "PUT", config->api_prefix, "/search/", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_advanced_search, (void*)config);
   
   // Other endpoints
-  ulfius_add_endpoint_by_val(config->instance, "GET", "/", NULL, TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_root, (void*)config);
-  ulfius_add_endpoint_by_val(config->instance, "GET", config->static_file_config->url_prefix, "*", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_static_file, (void*)config->static_file_config);
+  ulfius_add_endpoint_by_val(config->instance, "GET", NULL, "*", TALIESIN_CALLBACK_PRIORITY_FILES, &callback_static_file, (void*)config->static_file_config);
   ulfius_add_endpoint_by_val(config->instance, "GET", "/config/", NULL, TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_server_configuration, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "OPTIONS", NULL, "*", TALIESIN_CALLBACK_PRIORITY_ZERO, &callback_taliesin_options, NULL);
   ulfius_add_endpoint_by_val(config->instance, "*", NULL, "*", TALIESIN_CALLBACK_PRIORITY_CLEAN, &callback_clean, (void*)config);
-  ulfius_set_default_endpoint(config->instance, &callback_default, (void*)config);
 
   // Set default headers
   u_map_put(config->instance->default_headers, "Access-Control-Allow-Origin", config->allow_origin);
@@ -719,18 +717,6 @@ int build_config_from_file(struct config_elements * config) {
       config->static_file_config->files_path = o_strdup(cur_static_files_path);
       if (config->static_file_config->files_path == NULL) {
         fprintf(stderr, "Error allocating config->static_file_config->files_path, exiting\n");
-        config_destroy(&cfg);
-        return 0;
-      }
-    }
-  }
-
-  if (config->static_file_config->url_prefix == NULL) {
-    // Get prefix url for angharad
-    if (config_lookup_string(&cfg, "app_files_prefix", &cur_prefix)) {
-      config->static_file_config->url_prefix = o_strdup(cur_prefix);
-      if (config->static_file_config->url_prefix == NULL) {
-        fprintf(stderr, "Error allocating config->static_file_config->url_prefix, exiting\n");
         config_destroy(&cfg);
         return 0;
       }

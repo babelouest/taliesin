@@ -19,7 +19,13 @@ class MediaInfo extends Component {
 	}
 	
 	componentWillReceiveProps(nextProps) {
-		this.setState({media: nextProps.media, title: this.buildTitle(nextProps.media, nextProps.index, nextProps.total), imgThumbBlob: nextProps.imgThumbBlob, folded: nextProps.folded});
+		this.setState({
+			media: nextProps.media, 
+			title: this.buildTitle(nextProps.media, nextProps.index, nextProps.total), 
+			imgThumbBlob: nextProps.imgThumbBlob,
+			folded: nextProps.folded,
+			showModal: false
+		});
 	}
 	
 	buildTitle(media, index, total) {

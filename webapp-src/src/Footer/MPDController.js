@@ -327,7 +327,7 @@ class MPDController extends Component {
 					</ButtonGroup>
 				</div>
 				<div>
-					<label>
+					<label className="hidden-xs">
 						Current stream:&nbsp;
 					</label>
 					<span>

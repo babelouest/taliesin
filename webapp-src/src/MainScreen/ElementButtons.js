@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import FontAwesome from 'react-fontawesome';
 import { DropdownButton, MenuItem, ButtonGroup, Button } from 'react-bootstrap';
 import StateStore from '../lib/StateStore';
+import ModalEditStream from '../Modal/ModalEditStream';
 
 class ElementButtons extends Component {
   constructor(props) {
@@ -9,6 +10,8 @@ class ElementButtons extends Component {
 		this.state = {dataSource: props.dataSource, path: props.path, element: props.element};
 
 		this.playElement = this.playElement.bind(this);
+		this.playElementAdvanced = this.playElementAdvanced.bind(this);
+		this.onCloseModal = this.onCloseModal.bind(this);
 	}
 	
 	componentWillReceiveProps(nextProps) {
@@ -16,7 +19,7 @@ class ElementButtons extends Component {
 	}
   
   playElement() {
-    StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/path/" + encodeURI(this.state.path + "/" + this.state.element.name).replace(/#/g, "%23") + "?jukebox&recursive")
+    StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/path/" + encodeURI(this.state.path + "/" + (this.state.element.name||"")).replace(/#/g, "%23") + "?jukebox&recursive")
     .then((result) => {
       var streamList = StateStore.getState().streamList;
       streamList.push(result);
@@ -30,15 +33,23 @@ class ElementButtons extends Component {
 			});
     });
   }
+  
+  playElementAdvanced() {
+    this.setState({show: true});
+  }
+  
+  onCloseModal() {
+    this.setState({show: false});
+  }
 	
 	render() {
     return (
 			<div>
 				<ButtonGroup className="hidden-xs">
-					<Button onClick={this.playElement}>
+					<Button title="Play now" onClick={this.playElement}>
 						<FontAwesome name={"play"} />
 					</Button>
-					<Button>
+					<Button title="Create stream" onClick={this.playElementAdvanced}>
 						<FontAwesome name={"play"} />&nbsp;
 						<FontAwesome name={"cog"} />
 					</Button>
@@ -64,12 +75,12 @@ class ElementButtons extends Component {
 				<DropdownButton className="visible-xs" id={"xs-manage"-this.state.element.name} pullRight title={
 					<span><i className="fa fa-cog"></i></span>
 				}>
-					<MenuItem>
+					<MenuItem onClick={this.playElement}>
 						<FontAwesome name={"play"} />&nbsp;
 						Play now
 					</MenuItem>
 					<MenuItem divider />
-					<MenuItem>
+					<MenuItem onClick={this.playElementAdvanced}>
 						<FontAwesome name={"play"} />
 						<FontAwesome name={"cog"} />&nbsp;
 						Create stream
@@ -94,6 +105,7 @@ class ElementButtons extends Component {
 					<MenuItem>- playlist 1</MenuItem>
 					<MenuItem>- playlist 2</MenuItem>
 				</DropdownButton>
+        <ModalEditStream show={this.state.show} dataSource={this.state.dataSource} element={this.state.element} path={this.state.path} onCloseCb={this.onCloseModal} />
 			</div>
     );
 	}

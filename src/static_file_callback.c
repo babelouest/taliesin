@@ -67,6 +67,13 @@ int callback_static_file (const struct _u_request * request, struct _u_response 
   char * file_requested, * file_path, * url_dup_save;
   const char * content_type;
 
+	/*
+	 * Comment this if statement if you put static files url not in root, like /app
+	 */
+	if (response->shared_data != NULL) {
+		return U_CALLBACK_CONTINUE;
+	}
+	
   if (user_data != NULL && ((struct _static_file_config *)user_data)->files_path != NULL) {
     file_requested = o_strdup(request->http_url);
     url_dup_save = file_requested;

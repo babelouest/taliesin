@@ -57,7 +57,8 @@
 #define TALIESIN_CALLBACK_PRIORITY_ZERO           0
 #define TALIESIN_CALLBACK_PRIORITY_AUTHENTICATION 1
 #define TALIESIN_CALLBACK_PRIORITY_APPLICATION    2
-#define TALIESIN_CALLBACK_PRIORITY_CLEAN          3
+#define TALIESIN_CALLBACK_PRIORITY_FILES          3
+#define TALIESIN_CALLBACK_PRIORITY_CLEAN          4
 
 #define T_OK                 0
 #define T_ERROR              1
@@ -608,19 +609,19 @@ json_t * is_media_category_info_valid(struct config_elements * config, json_t * 
 json_t * media_category_cover_get(struct config_elements * config, json_t * j_data_source, const char * level, const char * category, int thumbnail);
 
 // Database Playlists functions
-json_t * playlist_list(struct config_elements * config, const char * username);
-json_t * playlist_list_webradio_startup(struct config_elements * config);
-json_t * playlist_get(struct config_elements * config, const char * username, const char * name, int with_id, size_t offset, size_t limit);
-json_t * playlist_get_by_id(struct config_elements * config, json_int_t tpl_id);
-json_t * is_playlist_valid(struct config_elements * config, const char * username, int is_admin, json_t * j_playlist, int update, int with_media);
-json_t * is_playlist_element_list_valid(struct config_elements * config, int is_admin, const char * username, json_t * j_element_list);
-int      playlist_add(struct config_elements * config, const char * username, json_t * j_playlist, struct _t_file_list * file_list);
-int      playlist_set(struct config_elements * config, json_int_t tpl_id, json_t * j_playlist);
-int      playlist_delete(struct config_elements * config, json_int_t tpl_id);
-int      playlist_can_update(json_t * j_playlist, int is_admin);
-int      playlist_add_media(struct config_elements * config, json_int_t tpl_id, json_t * media_list);
-int      playlist_delete_media(struct config_elements * config, json_int_t tpl_id, json_t * media_list);
-json_t * playlist_media_cover_get(struct config_elements * config, const char * username, const char * name, int thumbnail);
+json_t   * playlist_list(struct config_elements * config, const char * username);
+json_t   * playlist_list_webradio_startup(struct config_elements * config);
+json_t   * playlist_get(struct config_elements * config, const char * username, const char * name, int with_id, size_t offset, size_t limit);
+json_t   * playlist_get_by_id(struct config_elements * config, json_int_t tpl_id);
+json_t   * is_playlist_valid(struct config_elements * config, const char * username, int is_admin, json_t * j_playlist, int update, int with_media);
+json_t   * is_playlist_element_list_valid(struct config_elements * config, int is_admin, const char * username, json_t * j_element_list);
+json_int_t playlist_add(struct config_elements * config, const char * username, json_t * j_playlist, struct _t_file_list * file_list);
+int        playlist_set(struct config_elements * config, json_int_t tpl_id, json_t * j_playlist);
+int        playlist_delete(struct config_elements * config, json_int_t tpl_id);
+int        playlist_can_update(json_t * j_playlist, int is_admin);
+int        playlist_add_media(struct config_elements * config, json_int_t tpl_id, json_t * media_list);
+int        playlist_delete_media(struct config_elements * config, json_int_t tpl_id, json_t * media_list);
+json_t   * playlist_media_cover_get(struct config_elements * config, const char * username, const char * name, int thumbnail);
 
 // Libav functions
 int open_input_file(const char *filename, AVFormatContext **input_format_context, AVCodecContext **input_codec_context, int type);
@@ -699,7 +700,6 @@ int callback_taliesin_config_type_set (const struct _u_request * request, struct
 
 int callback_taliesin_check_access (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_check_admin_access (const struct _u_request * request, struct _u_response * response, void * user_data);
-int callback_taliesin_root (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_server_configuration (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_options (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_default (const struct _u_request * request, struct _u_response * response, void * user_data);

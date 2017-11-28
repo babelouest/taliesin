@@ -12,8 +12,14 @@ class BreadCrumbMenuElement extends Component {
 		this.setState({subPath: nextProps.subPath, path: nextProps.path})
 	}
 	
+	trimSlashes(str) {
+		return str.replace(new RegExp(
+			"^[/]+|[/]+$", "g"
+		), "");
+	}
+	
 	handleGotoPath(path) {
-		StateStore.dispatch({ type: 'setCurrentPath', path: path });
+		StateStore.dispatch({ type: 'setCurrentPath', path: this.trimSlashes(path) });
 	}
 
 	render() {

@@ -2,11 +2,11 @@ import React, { Component } from 'react';
 import NotificationSystem from 'react-notification-system';
 import TopMenu from './TopMenu/TopMenu';
 import MainScreen from './MainScreen/MainScreen';
+import FullScreen from './MainScreen/FullScreen';
 import Footer from './Footer/Footer';
 import StateStore from './lib/StateStore';
 
 class App extends Component {
-
   componentDidMount() {
 		StateStore.dispatch({ type: 'newNotificationManager', notificationManager: this.refs.notificationSystem });
   }
@@ -15,6 +15,7 @@ class App extends Component {
 		return (
 			<div className="container-fluid">
 				<NotificationSystem ref="notificationSystem" />
+				<FullScreen />
 				<TopMenu/>
 				<MainScreen/>
 				<Footer/>

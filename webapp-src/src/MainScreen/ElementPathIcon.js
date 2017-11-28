@@ -21,7 +21,9 @@ class ElementPathIcon extends Component {
 	}
 	
 	handleChangePath(subPath) {
-		StateStore.dispatch({ type: 'setCurrentPath', path: (this.state.path?(this.state.path + "/"):"") + subPath });
+		StateStore.dispatch({type: "setCurrentBrowse", browse: "path"});
+		StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: StateStore.getState().dataSourceList.find((ds) => {return ds.name === this.state.dataSource})});
+		StateStore.dispatch({type: "setCurrentPath", path: (this.state.path?(this.state.path + "/"):"") + subPath });
 	}
   
   handleOpenFile(name) {
@@ -36,7 +38,7 @@ class ElementPathIcon extends Component {
 	}
 	
 	getThumbnail() {
-		if (!this.state.thumb && (this.state.element.type === "audio" || this.state.element.type === "folder" || this.state.element.type === "image" || this.state.element.type === "artist" || this.state.element.type === "album" || this.state.element.type === "year" || this.state.element.type === "genre")) {
+		if (!this.state.thumb && (this.state.element.type === "audio" || this.state.element.type === "folder" || this.state.element.type === "image")) {
 			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/path/" + encodeURI(this.state.path).replace(/#/g, "%23").replace(/\+/g, "%2B") + "/" + this.state.element.name + "?cover&thumbnail&base64")
 			.then((result) => {
 				this.setState({thumb: result, thumbLoaded: true});

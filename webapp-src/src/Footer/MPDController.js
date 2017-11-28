@@ -61,10 +61,15 @@ class MPDController extends Component {
     });
 	}
 	
+	componentDidMount() { 
+		this._ismounted = true;
+	}
+
 	componentWillUnmount() {
 		if (this.state.interval) {
 			clearInterval(this.state.interval);
 		}
+		 this._ismounted = false;
 	}
 	
 	loadStream() {

@@ -38,6 +38,9 @@ class PlayerSelector extends Component {
     var playerName = "Local";
     if (this.state.player) {
       playerName = this.state.player;
+      if (playerName.length > 10) {
+        playerName = playerName.substring(0, 10) + "...";
+      }
     }
 		if (StateStore.getState().profile.isAdmin) {
 			separator = <MenuItem divider />;

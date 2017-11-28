@@ -28,7 +28,7 @@ class WebradioNow extends Component {
 	}
 	
 	loadCover() {
-    if (this.state.media) {
+    if (this.state.media && !StateStore.getState().showFullScreen) {
 			StateStore.getState().APIManager.taliesinApiRequest("GET", "/stream/" + encodeURIComponent(StateStore.getState().profile.stream.name) + "/cover?base64&thumbnail")
 			.then((result) => {
 				this.setState({imgThumbBlob: result});

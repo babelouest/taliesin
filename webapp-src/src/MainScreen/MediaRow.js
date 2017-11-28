@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
-import { Row, Col, Image } from 'react-bootstrap';
+import { Row, Col, Image, Button } from 'react-bootstrap';
+import FontAwesome from 'react-fontawesome';
+import VisibilitySensor from 'react-visibility-sensor';
 import StateStore from '../lib/StateStore';
 import ModalMedia from '../Modal/ModalMedia';
 
@@ -13,14 +15,16 @@ class MediaRow extends Component {
       index: props.index,
 			date: props.date,
 			imgThumbBlob: false,
+			coverLoaded: false,
 			modalShow: false,
-			modalTitle: this.buildTitle(props.media)
+			modalTitle: this.buildTitle(props.media),
+			visible: false
 		};
 
 		this.loadCover = this.loadCover.bind(this);
 		this.handleOpenModal = this.handleOpenModal.bind(this);
-		
-		this.loadCover();
+		this.handlePlayNow = this.handlePlayNow.bind(this);
+		this.onChangeVisibility = this.onChangeVisibility.bind(this);
 	}
 	
 	componentWillReceiveProps(nextProps) {
@@ -30,10 +34,10 @@ class MediaRow extends Component {
       index: nextProps.index,
 			date: nextProps.date,
 			imgThumbBlob: false,
+			coverLoaded: false,
 			modalShow: false,
-			modalTitle: this.buildTitle(nextProps.media)
-		}, () => {
-			this.loadCover();
+			modalTitle: this.buildTitle(nextProps.media),
+			visible: false
 		});
 	}
 	
@@ -61,10 +65,10 @@ class MediaRow extends Component {
 		if (this.state.media.data_source && this.state.media.path) {
 			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.media.data_source) + "/browse/path/" + encodeURI(this.state.media.path).replace(/#/g, "%23").replace(/\+/g, "%2B") + "?cover&thumbnail&base64")
 			.then((result) => {
-				this.setState({imgThumbBlob: result});
+				this.setState({imgThumbBlob: result, coverLoaded: true});
 			})
 			.fail(() => {
-				this.setState({imgThumbBlob: false});
+				this.setState({imgThumbBlob: false, coverLoaded: true});
 			});
 		}
 	}
@@ -72,9 +76,27 @@ class MediaRow extends Component {
   handleOpenModal() {
     this.setState({modalShow: true});
   }
+	
+	handlePlayNow() {
+		StateStore.dispatch({
+			type: "loadStreamAndPlay", 
+			stream: StateStore.getState().streamList.find((stream) => {
+				return stream.name === this.state.stream
+			}),
+			index: this.state.index
+		});
+	}
   
+	onChangeVisibility(isVisible) {
+    this.setState({visible: isVisible}, () => {
+			if (isVisible && !this.state.coverLoaded) {
+				this.loadCover();	
+			}
+		});
+	}
+	
 	render() {
-		var artist = "", album = "", name = "", date = "", cover = "";
+		var artist, album, name, date, cover, playButton;
 		if (this.state.media.tags) {
 			artist = this.state.media.tags.artist || this.state.media.tags.album_artist;
 			album = this.state.media.tags.album;
@@ -87,11 +109,19 @@ class MediaRow extends Component {
 			<Col md={2}>
 				{(new Date(this.state.date * 1000)).toLocaleString()}
 			</Col>;
-		} else {
-			date = <Col md={1} />;
 		}
 		if (this.state.imgThumbBlob) {
 			cover = <Image src={"data:image/jpeg;base64," + this.state.imgThumbBlob} thumbnail responsive className="cover-image-thumb"/>
+		} else {
+			cover = <Image src="/images/album-128.png" alt={this.state.media.name} className="cover-image-thumb" responsive />
+		}
+		if (!this.state.stream.webradio) {
+			playButton =
+			<Col md={1}>
+				<Button title="play now" onClick={this.handlePlayNow}>
+					<FontAwesome name="play" />
+				</Button>
+			</Col>;
 		}
 		return (
 			<div>
@@ -102,6 +132,7 @@ class MediaRow extends Component {
 				</Row>
 				<Row>
 					{date}
+					{playButton}
 					<Col md={2}>
 						<span>{this.state.media.data_source}</span>
 					</Col>
@@ -115,7 +146,17 @@ class MediaRow extends Component {
 						<a role="button" onClick={this.handleOpenModal}>{name}</a>
 					</Col>
 					<Col md={2}>
-						<a role="button" onClick={this.handleOpenModal}>{cover}</a>
+						<VisibilitySensor
+							scrollCheck
+							scrollThrottle={100}
+							intervalDelay={8000}
+							onChange={this.onChangeVisibility}
+							minTopValue={10}
+							partialVisibility={true}>
+							<a role="button" onClick={this.handleOpenModal}>
+								{cover}
+							</a>
+						</VisibilitySensor>
 					</Col>
 				</Row>
 				<ModalMedia show={this.state.modalShow} media={this.state.media} title={this.state.modalTitle} />

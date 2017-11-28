@@ -16,6 +16,7 @@ class TopMenu extends Component {
 		
 		this.handleSelectCategory = this.handleSelectCategory.bind(this);
 		this.handleBrowsePath = this.handleBrowsePath.bind(this);
+		this.handleBrowseRecent = this.handleBrowseRecent.bind(this);
 		this.handleSelectView = this.handleSelectView.bind(this);
 		
 		StateStore.subscribe(() => {
@@ -34,12 +35,20 @@ class TopMenu extends Component {
 	
 	handleSelectCategory(event) {
 		StateStore.dispatch({type: "setCurrentBrowse", browse: "category"});
-		StateStore.dispatch({type: "setCurrentPath", path: event});
+		StateStore.dispatch({type: "setCurrentCategory", category: event});
 	}
   
 	handleBrowsePath() {
 		StateStore.dispatch({type: "setCurrentBrowse", browse: "path"});
 		StateStore.dispatch({type: "setCurrentPath", path: ""});
+	}
+	
+	handleBrowseRecent() {
+		StateStore.dispatch({type: "setCurrentBrowse", browse: "recent"});
+	}
+	
+	handleBrowsePlylist() {
+		StateStore.dispatch({type: "setCurrentBrowse", browse: "playlist"});
 	}
 	
 	handleSelectView(event) {
@@ -62,7 +71,8 @@ class TopMenu extends Component {
 							<NavDropdown title="Browse" id="nav-categories">
 								<MenuItem onClick={() => {}} className={this.state.browse==="dashboard"?"bg-success":""}>Dashboard</MenuItem>
 								<MenuItem onClick={() => this.handleBrowsePath()} className={this.state.browse==="file"?"bg-success":""}>Files</MenuItem>
-								<MenuItem onClick={() => {}} className={this.state.browse==="recent"?"bg-success":""}>Recent media</MenuItem>
+								<MenuItem onClick={() => this.handleBrowsePlylist()} className={this.state.browse==="playlist"?"bg-success":""}>Playlists</MenuItem>
+								<MenuItem onClick={() => this.handleBrowseRecent()} className={this.state.browse==="recent"?"bg-success":""}>Recent media</MenuItem>
 								<MenuItem divider />
 								<MenuItem onClick={() => this.handleSelectCategory("artist")}>Artists</MenuItem>
 								<MenuItem onClick={() => this.handleSelectCategory("album")}>Albums</MenuItem>

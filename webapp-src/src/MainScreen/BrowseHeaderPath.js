@@ -4,7 +4,7 @@ import BreadCrumbMenu from './BreadCrumbMenu';
 import ElementButtons from './ElementButtons';
 import StateStore from '../lib/StateStore';
 
-class BrowseHeader extends Component {	
+class BrowseHeaderPath extends Component {	
   constructor(props) {
     super(props);
     
@@ -65,5 +65,4 @@ class BrowseHeader extends Component {
   }
 }
 
-export default BrowseHeader;
-
+export default BrowseHeaderPath;

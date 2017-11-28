@@ -106,7 +106,18 @@ body {
 {
 	background: center;
 	background-size: 100%;
-	filter: blur(3px);
+	filter: blur(1px);
+	position:absolute;
+	width: 100%;
+	height: 100%;
+	z-index: -100;
+}
+
+.media-background-fullscreen
+{
+	background: center;
+	background-size: 100%;
+	filter: blur(5px);
 	position:absolute;
 	width: 100%;
 	height: 100%;
@@ -138,4 +149,26 @@ body {
 .breadcrumb-buttons
 {
   width: 100px;
+}
+
+.fullscreen
+{
+	background-color: whitesmoke;
+	position:absolute;
+	top:0;
+	left:0;
+	width:100%;
+	height:100%;
+	z-index:10000;
+}
+
+.text-fullscreen
+{
+  color: #ffffff;
+  text-shadow: 1px 1px #000000;
+}
+
+.anchor-fullscreen
+{
+  text-shadow: 1px 1px #000000;
 }

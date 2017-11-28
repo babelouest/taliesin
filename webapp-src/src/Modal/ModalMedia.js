@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Modal, Row, Col, Image } from 'react-bootstrap';
+import { Modal, Row, Col, Image, Button } from 'react-bootstrap';
 import StateStore from '../lib/StateStore';
 
 class ModalMedia extends Component {
@@ -10,6 +10,10 @@ class ModalMedia extends Component {
 		
 		this.onCloseModal = this.onCloseModal.bind(this);
 		this.getMediaCover = this.getMediaCover.bind(this);
+		this.handleSelectArtist = this.handleSelectArtist.bind(this);
+		this.handleSelectAlbum = this.handleSelectAlbum.bind(this);
+		this.handleSelectYear = this.handleSelectYear.bind(this);
+		this.handleSelectGenre = this.handleSelectGenre.bind(this);
 		
 		this.getMediaCover();
 	}
@@ -34,6 +38,38 @@ class ModalMedia extends Component {
 		});
 	}
 	
+	handleSelectArtist(value) {
+		this.setState({show: false}, () => {
+			StateStore.dispatch({type: "setCurrentBrowse", browse: "category"});
+			StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: StateStore.getState().dataSourceList.find((ds) => {return ds.name === this.state.media.data_source})});
+			StateStore.dispatch({type: "setCurrentCategory", category: "artist", categoryValue: value});
+		});
+	}
+	
+	handleSelectAlbum(value) {
+		this.setState({show: false}, () => {
+			StateStore.dispatch({type: "setCurrentBrowse", browse: "category"});
+			StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: StateStore.getState().dataSourceList.find((ds) => {return ds.name === this.state.media.data_source})});
+			StateStore.dispatch({type: "setCurrentCategory", category: "album", categoryValue: value});
+		});
+	}
+	
+	handleSelectYear(value) {
+		this.setState({show: false}, () => {
+			StateStore.dispatch({type: "setCurrentBrowse", browse: "category"});
+			StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: StateStore.getState().dataSourceList.find((ds) => {return ds.name === this.state.media.data_source})});
+			StateStore.dispatch({type: "setCurrentCategory", category: "year", categoryValue: value});
+		});
+	}
+	
+	handleSelectGenre(value) {
+		this.setState({show: false}, () => {
+			StateStore.dispatch({type: "setCurrentBrowse", browse: "category"});
+			StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: StateStore.getState().dataSourceList.find((ds) => {return ds.name === this.state.media.data_source})});
+			StateStore.dispatch({type: "setCurrentCategory", category: "genre", categoryValue: value});
+		});
+	}
+	
   render() {
 		var metadata = [];
 		var mediaImage = "";
@@ -41,7 +77,7 @@ class ModalMedia extends Component {
 		if (this.state.media) {
 			if (this.state.media.tags.title) {
 				metadata.push(
-					<Row key={metadata.length}>
+					<Row key={0}>
 						<Col xs={6}>
 							<label>Title</label>
 						</Col>
@@ -52,45 +88,45 @@ class ModalMedia extends Component {
 			}
 			if (this.state.media.tags.artist) {
 				metadata.push(
-					<Row key={metadata.length}>
+					<Row key={1}>
 						<Col xs={6}>
 							<label>Artist</label>
 						</Col>
 						<Col xs={6}>
-							<span>{this.state.media.tags.artist}</span>
+							<span><a role="button" onClick={() => {this.handleSelectArtist(this.state.media.tags.artist)}}>{this.state.media.tags.artist}</a></span>
 						</Col>
 					</Row>);
 			}
 			if (this.state.media.tags.album) {
 				metadata.push(
-					<Row key={metadata.length}>
+					<Row key={2}>
 						<Col xs={6}>
 							<label>Album</label>
 						</Col>
 						<Col xs={6}>
-							<span>{this.state.media.tags.album}</span>
+							<span><a role="button" onClick={() => {this.handleSelectAlbum(this.state.media.tags.album)}}>{this.state.media.tags.album}</a></span>
 						</Col>
 					</Row>);
 			}
 			if (this.state.media.tags.date) {
 				metadata.push(
-					<Row key={metadata.length}>
+					<Row key={3}>
 						<Col xs={6}>
 							<label>Date</label>
 						</Col>
 						<Col xs={6}>
-							<span>{this.state.media.tags.date}</span>
+							<span><a role="button" onClick={() => {this.handleSelectYear(this.state.media.tags.date)}}>{this.state.media.tags.date}</a></span>
 						</Col>
 					</Row>);
 			}
 			if (this.state.media.tags.genre) {
 				metadata.push(
-					<Row key={metadata.length}>
+					<Row key={4}>
 						<Col xs={6}>
 							<label>Genre</label>
 						</Col>
 						<Col xs={6}>
-							<span>{this.state.media.tags.genre}</span>
+							<span><a role="button" onClick={() => {this.handleSelectGenre(this.state.media.tags.genre)}}>{this.state.media.tags.genre}</a></span>
 						</Col>
 					</Row>);
 			}
@@ -138,6 +174,13 @@ class ModalMedia extends Component {
 							<Row>
 								<Col xs={12} className="text-center">
 									{mediaImage}
+								</Col>
+							</Row>
+							<Row style={{marginTop: "10px"}}>
+								<Col xs={12} className="text-center">
+									<Button onClick={this.onCloseModal} className="btn btn-success">
+										Close
+									</Button>
 								</Col>
 							</Row>
 						</Modal.Body>

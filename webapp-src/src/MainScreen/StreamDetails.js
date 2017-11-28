@@ -317,12 +317,12 @@ class StreamDetails extends Component {
 			if (this.state.stream.random) {
 				streamRandom = 
 					<Row>
-						<Col md={6}>
+						<Col md={6} sm={6} xs={6}>
 							<Label>
 								Random
 							</Label>
 						</Col>
-						<Col md={6}>
+						<Col md={6} sm={6} xs={6}>
 							<span>
 								Yes
 							</span>
@@ -331,12 +331,12 @@ class StreamDetails extends Component {
 			} else {
 				streamRandom = 
 					<Row>
-						<Col md={6}>
+						<Col md={6} sm={6} xs={6}>
 							<Label>
 								Random
 							</Label>
 						</Col>
-						<Col md={6}>
+						<Col md={6} sm={6} xs={6}>
 							<span>
 								No
 							</span>
@@ -347,12 +347,12 @@ class StreamDetails extends Component {
 		if (this.state.stream.stored_playlist) {
 			playlistAttached = 
 					<Row>
-						<Col md={6}>
+						<Col md={6} sm={6} xs={6}>
 							<Label>
 								Playlist attached
 							</Label>
 						</Col>
-						<Col md={6}>
+						<Col md={6} sm={6} xs={6}>
 							<span>
 								{this.state.stream.stored_playlist}
 							</span>
@@ -368,16 +368,16 @@ class StreamDetails extends Component {
 						</Col>
 					</Row>
 					<Row>
-						<Col md={3}>
+						<Col md={3} sm={6} xs={6}>
 							<Label>IP Address</Label>
 						</Col>
-						<Col md={3}>
+						<Col md={3} sm={6} xs={6}>
 							<span>{client.ip_address}</span>
 						</Col>
-						<Col md={3}>
+						<Col md={3} sm={6} xs={6}>
 							<Label>User-Agent</Label>
 						</Col>
-						<Col md={3}>
+						<Col md={3} sm={6} xs={6}>
 							<span>{client.user_agent}</span>
 						</Col>
 					</Row>
@@ -387,7 +387,7 @@ class StreamDetails extends Component {
 		if (!clientList.length) {
 			clientList.push(
 				<Row key={0}>
-					<Col md={3}>
+					<Col md={3} sm={3} xs={3}>
 						<Label>None</Label>
 					</Col>
 				</Row>
@@ -411,7 +411,7 @@ class StreamDetails extends Component {
 							</ButtonGroup>
 						</Col>
 					</Row>
-					<Row>
+					<Row className="hidden-xs">
 						<Col md={2}>
 							<Label>Date</Label>
 						</Col>
@@ -500,47 +500,47 @@ class StreamDetails extends Component {
 				<PanelGroup>
 					<Panel collapsible header="Infos" eventKey="1" defaultExpanded={true}>
 						<Row>
-							<Col md={6}>
+							<Col md={6} sm={6} xs={6}>
 								<Label>
 									Display name
 								</Label>
 							</Col>
-							<Col md={6}>
+							<Col md={6} sm={6} xs={6}>
 								<span>
 									{this.state.stream.display_name}
 								</span>
 							</Col>
 						</Row>
 						<Row>
-							<Col md={6}>
+							<Col md={6} sm={6} xs={6}>
 								<Label>
 									URL name
 								</Label>
 							</Col>
-							<Col md={6}>
+							<Col md={6} sm={6} xs={6}>
 								<span>
 									{this.state.stream.name}
 								</span>
 							</Col>
 						</Row>
 						<Row>
-							<Col md={6}>
+							<Col md={6} sm={6} xs={6}>
 								<Label>
 									Stream URL
 								</Label>
 							</Col>
-							<Col md={6}>
+							<Col md={6} sm={6} xs={6}>
                 <a target="_blank" href={StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name}>direct link</a>
 							</Col>
 						</Row>
 						{playlistAttached}
 						<Row>
-							<Col md={6}>
+							<Col md={6} sm={6} xs={6}>
 								<Label>
 									Type
 								</Label>
 							</Col>
-							<Col md={6}>
+							<Col md={6} sm={6} xs={6}>
 								<span>
 									{this.state.stream.webradio?"Webradio":"Jukebox"}
 								</span>
@@ -548,48 +548,48 @@ class StreamDetails extends Component {
 						</Row>
 						{streamRandom}
 						<Row>
-							<Col md={6}>
+							<Col md={6} sm={6} xs={6}>
 								<Label>
 									Format
 								</Label>
 							</Col>
-							<Col md={6}>
+							<Col md={6} sm={6} xs={6}>
 								<span>
 									{this.state.stream.format}
 								</span>
 							</Col>
 						</Row>
 						<Row>
-							<Col md={6}>
+							<Col md={6} sm={6} xs={6}>
 								<Label>
 									Channels
 								</Label>
 							</Col>
-							<Col md={6}>
+							<Col md={6} sm={6} xs={6}>
 								<span>
 									{this.state.stream.stereo?"Stereo":"Mono"}
 								</span>
 							</Col>
 						</Row>
 						<Row>
-							<Col md={6}>
+							<Col md={6} sm={6} xs={6}>
 								<Label>
 									Sample Rate
 								</Label>
 							</Col>
-							<Col md={6}>
+							<Col md={6} sm={6} xs={6}>
 								<span>
 									{this.state.stream.sample_rate} kHz
 								</span>
 							</Col>
 						</Row>
 						<Row>
-							<Col md={6}>
+							<Col md={6} sm={6} xs={6}>
 								<Label>
 									Bit Rate
 								</Label>
 							</Col>
-							<Col md={6}>
+							<Col md={6} sm={6} xs={6}>
 								<span>
 									{(this.state.stream.bitrate/1000)} bps
 								</span>
@@ -603,20 +603,22 @@ class StreamDetails extends Component {
 									<Button onClick={this.handleMediaListPrevious} disabled={!this.state.mediaListOffset}>
 										Previous page
 									</Button>
-									<Button onClick={this.handleMediaListNext}>
+									<Button onClick={this.handleMediaListNext} disabled={(this.state.mediaListOffset + this.state.mediaList.length) >= this.state.stream.elements}>
 										Next page
 									</Button>
 								</ButtonGroup>
 							</Col>
-							<Col md={2}>
+							<Col md={2} sm={6} xs={6}>
 								<Label>Total media files: </Label>
 							</Col>
-							<Col md={2}>
+							<Col md={2} sm={6} xs={6}>
 								<span>{this.state.stream.elements}</span>
 							</Col>
 						</Row>
-						<Row>
-							<Col md={1} />
+						<Row className="hidden-xs">
+							<Col md={1}>
+								<Label>Play now</Label>
+							</Col>
 							<Col md={2}>
 								<Label>Data source</Label>
 							</Col>
@@ -640,9 +642,9 @@ class StreamDetails extends Component {
 					<Panel collapsible header="Clients" eventKey="4">
 						{clientList}
 					</Panel>
-					<ModalConfirm show={this.state.modalConfirmShow} title={this.state.modalTitle} message={this.state.modalMessage} cb={this.confirmDelete} />
-					<ModalEdit show={this.state.modalRenameShow} title={this.state.modalTitle} message={this.state.modalMessage} cb={this.confirmRename} value={this.state.modalValue} />
-					<ModalEdit show={this.state.modalSaveShow} title={this.state.modalTitle} message={this.state.modalMessage} cb={this.confirmSave} value={this.state.modalValue} />
+					<ModalConfirm show={this.state.modalConfirmShow} title={this.state.modalTitle} message={this.state.modalMessage} onCloseCb={this.confirmDelete} />
+					<ModalEdit show={this.state.modalRenameShow} title={this.state.modalTitle} message={this.state.modalMessage} onCloseCb={this.confirmRename} value={this.state.modalValue} />
+					<ModalEdit show={this.state.modalSaveShow} title={this.state.modalTitle} message={this.state.modalMessage} onCloseCb={this.confirmSave} value={this.state.modalValue} />
 				</PanelGroup>
 			</div>
 		);

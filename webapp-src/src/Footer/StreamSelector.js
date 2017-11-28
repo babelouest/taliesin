@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { DropdownButton, MenuItem, Button } from 'react-bootstrap';
+import { DropdownButton, MenuItem, Button, ButtonGroup } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
 import StateStore from '../lib/StateStore';
 
@@ -47,20 +47,25 @@ class StreamSelector extends Component {
     var streamName = "Select stream";
     if (this.state.selectedStream.name) {
       streamName = this.state.selectedStream.display_name||"no name";
+      if (streamName.length > 10) {
+        streamName = streamName.substring(0, 10) + "...";
+      }
     }
 		return (
 			<div>
-				<DropdownButton title={streamName} id="streamList">
-					{currentList}
-					<MenuItem divider />
-					<MenuItem onClick={this.handleManageStreams}>Manage Streams</MenuItem>
-				</DropdownButton>
-				<Button title="Load" onClick={this.handleLoadStream}>
-					<FontAwesome name={"arrow-circle-right"} />
-				</Button>
-				<Button title="Details" onClick={this.handleDetailsStream}>
-					<FontAwesome name={"eye"} />
-				</Button>
+				<ButtonGroup>
+					<DropdownButton title={streamName} id="streamList">
+						{currentList}
+						<MenuItem divider />
+						<MenuItem onClick={this.handleManageStreams}>Manage Streams</MenuItem>
+					</DropdownButton>
+					<Button title="Load" onClick={this.handleLoadStream}>
+						<FontAwesome name={"arrow-circle-right"} />
+					</Button>
+					<Button title="Details" onClick={this.handleDetailsStream}>
+						<FontAwesome name={"eye"} />
+					</Button>
+				</ButtonGroup>
 			</div>
 		);
   }

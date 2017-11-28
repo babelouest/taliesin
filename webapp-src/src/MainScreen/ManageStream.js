@@ -203,24 +203,33 @@ class ManageStream extends Component {
   render() {
     var rows = [];
     this.state.streamList.forEach((stream, index) => {
+			var type, random;
+			if (stream.webradio) {
+				type = "Webradio ";
+				if (stream.random) {
+					random = <FontAwesome name={"random"} />;
+				}
+			} else {
+				type = "Jukebox";
+			}
       rows.push(
         <tr key={index}>
           <td>
             {stream.display_name||"no name"}
           </td>
           <td>
-            {stream.webradio?"Webradio - "+(stream.random?"random":"no random"):"Jukebox"}
+            {type} {random}
           </td>
-          <td>
+          <td className="hidden-xs">
             {stream.elements}
           </td>
-          <td>
+          <td className="hidden-xs">
             {stream.format + " - " + (stream.stereo?"Stereo":"Mono") + " - " + stream.sample_rate + " kHz - " + (stream.bitrate/1000) + " bps"}
           </td>
-          <td>
+          <td className="hidden-xs">
             {(stream.clients&&stream.clients.length)||0}
           </td>
-          <td>
+          <td className="text-center">
             <ButtonGroup className="hidden-xs">
               <Button title="Rename" onClick={() => this.renameStream(stream)}>
                 <FontAwesome name={"pencil"} />
@@ -278,14 +287,14 @@ class ManageStream extends Component {
 				<Button title="Reload" onClick={this.reloadStreamList}>
 					<FontAwesome name={"refresh"} />
 				</Button>
-				<Table striped bordered condensed hover responsive>
+				<Table striped bordered condensed hover>
 					<thead>
 						<tr>
 							<td>Name</td>
 							<td>Type</td>
-							<td>Elements</td>
-							<td>Format</td>
-							<td>Clients</td>
+							<td className="hidden-xs">Elements</td>
+							<td className="hidden-xs">Format</td>
+							<td className="hidden-xs">Clients</td>
 							<td></td>
 						</tr>
 					</thead>
@@ -293,9 +302,9 @@ class ManageStream extends Component {
 						{rows}
 					</tbody>
 				</Table>
-				<ModalConfirm show={this.state.modalConfirmShow} title={this.state.modalTitle} message={this.state.modalMessage} cb={this.confirmDelete} />
-				<ModalEdit show={this.state.modalRenameShow} title={this.state.modalTitle} message={this.state.modalMessage} cb={this.confirmRename} value={this.state.modalValue} />
-				<ModalEdit show={this.state.modalSaveShow} title={this.state.modalTitle} message={this.state.modalMessage} cb={this.confirmSave} value={this.state.modalValue} />
+				<ModalConfirm show={this.state.modalConfirmShow} title={this.state.modalTitle} message={this.state.modalMessage} onCloseCb={this.confirmDelete} />
+				<ModalEdit show={this.state.modalRenameShow} title={this.state.modalTitle} message={this.state.modalMessage} onCloseCb={this.confirmRename} value={this.state.modalValue} />
+				<ModalEdit show={this.state.modalSaveShow} title={this.state.modalTitle} message={this.state.modalMessage} onCloseCb={this.confirmSave} value={this.state.modalValue} />
 			</div>
 		);
 	}

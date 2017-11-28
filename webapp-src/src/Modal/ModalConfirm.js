@@ -5,13 +5,13 @@ class ModalConfirm extends Component {
   constructor(props) {
     super(props);
 		
-		this.state = {show: props.show, title: props.title, message: props.message, cb: props.cb};
+		this.state = {show: props.show, title: props.title, message: props.message, cb: props.onCloseCb};
 		
 		this.close = this.close.bind(this);
 	}
 	
 	componentWillReceiveProps(nextProps) {
-		this.setState({show: nextProps.show, title: nextProps.title, message: nextProps.message, cb: nextProps.cb});
+		this.setState({show: nextProps.show, title: nextProps.title, message: nextProps.message, cb: nextProps.onCloseCb});
 	}
 
   close(result) {

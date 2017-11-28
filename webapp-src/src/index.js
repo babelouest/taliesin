@@ -71,6 +71,15 @@ StateStore.subscribe(() => {
 			StateStore.dispatch({type: "setDataSource", dataSourceList: [], currentDataSource: false});
 		});
 		
+		// Get playlist list
+		StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist")
+		.then((result) => {
+			StateStore.dispatch({type: "setPlaylist", playlist: result});
+		})
+		.fail((result) => {
+			StateStore.dispatch({type: "setPlaylist", playlist: []});
+		});
+		
 		// Get server default config
 		StateStore.getState().APIManager.taliesinApiRequest("GET", "/../config")
 		.then((result) => {

@@ -49,6 +49,14 @@ class ManageDataSource extends Component {
 			modalDeleteMessage: ""
 		});
 	}
+
+	componentDidMount() { 
+		this._ismounted = true;
+	}
+
+	componentWillUnmount() {
+		 this._ismounted = false;
+	}
 	
 	getRefreshStatusList() {
 		this.state.dataSourceList.forEach((dataSource) => {
@@ -62,12 +70,9 @@ class ManageDataSource extends Component {
 			var refreshStatus = this.state.refreshStatus;
 			refreshStatus[dataSource.name] = result;
 			this.setState({refreshStatus: refreshStatus});
-			if (result.status === "running" || result.status === "pending" || result.status === "preparing") {
+			if (this._ismounted && (result.status === "running" || result.status === "pending" || result.status === "preparing")) {
 				window.setTimeout(() => {this.getRefreshStatus(dataSource)}, 2000);
 			}
-		})
-		.fail((error) => {
-			console.log("refresh status error ", dataSource.name, error);
 		});
 	}
 	
@@ -106,7 +111,6 @@ class ManageDataSource extends Component {
 					this.getRefreshStatus(dataSource);
 				})
 				.fail((error) => {
-					console.log(error);
 					StateStore.getState().NotificationManager.addNotification({
 						message: 'Data Source add error: ',
 						level: 'error'
@@ -265,19 +269,19 @@ class ManageDataSource extends Component {
 					<td>
 						{dataSource.name}
 					</td>
-					<td>
+					<td className="hidden-xs">
 						{dataSource.description}
 					</td>
-					<td>
+					<td className="text-center">
 						{dataSource.scope==="all"?<FontAwesome name={"users"} />:<FontAwesome name={"user"} />}
 					</td>
-					<td>
+					<td className="hidden-xs">
 						{dataSource.last_updated?(new Date(dataSource.last_updated * 1000)).toLocaleString():""}
 					</td>
 					<td className="text-center">
 						{refresh}
 					</td>
-					<td>
+					<td className="text-center">
             <ButtonGroup className="hidden-xs">
               <Button title="Edit" onClick={() => this.editDataSource(dataSource)} disabled={!this.canUpdate(dataSource)}>
                 <FontAwesome name={"pencil"} />
@@ -328,19 +332,19 @@ class ManageDataSource extends Component {
 				<Button title="Add a new data source" onClick={() => this.addDataSource()}>
 					<FontAwesome name={"plus"} />
 				</Button>
-				<Table striped bordered condensed hover responsive>
+				<Table striped bordered condensed hover>
 					<thead>
 						<tr>
 							<th>
 								Name
 							</th>
-							<th>
+							<th className="hidden-xs">
 								Description
 							</th>
 							<th>
 								Scope
 							</th>
-							<th>
+							<th className="hidden-xs">
 								Last update
 							</th>
 							<th>
@@ -355,7 +359,7 @@ class ManageDataSource extends Component {
 					</tbody>
 				</Table>
 				<ModalEditDataSource show={this.state.modalShow} onCloseCb={this.onCloseModal} dataSource={this.state.dataSourceEdit} add={this.state.modalAdd} />
-				<ModalConfirm show={this.state.modalDeleteShow} title={"Delete Data Source"} message={this.state.modalDeleteMessage} cb={this.confirmDeleteDataSource}/>
+				<ModalConfirm show={this.state.modalDeleteShow} title={"Delete Data Source"} message={this.state.modalDeleteMessage} onCloseCb={this.confirmDeleteDataSource}/>
 			</div>
 		);
 	}

@@ -87,33 +87,6 @@ class ModalEditDataSource extends Component {
     this.setState({ dataSource: dataSource });
 	}
 	
-	handleUploadIcon(e) {
-		var file = e.target.files[0];
-		var fr = new FileReader();
-		var self = this;
-		if (file.type.startsWith("image") && file.size <= 16*1024*1024) {
-			fr.onload = function(ev2) {
-				var encoded = btoa(ev2.target.result);
-				if (encoded.length <= 16*1024*1024) {
-					var dataSource = self.state.dataSource;
-					dataSource.icon = "data:" + file.type + ";base64," + encoded;
-					self.setState({dataSource: dataSource});
-				} else {
-					StateStore.getState().NotificationManager.addNotification({
-						message: 'File too large, must be at least ~10MB',
-						level: 'error'
-					});
-				}
-			};
-			fr.readAsBinaryString(file);
-		} else {
-			StateStore.getState().NotificationManager.addNotification({
-				message: 'File error, only images allowed, must be at least ~10MB',
-				level: 'error'
-			});
-		}
-	}
-
   render() {
 		var title = this.state.add?"Add a new Data Source":"Edit Data Source '"+this.state.dataSource.name+"'", path = "";
 		var scopeInput = <span>{this.state.dataSource.scope==="me"?"Me":"All"}</span>;

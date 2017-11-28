@@ -4,6 +4,7 @@ import APIManager from './APIManager'
 var defaultState = {
   lastAction: false,
 	ready: false,
+	showFullScreen: false,
 	status: "",
 	taliesinApiUrl: false,
 	angharadApiUrl: false,
@@ -15,11 +16,16 @@ var defaultState = {
 	dataSourceList: [],
 	externalPlayerList: [],
   streamList: [],
+	playlist:[],
 	serverConfig: {},
 	profile: {
 		isAdmin: false,
 		dataSource: false, 
 		path: "",
+		category: false,
+		categoryValue: false,
+		subCategory: false,
+		subCategoryValue: false,
 		stream: false, 
 		streamDetails: false,
 		localStream: false,
@@ -29,7 +35,13 @@ var defaultState = {
 		browse: "dashboard",
 		view: "list",
 		jukeboxIndex: 0,
-		currentPlayer: false
+		currentPlayer: false,
+		currentPlayerStatus: false,
+		currentPlayerRepeat: false,
+		currentPlayerRandom: false,
+		currentPlayerVolume: 0,
+		playerAction: false,
+		playerActionParameter: false
 	}
 }
 
@@ -71,8 +83,13 @@ function stateStoreManager(state = defaultState, action) {
 		case "setStreamList":
 			state.streamList = action.streamList;
 			break;
-		case "loadStream":
 		case "loadStreamAndPlay":
+			if (action.index || action.index === 0) {
+				state.profile.jukeboxIndex = action.index;
+			} else {
+        state.profile.jukeboxIndex = -1;
+      }
+		case "loadStream":
 			state.profile.stream = action.stream;
 			break;
 		case "setLocalStream":
@@ -83,6 +100,24 @@ function stateStoreManager(state = defaultState, action) {
 			break;
 		case "setCurrentPath":
 			state.profile.path = action.path;
+			break;
+		case "setCurrentCategory":
+			state.profile.category = action.category;
+			if (action.categoryValue) {
+				state.profile.categoryValue = action.categoryValue;
+			} else {
+				state.profile.categoryValue = false;
+			}
+			if (action.subCategory) {
+				state.profile.subCategory = action.subCategory;
+			} else {
+				state.profile.subCategory = false;
+			}
+			if (action.subCategoryValue) {
+				state.profile.subCategoryValue = action.subCategoryValue;
+			} else {
+				state.profile.subCategoryValue = false;
+			}
 			break;
 		case "setJukeboxIndex":
 			state.profile.jukeboxIndex = action.index;
@@ -108,6 +143,34 @@ function stateStoreManager(state = defaultState, action) {
 			break;
 		case "setStreamDetails":
 			state.profile.streamDetails = action.stream;
+			break;
+		case "showFullScreen":
+			state.showFullScreen = action.show;
+			break;
+		case "setPlayerAction":
+			state.profile.playerAction = action.action;
+			if (action.parameter) {
+				state.profile.playerActionParameter = action.parameter;
+			} else {
+				state.profile.playerActionParameter = false;
+			}
+			break;
+		case "setCurrentPlayerStatus":
+			if (action.status) {
+				state.profile.currentPlayerStatus = action.status;
+			}
+			if (action.repeat) {
+				state.profile.currentPlayerRepeat = action.repeat;
+			}
+			if (action.random) {
+				state.profile.currentPlayerRandom = action.random;
+			}
+			if (action.volume) {
+				state.profile.currentPlayerVolume = action.volume;
+			}
+			break;
+		case "setPlaylist":
+			state.playlist = action.playlist;
 			break;
 		default:
 			break;

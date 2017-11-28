@@ -15,6 +15,8 @@ class AudioPlayer extends Component {
 		this.state = {
 			play: false, 
 			stream: props.stream,
+      playNow: props.play,
+      playIndex: props.index,
 			streamUrl: "#", 
 			media: {data_source: false, path: false},
 			interval: interval,
@@ -46,27 +48,78 @@ class AudioPlayer extends Component {
 		this.loadMedia = this.loadMedia.bind(this);
 		this._notificationSystem = null;
     
+		StateStore.subscribe(() => {
+			var reduxState = StateStore.getState();
+			if (this._ismounted) {
+				if (reduxState.lastAction === "setPlayerAction") {
+					switch (reduxState.profile.playerAction) {
+						case "previous":
+							this.handlePrevious();
+							break;
+						case "stop":
+							this.handleStop();
+							break;
+						case "play":
+							this.handleStop();
+							this.handlePlay();
+							break;
+						case "next":
+							this.handleNext();
+							break;
+						case "repeat":
+							this.handleRepeat();
+							break;
+						case "random":
+							this.handleRandom();
+							break;
+						case "volume":
+							this.handleChangeVolume({target: {value: reduxState.profile.playerActionParameter}});
+							break;
+            default:
+              break;
+					}
+				}
+			}
+		});
 		this.loadMedia();
 	}
 	
+	componentWillReceiveProps(nextProps) {
+		this.setState({stream: nextProps.stream, playNow: nextProps.play, playIndex: nextProps.index}, () => {
+			this.loadMedia();
+		});
+	}
+	
+	componentDidMount() { 
+		this._ismounted = true;
+		this.setState({
+			volume: this.rap.audioEl.volume * 100
+		}, () => {
+			StateStore.dispatch({
+				type: "setCurrentPlayerStatus",
+				status: this.state.play?"play":"stop",
+				repeat: this.state.jukeboxRepeat,
+				random: this.state.jukeboxRandom,
+				volume: this.state.volume
+			});
+		});
+	}
+
 	componentWillUnmount() {
+		 this._ismounted = false;
 		if (this.state.interval) {
 			clearInterval(this.state.interval);
 		}
 	}
 	
-	componentWillReceiveProps(nextProps) {
-		this.setState({stream: nextProps.stream}, () => {
-			this.loadMedia();
-		});
-	}
-	
 	loadMedia() {
     if (this.state.stream.name) {
+      if (this.state.playNow) {
+        this.setState({playNow: false, jukeboxIndex: this.state.playIndex}, () => {
+          this.handlePlay();
+        });
+      }
 			if (this.state.stream.webradio) {
-				if (StateStore.getState().profile.jukeboxIndex !== -1) {
-					StateStore.dispatch({ type: "setJukeboxIndex", index: -1 });
-				}
 				StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "now"})
 				.then((result) => {
 					if (StateStore.getState().profile.mediaNow.data_source !== result.data_source || StateStore.getState().profile.mediaNow.path !== result.path) {
@@ -82,7 +135,7 @@ class AudioPlayer extends Component {
 			} else {
 				StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "list", parameters: {offset: this.state.jukeboxIndex, limit: 1}})
 				.then((result) => {
-					if (result[0].data_source !== StateStore.getState().profile.mediaNow.data_source && result[0].path !== StateStore.getState().profile.mediaNow.path) {
+					if (result[0].data_source !== StateStore.getState().profile.mediaNow.data_source || result[0].path !== StateStore.getState().profile.mediaNow.path) {
 						StateStore.dispatch({type: "setMediaNow", media: result[0]});
 					}
 				});
@@ -134,9 +187,6 @@ class AudioPlayer extends Component {
     this.rap.audioEl.currentTime = 0;
     this.rap.audioEl.src = URL.createObjectURL(new Blob([], {type:"audio/mp3"}));
 		this.setState({play: false});
-		if (this.state.interval) {
-			clearInterval(this.state.interval);
-		}
   }
 	
   handlePause() {

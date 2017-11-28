@@ -5,7 +5,7 @@ class ModalEdit extends Component {
   constructor(props) {
     super(props);
 		
-		this.state = {show: props.show, title: props.title, message: props.message, value: props.value, cb: props.cb};
+		this.state = {show: props.show, title: props.title, message: props.message, value: props.value, cb: props.onCloseCb};
 		
 		this.close = this.close.bind(this);
 		this.handleChange = this.handleChange.bind(this);
@@ -13,7 +13,7 @@ class ModalEdit extends Component {
 	}
 	
 	componentWillReceiveProps(nextProps) {
-		this.setState({show: nextProps.show, title: nextProps.title, message: nextProps.message, value: nextProps.value, cb: nextProps.cb});
+		this.setState({show: nextProps.show, title: nextProps.title, message: nextProps.message, value: nextProps.value, cb: nextProps.onCloseCb});
 	}
 
   close(result) {

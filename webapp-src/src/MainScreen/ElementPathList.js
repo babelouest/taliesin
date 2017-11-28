@@ -32,6 +32,8 @@ class ElementPathList extends Component {
 	}
 	
 	handleChangePath(name) {
+		StateStore.dispatch({type: "setCurrentBrowse", browse: "path"});
+		StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: StateStore.getState().dataSourceList.find((ds) => {return ds.name === this.state.dataSource})});
 		StateStore.dispatch({type: "setCurrentPath", path: this.state.path + "/" + name});
 	}
 	

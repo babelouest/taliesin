@@ -564,8 +564,8 @@ json_t * add_webradio_from_path(struct config_elements * config, json_t * j_data
                                       config->webradio_set[webradio_index]->display_name,
                                       "format",
                                       format,
-                                      "channels",
-                                      channels==1?"mono":"stereo",
+                                      "stereo",
+                                      channels==1?json_false():json_true(),
                                       "sample_rate",
                                       sample_rate,
                                       "bitrate",
@@ -623,7 +623,7 @@ json_t * add_webradio_from_playlist(struct config_elements * config, json_t * j_
           config->webradio_set[webradio_index]->username = o_strdup(username);
           config->webradio_set[webradio_index]->random = random;
 					if (name == NULL) {
-						config->webradio_set[webradio_index]->display_name = o_strdup(json_string_value(json_object_get(j_playlist, "description")));
+						config->webradio_set[webradio_index]->display_name = o_strdup(json_string_value(json_object_get(j_playlist, "name")));
 					} else {
 						config->webradio_set[webradio_index]->display_name = o_strdup(name);
 					}
@@ -640,7 +640,7 @@ json_t * add_webradio_from_playlist(struct config_elements * config, json_t * j_
             *new_webradio = config->webradio_set[webradio_index];
           }
           if (webradio_add_db_stream(config, config->webradio_set[webradio_index]) == T_OK) {
-            j_result = json_pack("{sis{sssssssssisisosis[]}}",
+            j_result = json_pack("{sis{sssssssosisisosis[]}}",
                                   "result",
                                   T_OK,
                                   "stream",
@@ -650,8 +650,8 @@ json_t * add_webradio_from_playlist(struct config_elements * config, json_t * j_
                                     config->webradio_set[webradio_index]->display_name,
                                     "format",
                                     format,
-                                    "channels",
-                                    channels==1?"mono":"stereo",
+                                    "stereo",
+                                    channels==1?json_false():json_true(),
                                     "sample_rate",
                                     sample_rate,
                                     "bitrate",

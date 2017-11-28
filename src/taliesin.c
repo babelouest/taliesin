@@ -199,7 +199,7 @@ int main (int argc, char ** argv) {
   ulfius_add_endpoint_by_val(config->instance, "DELETE", config->api_prefix, "/playlist/:playlist/", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_playlist_delete, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "PUT", config->api_prefix, "/playlist/:playlist/add_media", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_playlist_add_media, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "DELETE", config->api_prefix, "/playlist/:playlist/delete_media", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_playlist_delete_media, (void*)config);
-  ulfius_add_endpoint_by_val(config->instance, "PUT", config->api_prefix, "/playlist/:playlist/load", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_playlist_load, (void*)config);
+  ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/playlist/:playlist/load", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_playlist_load, (void*)config);
   
   
   // Config endpoints

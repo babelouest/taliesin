@@ -333,8 +333,8 @@ json_t * is_playlist_valid(struct config_elements * config, const char * usernam
       }
       
       if (with_media) {
-        if (json_object_get(j_playlist, "media") == NULL || !json_is_array(json_object_get(j_playlist, "media")) || !json_array_size(json_object_get(j_playlist, "media"))) {
-          json_array_append_new(j_return, json_pack("{ss}", "media", "You must set at least one media of format {data_source, path}"));
+        if (json_object_get(j_playlist, "media") != NULL && !json_is_array(json_object_get(j_playlist, "media"))) {
+          json_array_append_new(j_return, json_pack("{ss}", "media", "media must be a JSON array"));
         } else {
           json_array_foreach(json_object_get(j_playlist, "media"), index, j_element) {
             if (!is_valid_jukebox_element_parameter(config, j_element, username, is_admin)) {
@@ -439,7 +439,7 @@ json_int_t playlist_add(struct config_elements * config, const char * username, 
         if (playlist_replace_element_list(config, tpl_id, j_playlist) != T_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add - Error insert playlist elements");
         }
-      } else {
+      } else if (file_list->nb_files) {
         j_query = json_pack("{sss[]}", "table", TALIESIN_TABLE_PLAYLIST_ELEMENT, "values");
         if (j_query != NULL) {
           file = file_list->start;
@@ -463,6 +463,7 @@ json_int_t playlist_add(struct config_elements * config, const char * username, 
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add - Error executing j_query (1)");
   }
+  y_log_message(Y_LOG_LEVEL_DEBUG, "Got tpl_id: %"JSON_INTEGER_FORMAT, tpl_id);
   return tpl_id;
 }
 

@@ -466,7 +466,7 @@ json_t * add_jukebox_from_path(struct config_elements * config, json_t * j_data_
               }
             }
             if (jukebox_add_db_stream(config, config->jukebox_set[jukebox_index]) == T_OK) {
-              j_result = json_pack("{sis{sssssssssisisosis[]}}",
+              j_result = json_pack("{sis{sssssssosisisosis[]}}",
                                     "result",
                                     T_OK,
                                     "stream",
@@ -476,8 +476,8 @@ json_t * add_jukebox_from_path(struct config_elements * config, json_t * j_data_
                                       config->jukebox_set[jukebox_index]->display_name,
                                       "format",
                                       format,
-                                      "channels",
-                                      channels==1?"mono":"stereo",
+                                      "stereo",
+                                      channels==1?json_false():json_true(),
                                       "sample_rate",
                                       sample_rate,
                                       "bitrate",
@@ -537,7 +537,7 @@ json_t * add_jukebox_from_playlist(struct config_elements * config, json_t * j_p
           config->jukebox_set[jukebox_index]->config = config;
           config->jukebox_set[jukebox_index]->username = o_strdup(username);
 					if (name == NULL) {
-						config->jukebox_set[jukebox_index]->display_name = o_strdup(json_string_value(json_object_get(j_playlist, "description")));
+						config->jukebox_set[jukebox_index]->display_name = o_strdup(json_string_value(json_object_get(j_playlist, "name")));
 					} else {
 						config->jukebox_set[jukebox_index]->display_name = o_strdup(name);
 					}
@@ -551,18 +551,18 @@ json_t * add_jukebox_from_playlist(struct config_elements * config, json_t * j_p
             o_free(full_path);
           }
           if (jukebox_add_db_stream(config, config->jukebox_set[jukebox_index]) == T_OK) {
-            j_result = json_pack("{sis{sssssssssisisosis[]}}",
+            j_result = json_pack("{sis{sssssssosisisosis[]}}",
                                   "result",
                                   T_OK,
                                   "stream",
                                     "name",
                                     config->jukebox_set[jukebox_index]->name,
                                     "display_name",
-                                    config->jukebox_set[jukebox_index]->playlist_name,
+                                    config->jukebox_set[jukebox_index]->display_name,
                                     "format",
                                     format,
-                                    "channels",
-                                    channels==1?"mono":"stereo",
+                                    "stereo",
+                                    channels==1?json_false():json_true(),
                                     "sample_rate",
                                     sample_rate,
                                     "bitrate",
@@ -1318,12 +1318,12 @@ void clean_client_data_jukebox(struct _client_data_jukebox * client_data_jukebox
 }
 
 void * jukebox_run_thread(void * args) {
-  struct _client_data_jukebox * client_data_jukebox = (struct _client_data_jukebox *)args;
-  struct config_elements * config               = client_data_jukebox->jukebox->config;
-  AVFormatContext        * input_format_context = NULL, * output_format_context = NULL;
-  AVCodecContext         * input_codec_context  = NULL, * output_codec_context  = NULL;
-  AVAudioResampleContext * resample_context     = NULL;
-  AVAudioFifo            * fifo                 = NULL;
+  struct _client_data_jukebox * client_data_jukebox  = (struct _client_data_jukebox *)args;
+  struct config_elements      * config               = client_data_jukebox->jukebox->config;
+  AVFormatContext             * input_format_context = NULL, * output_format_context = NULL;
+  AVCodecContext              * input_codec_context  = NULL, * output_codec_context  = NULL;
+  AVAudioResampleContext      * resample_context     = NULL;
+  AVAudioFifo                 * fifo                 = NULL;
   int64_t pts = 0;
   int output_frame_size, finished = 0, error, data_present = 0, data_written = 0;
   
@@ -1413,19 +1413,25 @@ ssize_t u_jukebox_stream (void * cls, uint64_t pos, char * buf, size_t max) {
   size_t len;
   
   //y_log_message(Y_LOG_LEVEL_DEBUG, "u_jukebox_stream - start");
-  if (client_data_jukebox->audio_buffer->status != TALIESIN_STREAM_STATUS_STOPPED || (client_data_jukebox->buffer_offset >= client_data_jukebox->audio_buffer->size && client_data_jukebox->audio_buffer->status == TALIESIN_STREAM_STATUS_COMPLETED)) {
-    while (client_data_jukebox->buffer_offset + max > client_data_jukebox->audio_buffer->size && client_data_jukebox->audio_buffer->status == TALIESIN_STREAM_STATUS_STARTED) {
-      usleep(50000);
-    }
-    if (client_data_jukebox->buffer_offset + max > client_data_jukebox->audio_buffer->size) {
-      len = (client_data_jukebox->audio_buffer->size - client_data_jukebox->buffer_offset);
+  if (client_data_jukebox->audio_buffer->status == TALIESIN_STREAM_STATUS_STARTED) {
+    if (client_data_jukebox->audio_buffer->complete && client_data_jukebox->buffer_offset >= client_data_jukebox->audio_buffer->size) {
+      return U_STREAM_END;
     } else {
-      len = max;
+      while (client_data_jukebox->buffer_offset + max > client_data_jukebox->audio_buffer->size && 
+             !client_data_jukebox->audio_buffer->complete &&
+             client_data_jukebox->audio_buffer->status == TALIESIN_STREAM_STATUS_STARTED) {
+        usleep(50000);
+      }
+      if (client_data_jukebox->buffer_offset + max > client_data_jukebox->audio_buffer->size) {
+        len = (client_data_jukebox->audio_buffer->size - client_data_jukebox->buffer_offset);
+      } else {
+        len = max;
+      }
+      
+      memcpy(buf, client_data_jukebox->audio_buffer->data + client_data_jukebox->buffer_offset, len);
+      client_data_jukebox->buffer_offset += len;
+      return len;
     }
-    
-    memcpy(buf, client_data_jukebox->audio_buffer->data + client_data_jukebox->buffer_offset, len);
-    client_data_jukebox->buffer_offset += len;
-    return len;
   } else {
     return U_STREAM_END;
   }

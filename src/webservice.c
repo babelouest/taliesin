@@ -98,7 +98,7 @@ int callback_taliesin_server_configuration (const struct _u_request * request, s
                         ((struct config_elements *)user_data)->stream_sample_rate,
                         "defrault_stream_bitrate",
                         ((struct config_elements *)user_data)->stream_bitrate));
-  return U_CALLBACK_CONTINUE;
+  return U_CALLBACK_COMPLETE;
 };
 
 /**
@@ -631,7 +631,7 @@ int callback_taliesin_category_get_info (const struct _u_request * request, stru
           } else if (check_result_value(j_result, T_ERROR_NOT_FOUND)) {
             response->status = 404;
           } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_get_info - Error media_category_get");
+            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_get_info - Error media_category_get_info");
             response->status = 500;
           }
           json_decref(j_result);
@@ -647,7 +647,7 @@ int callback_taliesin_category_get_info (const struct _u_request * request, stru
               if (o_base64_decode((const unsigned char *)cover_b64, cover_b64_len, cover_decoded, &cover_decoded_len)) {
                 ulfius_set_binary_body_response(response, 200, (const char *)cover_decoded, cover_decoded_len);
               } else {
-                y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_cover_get - Error decoding cover");
+                y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_get_info - Error decoding cover");
                 response->status = 500;
               }
               o_free(cover_decoded);
@@ -655,7 +655,7 @@ int callback_taliesin_category_get_info (const struct _u_request * request, stru
           } else if (check_result_value(j_cover, T_ERROR_NOT_FOUND)) {
             response->status = 404;
           } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_cover_get - Error getting cover");
+            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_get_info - Error getting cover");
             response->status = 500;
           }
           json_decref(j_cover);
@@ -872,7 +872,7 @@ int callback_taliesin_category_list (const struct _u_request * request, struct _
         } else if (check_result_value(j_result, T_ERROR_NOT_FOUND)) {
           response->status = 404;
         } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_get - Error media_category_get");
+          y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_get - Error media_category_list");
           response->status = 500;
         }
         json_decref(j_result);
@@ -914,7 +914,7 @@ int callback_taliesin_subcategory_get (const struct _u_request * request, struct
           } else if (check_result_value(j_result, T_ERROR_NOT_FOUND)) {
             response->status = 404;
           } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_get - Error media_category_get");
+            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_get - Error media_subcategory_get");
             response->status = 500;
           }
           json_decref(j_result);
@@ -1029,7 +1029,7 @@ int callback_taliesin_subcategory_list (const struct _u_request * request, struc
           } else if (check_result_value(j_result, T_ERROR_NOT_FOUND)) {
             response->status = 404;
           } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_get - Error media_category_get");
+            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_get - Error media_subcategory_list");
             response->status = 500;
           }
           json_decref(j_result);
@@ -1255,7 +1255,7 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
   } else {
     response->status = 404;
   }
-  return U_CALLBACK_CONTINUE;
+  return U_CALLBACK_COMPLETE;
 }
 
 int callback_taliesin_stream_get_list (const struct _u_request * request, struct _u_response * response, void * user_data) {
@@ -1355,7 +1355,7 @@ int callback_taliesin_stream_manage_ws (const struct _u_request * request, struc
   struct _t_webradio * current_webradio = NULL;
   struct _t_jukebox * current_playlist = NULL;
   struct _ws_stream * ws_stream;
-  int ret = U_CALLBACK_CONTINUE, i;
+  int ret = U_CALLBACK_COMPLETE, i;
   
   for (i=0; i<config->nb_webradio; i++) {
     if (0 == o_strcmp(u_map_get(request->map_url, "stream_name"), config->webradio_set[i]->name)) {
@@ -1387,7 +1387,7 @@ int callback_taliesin_stream_manage_ws (const struct _u_request * request, struc
       ws_stream->jukebox = current_playlist;
       ws_stream->status = TALIESIN_WEBSOCKET_PLAYLIST_STATUS_OPEN;
       if (ulfius_set_websocket_response(response, NULL, NULL, &callback_websocket_stream_manager, ws_stream, &callback_websocket_stream_incoming_message, ws_stream, &callback_websocket_stream_onclose, ws_stream) == U_OK) {
-        ret = U_CALLBACK_CONTINUE;
+        ret = U_CALLBACK_COMPLETE;
       } else {
         y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_manage_ws - Error ulfius_set_websocket_response");
         o_free(ws_stream);
@@ -1779,7 +1779,8 @@ int callback_taliesin_stream_cover (const struct _u_request * request, struct _u
   } else {
     response->status = 404;
   }
-  return U_CALLBACK_CONTINUE;
+  response->shared_data = malloc(sizeof(char));
+  return U_CALLBACK_COMPLETE;
 }
 
 /**
@@ -1822,7 +1823,7 @@ int callback_taliesin_playlist_get (const struct _u_request * request, struct _u
   if (check_result_value(j_result, T_OK)) {
     if (u_map_get(request->map_url, "cover") == NULL) {
       json_object_del(json_object_get(j_result, "playlist"), "tpl_id");
-      if (set_response_json_body_and_clean(response, 200, json_copy(json_object_get(j_result, "playlist"))) != U_OK) {
+      if (ulfius_set_json_body_response(response, 200, json_object_get(j_result, "playlist")) != U_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_playlist_get - Error setting json response");
         res = U_CALLBACK_ERROR;
       }
@@ -1869,7 +1870,7 @@ int callback_taliesin_playlist_add (const struct _u_request * request, struct _u
   j_is_valid = is_playlist_valid(config, get_username(request, response, config), has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin), j_body, 0, 1);
   if (j_is_valid != NULL) {
     if (json_array_size(j_is_valid) == 0) {
-      if (playlist_add(config, get_username(request, response, config), j_body, NULL) != T_OK) {
+      if (playlist_add(config, get_username(request, response, config), j_body, NULL) == -1) {
         y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_playlist_add - Error playlist_add");
         res = U_CALLBACK_ERROR;
       }
@@ -2062,63 +2063,69 @@ int callback_taliesin_playlist_load (const struct _u_request * request, struct _
   
   j_playlist = playlist_get(config, get_username(request, response, config), u_map_get(request->map_url, "playlist"), 1, 0, 0);
   if (check_result_value(j_playlist, T_OK)) {
-    format = u_map_get(request->map_url, "format");
-    channels = u_map_get(request->map_url, "channels")!=NULL?strtol(u_map_get(request->map_url, "channels"), NULL, 10):TALIESIN_STREAM_DEFAULT_CHANNELS;
-    sample_rate = u_map_get(request->map_url, "samplerate")!=NULL?strtol(u_map_get(request->map_url, "samplerate"), NULL, 10):TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
-    if (0 == o_strcmp(format, "flac")) {
-      bit_rate = TALIESIN_STREAM_FLAC_BIT_RATE;
-    } else {
-      bit_rate = u_map_get(request->map_url, "bitrate")!=NULL?strtol(u_map_get(request->map_url, "bitrate"), NULL, 10):TALIESIN_STREAM_DEFAULT_BIT_RATE;
-    }
-    
-    if (format == NULL) {
-      format = TALIESIN_STREAM_DEFAULT_FORMAT;
-    }
-    if (!channels) {
-      sample_rate = TALIESIN_STREAM_DEFAULT_CHANNELS;
-    }
-    if (!sample_rate) {
-      channels = TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
-    }
-    if (!bit_rate) {
-      bit_rate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
-    }
-    j_valid = is_stream_parameters_valid((u_map_get(request->map_url, "webradio") != NULL), format, channels, sample_rate, bit_rate);
-    if (j_valid != NULL && json_array_size(j_valid) == 0) {
-      if (u_map_get(request->map_url, "webradio") != NULL) {
-        j_stream_info = add_webradio_from_playlist(config, json_object_get(j_playlist, "playlist"), get_username(request, response, config), format, channels, sample_rate, bit_rate, (u_map_get(request->map_url, "random")!=NULL), u_map_get(request->map_url, "name"), &webradio);
-        if (check_result_value(j_stream_info, T_OK)) {
-          ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
-          detach_thread_webradio = pthread_detach(thread_webradio);
-          if (ret_thread_webradio || detach_thread_webradio) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio");
-            response->status = 500;
-          } else {
-            ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
-          }
-        } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get_path - Error streaming file");
-          response->status = 500;
-        }
-        json_decref(j_stream_info);
+    if (json_array_size(json_object_get(json_object_get(j_playlist, "playlist"), "media"))) {
+      format = u_map_get(request->map_url, "format");
+      channels = u_map_get(request->map_url, "channels")!=NULL?strtol(u_map_get(request->map_url, "channels"), NULL, 10):TALIESIN_STREAM_DEFAULT_CHANNELS;
+      sample_rate = u_map_get(request->map_url, "samplerate")!=NULL?strtol(u_map_get(request->map_url, "samplerate"), NULL, 10):TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
+      if (0 == o_strcmp(format, "flac")) {
+        bit_rate = TALIESIN_STREAM_FLAC_BIT_RATE;
       } else {
-        j_stream_info = add_jukebox_from_playlist(config, json_object_get(j_playlist, "playlist"), get_username(request, response, config), format, channels, sample_rate, bit_rate, u_map_get(request->map_url, "name"));
-        if (check_result_value(j_stream_info, T_OK)) {
-          json_object_set_new(json_object_get(j_stream_info, "stream"), "media", json_deep_copy(json_object_get(json_object_get(j_playlist, "playlist"), "media")));
-          ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
-        } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get_path - Error creating playlist");
-          response->status = 500;
-        }
-        json_decref(j_stream_info);
+        bit_rate = u_map_get(request->map_url, "bitrate")!=NULL?strtol(u_map_get(request->map_url, "bitrate"), NULL, 10):TALIESIN_STREAM_DEFAULT_BIT_RATE;
       }
-    } else if (j_valid != NULL && json_array_size(j_valid) > 0) {
-      ulfius_set_json_body_response(response, 400, j_valid);
+      
+      if (format == NULL) {
+        format = TALIESIN_STREAM_DEFAULT_FORMAT;
+      }
+      if (!channels) {
+        sample_rate = TALIESIN_STREAM_DEFAULT_CHANNELS;
+      }
+      if (!sample_rate) {
+        channels = TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
+      }
+      if (!bit_rate) {
+        bit_rate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
+      }
+      j_valid = is_stream_parameters_valid((u_map_get(request->map_url, "webradio") != NULL), format, channels, sample_rate, bit_rate);
+      if (j_valid != NULL && json_array_size(j_valid) == 0) {
+        if (u_map_get(request->map_url, "webradio") != NULL) {
+          j_stream_info = add_webradio_from_playlist(config, json_object_get(j_playlist, "playlist"), get_username(request, response, config), format, channels, sample_rate, bit_rate, (u_map_get(request->map_url, "random")!=NULL), u_map_get(request->map_url, "name"), &webradio);
+          if (check_result_value(j_stream_info, T_OK)) {
+            ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
+            detach_thread_webradio = pthread_detach(thread_webradio);
+            if (ret_thread_webradio || detach_thread_webradio) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio");
+              response->status = 500;
+            } else {
+              ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
+            }
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get_path - Error streaming file");
+            response->status = 500;
+          }
+          json_decref(j_stream_info);
+        } else {
+          j_stream_info = add_jukebox_from_playlist(config, json_object_get(j_playlist, "playlist"), get_username(request, response, config), format, channels, sample_rate, bit_rate, u_map_get(request->map_url, "name"));
+          if (check_result_value(j_stream_info, T_OK)) {
+            json_object_set_new(json_object_get(j_stream_info, "stream"), "media", json_deep_copy(json_object_get(json_object_get(j_playlist, "playlist"), "media")));
+            ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get_path - Error creating playlist");
+            response->status = 500;
+          }
+          json_decref(j_stream_info);
+        }
+      } else if (j_valid != NULL && json_array_size(j_valid) > 0) {
+        ulfius_set_json_body_response(response, 400, j_valid);
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get_path - Error is_stream_parameters_valid");
+        response->status = 500;
+      }
+      json_decref(j_valid);
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get_path - Error is_stream_parameters_valid");
-      response->status = 500;
+      j_valid = json_pack("{ss}", "error", "playlist has no media");
+      ulfius_set_json_body_response(response, 400, j_valid);
+      json_decref(j_valid);
     }
-    json_decref(j_valid);
   } else if (check_result_value(j_playlist, T_ERROR_NOT_FOUND)) {
     response->status = 404;
   } else {

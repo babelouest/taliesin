@@ -98,9 +98,10 @@ json_t * folder_search(struct config_elements * config, const char * username_es
 }
 
 json_t * media_search(struct config_elements * config, const char * username_escape, const char * search_pattern_escape, unsigned short int search_category) {
-  json_t * j_result, * j_return;
+  json_t * j_result, * j_return, * j_element, * j_tags;
   int res;
   char * clause_search = NULL, * query;
+	size_t index;
   
   if (search_category == TALIESIN_SEARCH_CATEGORY_NONE) {
     clause_search = msprintf("tm_name LIKE '%%%s%%' OR `tm_id` IN (SELECT `tm_id` FROM `%s` WHERE `tmd_value` LIKE '%%%s%%')", search_pattern_escape, TALIESIN_TABLE_META_DATA, search_pattern_escape);
@@ -117,11 +118,21 @@ json_t * media_search(struct config_elements * config, const char * username_esc
   } else if (search_category == TALIESIN_SEARCH_CATEGORY_GENRE) {
     clause_search = msprintf("`tm_id` IN (SELECT `tm_id` FROM `%s` WHERE `tmd_value` LIKE '%%%s%%' AND `tmd_key`='genre')", TALIESIN_TABLE_META_DATA, search_pattern_escape);
   }
-  query = msprintf("SELECT " TALIESIN_TABLE_DATA_SOURCE ".tds_name AS data_source, " TALIESIN_TABLE_MEDIA ".tm_name AS name, " TALIESIN_TABLE_MEDIA ".tm_path AS path FROM `" TALIESIN_TABLE_MEDIA "`, `" TALIESIN_TABLE_DATA_SOURCE "` WHERE `" TALIESIN_TABLE_DATA_SOURCE "`.`tds_id` in (SELECT `tds_id` FROM `%s` WHERE `tds_username`='%s' OR `tds_username` IS NULL) AND %s AND `" TALIESIN_TABLE_DATA_SOURCE "`.`tds_id` = `" TALIESIN_TABLE_MEDIA "`.`tds_id` LIMIT %d", TALIESIN_TABLE_DATA_SOURCE, username_escape, clause_search, TALIESIN_MEDIA_LIMIT_DEFAULT);
+  query = msprintf("SELECT " TALIESIN_TABLE_DATA_SOURCE ".tds_id " TALIESIN_TABLE_DATA_SOURCE ".tds_name AS data_source, " TALIESIN_TABLE_MEDIA ".tm_name AS name, " TALIESIN_TABLE_MEDIA ".tm_path AS path FROM `" TALIESIN_TABLE_MEDIA "`, `" TALIESIN_TABLE_DATA_SOURCE "` WHERE `" TALIESIN_TABLE_DATA_SOURCE "`.`tds_id` in (SELECT `tds_id` FROM `%s` WHERE `tds_username`='%s' OR `tds_username` IS NULL) AND %s AND `" TALIESIN_TABLE_DATA_SOURCE "`.`tds_id` = `" TALIESIN_TABLE_MEDIA "`.`tds_id` LIMIT %d", TALIESIN_TABLE_DATA_SOURCE, username_escape, clause_search, TALIESIN_MEDIA_LIMIT_DEFAULT);
   o_free(clause_search);
   res = h_execute_query_json(config->conn, query, &j_result);
   o_free(query);
   if (res == H_OK) {
+		json_array_foreach(j_result, index, j_element) {
+			j_tags = media_get_tags_from_id(config, json_integer_value(json_object_get(j_element, "tm_id")));
+			if (check_result_value(j_tags, T_OK)) {
+				json_object_set(j_element, "tags", json_object_get(j_tags, "tags"));
+			} else {
+				y_log_message(Y_LOG_LEVEL_ERROR, "media_advanced_search - Error media_get_tags_from_id");
+			}
+			json_decref(j_tags);
+			json_object_del(j_element, "tm_id");
+		}
     j_return = json_pack("{sisO}", "result", T_OK, "media", j_result);
     json_decref(j_result);
   } else {
@@ -367,12 +378,12 @@ json_t * is_valid_media_advanced_search(struct config_elements * config, const c
  */
 json_t * media_advanced_search(struct config_elements * config, const char * username, json_t * search_criteria) {
   char * query, * clause_tags = NULL, * clause, * tmp, * escape_key, * escape_value, * escape_value_max, * escape;
-  json_t * j_element, * j_result = NULL;
+  json_t * j_element, * j_result = NULL, * j_tags;
   int res;
   size_t index;
   
   escape = h_escape_string(config->conn, username);
-  query = msprintf("SELECT `"TALIESIN_TABLE_MEDIA"`.`tm_type` AS `type`, `"TALIESIN_TABLE_MEDIA"`.`tm_name` AS `name`, `"TALIESIN_TABLE_MEDIA"`.`tm_path` AS `path`, `"TALIESIN_TABLE_DATA_SOURCE"`.`tds_name` AS `data_source`, "
+  query = msprintf("SELECT `"TALIESIN_TABLE_MEDIA"`.`tm_id`, `"TALIESIN_TABLE_MEDIA"`.`tm_type` AS `type`, `"TALIESIN_TABLE_MEDIA"`.`tm_name` AS `name`, `"TALIESIN_TABLE_MEDIA"`.`tm_path` AS `path`, `"TALIESIN_TABLE_DATA_SOURCE"`.`tds_name` AS `data_source`, "
                    "(SELECT COUNT(`tmh_id`) FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE `"TALIESIN_TABLE_MEDIA_HISTORY"`.`tm_id`=`"TALIESIN_TABLE_MEDIA"`.`tm_id`) AS `nb_play`,"
                    "(SELECT %s FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE `"TALIESIN_TABLE_MEDIA_HISTORY"`.`tm_id`=`"TALIESIN_TABLE_MEDIA"`.`tm_id` ORDER BY `tmh_datestamp` DESC LIMIT 1) AS `last_played` "
                    "FROM `"TALIESIN_TABLE_MEDIA"`, `"TALIESIN_TABLE_DATA_SOURCE"` "
@@ -746,6 +757,16 @@ json_t * media_advanced_search(struct config_elements * config, const char * use
   res = h_execute_query_json(config->conn, query, &j_result);
   o_free(query);
   if (res == H_OK) {
+		json_array_foreach(j_result, index, j_element) {
+			j_tags = media_get_tags_from_id(config, json_integer_value(json_object_get(j_element, "tm_id")));
+			if (check_result_value(j_tags, T_OK)) {
+				json_object_set(j_element, "tags", json_object_get(j_tags, "tags"));
+			} else {
+				y_log_message(Y_LOG_LEVEL_ERROR, "media_advanced_search - Error media_get_tags_from_id");
+			}
+			json_decref(j_tags);
+			json_object_del(j_element, "tm_id");
+		}
     return json_pack("{siso}", "result", T_OK, "list", j_result);
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "media_advanced_search - Error executing query");

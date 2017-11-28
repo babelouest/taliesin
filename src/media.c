@@ -311,6 +311,39 @@ json_t * media_get_metadata(struct config_elements * config, AVCodecContext * th
   return j_metadata;
 }
 
+json_t * media_get_tags_from_id(struct config_elements * config, json_int_t tm_id) {
+	json_t * j_query, * j_result, * j_tag, * j_return;
+	size_t index;
+	int res;
+	
+	j_query = json_pack("{sss[ss]s{sI}}",
+											"table",
+											TALIESIN_TABLE_META_DATA,
+											"columns",
+												"tmd_key",
+												"tmd_value",
+											"where",
+												"tm_id",
+												tm_id);
+	res = h_select(config->conn, j_query, &j_result, NULL);
+	json_decref(j_query);
+	if (res == H_OK) {
+		j_return = json_pack("{sis{}}", "result", T_OK, "tags");
+		if (j_return != NULL) {
+			json_array_foreach(j_result, index, j_tag) {
+				json_object_set_new(json_object_get(j_return, "tags"), json_string_value(json_object_get(j_tag, "tmd_key")), json_copy(json_object_get(j_tag, "tmd_value")));
+			}
+		} else {
+			y_log_message(Y_LOG_LEVEL_ERROR, "media_get_tags_from_id - Error allocating resources for j_return");
+		}
+		json_decref(j_result);
+	} else {
+		y_log_message(Y_LOG_LEVEL_ERROR, "media_get_tags_from_id - Error executing j_query");
+		j_return = json_pack("{si}", "result", T_ERROR_DB);
+	}
+	return j_return;
+}
+
 json_int_t folder_get_id(struct config_elements * config, json_t * j_data_source, json_int_t tf_parent_id, const char * path) {
   char * sub_path;
   json_t * j_query, * j_result = NULL;

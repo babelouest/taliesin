@@ -588,6 +588,7 @@ json_t   * media_get_history(struct config_elements * config, const char * strea
 int        media_image_cover_clean_orphan(struct config_elements * config, json_int_t tds_id);
 int        is_valid_b64_image(const unsigned char * base64_image);
 json_int_t media_cover_save(struct config_elements * config, json_int_t tds_id, const unsigned char * image_base64);
+json_t *   media_get_tags_from_id(struct config_elements * config, json_int_t tm_id);
 
 // db stream functions
 json_t * db_stream_list(struct config_elements * config);

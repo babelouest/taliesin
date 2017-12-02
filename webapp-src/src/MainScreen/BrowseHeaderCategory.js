@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { Col, Row, Image } from 'react-bootstrap';
 import BreadCrumbMenuCategory from './BreadCrumbMenuCategory';
-import ElementButtons from './ElementButtons';
 //import StateStore from '../lib/StateStore';
 
 class BrowseHeaderCategory extends Component {	
@@ -49,29 +48,19 @@ class BrowseHeaderCategory extends Component {
     if (this.state.imgThumbBlob) {
       return (
         <Row>
-          <Col md={6} sm={6} xs={8}>
+          <Col md={9} sm={9} xs={8}>
             <BreadCrumbMenuCategory dataSource={this.state.dataSource} category={this.state.category} categoryValue={this.state.categoryValue} subCategory={this.state.subCategory} subCategoryValue={this.state.subCategoryValue} />
           </Col>
-          <Col md={3} sm={3} xs={3} className="text-right">
+          <Col md={3} sm={3} xs={4} className="text-right">
             <Image src={"data:image/jpeg;base64," + this.state.imgThumbBlob} thumbnail responsive />
-          </Col>
-          <Col md={3} sm={3} xs={1} className="text-right">
-            <div className="text-right">
-              <ElementButtons dataSource={this.state.dataSource} category={this.state.category} categoryValue={this.state.categoryValue} subCategory={this.state.subCategory} subCategoryValue={this.state.subCategoryValue} element={false}/>
-            </div>
           </Col>
         </Row>
       );
     } else {
       return (
         <Row>
-          <Col md={9} sm={9} xs={9}>
+          <Col md={12} sm={12} xs={12}>
             <BreadCrumbMenuCategory dataSource={this.state.dataSource} category={this.state.category} categoryValue={this.state.categoryValue} subCategory={this.state.subCategory} subCategoryValue={this.state.subCategoryValue} />
-          </Col>
-          <Col md={3} sm={3} xs={3} className="text-right">
-            <div className="text-right">
-              <ElementButtons dataSource={this.state.dataSource} category={this.state.category} categoryValue={this.state.categoryValue} subCategory={this.state.subCategory} subCategoryValue={this.state.subCategoryValue} element={false}/>
-            </div>
           </Col>
         </Row>
       );

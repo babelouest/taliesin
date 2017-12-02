@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import FontAwesome from 'react-fontawesome';
 import { Image, Col } from 'react-bootstrap';
 import VisibilitySensor from 'react-visibility-sensor';
+import ModalMedia from '../Modal/ModalMedia';
 import StateStore from '../lib/StateStore';
 import ElementButtons from './ElementButtons';
 
@@ -14,11 +15,11 @@ class ElementCategoryIcon extends Component {
 			categoryValue: props.categoryValue, 
 			subCategory: props.subCategory, 
 			subCategoryValue: props.subCategoryValue, 
-			element: props.element
+			element: props.element,
+			modal: ""
 		};
 		
 		this.handleChangePath = this.handleChangePath.bind(this);
-		this.handleOpenFile = this.handleOpenFile.bind(this);
 		this.onChangeVisibility = this.onChangeVisibility.bind(this);
 		this.getThumbnail = this.getThumbnail.bind(this);
 	}
@@ -30,15 +31,20 @@ class ElementCategoryIcon extends Component {
 			categoryValue: nextProps.categoryValue, 
 			subCategory: nextProps.subCategory, 
 			subCategoryValue: nextProps.subCategoryValue, 
-			element: nextProps.element
+			element: nextProps.element,
+			modal: ""
 		});
 	}
 	
 	handleChangePath(name) {
-		if (this.state.subCategory) {
-			StateStore.dispatch({type: "setCurrentCategory", category: this.state.category, categoryValue: this.state.categoryValue, subCategory: this.state.subCategory, subCategoryValue: name});
+		if (this.state.element.type === "media") {
+			this.setState({modal: <ModalMedia show={true} media={this.state.element} title={this.state.element.tags.title||this.state.element.name} />});
 		} else {
-			StateStore.dispatch({type: "setCurrentCategory", category: this.state.category, categoryValue: name});
+			if (this.state.subCategory) {
+				StateStore.dispatch({type: "setCurrentCategory", category: this.state.category, categoryValue: this.state.categoryValue, subCategory: this.state.subCategory, subCategoryValue: name});
+			} else {
+				StateStore.dispatch({type: "setCurrentCategory", category: this.state.category, categoryValue: name});
+			}
 		}
 	}
 	
@@ -78,9 +84,6 @@ class ElementCategoryIcon extends Component {
 		}
 	}
 	
-  handleOpenFile(name) {
-  }
-	
 	render() {
 		var icon = "";
 		if (!this.state.thumbLoaded) {
@@ -107,7 +110,7 @@ class ElementCategoryIcon extends Component {
 					</a>
 			} else {
 				icon =
-					<a role="button" onClick={() => this.handleOpenFile(this.state.element.name)} title={this.state.element.name}>
+					<a role="button" onClick={() => this.handleChangePath(this.state.element.name)} title={this.state.element.name}>
 						<Image src={"data:image/jpeg;base64,"+this.state.thumb} alt={this.state.element.name} className="elementImage" responsive>
 						</Image>
 						<div className="hideOverflow">
@@ -128,8 +131,9 @@ class ElementCategoryIcon extends Component {
 					{icon}
 				</VisibilitySensor>
 				<div className="text-center">
-					<ElementButtons dataSource={this.state.dataSource} path={this.state.path} element={this.state.element}/>
+					<ElementButtons dataSource={this.state.dataSource} path={this.state.element.path} category={this.state.category} categoryValue={this.state.categoryValue} subCategory={this.state.subCategory} subCategoryValue={this.state.subCategoryValue} element={this.state.element}/>
 				</div>
+				{this.state.modal}
 			</Col>
 		);
 	}

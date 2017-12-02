@@ -7,16 +7,47 @@ import ModalEditStream from '../Modal/ModalEditStream';
 class ElementButtons extends Component {
   constructor(props) {
     super(props);
-		this.state = {dataSource: props.dataSource, path: props.path, element: props.element};
+		this.state = {
+			dataSource: props.dataSource, 
+			path: props.path, 
+			category: props.category, 
+			categoryValue: props.categoryValue, 
+			subCategory: props.subCategory, 
+			subCategoryValue: props.subCategoryValue, 
+			element: props.element,
+			streamList: StateStore.getState().streamList,
+			playlist: StateStore.getState().playlist
+		};
 
 		this.playElement = this.playElement.bind(this);
 		this.runPlayElement = this.runPlayElement.bind(this);
 		this.playElementAdvanced = this.playElementAdvanced.bind(this);
-		this.onCloseModal = this.onCloseModal.bind(this);
+		this.addToStream = this.addToStream.bind(this);
+		this.addToPlaylist = this.addToPlaylist.bind(this);
+		this.runPlayElementAdvanced = this.runPlayElementAdvanced.bind(this);
+		
+		StateStore.subscribe(() => {
+			var reduxState = StateStore.getState();
+			if (reduxState.lastAction === "setPlaylist") {
+				this.setState({streamList: StateStore.getState().streamList});
+			} else if (reduxState.lastAction === "setStreamList") {
+        this.setState({playlist: StateStore.getState().playlist});
+			}
+		});
 	}
 	
 	componentWillReceiveProps(nextProps) {
-    this.setState({dataSource: nextProps.dataSource, path: nextProps.path, element: nextProps.element});
+    this.setState({
+			dataSource: nextProps.dataSource, 
+			path: nextProps.path, 
+			category: nextProps.category, 
+			categoryValue: nextProps.categoryValue, 
+			subCategory: nextProps.subCategory, 
+			subCategoryValue: nextProps.subCategoryValue, 
+			element: nextProps.element,
+			streamList: StateStore.getState().streamList,
+			playlist: StateStore.getState().playlist
+		});
 	}
   
   playElement() {
@@ -49,12 +80,21 @@ class ElementButtons extends Component {
   }
 	
 	runPlayElement() {
-    StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/path/" + encodeURI(this.state.path).replace(/#/g, "%23") + "?jukebox&recursive&name=" + (StateStore.getState().currentPlayer||"local"))
+		var url;
+		if (this.state.path) {
+			url = "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/path/" + encodeURI(this.state.path).replace(/#/g, "%23");
+		} else {
+			url = "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/category/" + encodeURI(this.state.category) + "/" + encodeURI(this.state.categoryValue);
+			if (this.state.subCategory) {
+				url += "/" + encodeURI(this.state.subCategory) + "/" + encodeURI(this.state.subCategoryValue);
+			}
+		}
+    StateStore.getState().APIManager.taliesinApiRequest("GET", url + "?jukebox&recursive&name=" + (StateStore.getState().currentPlayer||"local"))
     .then((result) => {
 			var streamList = StateStore.getState().streamList;
       streamList.push(result);
       StateStore.dispatch({type: "setStreamList", streamList: streamList});
-      StateStore.dispatch({type: "loadStream", stream: result});
+      StateStore.dispatch({type: "loadStreamAndPlay", stream: result, index: 0});
 			StateStore.getState().NotificationManager.addNotification({
 				message: 'Play new stream',
 				level: 'info'
@@ -72,9 +112,18 @@ class ElementButtons extends Component {
     this.setState({show: true});
   }
   
-  onCloseModal(player) {
+  runPlayElementAdvanced(player) {
 		if (player) {
-			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(player.dataSource) + "/browse/path" + encodeURI(player.path).replace(/#/g, "%23") + "?" + player.type + (player.recursive?"&recursive":"") + "&format=" + player.format + "&channels=" + player.channels + "&bitrate=" + player.bitrate + "&sample_rate=" + player.sampleRate)
+			var url;
+			if (this.state.path) {
+				url = "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/path/" + encodeURI(this.state.path).replace(/#/g, "%23");
+			} else {
+				url = "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/category/" + encodeURI(this.state.category) + "/" + encodeURI(this.state.categoryValue);
+				if (this.state.subCategory) {
+					url += "/" + encodeURI(this.state.subCategory) + "/" + encodeURI(this.state.subCategoryValue);
+				}
+			}
+			StateStore.getState().APIManager.taliesinApiRequest("GET", url + "?" + player.type + (player.recursive?"&recursive":"") + "&format=" + player.format + "&channels=" + player.channels + "&bitrate=" + player.bitrate + "&sample_rate=" + player.sampleRate + (player.random?"&random":""))
 			.then((result) => {
 				var streamList = StateStore.getState().streamList;
 				streamList.push(result);
@@ -91,7 +140,66 @@ class ElementButtons extends Component {
     this.setState({show: false});
   }
 	
+	addToStream(stream) {
+    var parameters;
+    if (this.state.path) {
+      parameters = {data_source: this.state.dataSource, path: this.state.path, recursive: true};
+    } else {
+      parameters = {data_source: this.state.dataSource, category: this.state.category, category_value: this.state.categoryValue, sub_category: (this.state.subCategory?this.state.subCategory:undefined), sub_category_value: (this.state.subCategoryValue?this.state.subCategoryValue:undefined) };
+    }
+		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(stream) + "/manage", {command: "append_list", parameters: [parameters]})
+    .then((result) => {
+			StateStore.getState().NotificationManager.addNotification({
+				message: 'Add to stream stream ok',
+				level: 'info'
+			});
+    })
+    .fail(() => {
+			StateStore.getState().NotificationManager.addNotification({
+				message: 'Error adding to stream',
+				level: 'error'
+			});
+    });
+	}
+	
+	addToPlaylist(playlist) {
+    var parameters;
+    if (this.state.path) {
+      parameters = {data_source: this.state.dataSource, path: this.state.path, recursive: true};
+    } else {
+      parameters = {data_source: this.state.dataSource, category: this.state.category, category_value: this.state.categoryValue, sub_category: (this.state.subCategory?this.state.subCategory:undefined), sub_category_value: (this.state.subCategoryValue?this.state.subCategoryValue:undefined) };
+    }
+		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/playlist/" + encodeURIComponent(playlist) + "/add_media", [parameters])
+    .then((result) => {
+			StateStore.getState().NotificationManager.addNotification({
+				message: 'Add to stream stream ok',
+				level: 'info'
+			});
+    })
+    .fail(() => {
+			StateStore.getState().NotificationManager.addNotification({
+				message: 'Error adding to stream',
+				level: 'error'
+			});
+    });
+	}
+	
 	render() {
+		var streamList = [], playlist = [];
+		this.state.streamList.forEach((stream, index) => {
+			streamList.push(
+				<MenuItem key={index} onClick={() => this.addToStream(stream.name)}>
+					- {stream.display_name||"no name"}
+				</MenuItem>
+			);
+		});
+		this.state.playlist.forEach((pl, index) => {
+			playlist.push(
+				<MenuItem key={index} onClick={() => this.addToPlaylist(pl.name)}>
+					- {pl.name}
+				</MenuItem>
+			);
+		});
     return (
 			<div>
 				<ButtonGroup className="hidden-xs">
@@ -108,14 +216,12 @@ class ElementButtons extends Component {
 						<MenuItem>
 							Add to stream
 						</MenuItem>
-						<MenuItem>- stream 1</MenuItem>
-						<MenuItem>- stream 2</MenuItem>
+						{streamList}
 						<MenuItem divider />
 						<MenuItem>
 							Add to playlist
 						</MenuItem>
-						<MenuItem>- playlist 1</MenuItem>
-						<MenuItem>- playlist 2</MenuItem>
+						{playlist}
 					</DropdownButton>
 				</ButtonGroup>
 				<DropdownButton className="visible-xs" id={"xs-manage"-this.state.element.name} pullRight title={
@@ -136,17 +242,15 @@ class ElementButtons extends Component {
 						<FontAwesome name={"plus"} />&nbsp;
 						Add to stream
 					</MenuItem>
-					<MenuItem>- stream 1</MenuItem>
-					<MenuItem>- stream 2</MenuItem>
+					{streamList}
 					<MenuItem divider />
 					<MenuItem>
 						<FontAwesome name={"plus"} />&nbsp;
 						Add to playlist
 					</MenuItem>
-					<MenuItem>- playlist 1</MenuItem>
-					<MenuItem>- playlist 2</MenuItem>
+					{playlist}
 				</DropdownButton>
-        <ModalEditStream show={this.state.show} dataSource={this.state.dataSource} element={this.state.element} path={this.state.path} onCloseCb={this.onCloseModal} />
+        <ModalEditStream show={this.state.show} dataSource={this.state.dataSource} element={this.state.element} path={this.state.path} category={this.state.category} categoryValue={this.state.categoryValue} subCategory={this.state.subCategory} subCategoryValue={this.state.subCategoryValue} onCloseCb={this.runPlayElementAdvanced} />
 			</div>
     );
 	}

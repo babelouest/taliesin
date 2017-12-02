@@ -12,6 +12,14 @@ class WebradioNext extends Component {
 		};
     this.loadCover();
 		
+		StateStore.subscribe(() => {
+			var reduxState = StateStore.getState();
+			if (reduxState.lastAction === "showFullScreen") {
+				if (!StateStore.getState().showFullScreen) {
+					this.loadCover();
+				}
+			}
+		});
 	}
 	
 	componentWillUnmount() {

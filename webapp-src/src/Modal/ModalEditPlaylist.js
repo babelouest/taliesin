@@ -9,7 +9,7 @@ class ModalAddPlaylist extends Component {
 		this.state = {
 			show: props.show, 
       add: props.add,
-			playlist: props.add?{name: "", description: "", cover: "", scope: "me"}:props.playlist, 
+			playlist: props.add?{name: "", description: "", cover: undefined, scope: "me"}:props.playlist, 
 			iconPath: "",
 			onCloseCb: props.onCloseCb
 		};
@@ -26,14 +26,17 @@ class ModalAddPlaylist extends Component {
 		this.setState({
 			show: nextProps.show, 
       add: nextProps.add,
-			playlist: nextProps.add?{name: "", description: "", cover: "", scope: "me"}:nextProps.playlist, 
+			playlist: nextProps.add?{name: "", description: "", cover: undefined, scope: "me"}:nextProps.playlist, 
 			iconPath: "",
 			onCloseCb: nextProps.onCloseCb,
 			nameValidateMessage: ""
 		});
 	}
 
-  close(result) {
+  close(result, e) {
+		if (e) {
+			e.preventDefault();
+		}
 		if (result && this.state.onCloseCb) {
 			this.setState({ show: false }, () => {
         this.state.onCloseCb(true, this.state.playlist, this.state.add);
@@ -156,7 +159,7 @@ class ModalAddPlaylist extends Component {
 				</Modal.Header>
 
 				<Modal.Body>
-					<form>
+					<form onSubmit={(e) => {this.close(true, e)}}>
 						<FormGroup
 							controlId="formName"
 							validationState={this.getNameValidationState()}

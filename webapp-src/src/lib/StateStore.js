@@ -73,8 +73,10 @@ function stateStoreManager(state = defaultState, action) {
 			break;
 		case "setDataSource":
 			state.dataSourceList = action.dataSourceList
-			state.profile.dataSource = action.currentDataSource;
-			state.profile.path = "";
+			if (action.currentDataSource) {
+				state.profile.dataSource = action.currentDataSource;
+				state.profile.path = "";
+			}
 			break;
 		case "setCurrentDataSource":
 			state.profile.dataSource = action.currentDataSource;
@@ -89,6 +91,8 @@ function stateStoreManager(state = defaultState, action) {
 			} else {
         state.profile.jukeboxIndex = -1;
       }
+			state.profile.stream = action.stream;
+			break;
 		case "loadStream":
 			state.profile.stream = action.stream;
 			break;

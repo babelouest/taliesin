@@ -16,7 +16,10 @@ class ModalEdit extends Component {
 		this.setState({show: nextProps.show, title: nextProps.title, message: nextProps.message, value: nextProps.value, cb: nextProps.onCloseCb});
 	}
 
-  close(result) {
+  close(result, e) {
+		if (e) {
+			e.preventDefault();
+		}
     this.setState({ show: false }, () => {
 			this.state.cb && this.state.cb(result?this.state.value:false);
 		});
@@ -42,7 +45,7 @@ class ModalEdit extends Component {
 				</Modal.Header>
 
 				<Modal.Body>
-					<form>
+					<form onSubmit={(e) => {this.close(true, e)}}>
 						<FormGroup
 							controlId="formBasicText"
 							validationState={this.getValidationState()}

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Row, Col, Image, Button } from 'react-bootstrap';
+import { Row, Col, Image, Button, ButtonGroup, Label } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
 import VisibilitySensor from 'react-visibility-sensor';
 import StateStore from '../lib/StateStore';
@@ -13,6 +13,7 @@ class MediaRow extends Component {
       stream: props.stream,
 			media: props.media, 
       index: props.index,
+			elements: props.elements,
 			date: props.date,
 			imgThumbBlob: false,
 			coverLoaded: false,
@@ -24,6 +25,10 @@ class MediaRow extends Component {
 		this.loadCover = this.loadCover.bind(this);
 		this.handleOpenModal = this.handleOpenModal.bind(this);
 		this.handlePlayNow = this.handlePlayNow.bind(this);
+		this.handleRemove = this.handleRemove.bind(this);
+		this.handleSelectDataSource = this.handleSelectDataSource.bind(this);
+		this.handleSelectArtist = this.handleSelectArtist.bind(this);
+		this.handleSelectAlbum = this.handleSelectAlbum.bind(this);
 		this.onChangeVisibility = this.onChangeVisibility.bind(this);
 	}
 	
@@ -32,6 +37,7 @@ class MediaRow extends Component {
       stream: nextProps.stream,
 			media: nextProps.media,
       index: nextProps.index,
+			elements: nextProps.elements,
 			date: nextProps.date,
 			imgThumbBlob: false,
 			coverLoaded: false,
@@ -39,6 +45,14 @@ class MediaRow extends Component {
 			modalTitle: this.buildTitle(nextProps.media),
 			visible: false
 		});
+	}
+	
+	componentDidMount() { 
+		this._ismounted = true;
+	}
+
+	componentWillUnmount() {
+		this._ismounted = false;
 	}
 	
 	buildTitle(media, index, total) {
@@ -62,7 +76,7 @@ class MediaRow extends Component {
 	}
   
 	loadCover() {
-		if (this.state.media.data_source && this.state.media.path) {
+		if (this.state.media.data_source && this.state.media.path && this._ismounted) {
 			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.media.data_source) + "/browse/path/" + encodeURI(this.state.media.path).replace(/#/g, "%23").replace(/\+/g, "%2B") + "?cover&thumbnail&base64")
 			.then((result) => {
 				this.setState({imgThumbBlob: result, coverLoaded: true});
@@ -74,7 +88,9 @@ class MediaRow extends Component {
 	}
 	
   handleOpenModal() {
-    this.setState({modalShow: true});
+		if (this._ismounted) {
+			this.setState({modalShow: true});
+		}
   }
 	
 	handlePlayNow() {
@@ -86,9 +102,42 @@ class MediaRow extends Component {
 			index: this.state.index
 		});
 	}
+	
+	handleRemove() {
+		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream) + "/manage", {command: "remove_list", parameters: {index: this.state.index}})
+		.then(() => {
+			var list = StateStore.getState().streamList;
+			for (var i in list) {
+				if (list[i].name === this.state.stream) {
+					list[i].elements--;
+					StateStore.dispatch({type: "setStreamList", streamList: list});
+					StateStore.dispatch({type: "setCurrentBrowse", browse: "showStreamMediaList"});
+					break;
+				}
+			}
+		});
+	}
+	
+	handleSelectDataSource() {
+		StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: StateStore.getState().dataSourceList.find((ds) => {return ds.name === this.state.media.data_source})});
+		StateStore.dispatch({type: "setCurrentBrowse", browse: "path"});
+		StateStore.dispatch({type: "setCurrentPath", path: ""});
+	}
+	
+	handleSelectArtist() {
+		StateStore.dispatch({type: "setCurrentBrowse", browse: "category"});
+		StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: StateStore.getState().dataSourceList.find((ds) => {return ds.name === this.state.media.data_source})});
+		StateStore.dispatch({type: "setCurrentCategory", category: "artist", categoryValue: (this.state.media.tags.artist || this.state.media.tags.album_artist)});
+	}
+	
+	handleSelectAlbum() {
+		StateStore.dispatch({type: "setCurrentBrowse", browse: "category"});
+		StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: StateStore.getState().dataSourceList.find((ds) => {return ds.name === this.state.media.data_source})});
+		StateStore.dispatch({type: "setCurrentCategory", category: "album", categoryValue: this.state.media.tags.album});
+	}
   
 	onChangeVisibility(isVisible) {
-    this.setState({visible: isVisible}, () => {
+		this.setState({visible: isVisible}, () => {
 			if (isVisible && !this.state.coverLoaded) {
 				this.loadCover();	
 			}
@@ -96,7 +145,7 @@ class MediaRow extends Component {
 	}
 	
 	render() {
-		var artist, album, name, date, cover, playButton;
+		var artist, album, name, date, cover, firstCol;
 		if (this.state.media.tags) {
 			artist = this.state.media.tags.artist || this.state.media.tags.album_artist;
 			album = this.state.media.tags.album;
@@ -106,8 +155,8 @@ class MediaRow extends Component {
 		}
 		if (this.state.date) {
 			date = 
-			<Col md={2}>
-				{(new Date(this.state.date * 1000)).toLocaleString()}
+			<Col md={2} sm={12} xs={12}>
+				<Label className="visible-xs visible-sm">Date</Label> {(new Date(this.state.date * 1000)).toLocaleString()}
 			</Col>;
 		}
 		if (this.state.imgThumbBlob) {
@@ -115,13 +164,19 @@ class MediaRow extends Component {
 		} else {
 			cover = <Image src="/images/album-128.png" alt={this.state.media.name} className="cover-image-thumb" responsive />
 		}
-		if (!this.state.stream.webradio) {
-			playButton =
-			<Col md={1}>
-				<Button title="play now" onClick={this.handlePlayNow}>
-					<FontAwesome name="play" />
-				</Button>
-			</Col>;
+		if (this.state.stream && !this.state.stream.webradio) {
+			firstCol =
+				<Col md={2} sm={12} xs={12}>
+					<ButtonGroup>
+						<Button title="Play now" onClick={this.handlePlayNow}>
+							<FontAwesome name="play" />
+						</Button>
+						<Button title="Remove from list" onClick={this.handleRemove}>
+							<FontAwesome name="trash" />
+						</Button>
+					</ButtonGroup>
+					&nbsp;&nbsp;{(this.state.elements>=10&&this.state.index<9?"0":"") + (this.state.index + 1) + "/" + this.state.elements}
+				</Col>;
 		}
 		return (
 			<div>
@@ -130,22 +185,22 @@ class MediaRow extends Component {
 						<hr/>
 					</Col>
 				</Row>
-				<Row>
+				<Row className="row-media">
 					{date}
-					{playButton}
-					<Col md={2}>
-						<span>{this.state.media.data_source}</span>
+					{firstCol}
+					<Col md={2} sm={12} xs={12}>
+						<Label className="visible-xs visible-sm">Data Source</Label><span><a role="button" onClick={this.handleSelectDataSource}>{this.state.media.data_source}</a></span>
 					</Col>
-					<Col md={2}>
-						<span>{artist}</span>
+					<Col md={2} sm={12} xs={12}>
+						<Label className="visible-xs visible-sm">Artist</Label><span><a role="button" onClick={this.handleSelectArtist}>{artist}</a></span>
 					</Col>
-					<Col md={2}>
-						<span>{album}</span>
+					<Col md={2} sm={12} xs={12}>
+						<Label className="visible-xs visible-sm">Album</Label><span><a role="button" onClick={this.handleSelectAlbum}>{album}</a></span>
 					</Col>
-					<Col md={2}>
-						<a role="button" onClick={this.handleOpenModal}>{name}</a>
+					<Col md={2} sm={12} xs={12}>
+						<Label className="visible-xs visible-sm">Title</Label><a role="button" onClick={this.handleOpenModal}>{name}</a>
 					</Col>
-					<Col md={2}>
+					<Col md={2} sm={12} xs={12}>
 						<VisibilitySensor
 							scrollCheck
 							scrollThrottle={100}

@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Modal, Row, Col, Image, Button } from 'react-bootstrap';
+import FontAwesome from 'react-fontawesome';
 import StateStore from '../lib/StateStore';
 
 class ModalMedia extends Component {
@@ -10,10 +11,13 @@ class ModalMedia extends Component {
 		
 		this.onCloseModal = this.onCloseModal.bind(this);
 		this.getMediaCover = this.getMediaCover.bind(this);
+		this.handleSelectDataSource = this.handleSelectDataSource.bind(this);
 		this.handleSelectArtist = this.handleSelectArtist.bind(this);
 		this.handleSelectAlbum = this.handleSelectAlbum.bind(this);
 		this.handleSelectYear = this.handleSelectYear.bind(this);
 		this.handleSelectGenre = this.handleSelectGenre.bind(this);
+		this.onPlayNow = this.onPlayNow.bind(this);
+		this.runPlayNow = this.runPlayNow.bind(this);
 		
 		this.getMediaCover();
 	}
@@ -28,6 +32,56 @@ class ModalMedia extends Component {
     this.setState({show: false});
   }
 	
+	onPlayNow() {
+		var streamList = StateStore.getState().streamList, curStream = streamList.find((stream) => {return stream.display_name === (StateStore.getState().currentPlayer||"local")});
+		if (curStream) {
+			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(curStream.name) + "/manage", {command: "stop"})
+			.then(() => {
+				var streamList = StateStore.getState().streamList;
+				for (var i in streamList) {
+					if (streamList[i].name === curStream.name) {
+						streamList.splice(i, 1);
+						break;
+					}
+				}
+				StateStore.dispatch({type: "setStreamList", streamList: streamList});
+				if (StateStore.getState().profile.stream.name === curStream.name) {
+					StateStore.dispatch({type: "loadStream", stream: false});
+				}
+				this.runPlayNow();
+			})
+			.fail(() => {
+				StateStore.getState().NotificationManager.addNotification({
+					message: 'Error delete stream',
+					level: 'error'
+				});
+			});
+		} else {
+			this.runPlayNow();
+		}
+	}
+	
+	runPlayNow() {
+    StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.media.data_source) + "/browse/path/" + encodeURI(this.state.media.path).replace(/#/g, "%23") + "?jukebox&recursive&name=" + (StateStore.getState().currentPlayer||"local"))
+    .then((result) => {
+			var streamList = StateStore.getState().streamList;
+      streamList.push(result);
+      StateStore.dispatch({type: "setStreamList", streamList: streamList});
+      StateStore.dispatch({type: "loadStreamAndPlay", stream: result, index: 0});
+			StateStore.getState().NotificationManager.addNotification({
+				message: 'Play new stream',
+				level: 'info'
+			});
+			this.setState({show: false});
+    })
+    .fail(() => {
+			StateStore.getState().NotificationManager.addNotification({
+				message: 'Error Play',
+				level: 'error'
+			});
+    });
+	}
+	
 	getMediaCover() {
 		this.state.media && StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.media.data_source) + "/browse/path/" + encodeURI(this.state.media.path).replace(/#/g, "%23").replace(/\+/g, "%2B") + "?cover&base64")
 		.then((result) => {
@@ -35,6 +89,14 @@ class ModalMedia extends Component {
 		})
 		.fail(() => {
 			this.setState({imgBlob: false});
+		});
+	}
+	
+	handleSelectDataSource() {
+		this.setState({show: false}, () => {
+			StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: StateStore.getState().dataSourceList.find((ds) => {return ds.name === this.state.media.data_source})});
+			StateStore.dispatch({type: "setCurrentBrowse", browse: "path"});
+			StateStore.dispatch({type: "setCurrentPath", path: ""});
 		});
 	}
 	
@@ -75,7 +137,7 @@ class ModalMedia extends Component {
 		var mediaImage = "";
 		var separator = "";
 		if (this.state.media) {
-			if (this.state.media.tags.title) {
+			if (this.state.media.tags && this.state.media.tags.title) {
 				metadata.push(
 					<Row key={0}>
 						<Col xs={6}>
@@ -86,7 +148,7 @@ class ModalMedia extends Component {
 						</Col>
 					</Row>);
 			}
-			if (this.state.media.tags.artist) {
+			if (this.state.media.tags && this.state.media.tags.artist) {
 				metadata.push(
 					<Row key={1}>
 						<Col xs={6}>
@@ -97,7 +159,7 @@ class ModalMedia extends Component {
 						</Col>
 					</Row>);
 			}
-			if (this.state.media.tags.album) {
+			if (this.state.media.tags && this.state.media.tags.album) {
 				metadata.push(
 					<Row key={2}>
 						<Col xs={6}>
@@ -108,7 +170,7 @@ class ModalMedia extends Component {
 						</Col>
 					</Row>);
 			}
-			if (this.state.media.tags.date) {
+			if (this.state.media.tags && this.state.media.tags.date) {
 				metadata.push(
 					<Row key={3}>
 						<Col xs={6}>
@@ -119,7 +181,7 @@ class ModalMedia extends Component {
 						</Col>
 					</Row>);
 			}
-			if (this.state.media.tags.genre) {
+			if (this.state.media.tags && this.state.media.tags.genre) {
 				metadata.push(
 					<Row key={4}>
 						<Col xs={6}>
@@ -139,7 +201,12 @@ class ModalMedia extends Component {
 			return (
 					<Modal show={this.state.show} onHide={this.onCloseModal}>
 						<Modal.Header closeButton>
-							<Modal.Title>{this.state.title}</Modal.Title>
+							<Modal.Title>
+								<Button onClick={this.onPlayNow} className="btn" title="Play now">
+									<FontAwesome name={"play"} />
+								</Button>&nbsp;
+								{this.state.title}
+							</Modal.Title>
 						</Modal.Header>
 						<Modal.Body>
 							{metadata}
@@ -149,7 +216,7 @@ class ModalMedia extends Component {
 									<label>Data Source</label>
 								</Col>
 								<Col xs={6}>
-									<span>{this.state.media.data_source}</span>
+									<span><a role="button" onClick={this.handleSelectDataSource}>{this.state.media.data_source}</a></span>
 								</Col>
 							</Row>
 							<Row>

@@ -43,6 +43,10 @@ class TopMenu extends Component {
 		StateStore.dispatch({type: "setCurrentPath", path: ""});
 	}
 	
+	handleBrowseDashboard() {
+		StateStore.dispatch({type: "setCurrentBrowse", browse: "dashboard"});
+	}
+	
 	handleBrowseRecent() {
 		StateStore.dispatch({type: "setCurrentBrowse", browse: "recent"});
 	}
@@ -69,7 +73,7 @@ class TopMenu extends Component {
 						<Nav>
               <DataSourceList list={this.state.dataSourceList} dataSource={this.state.dataSource}/>
 							<NavDropdown title="Browse" id="nav-categories">
-								<MenuItem onClick={() => {}} className={this.state.browse==="dashboard"?"bg-success":""}>Dashboard</MenuItem>
+								<MenuItem onClick={() => this.handleBrowseDashboard()} className={this.state.browse==="dashboard"?"bg-success":""}>Dashboard</MenuItem>
 								<MenuItem onClick={() => this.handleBrowsePath()} className={this.state.browse==="file"?"bg-success":""}>Files</MenuItem>
 								<MenuItem onClick={() => this.handleBrowsePlylist()} className={this.state.browse==="playlist"?"bg-success":""}>Playlists</MenuItem>
 								<MenuItem onClick={() => this.handleBrowseRecent()} className={this.state.browse==="recent"?"bg-success":""}>Recent media</MenuItem>

@@ -51,7 +51,7 @@ class ElementPathList extends Component {
 			element = <a role="button" onClick={() => this.handleDetailsFile(this.state.element.name)}>{this.state.element.name}</a>;
 		}
 		return (
-			<Row>
+			<Row className="row-media">
 				<Col md={8} sm={8} xs={6}>
 					{element}
 				</Col>

@@ -20,6 +20,7 @@ class ManageStream extends Component {
 			curStream: false
 		};
 
+		this.playStream = this.playStream.bind(this);
 		this.deleteStream = this.deleteStream.bind(this);
 		this.renameStream = this.renameStream.bind(this);
 		this.saveStream = this.saveStream.bind(this);
@@ -45,6 +46,10 @@ class ManageStream extends Component {
 		});
 	}
 
+	playStream(stream) {
+		StateStore.dispatch({type: "loadStreamAndPlay", stream: stream, index: 0});
+	}
+	
   deleteStream(stream) {
 		this.setState({modalConfirmShow: true, modalTitle: "Close and remove stream", modalMessage: ("Are you sure you want to close and remove the stream '" + (stream.display_name||"no name") + "'"), curStream: stream});
   }
@@ -131,6 +136,8 @@ class ManageStream extends Component {
 				});
 				this.setState({modalConfirmShow: false});
 			});
+		} else {
+			this.setState({modalConfirmShow: false});
 		}
 	}
 	
@@ -159,6 +166,8 @@ class ManageStream extends Component {
 				});
 				this.setState({modalRenameShow: false});
 			});
+		} else {
+			this.setState({modalRenameShow: false});
 		}
 	}
   
@@ -179,6 +188,8 @@ class ManageStream extends Component {
 				});
 				this.setState({modalSaveShow: false});
 			});
+		} else {
+			this.setState({modalSaveShow: false});
 		}
 	}
 	
@@ -230,7 +241,10 @@ class ManageStream extends Component {
             {(stream.clients&&stream.clients.length)||0}
           </td>
           <td className="text-center">
-            <ButtonGroup className="hidden-xs">
+            <ButtonGroup className="hidden-xs hidden-sm">
+              <Button title="Play now" onClick={() => this.playStream(stream)}>
+                <FontAwesome name={"play"} />
+              </Button>
               <Button title="Rename" onClick={() => this.renameStream(stream)}>
                 <FontAwesome name={"pencil"} />
               </Button>
@@ -250,9 +264,13 @@ class ManageStream extends Component {
                 <FontAwesome name={"trash"} />
               </Button>
             </ButtonGroup>
-						<DropdownButton className="visible-xs" id={"xs-manage"-stream.name} pullRight title={
+						<DropdownButton className="visible-xs visible-sm" id={"xs-manage"-stream.name} pullRight title={
 							<span><i className="fa fa-cog"></i></span>
 						}>
+							<MenuItem onClick={() => this.playStream(stream)}>
+								<FontAwesome name={"play"} />&nbsp;
+								Play now
+							</MenuItem>
 							<MenuItem onClick={() => this.renameStream(stream)}>
 								<FontAwesome name={"pencil"} />&nbsp;
 								Rename

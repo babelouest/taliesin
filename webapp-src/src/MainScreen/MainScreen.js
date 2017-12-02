@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Grid } from 'react-bootstrap';
+import Dashboard from './Dashboard';
 import BrowsePath from './BrowsePath';
 import BrowsePlaylist from './BrowsePlaylist';
 import BrowseRecent from './BrowseRecent';
@@ -25,7 +26,8 @@ class MainScreen extends Component {
 			categoryValue: false,
 			subCategory: false,
 			subCategoryValue: false,
-      imgThumbBlob: false
+      imgThumbBlob: false,
+			showMainScreen: true
     };
 		
 		StateStore.subscribe(() => {
@@ -40,72 +42,89 @@ class MainScreen extends Component {
 				this.setState({category: reduxState.profile.category, categoryValue: reduxState.profile.categoryValue, subCategory: reduxState.profile.subCategory, subCategoryValue: reduxState.profile.subCategoryValue});
 			} else if (reduxState.lastAction === "setCurrentView") {
 				this.setState({view: reduxState.profile.view});
+			} else if (StateStore.getState().lastAction === "showFullScreen") {
+				this.setState({showMainScreen: !StateStore.getState().showFullScreen});
 			}
 		});
 	}
 	
 	render() {
-		if (this.state.browse === "path") {
-			return (
-				<Grid className="main-screen">
-          <BrowseHeaderPath dataSource={this.state.dataSource.name} path={this.state.path} />
-					<BrowsePath dataSource={this.state.dataSource.name} path={this.state.path} view={this.state.view} />
-				</Grid>
-			);
-		} else if (this.state.browse === "playlist") {
-			return (
-				<Grid className="main-screen">
-					<BrowsePlaylist view={this.state.view} />
-				</Grid>
-			);
-		} else if (this.state.browse === "recent") {
-			return (
-				<Grid className="main-screen">
-					<BrowseRecent view={this.state.view} />
-				</Grid>
-			);
-		} else if (this.state.browse === "category") {
-			return (
-				<Grid className="main-screen">
-          <BrowseHeaderCategory dataSource={this.state.dataSource.name} category={this.state.category} categoryValue={this.state.categoryValue} subCategory={this.state.subCategory} subCategoryValue={this.state.subCategoryValue} />
-					<BrowseCategory dataSource={this.state.dataSource.name} category={this.state.category} categoryValue={this.state.categoryValue} subCategory={this.state.subCategory} subCategoryValue={this.state.subCategoryValue} view={this.state.view} />
-				</Grid>
-			);
-		} else if (this.state.browse === "managePlayer") {
-			return (
-				<Grid className="main-screen">
-					<ManagePlayer />
-				</Grid>
-			);
-		} else if (this.state.browse === "manageStream") {
-			return (
-				<Grid className="main-screen">
-					<ManageStream />
-				</Grid>
-			);
-		} else if (this.state.browse === "manageDataSource") {
-			return (
-				<Grid className="main-screen">
-					<ManageDataSource />
-				</Grid>
-			);
-		} else if (this.state.browse === "streamDetails") {
-			return (
-				<Grid className="main-screen">
-					<StreamDetails stream={StateStore.getState().profile.streamDetails} />
-				</Grid>
-			);
-		} else if (this.state.browse === "showStreamMediaList") {
-			return (
-				<Grid className="main-screen">
-					<StreamMediaList stream={StateStore.getState().profile.stream} />
-				</Grid>
-			);
+		if (this.state.showMainScreen) {
+			if (this.state.browse === "path") {
+				return (
+					<Grid className="main-screen">
+						<h2>Files</h2>
+						<BrowseHeaderPath dataSource={this.state.dataSource.name} path={this.state.path} />
+						<BrowsePath dataSource={this.state.dataSource.name} path={this.state.path} view={this.state.view} />
+					</Grid>
+				);
+			} else if (this.state.browse === "playlist") {
+				return (
+					<Grid className="main-screen">
+						<h2>Playlists</h2>
+						<BrowsePlaylist view={this.state.view} />
+					</Grid>
+				);
+			} else if (this.state.browse === "recent") {
+				return (
+					<Grid className="main-screen">
+						<h2>Recently added</h2>
+						<BrowseRecent view={this.state.view} />
+					</Grid>
+				);
+			} else if (this.state.browse === "category") {
+				return (
+					<Grid className="main-screen">
+						<h2>Browse category</h2>
+						<BrowseHeaderCategory dataSource={this.state.dataSource.name} category={this.state.category} categoryValue={this.state.categoryValue} subCategory={this.state.subCategory} subCategoryValue={this.state.subCategoryValue} />
+						<BrowseCategory dataSource={this.state.dataSource.name} category={this.state.category} categoryValue={this.state.categoryValue} subCategory={this.state.subCategory} subCategoryValue={this.state.subCategoryValue} view={this.state.view} />
+					</Grid>
+				);
+			} else if (this.state.browse === "managePlayer") {
+				return (
+					<Grid className="main-screen">
+						<h2>External players</h2>
+						<ManagePlayer />
+					</Grid>
+				);
+			} else if (this.state.browse === "manageStream") {
+				return (
+					<Grid className="main-screen">
+						<h2>Streams</h2>
+						<ManageStream />
+					</Grid>
+				);
+			} else if (this.state.browse === "manageDataSource") {
+				return (
+					<Grid className="main-screen">
+						<h2>Data Sources</h2>
+						<ManageDataSource />
+					</Grid>
+				);
+			} else if (this.state.browse === "streamDetails") {
+				return (
+					<Grid className="main-screen">
+						<h2>Stream</h2>
+						<StreamDetails stream={StateStore.getState().profile.streamDetails} />
+					</Grid>
+				);
+			} else if (this.state.browse === "showStreamMediaList") {
+				return (
+					<Grid className="main-screen">
+						<h2>Stream media list</h2>
+						<StreamMediaList stream={StateStore.getState().profile.stream} />
+					</Grid>
+				);
+			} else {
+				return (
+					<Grid className="main-screen">
+						<Dashboard />
+					</Grid>
+				);
+			}
 		} else {
-			return (
-				<Grid className="main-screen">
-					<span>Taliesin</span>
-				</Grid>
+			return  (
+				<div></div>
 			);
 		}
 	}

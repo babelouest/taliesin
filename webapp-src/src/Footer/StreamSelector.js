@@ -19,11 +19,12 @@ class StreamSelector extends Component {
 	
 	handleDetailsStream() {
     StateStore.dispatch({type: "setStreamDetails", stream: this.state.selectedStream});
+    StateStore.dispatch({type: "loadStream", stream: this.state.selectedStream});
     StateStore.dispatch({type: "setCurrentBrowse", browse: "streamDetails"});
 	}
   
   handleLoadStream() {
-    StateStore.dispatch({type: "loadStream", stream: this.state.selectedStream});
+    StateStore.dispatch({type: "loadStreamAndPlay", stream: this.state.selectedStream, index: 0});
   }
 	
 	handleManageStreams() {
@@ -59,8 +60,8 @@ class StreamSelector extends Component {
 						<MenuItem divider />
 						<MenuItem onClick={this.handleManageStreams}>Manage Streams</MenuItem>
 					</DropdownButton>
-					<Button title="Load" onClick={this.handleLoadStream}>
-						<FontAwesome name={"arrow-circle-right"} />
+					<Button title="Play now" onClick={this.handleLoadStream}>
+						<FontAwesome name={"play"} />
 					</Button>
 					<Button title="Details" onClick={this.handleDetailsStream}>
 						<FontAwesome name={"eye"} />

@@ -11,6 +11,10 @@ class ModalEditStream extends Component {
 			dataSource: props.dataSource, 
 			path: props.path,
 			element: props.element,
+			category: props.category, 
+			categoryValue: props.categoryValue, 
+			subCategory: props.subCategory, 
+			subCategoryValue: props.subCategoryValue, 
 			playlist: props.playlist,
 			onCloseCb: props.onCloseCb,
 			recursive: true,
@@ -44,6 +48,10 @@ class ModalEditStream extends Component {
 			dataSource: nextProps.dataSource, 
 			path: nextProps.path,
 			element: nextProps.element,
+			category: nextProps.category, 
+			categoryValue: nextProps.categoryValue, 
+			subCategory: nextProps.subCategory, 
+			subCategoryValue: nextProps.subCategoryValue, 
 			playlist: nextProps.playlist,
 			onCloseCb: nextProps.onCloseCb,
 			recursive: true,
@@ -61,7 +69,10 @@ class ModalEditStream extends Component {
 		});
 	}
 
-  close(result) {
+  close(result, e) {
+		if (e) {
+			e.preventDefault();
+		}
 		if (result) {
 			this.state.onCloseCb({
 				dataSource: this.state.dataSource, 
@@ -150,6 +161,8 @@ class ModalEditStream extends Component {
 						</Col>
 					</Row>
 				</div>;
+		}
+		if (this.state.path) {
 			path =
 				<div>
 					<Row>
@@ -158,6 +171,27 @@ class ModalEditStream extends Component {
 						</Col>
 						<Col md={8}>
 							{this.state.dataSource + " - " + this.state.path}
+						</Col>
+					</Row>
+					<Row>
+						<Col md={12}>
+							<hr/>
+						</Col>
+					</Row>
+				</div>;
+		} else {
+			var categoryPath = this.state.category + " / " + this.state.categoryValue;
+			if (this.state.subCategory) {
+				categoryPath += " / " + this.state.subCategory + " / " + this.state.subCategoryValue
+			}
+			path =
+				<div>
+					<Row>
+						<Col md={4}>
+							<Label>Category</Label>
+						</Col>
+						<Col md={8}>
+							{categoryPath}
 						</Col>
 					</Row>
 					<Row>
@@ -215,7 +249,7 @@ class ModalEditStream extends Component {
 					<Modal.Title>Create Stream</Modal.Title>
 				</Modal.Header>
 				<Modal.Body>
-					<form>
+					<form onSubmit={(e) => {this.close(true, e)}}>
 						{playlist}
 						{path}
 						{recursive}

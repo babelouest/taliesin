@@ -40,7 +40,7 @@ class StreamMediaList extends Component {
 		.then((result) => {
 			var list = [];
 			result.forEach((media, index) => {
-				list.push(<MediaRow stream={this.state.stream.webradio?false:this.state.stream.name} media={media} index={index} key={index} />);
+				list.push(<MediaRow stream={this.state.stream.webradio?false:this.state.stream.name} elements={this.state.stream.elements} media={media} index={index} key={index} />);
 			});
 			this.setState({list: list, listLoaded: true});
 		});
@@ -80,8 +80,7 @@ class StreamMediaList extends Component {
 					</Col>
 				</Row>
 				<Row className="hidden-xs">
-					<Col md={1}>
-						<Label>Play now</Label>
+					<Col md={2}>
 					</Col>
 					<Col md={2}>
 						<Label>Data source</Label>

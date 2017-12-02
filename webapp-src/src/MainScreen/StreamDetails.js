@@ -236,7 +236,7 @@ class StreamDetails extends Component {
 			});
 			this.setState({historyList: historyList, historyLoaded: true});
 		})
-		.fail(() => {
+		.fail((error) => {
 			StateStore.getState().NotificationManager.addNotification({
 				message: 'Error getting history',
 				level: 'error'
@@ -277,7 +277,7 @@ class StreamDetails extends Component {
 			var mediaList = [];
 			result.forEach((media, index) => {
 				mediaList.push(
-					<MediaRow stream={this.state.stream.webradio?false:this.state.stream.name} media={media} index={index} key={index} />
+					<MediaRow stream={this.state.stream.webradio?false:this.state.stream.name} elements={this.state.stream.elements} media={media} index={index} key={index} />
 				);
 			});
 			this.setState({mediaList: mediaList, mediaListLoaded: true});
@@ -312,7 +312,7 @@ class StreamDetails extends Component {
 	}
 	
   render() {
-		var streamRandom = "", playlistAttached = "", history = "", clientList = [];
+		var streamRandom, playlistAttached, history, clientList = [], playNowTitle;
 		if (this.state.stream.webradio) {
 			if (this.state.stream.random) {
 				streamRandom = 
@@ -434,6 +434,10 @@ class StreamDetails extends Component {
 					{this.state.historyList}
 					{this.state.historyLoaded?"":<FontAwesome name="spinner" spin />}
 				</Panel>
+		} else {
+			playNowTitle = 
+				<Col md={2}>
+				</Col>
 		}
 		return (
 			<div>
@@ -441,56 +445,56 @@ class StreamDetails extends Component {
 					<Col md={12}>
 						<a href={this.state.playExternalAnchor} style={{display: "none"}} id="play-external-anchor" download={(this.state.stream.display_name||"no name")+".m3u"}>External</a>
 						<ButtonGroup className="hidden-xs">
-							<Button title="Rename" onClick={() => this.renameStream()}>
+							<Button title="Rename" onClick={this.renameStream}>
 								<FontAwesome name={"pencil"} />
 							</Button>
-							<Button title="Save as playlist" onClick={() => this.saveStream()}>
+							<Button title="Save as playlist" onClick={this.saveStream}>
 								<FontAwesome name={"floppy-o"} />
 							</Button>
-							<Button title="Reload" onClick={() => this.reloadStream()}>
+							<Button title="Reload" onClick={this.reloadStream}>
 								<FontAwesome name={"exchange"} />
 							</Button>
-							<Button title="Reset URL" onClick={() => this.resetStream()}>
+							<Button title="Reset URL" onClick={this.resetStream}>
 								<FontAwesome name={"unlock-alt"} />
 							</Button>
-							<Button title="Close and delete" onClick={() => this.deleteStream()}>
+							<Button title="Close and delete" onClick={this.deleteStream}>
 								<FontAwesome name={"trash"} />
 							</Button>
-							<Button title="Play" onClick={() => this.playStream()}>
+							<Button title="Play" onClick={this.playStream}>
 								<FontAwesome name={"play"} />
 							</Button>
-							<Button title="Open in external player" onClick={() => this.playStreamExternal()}>
+							<Button title="Open in external player" onClick={this.playStreamExternal}>
 								<FontAwesome name={"external-link"} />
 							</Button>
 						</ButtonGroup>
-						<DropdownButton className="visible-xs" id={"xs-manage"-this.state.stream.name} pullRight title={
+						<DropdownButton className="visible-xs" id={"xs-manage"-this.state.stream.name} pullLeft title={
 							<span><i className="fa fa-cog"></i></span>
 						}>
-							<MenuItem onClick={() => this.renameStream()}>
+							<MenuItem onClick={this.renameStream}>
 								<FontAwesome name={"pencil"} />&nbsp;
 								Rename
 							</MenuItem>
-							<MenuItem onClick={() => this.saveStream()}>
+							<MenuItem onClick={this.saveStream}>
 								<FontAwesome name={"floppy-o"} />&nbsp;
 								Save as playlist
 							</MenuItem>
-							<MenuItem onClick={() => this.reloadStream()}>
+							<MenuItem onClick={this.reloadStream}>
 								<FontAwesome name={"exchange"} />&nbsp;
 								Reload
 							</MenuItem>
-							<MenuItem onClick={() => this.resetStream()}>
+							<MenuItem onClick={this.resetStream}>
 								<FontAwesome name={"unlock-alt"} />&nbsp;
 								Reset url
 							</MenuItem>
-							<MenuItem onClick={() => this.deleteStream()}>
+							<MenuItem onClick={this.deleteStream}>
 								<FontAwesome name={"trash"} />&nbsp;
 								Close and delete
 							</MenuItem>
-							<MenuItem onClick={() => this.playStream()}>
+							<MenuItem onClick={this.playStream}>
 								<FontAwesome name={"play"} />&nbsp;
 								Play
 							</MenuItem>
-							<MenuItem onClick={() => this.playStreamExternal()}>
+							<MenuItem onClick={this.playStreamExternal}>
 								<FontAwesome name={"external-link"} />&nbsp;
 								Open in external player
 							</MenuItem>
@@ -517,7 +521,7 @@ class StreamDetails extends Component {
 									URL name
 								</Label>
 							</Col>
-							<Col md={6} sm={6} xs={6}>
+							<Col md={6} sm={6} xs={6} className="large-label">
 								<span>
 									{this.state.stream.name}
 								</span>
@@ -616,9 +620,7 @@ class StreamDetails extends Component {
 							</Col>
 						</Row>
 						<Row className="hidden-xs">
-							<Col md={1}>
-								<Label>Play now</Label>
-							</Col>
+							{playNowTitle}
 							<Col md={2}>
 								<Label>Data source</Label>
 							</Col>

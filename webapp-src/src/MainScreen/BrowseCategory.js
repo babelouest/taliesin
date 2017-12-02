@@ -94,27 +94,22 @@ class BrowseCategory extends Component {
 		var index;
 		
 		if (this.state.loaded) {
-			if (this.state.view === "icon") {
-				for (index in currentElementList) {
-					if (index >= this.state.offset) {
+			for (index in currentElementList) {
+				if (index >= this.state.offset) {
+					var categoryValue = this.state.categoryValue?this.state.categoryValue:currentElementList[index].name;
+					var subCategoryValue = this.state.categoryValue?currentElementList[index].name:false;
+					if (this.state.view === "icon") {
 						currentList.push(
-							<ElementCategoryIcon key={index} dataSource={this.state.dataSource} category={this.state.category} categoryValue={this.state.categoryValue} subCategory={this.state.subCategory} subCategoryValue={this.state.subCategoryValue} element={currentElementList[index]} />
+							<ElementCategoryIcon key={index} dataSource={this.state.dataSource} category={this.state.category} categoryValue={categoryValue} subCategory={this.state.subCategory} subCategoryValue={subCategoryValue} element={currentElementList[index]} />
 						);
-					}
-					if (index > this.state.offset + this.state.limit) {
-						break;
+					} else {
+						currentList.push(
+							<ElementCategoryList key={index} dataSource={this.state.dataSource} category={this.state.category} categoryValue={categoryValue} subCategory={this.state.subCategory} subCategoryValue={subCategoryValue} element={currentElementList[index]} />
+						);
 					}
 				}
-			} else {
-				for (index in currentElementList) {
-					if (index >= this.state.offset) {
-						currentList.push(
-							<ElementCategoryList key={index} dataSource={this.state.dataSource} category={this.state.category} categoryValue={this.state.categoryValue} subCategory={this.state.subCategory} subCategoryValue={this.state.subCategoryValue} element={currentElementList[index]} />
-						);
-					}
-					if (index > this.state.offset + this.state.limit) {
-						break;
-					}
+				if (index > this.state.offset + this.state.limit) {
+					break;
 				}
 			}
 			return (

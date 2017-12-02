@@ -20,6 +20,17 @@ class ElementPathIcon extends Component {
 		this.setState({element: nextProps.element, dataSource: nextProps.dataSource, path: nextProps.path});
 	}
 	
+	componentDidMount() {
+		this._ismounted = true;
+		if (this.state.visible && !this.state.thumbLoaded) {
+			this.getThumbnail();	
+		}
+	}
+
+	componentWillUnmount() {
+		this._ismounted = false;
+	}
+	
 	handleChangePath(subPath) {
 		StateStore.dispatch({type: "setCurrentBrowse", browse: "path"});
 		StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: StateStore.getState().dataSourceList.find((ds) => {return ds.name === this.state.dataSource})});
@@ -30,7 +41,7 @@ class ElementPathIcon extends Component {
   }
 	
 	onChangeVisibility(isVisible) {
-    this.setState({visible: isVisible}, () => {
+		this.setState({visible: isVisible}, () => {
 			if (isVisible && !this.state.thumbLoaded) {
 				this.getThumbnail();	
 			}
@@ -38,16 +49,18 @@ class ElementPathIcon extends Component {
 	}
 	
 	getThumbnail() {
-		if (!this.state.thumb && (this.state.element.type === "audio" || this.state.element.type === "folder" || this.state.element.type === "image")) {
-			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/path/" + encodeURI(this.state.path).replace(/#/g, "%23").replace(/\+/g, "%2B") + "/" + this.state.element.name + "?cover&thumbnail&base64")
-			.then((result) => {
-				this.setState({thumb: result, thumbLoaded: true});
-			})
-			.fail(() => {
+		if (this._ismounted) {
+			if (!this.state.thumb && (this.state.element.type === "audio" || this.state.element.type === "folder" || this.state.element.type === "image")) {
+				StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/path/" + encodeURI(this.state.path).replace(/#/g, "%23").replace(/\+/g, "%2B") + "/" + this.state.element.name + "?cover&thumbnail&base64")
+				.then((result) => {
+					this.setState({thumb: result, thumbLoaded: true});
+				})
+				.fail(() => {
+					this.setState({thumb: false, thumbLoaded: true});
+				});
+			} else {
 				this.setState({thumb: false, thumbLoaded: true});
-			});
-		} else {
-			this.setState({thumb: false, thumbLoaded: true});
+			}
 		}
 	}
 	
@@ -55,10 +68,8 @@ class ElementPathIcon extends Component {
 		var icon = "";
 		if (!this.state.thumbLoaded) {
 			icon = 
-				<div>
+				<div className="text-center">
           <a role="button" onClick={() => this.handleChangePath(this.state.element.name)} title={this.state.element.name}>
-            <Image src="/images/unknown-128.png" alt={this.state.element.name} className="elementImage" responsive>
-            </Image>
             <FontAwesome name="spinner" spin />
             <div className="hideOverflow">
               <span>{this.state.element.name}</span>
@@ -174,7 +185,7 @@ class ElementPathIcon extends Component {
 					{icon}
 				</VisibilitySensor>
 				<div className="text-center">
-					<ElementButtons dataSource={this.state.dataSource} path={this.state.path} element={this.state.element}/>
+					<ElementButtons dataSource={this.state.dataSource} path={this.state.path + "/" + this.state.element.name} element={this.state.element}/>
 				</div>
 			</Col>
 		);

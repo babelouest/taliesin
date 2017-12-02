@@ -19,7 +19,6 @@ class ModalEditDataSource extends Component {
 		this.handleChangeDescription = this.handleChangeDescription.bind(this);
 		this.handleChangeScope = this.handleChangeScope.bind(this);
 		this.handleChangePath = this.handleChangePath.bind(this);
-		this.handleUploadIcon = this.handleUploadIcon.bind(this);
 		this.getNameValidationState = this.getNameValidationState.bind(this);
 	}
 	
@@ -34,7 +33,10 @@ class ModalEditDataSource extends Component {
 		});
 	}
 
-  close(result) {
+  close(result, e) {
+		if (e) {
+			e.preventDefault();
+		}
 		if (result && this.state.onCloseCb) {
 			this.state.onCloseCb(this.state.dataSource, this.state.add);
 		} else {
@@ -133,7 +135,7 @@ class ModalEditDataSource extends Component {
 				</Modal.Header>
 
 				<Modal.Body>
-					<form>
+					<form onSubmit={(e) => {this.close(true, e)}}>
 						<FormGroup
 							controlId="formName"
 							validationState={this.getNameValidationState()}

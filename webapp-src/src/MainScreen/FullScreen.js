@@ -22,14 +22,18 @@ class FullScreen extends Component {
 		};
 		
 		StateStore.subscribe(() => {
-			if (StateStore.getState().lastAction === "loadStream") {
-				this.setState({stream: StateStore.getState().profile.stream}, () => {this.loadMedia();});
-			} else if (StateStore.getState().lastAction === "setJukeboxIndex") {
-				this.setState({jukeboxIndex: StateStore.getState().profile.jukeboxIndex}, () => {this.loadMedia();});
-			} else if (StateStore.getState().lastAction === "setMediaNow") {
-				this.setState({media: StateStore.getState().profile.mediaNow}, () => {this.loadMedia();});
-			} else if (StateStore.getState().lastAction === "showFullScreen") {
-				this.setState({show: StateStore.getState().showFullScreen}, () => {this.loadMedia();});
+			if (this._ismounted) {
+				if (StateStore.getState().lastAction === "loadStream") {
+					this.setState({stream: StateStore.getState().profile.stream}, () => {this.loadMedia();});
+				} else if (StateStore.getState().lastAction === "setJukeboxIndex") {
+					this.setState({jukeboxIndex: StateStore.getState().profile.jukeboxIndex}, () => {this.loadMedia();});
+				} else if (StateStore.getState().lastAction === "setMediaNow") {
+					this.setState({media: StateStore.getState().profile.mediaNow}, () => {this.loadMedia();});
+				} else if (StateStore.getState().lastAction === "showFullScreen") {
+					this.setState({show: StateStore.getState().showFullScreen}, () => {this.loadMedia();});
+				} else if (StateStore.getState().lastAction === "loadStream" || StateStore.getState().lastAction === "loadStreamAndPlay") {
+					this.setState({stream: StateStore.getState().profile.stream}, () => {this.loadMedia();});
+				}
 			}
 		});
 		
@@ -53,7 +57,7 @@ class FullScreen extends Component {
 			media: StateStore.getState().profile.mediaNow,
 			jukeboxIndex: StateStore.getState().profile.jukeboxIndex,
 			show: StateStore.getState().showFullScreen,
-			title: this.buildTitle(),
+			title: "",
 			imgBlob: false,
 			status: StateStore.getState().profile.currentPlayerStatus,
 			repeat: StateStore.getState().profile.currentPlayerRepeat,
@@ -64,19 +68,30 @@ class FullScreen extends Component {
 		});
 	}
 	
+	componentWillUnmount() {
+		this._ismounted = false;
+	}
+	
+	componentDidMount() { 
+		this._ismounted = true;
+	}
+
 	loadMedia() {
-		this.setState({title: this.buildTitle()});
-		this.getMediaCover();
+		if (this._ismounted) {
+			this.setState({title: this.buildTitle()});
+			this.getMediaCover();
+		}
 	}
 	
 	buildTitle() {
 		var title = "";
 		if (!!this.state.media) {
-			if (this.state.jukeboxIndex > -1) {
+			console.log("title", this.state.jukeboxIndex, this.state.stream);
+			if (this.state.jukeboxIndex > -1 && !this.state.stream.webradio) {
 				title += ((this.state.jukeboxIndex+1)<10?"0"+(this.state.jukeboxIndex+1):(this.state.jukeboxIndex+1)) + "/" + (this.state.stream.elements<10?"0"+this.state.stream.elements:this.state.stream.elements) + " - ";
 			}
-			if (!!this.state.media.tags) {
-				title += (this.state.media.tags.title || this.state.media.name.replace(/\.[^/.]+$/, ""));
+			if (!!this.state.media.tags && !!this.state.media.tags.title) {
+				title += this.state.media.tags.title;
 			} else {
 				title += this.state.media.name.replace(/\.[^/.]+$/, "");
 			}
@@ -121,13 +136,15 @@ class FullScreen extends Component {
 	}
 	
 	handleChangeVolume(event) {
-		this.setState({volume: event.target.value}, () => {
-			StateStore.dispatch({type: "setPlayerAction", action: "volume", parameter: (this.state.volume)});
-		});
+		if (this._ismounted) {
+			this.setState({volume: event.target.value}, () => {
+				StateStore.dispatch({type: "setPlayerAction", action: "volume", parameter: (this.state.volume)});
+			});
+		}
 	}
 	
 	getMediaCover() {
-		if (!!this.state.media && this.state.show) {
+		if (!!this.state.media && this.state.show && this._ismounted) {
 			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.media.data_source) + "/browse/path/" + encodeURI(this.state.media.path).replace(/#/g, "%23").replace(/\+/g, "%2B") + "?cover&base64")
 			.then((result) => {
 				this.setState({imgBlob: result});
@@ -139,7 +156,7 @@ class FullScreen extends Component {
 	}
 	
 	render() {
-		var mediaImage, metadata = [], separator, playButton;
+		var mediaImage, metadata = [], separator, playButton, randomButton, repeatButton;
 		if (this.state.imgBlob) {
 			mediaImage = <Image src={"data:image/jpeg;base64," + this.state.imgBlob} className="cover-image-full center-block" responsive />;
 		} else {
@@ -156,6 +173,16 @@ class FullScreen extends Component {
 					<FontAwesome name={"play"} />
         </Button>;
     }
+		if (!this.state.stream.webradio) {
+			randomButton =
+				<Button title="Repeat list" onClick={() => {this.handlePlayerAction("repeat")}} disabled={this.state.stream.webradio} className={(this.state.repeat&&!this.state.stream.webradio)?"btn-primary":""}>
+					<FontAwesome name={"repeat"} />
+				</Button>;
+			repeatButton =
+				<Button title="Random" onClick={() => {this.handlePlayerAction("random")}} disabled={this.state.stream.webradio} className={(this.state.random&&!this.state.stream.webradio)?"btn-primary":""}>
+					<FontAwesome name={"random"} />
+				</Button>;
+		}
 		if (this.state.media) {
 			if (this.state.media.tags.title) {
 				metadata.push(
@@ -235,12 +262,8 @@ class FullScreen extends Component {
               <Button title="Next song" onClick={() => {this.handlePlayerAction("next")}}>
                 <FontAwesome name={"fast-forward"} />
               </Button>
-              <Button title="Repeat list" onClick={() => {this.handlePlayerAction("repeat")}} disabled={this.state.stream.webradio} className={(this.state.repeat&&!this.state.stream.webradio)?"btn-primary":""}>
-                <FontAwesome name={"repeat"} />
-              </Button>
-              <Button title="Random" onClick={() => {this.handlePlayerAction("random")}} disabled={this.state.stream.webradio} className={(this.state.random&&!this.state.stream.webradio)?"btn-primary":""}>
-                <FontAwesome name={"random"} />
-              </Button>
+							{randomButton}
+							{repeatButton}
               <DropdownButton title={<FontAwesome name={"volume-up"} />} id="dropdown-volume">
                 <MenuItem eventKey="1"><input type="range" onChange={this.handleChangeVolume} value={this.state.volume} min="0" max="100" step="1"/></MenuItem>
               </DropdownButton>

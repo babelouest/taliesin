@@ -46,7 +46,6 @@ class AudioPlayer extends Component {
 		this.handleOnPause = this.handleOnPause.bind(this);
 		this.handleChangeVolume = this.handleChangeVolume.bind(this);
 		this.loadMedia = this.loadMedia.bind(this);
-		this._notificationSystem = null;
     
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
@@ -106,7 +105,7 @@ class AudioPlayer extends Component {
 	}
 
 	componentWillUnmount() {
-		 this._ismounted = false;
+		this._ismounted = false;
 		if (this.state.interval) {
 			clearInterval(this.state.interval);
 		}
@@ -207,8 +206,7 @@ class AudioPlayer extends Component {
 				var newPlayedIndex = this.state.jukeboxPlayedIndex;
 				newPlayedIndex.push(this.state.jukeboxIndex);
 				newState.jukeboxPlayedIndex = newPlayedIndex;
-			}
-			if (!this.state.stream.webradio) {
+			} else {
 				this.loadMedia();
 				StateStore.dispatch({type: "setJukeboxIndex", index: this.state.jukeboxIndex});
 			}
@@ -267,15 +265,19 @@ class AudioPlayer extends Component {
 	
 	nextSong() {
 		if (this.state.jukeboxRandom) {
+			var nextIndex, playedIndex;
 			if (this.state.jukeboxPlayedIndex.length < this.state.stream.elements) {
-				var nextIndex = Math.floor(Math.random() * (this.state.stream.elements + 1));
-				while (this.state.jukeboxPlayedIndex.indexOf(nextIndex) >= 0) {
-					nextIndex = Math.floor(Math.random() * (this.state.stream.elements + 1));
-				}
-				this.setState({jukeboxIndex: nextIndex}, () => {(this.state.playerStatus!=="stop") && this.handlePlay()});
-				this.loadMedia();
-				StateStore.dispatch({type: "setJukeboxIndex", index: nextIndex});
+				playedIndex = this.state.jukeboxPlayedIndex;
+			} else {
+				playedIndex = [];
 			}
+			do {
+				nextIndex = Math.floor(Math.random() * (this.state.stream.elements + 1));
+			} while (playedIndex.indexOf(nextIndex) >= 0);
+			playedIndex.push(nextIndex);
+			this.setState({jukeboxIndex: nextIndex, jukeboxPlayedIndex: playedIndex}, () => {(this.state.playerStatus!=="stop") && this.handlePlay()});
+			this.loadMedia();
+			StateStore.dispatch({type: "setJukeboxIndex", index: nextIndex});
 		} else {
 			if (this.state.jukeboxIndex < this.state.stream.elements - 1) {
 				this.setState({jukeboxIndex: this.state.jukeboxIndex+1}, () => {

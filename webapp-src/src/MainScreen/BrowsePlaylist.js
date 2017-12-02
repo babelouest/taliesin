@@ -45,6 +45,7 @@ class BrowsePlaylist extends Component {
 		this.getMediaCovers = this.getMediaCovers.bind(this);
 		this.getMediaCover = this.getMediaCover.bind(this);
 		this.deleteMedia = this.deleteMedia.bind(this);
+		this.refreshPlaylists = this.refreshPlaylists.bind(this);
 	}
 	
 	componentWillReceiveProps(nextProps) {
@@ -67,45 +68,61 @@ class BrowsePlaylist extends Component {
     });
 	}
   
+	componentDidMount() {
+		this._ismounted = true;
+	}
+
+	componentWillUnmount() {
+		this._ismounted = false;
+	}
+	
   getCovers() {
-    var list = this.state.playlist;
-    for (var i in list) {
-      this.getPlaylistCover(list[i].name);
-    }
-    this.setState({playlist: list});
+		if (this._ismounted) {
+			var list = this.state.playlist;
+			for (var i in list) {
+				this.getPlaylistCover(list[i].name);
+			}
+			this.setState({playlist: list});
+		}
   }
   
   getPlaylistCover(name) {
-    StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + name + "?cover&thumbnail&base64")
-    .then((cover) => {
-      var list = this.state.playlist;
-      for (var i in list) {
-        if (list[i].name === name) {
-          list[i].cover = cover;
-          this.setState({playlist: list});
-          break;
-        }
-      }
-    });
+		if (this._ismounted) {
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + name + "?cover&thumbnail&base64")
+			.then((cover) => {
+				var list = this.state.playlist;
+				for (var i in list) {
+					if (list[i].name === name) {
+						list[i].cover = cover;
+						this.setState({playlist: list});
+						break;
+					}
+				}
+			});
+		}
   }
   
 	showPlaylist(playlist) {
-    StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + playlist.name + "?offset=" + this.state.offset + "&limit=" + this.state.limit)
-    .then((pl) => {
-      this.setState({showPlaylist: true, shownPlaylist: playlist, mediaList: pl.media}, () => {
-        this.getMediaCovers();
-      });
-    })
-    .fail(() => {
-      StateStore.getState().NotificationManager.addNotification({
-        message: 'Error getting playlist',
-        level: 'error'
-      });
-    });
+		if (this._ismounted) {
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + playlist.name + "?offset=" + this.state.offset + "&limit=" + this.state.limit)
+			.then((pl) => {
+				this.setState({showPlaylist: true, shownPlaylist: playlist, mediaList: pl.media}, () => {
+					this.getMediaCovers();
+				});
+			})
+			.fail(() => {
+				StateStore.getState().NotificationManager.addNotification({
+					message: 'Error getting playlist',
+					level: 'error'
+				});
+			});
+		}
 	}
 	
 	showList() {
-		this.setState({showPlaylist: false, shownPlaylist: {}, mediaList: []});
+		if (this._ismounted) {
+			this.setState({showPlaylist: false, shownPlaylist: {}, mediaList: []});
+		}
 	}
   
   getMediaCovers() {
@@ -116,24 +133,28 @@ class BrowsePlaylist extends Component {
   }
   
   getMediaCover(media) {
-    StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + media.data_source + "/browse/path/" + media.path + "?cover&thumbnail&base64")
-    .then((cover) => {
-      var list = this.state.mediaList;
-      for (var i in list) {
-        if (list[i].data_source === media.data_source && list[i].path === media.path) {
-          list[i].cover = cover;
-          this.setState({mediaList: list});
-        }
-      }
-    });
+		if (this._ismounted) {
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + media.data_source + "/browse/path/" + media.path + "?cover&thumbnail&base64")
+			.then((cover) => {
+				var list = this.state.mediaList;
+				for (var i in list) {
+					if (list[i].data_source === media.data_source && list[i].path === media.path) {
+						list[i].cover = cover;
+						this.setState({mediaList: list});
+					}
+				}
+			});
+		}
   }
 	
   addPlaylist() {
-    this.setState({addPlaylistShow: true, add: true});
+		if (this._ismounted) {
+			this.setState({addPlaylistShow: true, add: true});
+		}
   }
   
   onAddPlaylist(playlist) {
-    if (playlist) {
+    if (playlist && this._ismounted) {
       StateStore.getState().APIManager.taliesinApiRequest("POST", "/playlist/", playlist)
       .then(() => {
         var list = this.state.playlist
@@ -155,19 +176,21 @@ class BrowsePlaylist extends Component {
   }
   
   onSavePlaylist(result, playlist, add) {
-    if (result) {
-      if (add) {
-        this.setState({addPlaylistShow: false}, () => {
-          this.onAddPlaylist(playlist);
-        });
-      } else {
-        this.setState({addPlaylistShow: false}, () => {
-          this.onEditPlaylist(playlist);
-        });
-      }
-    } else {
-      this.setState({addPlaylistShow: false});
-    }
+		if (this._ismounted) {
+			if (result) {
+				if (add) {
+					this.setState({addPlaylistShow: false}, () => {
+						this.onAddPlaylist(playlist);
+					});
+				} else {
+					this.setState({addPlaylistShow: false}, () => {
+						this.onEditPlaylist(playlist);
+					});
+				}
+			} else {
+				this.setState({addPlaylistShow: false});
+			}
+		}
   }
 	
 	canUpdate(playlist) {
@@ -224,18 +247,22 @@ class BrowsePlaylist extends Component {
 	}
   
 	playAdvanced(playlist) {
-		this.setState({
-			curPlaylist: playlist,
-			editStreamShow: true
-		});
+		if (this._ismounted) {
+			this.setState({
+				curPlaylist: playlist,
+				editStreamShow: true
+			});
+		}
 	}
 	
 	editPlaylist(playlist) {
-		this.setState({addPlaylistShow: true, add: false, curPlaylist: playlist});
+		if (this._ismounted) {
+			this.setState({addPlaylistShow: true, add: false, curPlaylist: playlist});
+		}
 	}
 	
 	onEditPlaylist(playlist) {
-    if (playlist) {
+    if (playlist && this._ismounted) {
       StateStore.getState().APIManager.taliesinApiRequest("PUT", "/playlist/" + playlist.name, playlist)
       .then(() => {
         var list = this.state.playlist
@@ -261,11 +288,13 @@ class BrowsePlaylist extends Component {
 	}
 	
 	deletePlaylist(playlist) {
-		this.setState({modalDeleteShow: true, modalDeleteMessage: "Are you sure you want to delete the playlist '" + playlist.name + "'?", curPlaylist: playlist});
+		if (this._ismounted) {
+			this.setState({modalDeleteShow: true, modalDeleteMessage: "Are you sure you want to delete the playlist '" + playlist.name + "'?", curPlaylist: playlist});
+		}
 	}
 	
 	onDeletePlaylist(result) {
-    if (result) {
+    if (result && this._ismounted) {
       StateStore.getState().APIManager.taliesinApiRequest("DELETE", "/playlist/" + encodeURIComponent(this.state.curPlaylist.name))
       .then((result) => {
         var list = this.state.playlist
@@ -287,41 +316,63 @@ class BrowsePlaylist extends Component {
 	}
 	
 	onCloseStreamModal(player) {
-		if (player) {
-			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(this.state.curPlaylist.name) + "/load?" + player.type + "&format=" + player.format + "&channels=" + player.channels + "&bitrate=" + player.bitrate + "&sample_rate=" + player.sampleRate)
-			.then((result) => {
-				var streamList = StateStore.getState().streamList;
-				streamList.push(result);
-				StateStore.dispatch({type: "setStreamList", streamList: streamList});
-				StateStore.dispatch({type: "loadStream", stream: result});
-				StateStore.getState().NotificationManager.addNotification({
-					message: 'Play new stream',
-					level: 'info'
+		if (this._ismounted) {
+			if (player) {
+				StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(this.state.curPlaylist.name) + "/load?" + player.type + "&format=" + player.format + "&channels=" + player.channels + "&bitrate=" + player.bitrate + "&sample_rate=" + player.sampleRate)
+				.then((result) => {
+					var streamList = StateStore.getState().streamList;
+					streamList.push(result);
+					StateStore.dispatch({type: "setStreamList", streamList: streamList});
+					StateStore.dispatch({type: "loadStream", stream: result});
+					StateStore.getState().NotificationManager.addNotification({
+						message: 'Play new stream',
+						level: 'info'
+					});
+				})
+				.fail(() => {
+					StateStore.getState().NotificationManager.addNotification({
+						message: 'Error Play stream',
+						level: 'error'
+					});
 				});
+			}
+			this.setState({editStreamShow: false});
+		}
+	}
+	
+	deleteMedia(media) {
+		if (this._ismounted) {
+			StateStore.getState().APIManager.taliesinApiRequest("DELETE", "/playlist/" + this.state.shownPlaylist.name, {data_source: media.data_source, path: media.path})
+			.then(() => {
+				var list = this.state.mediaList;
+				list.splice(list.indexOf(media), 1);
+				this.setState({mediaList: list});
 			})
 			.fail(() => {
 				StateStore.getState().NotificationManager.addNotification({
-					message: 'Error Play stream',
+					message: 'Error deleting media',
 					level: 'error'
 				});
 			});
 		}
-    this.setState({editStreamShow: false});
 	}
 	
-	deleteMedia(playlist, media) {
-    StateStore.getState().APIManager.taliesinApiRequest("DELETE", "/playlist/" + this.state.shownPlaylist.name, {data_source: media.data_source, path: media.path})
-    .then(() => {
-			var list = this.state.mediaList;
-			list.splice(list.indexOf(media), 1);
-			this.setState({mediaList: list});
-    })
-    .fail(() => {
+	refreshPlaylists() {
+		StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist")
+		.then((result) => {
+			StateStore.dispatch({type: "setPlaylist", playlist: result});
       StateStore.getState().NotificationManager.addNotification({
-        message: 'Error deleting media',
+        message: 'Plylists refreshed',
+        level: 'info'
+      });
+		})
+		.fail((result) => {
+			StateStore.dispatch({type: "setPlaylist", playlist: []});
+      StateStore.getState().NotificationManager.addNotification({
+        message: 'Error refreshing playlists',
         level: 'error'
       });
-    });
+		});
 	}
 	
   render() {
@@ -340,10 +391,10 @@ class BrowsePlaylist extends Component {
             <td>
               <a role="button" onClick={() => this.showPlaylist(aPlaylist)}>{aPlaylist.name}</a>
             </td>
-            <td>
+            <td className="hidden-xs">
               {aPlaylist.description}
             </td>
-            <td>
+            <td className="hidden-xs">
               {aPlaylist.elements}
             </td>
             <td>
@@ -393,9 +444,14 @@ class BrowsePlaylist extends Component {
       });
       return (
         <div>
-          <Button title="Add a new playlist" onClick={() => this.addPlaylist()}>
-            <FontAwesome name={"plus"} />
-          </Button>
+					<ButtonGroup>
+						<Button title="Add a new playlist" onClick={() => this.addPlaylist()}>
+							<FontAwesome name={"plus"} />
+						</Button>
+						<Button title="Refresh list" onClick={() => this.refreshPlaylists()}>
+							<FontAwesome name={"refresh"} />
+						</Button>
+					</ButtonGroup>
           <Table striped bordered condensed hover>
             <thead>
               <tr>

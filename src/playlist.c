@@ -287,12 +287,14 @@ json_t * is_playlist_element_list_valid(struct config_elements * config, int is_
   size_t index;
   
   if (j_return != NULL) {
-    if (!json_is_array(j_element_list) || !json_array_size(j_element_list)) {
-      json_array_append_new(j_return, json_pack("{ss}", "media", "You must set at least one media of format {data_source, path}"));
+    if (!json_is_array(j_element_list)) {
+      json_array_append_new(j_return, json_pack("{ss}", "parameters", "parameters must be a json array"));
+    } else if (json_array_size(j_element_list) == 0) {
+      json_array_append_new(j_return, json_pack("{ss}", "parameters", "parameters must be a json array of at least one element"));
     } else {
       json_array_foreach(j_element_list, index, j_element) {
-        if (!is_valid_jukebox_element_parameter(config, j_element, username, is_admin)) {
-          json_array_append_new(j_return, json_pack("{ss}", "media", "media is not a valid {data_source, path} object or does not exist"));
+        if (!is_valid_path_element_parameter(config, j_element, username, is_admin) && !is_valid_category_element_parameter(config, j_element, username, is_admin)) {
+          json_array_append_new(j_return, json_pack("{ss}", "parameter", "parameter is not a valid element"));
         }
       }
     }
@@ -337,8 +339,8 @@ json_t * is_playlist_valid(struct config_elements * config, const char * usernam
           json_array_append_new(j_return, json_pack("{ss}", "media", "media must be a JSON array"));
         } else {
           json_array_foreach(json_object_get(j_playlist, "media"), index, j_element) {
-            if (!is_valid_jukebox_element_parameter(config, j_element, username, is_admin)) {
-              json_array_append_new(j_return, json_pack("{ss}", "media", "media is not a valid {data_source, path} object or does not exist"));
+            if (!is_valid_path_element_parameter(config, j_element, username, is_admin) && !is_valid_category_element_parameter(config, j_element, username, is_admin)) {
+              json_array_append_new(j_return, json_pack("{ss}", "media", "media is not a valid object or does not exist"));
             }
           }
         }

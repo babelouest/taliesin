@@ -1156,6 +1156,46 @@ json_t * media_get_file_list_from_path(struct config_elements * config, json_t *
   return j_return;
 }
 
+json_t * media_get_audio_list_from_path(struct config_elements * config, json_t * j_data_source, const char * path, int recursive) {
+  json_t * j_result = media_get_full(config, j_data_source, path), * j_sub_result, * j_return, * j_element;
+  size_t index;
+  char * sub_path;
+  
+  if (check_result_value(j_result, T_OK)) {
+    if (json_is_array(json_object_get(j_result, "media"))) {
+      j_return = json_pack("{sis[]}", "result", T_OK, "media");
+      if (j_return != NULL) {
+        json_array_foreach(json_object_get(j_result, "media"), index, j_element) {
+          if (recursive && 0 == o_strcmp("folder", json_string_value(json_object_get(j_element, "type")))) {
+            sub_path = msprintf("%s/%s", path, json_string_value(json_object_get(j_element, "name")));;
+            j_sub_result = media_get_file_list_from_path(config, j_data_source, sub_path, recursive);
+            if (check_result_value(j_sub_result, T_OK)) {
+              json_array_extend(json_object_get(j_return, "media"), json_object_get(j_sub_result, "media"));
+            } else {
+              y_log_message(Y_LOG_LEVEL_ERROR, "media_get_file_list_from_path - Error media_get_file_list_from_path for sub_path %s", sub_path);
+            }
+            json_decref(j_sub_result);
+            o_free(sub_path);
+          } else if (0 == o_strcmp("audio", json_string_value(json_object_get(j_element, "type")))) {
+            json_object_set(j_element, "data_source_path", json_object_get(j_data_source, "path"));
+            json_array_append(json_object_get(j_return, "media"), j_element);
+          }
+        }
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "media_get_file_list_from_path - Error allocating resources for j_return");
+      }
+    } else {
+      j_return = json_pack("{sis[O]}", "result", T_OK, "media", json_object_get(j_result, "media"));
+      json_object_set(json_array_get(json_object_get(j_return, "media"), 0), "data_source_path", json_object_get(j_data_source, "path"));
+    }
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "media_get_file_list_from_path - Error media_get_full");
+    j_return = json_pack("{si}", "result", T_ERROR);
+  }
+  json_decref(j_result);
+  return j_return;
+}
+
 json_t * media_get_full(struct config_elements * config, json_t * j_data_source, const char * path) {
   json_t * j_query, * j_result_folders, * j_result = NULL, * j_result_files, * j_element;
   json_int_t tf_id = 0;
@@ -1550,11 +1590,12 @@ ORDER BY `name`;", tds_id, tds_id);
   return j_return;
 }
 
-json_t * media_category_list(struct config_elements * config, json_t * j_data_source, const char * level, const char * category) {
-  json_t * j_result, * j_return, * j_query;
+json_t * media_category_list(struct config_elements * config, json_t * j_data_source, const char * level, const char * category, int with_id) {
+  json_t * j_result, * j_return, * j_query, * j_element, * j_tags;
   int res = H_ERROR;
   char * clause_data_source, * escape_category = NULL, * clause_category = NULL;
   json_int_t tds_id = json_integer_value(json_object_get(j_data_source, "tds_id"));
+	size_t index;
   
   clause_data_source = msprintf("`tm_id` IN (SELECT `tm_id` FROM `%s` WHERE `tds_id`=%" JSON_INTEGER_FORMAT ")", TALIESIN_TABLE_MEDIA, tds_id);
   escape_category = h_escape_string(config->conn, category);
@@ -1571,7 +1612,7 @@ json_t * media_category_list(struct config_elements * config, json_t * j_data_so
                       "table",
                       TALIESIN_TABLE_MEDIA,
                       "columns",
-                        "`tm_id`",
+												"`tm_id`",
                         "`tm_name` AS name",
                         "`tm_path` AS path",
                         "'media' AS type",
@@ -1596,7 +1637,20 @@ json_t * media_category_list(struct config_elements * config, json_t * j_data_so
   json_decref(j_query);
   if (res == H_OK) {
     if (json_array_size(j_result) > 0) {
-      j_return = json_pack("{siso}", "result", T_OK, "list", j_result);
+			if (!with_id) {
+				json_array_foreach(j_result, index, j_element) {
+					json_object_set(j_element, "data_source", json_object_get(j_data_source, "name"));
+					j_tags = media_get_tags_from_id(config, json_integer_value(json_object_get(j_element, "tm_id")));
+					if (check_result_value(j_tags, T_OK)) {
+						json_object_set(j_element, "tags", json_object_get(j_tags, "tags"));
+					} else {
+						y_log_message(Y_LOG_LEVEL_ERROR, "media_category_list - Error media_get_tags_from_id");
+					}
+					json_decref(j_tags);
+					json_object_del(j_element, "tm_id");
+				}
+			}
+      j_return = json_pack("{siso}", "result", T_OK, "media", j_result);
     } else {
       json_decref(j_result);
       j_return = json_pack("{si}", "result", T_ERROR_NOT_FOUND);
@@ -1731,11 +1785,12 @@ ORDER BY `name`;", tds_id, clause_category, tds_id, clause_category);
   return j_return;
 }
 
-json_t * media_subcategory_list(struct config_elements * config, json_t * j_data_source, const char * level, const char * category, const char * sublevel, const char * subcategory) {
-  json_t * j_result, * j_return, * j_query;
+json_t * media_subcategory_list(struct config_elements * config, json_t * j_data_source, const char * level, const char * category, const char * sublevel, const char * subcategory, int with_id) {
+  json_t * j_result, * j_return, * j_query, * j_element, * j_tags;
   int res = H_ERROR;
   char * clause_data_source, * escape_category = NULL, * clause_category = NULL, * escape_subcategory = NULL, * clause_subcategory = NULL;
   json_int_t tds_id = json_integer_value(json_object_get(j_data_source, "tds_id"));
+	size_t index;
   
   escape_category = h_escape_string(config->conn, category);
   if (o_strcmp(level, "artist") == 0) {
@@ -1760,11 +1815,10 @@ json_t * media_subcategory_list(struct config_elements * config, json_t * j_data
     clause_subcategory = msprintf("`tm_id` IN (SELECT `tm_id` FROM " TALIESIN_TABLE_META_DATA " WHERE `tmd_key`='genre' AND TRIM(`tmd_value`)='%s')", escape_subcategory);
   }
   clause_data_source = msprintf("`tm_id` IN (SELECT `tm_id` FROM `%s` WHERE `tds_id`=%" JSON_INTEGER_FORMAT ")", TALIESIN_TABLE_MEDIA, tds_id);
-  j_query = json_pack("{sss[sssss]s{s{ssss}s{ssss}s{ssss}}ss}",
+  j_query = json_pack("{sss[ssss]s{s{ssss}s{ssss}s{ssss}}ss}",
                       "table",
                       TALIESIN_TABLE_MEDIA,
                       "columns",
-                        "`tm_id`",
                         "`tm_name` AS name",
                         "`tm_path` AS path",
                         "'media' AS type",
@@ -1795,7 +1849,20 @@ json_t * media_subcategory_list(struct config_elements * config, json_t * j_data
   json_decref(j_query);
   if (res == H_OK) {
     if (json_array_size(j_result) > 0) {
-      j_return = json_pack("{siso}", "result", T_OK, "list", j_result);
+			if (!with_id) {
+				json_array_foreach(j_result, index, j_element) {
+					json_object_set(j_element, "data_source", json_object_get(j_data_source, "name"));
+					j_tags = media_get_tags_from_id(config, json_integer_value(json_object_get(j_element, "tm_id")));
+					if (check_result_value(j_tags, T_OK)) {
+						json_object_set(j_element, "tags", json_object_get(j_tags, "tags"));
+					} else {
+						y_log_message(Y_LOG_LEVEL_ERROR, "media_category_list - Error media_get_tags_from_id");
+					}
+					json_decref(j_tags);
+					json_object_del(j_element, "tm_id");
+				}
+			}
+      j_return = json_pack("{siso}", "result", T_OK, "media", j_result);
     } else {
       json_decref(j_result);
       j_return = json_pack("{si}", "result", T_ERROR_NOT_FOUND);
@@ -2167,4 +2234,137 @@ json_t * media_category_cover_get(struct config_elements * config, json_t * j_da
     j_return = json_pack("{si}", "result", T_ERROR_DB);
   }
   return j_return;
+}
+
+int is_valid_path_element_parameter(struct config_elements * config, json_t * jukebox_element, const char * username, int is_admin) {
+  json_t * j_data_source, * j_media;
+  int res;
+  char * path;
+  
+  if (jukebox_element != NULL &&
+      json_is_object(jukebox_element) &&
+      json_object_get(jukebox_element, "data_source") != NULL &&
+      json_is_string(json_object_get(jukebox_element, "data_source")) &&
+      json_object_get(jukebox_element, "path") != NULL &&
+      json_is_string(json_object_get(jukebox_element, "path")) &&
+      (json_object_get(jukebox_element, "recursive") == NULL || json_is_boolean(json_object_get(jukebox_element, "recursive")))) {
+    j_data_source = data_source_get(config, is_admin?NULL:username, json_string_value(json_object_get(jukebox_element, "data_source")), 1);
+    if (check_result_value(j_data_source, T_OK)) {
+      path = (char *)json_string_value(json_object_get(jukebox_element, "path"));
+      while (path != NULL && path[0] != '\0' && path[0] == '/') {
+        path++;
+      }
+      j_media = media_get_full(config, json_object_get(j_data_source, "data_source"), path);
+      res = check_result_value(j_media, T_OK);
+      if (!res && !check_result_value(j_media, T_ERROR_NOT_FOUND)) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "Error get media %s/%s: %d", json_string_value(json_object_get(jukebox_element, "data_source")), json_string_value(json_object_get(jukebox_element, "path")), res);
+      } else {
+        json_object_set(jukebox_element, "tm_id", json_object_get(json_object_get(j_media, "media"), "tm_id"));
+      }
+      json_decref(j_media);
+    } else if (!check_result_value(j_data_source, T_ERROR_NOT_FOUND)) {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "Error get data source %s %s", username, json_string_value(json_object_get(jukebox_element, "data_source")));
+      res = 0;
+    } else {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "Error data_source_get");
+      res = 0;
+    }
+    json_decref(j_data_source);
+  } else {
+    res = 0;
+  }
+  return res;
+}
+
+static int is_valid_category_name(const char * category) {
+  return category != NULL && (0 == o_strcmp("artist", category) || 0 == o_strcmp("album", category) || 0 == o_strcmp("year", category) || 0 == o_strcmp("genre", category));
+}
+
+int is_valid_category_element_parameter(struct config_elements * config, json_t * category_element, const char * username, int is_admin) {
+  json_t * j_data_source;
+  int res;
+  
+  if (
+        category_element != NULL &&
+        json_is_object(category_element) &&
+        json_object_get(category_element, "data_source") != NULL &&
+        json_is_string(json_object_get(category_element, "data_source")) &&
+        json_object_get(category_element, "category") != NULL &&
+        json_is_string(json_object_get(category_element, "category")) &&
+        is_valid_category_name(json_string_value(json_object_get(category_element, "category"))) &&
+        json_object_get(category_element, "category_value") != NULL &&
+        json_is_string(json_object_get(category_element, "category_value")) &&
+        (
+          json_object_get(category_element, "sub_category") == NULL ||
+          (
+            json_is_string(json_object_get(category_element, "sub_category")) &&
+            is_valid_category_name(json_string_value(json_object_get(category_element, "sub_category"))) &&
+            json_object_get(category_element, "sub_category_value") != NULL &&
+            json_is_string(json_object_get(category_element, "sub_category_value"))
+          )
+        )
+      ) {
+    j_data_source = data_source_get(config, is_admin?NULL:username, json_string_value(json_object_get(category_element, "data_source")), 1);
+    if (check_result_value(j_data_source, T_OK)) {
+      res = 1;
+    } else if (!check_result_value(j_data_source, T_ERROR_NOT_FOUND)) {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "Error get data source %s %s", username, json_string_value(json_object_get(category_element, "data_source")));
+      res = 0;
+    } else {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "Error data_source_get");
+      res = 0;
+    }
+    json_decref(j_data_source);
+  } else {
+    res = 0;
+  }
+  return res;
+}
+
+json_t * media_append_list_to_media_list(struct config_elements * config, json_t * append_list, const char * username) {
+  json_t * j_element, * j_return, * j_media_list, * j_result, * j_data_source;
+  size_t index;
+  
+  j_media_list = json_array();
+  if (j_media_list != NULL) {
+    json_array_foreach(append_list, index, j_element) {
+      j_data_source = data_source_get(config, username, json_string_value(json_object_get(j_element, "data_source")), 1);
+      if (check_result_value(j_data_source, T_OK)) {
+        if (json_object_get(j_element, "path") != NULL) {
+          j_result = media_get_audio_list_from_path(config, json_object_get(j_data_source, "data_source"), json_string_value(json_object_get(j_element, "path")), (json_object_get(j_element, "recursive") == json_true()));
+          if (check_result_value(j_result, T_OK)) {
+            json_array_extend(j_media_list, json_object_get(j_result, "media"));
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "media_append_list_to_media_list - Error media_get_audio_list_from_path");
+          }
+          json_decref(j_result);
+        } else if (json_object_get(j_element, "sub_category") == NULL) {
+          j_result = media_category_list(config, json_object_get(j_data_source, "data_source"), json_string_value(json_object_get(j_element, "category")), json_string_value(json_object_get(j_element, "category_value")), 1);
+          if (check_result_value(j_result, T_OK)) {
+            json_array_extend(j_media_list, json_object_get(j_result, "media"));
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "media_append_list_to_media_list - Error media_category_list");
+          }
+          json_decref(j_result);
+        } else {
+          j_result = media_subcategory_list(config, json_object_get(j_data_source, "data_source"), json_string_value(json_object_get(j_element, "category")), json_string_value(json_object_get(j_element, "category_value")), json_string_value(json_object_get(j_element, "sub_category")), json_string_value(json_object_get(j_element, "sub_category_value")), 1);
+          if (check_result_value(j_result, T_OK)) {
+            json_array_extend(j_media_list, json_object_get(j_result, "media"));
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "media_append_list_to_media_list - Error media_subcategory_list");
+          }
+          json_decref(j_result);
+        }
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "media_append_list_to_media_list - Error data_source_get");
+      }
+      json_decref(j_data_source);
+    }
+    j_return = json_pack("{sisO}", "result", T_OK, "media", j_media_list);
+    json_decref(j_media_list);
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "media_append_list_to_media_list - Error allocating resources for j_media_list");
+    j_return = json_pack("{si}", "result", T_ERROR_MEMORY);
+  }
+	return j_return;
 }

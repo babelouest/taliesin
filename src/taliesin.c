@@ -485,6 +485,7 @@ int build_config_from_args(int argc, char ** argv, struct config_elements * conf
           }
           break;
         case 'h':
+					print_help(stdout);
           exit_server(&config, TALIESIN_STOP);
           break;
       }
@@ -508,16 +509,25 @@ int build_config_from_args(int argc, char ** argv, struct config_elements * conf
  * Print help message to output file specified
  */
 void print_help(FILE * output) {
-  fprintf(output, "\nTaliesin\n");
+  fprintf(output, "\nTaliesin - Streaming server\n");
   fprintf(output, "\n");
-  fprintf(output, "Password and private data locker\n");
+  fprintf(output, "Version %s\n", _TALIESIN_VERSION_);
+  fprintf(output, "\n");
+  fprintf(output, "Copyright 2017 Nicolas Mora <mail@babelouest.org>\n");
+  fprintf(output, "\n");
+  fprintf(output, "This program is free software; you can redistribute it and/or\n");
+  fprintf(output, "modify it under the terms of the GNU GENERAL PUBLIC LICENSE\n");
+  fprintf(output, "License as published by the Free Software Foundation;\n");
+  fprintf(output, "version 3 of the License.\n");
+  fprintf(output, "\n");
+  fprintf(output, "Command-line options:\n");
   fprintf(output, "\n");
   fprintf(output, "-c --config-file=PATH\n");
   fprintf(output, "\tPath to configuration file\n");
   fprintf(output, "-p --port=PORT\n");
   fprintf(output, "\tPort to listen to\n");
   fprintf(output, "-u --url-prefix=PREFIX\n");
-  fprintf(output, "\tURL prefix\n");
+  fprintf(output, "\tAPI URL prefix\n");
   fprintf(output, "-m --log-mode=MODE\n");
   fprintf(output, "\tLog Mode\n");
   fprintf(output, "\tconsole, syslog or file\n");
@@ -530,6 +540,7 @@ void print_help(FILE * output) {
   fprintf(output, "-f --log-file=PATH\n");
   fprintf(output, "\tPath for log file if log mode file is specified\n");
   fprintf(output, "-h --help\n");
+  fprintf(output, "-v --version\n");
   fprintf(output, "\tPrint this message\n\n");
 }
 

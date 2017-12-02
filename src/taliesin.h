@@ -24,6 +24,8 @@
 #ifndef __TALIESIN_H_
 #define __TALIESIN_H_
 
+#define _TALIESIN_VERSION_ "0.9"
+
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
@@ -343,6 +345,8 @@ struct _jukebox_audio_buffer {
   pthread_mutex_t      buffer_lock;
   pthread_cond_t       buffer_cond;
   
+  pthread_mutex_t      write_lock;
+	
   struct _t_jukebox * jukebox;
 };
 
@@ -550,7 +554,8 @@ json_t            * jukebox_command(struct config_elements * config, struct _t_j
 int                 jukebox_close(struct config_elements * config, struct _t_jukebox * jukebox);
 int                 jukebox_audio_buffer_add_data(struct _jukebox_audio_buffer * jukebox_audio_buffer, uint8_t *buf, int buf_size);
 int                 jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukebox, char ** m3u_data);
-int                 is_valid_jukebox_element_parameter(struct config_elements * config, json_t * jukebox_element, const char * username, int is_admin);
+int                 is_valid_path_element_parameter(struct config_elements * config, json_t * jukebox_element, const char * username, int is_admin);
+int                 is_valid_category_element_parameter(struct config_elements * config, json_t * category_element, const char * username, int is_admin);
 void              * jukebox_run_thread(void * args);
 json_t            * add_jukebox_from_path(struct config_elements * config, json_t * j_data_source, const char * path, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, int recursive, const char * name);
 json_t            * add_jukebox_from_playlist(struct config_elements * config, json_t * j_playlist, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, const char * name);
@@ -573,6 +578,7 @@ json_t   * media_get(struct config_elements * config, json_t * j_data_source, co
 json_t   * media_get_by_id(struct config_elements * config, json_int_t tm_id);
 json_t   * media_get_full(struct config_elements * config, json_t * j_data_source, const char * path);
 json_t   * media_get_file_list_from_path(struct config_elements * config, json_t * j_data_source, const char * path, int recursive);
+json_t   * media_get_audio_list_from_path(struct config_elements * config, json_t * j_data_source, const char * path, int recursive);
 json_t   * media_cover_get(struct config_elements * config, json_t * j_data_source, const char * path, int thumbnail);
 json_t   * media_cover_get_by_id(struct config_elements * config, json_int_t tm_id, int thumbnail);
 json_t   * media_list_folder(struct config_elements * config, json_t * j_data_source, json_int_t tf_id, int get_id);
@@ -589,6 +595,7 @@ int        media_image_cover_clean_orphan(struct config_elements * config, json_
 int        is_valid_b64_image(const unsigned char * base64_image);
 json_int_t media_cover_save(struct config_elements * config, json_int_t tds_id, const unsigned char * image_base64);
 json_t *   media_get_tags_from_id(struct config_elements * config, json_int_t tm_id);
+json_t *   media_append_list_to_media_list(struct config_elements * config, json_t * append_list, const char * username);
 
 // db stream functions
 json_t * db_stream_list(struct config_elements * config);
@@ -600,9 +607,9 @@ json_t * media_advanced_search(struct config_elements * config, const char * use
 
 // Browse category functions
 json_t * media_category_get(struct config_elements * config, json_t * j_data_source, const char * level);
-json_t * media_category_list(struct config_elements * config, json_t * j_data_source, const char * level, const char * category);
+json_t * media_category_list(struct config_elements * config, json_t * j_data_source, const char * level, const char * category, int with_id);
 json_t * media_subcategory_get(struct config_elements * config, json_t * j_data_source, const char * level, const char * category, const char * sublevel);
-json_t * media_subcategory_list(struct config_elements * config, json_t * j_data_source, const char * level, const char * category, const char * sublevel, const char * subcategory);
+json_t * media_subcategory_list(struct config_elements * config, json_t * j_data_source, const char * level, const char * category, const char * sublevel, const char * subcategory, int with_id);
 json_t * media_category_get_info(struct config_elements * config, json_t * j_data_source, const char * level, const char * category);
 int      media_category_set_info(struct config_elements * config, json_t * j_data_source, const char * level, const char * category, json_t * j_info);
 int      media_category_delete_info(struct config_elements * config, json_t * j_data_source, const char * level, const char * category);
@@ -647,7 +654,7 @@ int encode_audio_frame_and_return(AVFrame * frame,
                                   int * data_present);
 int init_output_jpeg_image(AVCodecContext ** thumbnail_cover_codec_context, int dst_width, int dst_height);
 int resize_image(AVCodecContext * full_size_cover_codec_context, AVCodecContext * thumbnail_cover_codec_context, AVPacket * full_size_cover_packet, AVPacket * thumbnail_cover_packet, int dst_width, int dst_height);
-int open_output_buffer_playlist(struct _jukebox_audio_buffer * jukebox_audio_buffer, AVFormatContext ** output_format_context, AVCodecContext ** output_codec_context, AVAudioFifo ** fifo);
+int open_output_buffer_jukebox(struct _jukebox_audio_buffer * jukebox_audio_buffer, AVFormatContext ** output_format_context, AVCodecContext ** output_codec_context, AVAudioFifo ** fifo);
 int open_input_buffer(const unsigned char * base64_buffer, AVFormatContext **image_format_context, AVCodecContext **image_codec_context, int * codec_index, int type);
 
 /**

@@ -612,7 +612,7 @@ int open_input_buffer(const unsigned char * base64_buffer, AVFormatContext **ima
   return ret;
 }
 
-static int write_packet_playlist(void * opaque, uint8_t * buf, int buf_size) {
+static int write_packet_jukebox(void * opaque, uint8_t * buf, int buf_size) {
   struct _jukebox_audio_buffer * jukebox_audio_buffer = (struct _jukebox_audio_buffer *)opaque;
   
   if (jukebox_audio_buffer_add_data(jukebox_audio_buffer, buf, buf_size)) {
@@ -621,7 +621,7 @@ static int write_packet_playlist(void * opaque, uint8_t * buf, int buf_size) {
   return buf_size;
 }
 
-int open_output_buffer_playlist(struct _jukebox_audio_buffer * jukebox_audio_buffer, AVFormatContext ** output_format_context, AVCodecContext ** output_codec_context, AVAudioFifo ** fifo) {
+int open_output_buffer_jukebox(struct _jukebox_audio_buffer * jukebox_audio_buffer, AVFormatContext ** output_format_context, AVCodecContext ** output_codec_context, AVAudioFifo ** fifo) {
   AVCodecContext * avctx          = NULL;
   AVCodec * output_codec          = NULL;
   AVIOContext * output_io_context = NULL;
@@ -654,7 +654,7 @@ int open_output_buffer_playlist(struct _jukebox_audio_buffer * jukebox_audio_buf
   } else if ((avctx = avcodec_alloc_context3(output_codec)) == NULL) {
     y_log_message(Y_LOG_LEVEL_ERROR, "Could not allocate an encoding context");
     error = AVERROR(ENOMEM);
-  } else if ((output_io_context = avio_alloc_context(avio_ctx_buffer, avio_ctx_buffer_size, 1, jukebox_audio_buffer, NULL, &write_packet_playlist, NULL)) == NULL) {
+  } else if ((output_io_context = avio_alloc_context(avio_ctx_buffer, avio_ctx_buffer_size, 1, jukebox_audio_buffer, NULL, &write_packet_jukebox, NULL)) == NULL) {
     y_log_message(Y_LOG_LEVEL_ERROR, "Error avio_alloc_context");
     error = AVERROR(ENOMEM);
   } else {

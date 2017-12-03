@@ -337,7 +337,7 @@ END_TEST
 
 START_TEST(test_playlist_add_media_error_input)
 {
-  char * url = msprintf("%s/playlist/%s", TALIESIN_SERVER_URI, PLAYLIST_USER_VALID);
+  char * url = msprintf("%s/playlist/%s/add_media", TALIESIN_SERVER_URI, PLAYLIST_USER_VALID);
   json_t * j_playlist = json_pack("{ssss}",
 																		"data_source", DATA_SOURCE_VALID,
 																		"path", "/fss/free-software-song.ogg");

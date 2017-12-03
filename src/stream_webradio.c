@@ -297,7 +297,7 @@ static int webradio_delete_db_stream_media(struct config_elements * config, stru
         ret = T_ERROR_DB;
       }
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "webradio_update_db_stream_media_list - stream not found");
+      y_log_message(Y_LOG_LEVEL_ERROR, "webradio_delete_db_stream_media - stream not found");
       ret = T_ERROR_NOT_FOUND;
     }
     json_decref(j_result);
@@ -1079,24 +1079,7 @@ int stream_get_next_buffer(struct _client_data_webradio * client_data) {
   }
 }
 
-struct _t_webradio * webradio_get_stream(struct config_elements * config, const char * stream_name, const char * username, int is_admin) {
-  int i;
-  struct _t_webradio * webradio = NULL;
-  
-  if (pthread_mutex_lock(&config->playlist_lock)) {
-    return NULL;
-  }
-  for (i=0; i<config->nb_webradio; i++) {
-    if (0 == o_strcmp(stream_name, config->webradio_set[i]->name) && (is_admin || 0 == o_strcmp(config->webradio_set[i]->username, username))) {
-      webradio = config->webradio_set[i];
-      break;
-    }
-  }
-  pthread_mutex_unlock(&config->playlist_lock);
-  return webradio;
-}
-
-json_t * is_webradio_command_valid(struct config_elements * config, json_t * j_command, const char * username, int is_admin) {
+json_t * is_webradio_command_valid(struct config_elements * config, struct _t_webradio * webradio, json_t * j_command, const char * username, int is_admin) {
   json_t * j_result = json_array(), * j_element;
   const char * str_command;
   size_t index;
@@ -1118,7 +1101,6 @@ json_t * is_webradio_command_valid(struct config_elements * config, json_t * j_c
                  0 != o_strcmp(str_command, "list") &&
                  0 != o_strcmp(str_command, "append_list") &&
                  0 != o_strcmp(str_command, "remove_list") &&
-                 //0 != o_strcmp(str_command, "play_after") &&
                  0 != o_strcmp(str_command, "move") &&
                  0 != o_strcmp(str_command, "attach_playlist") &&
                  0 != o_strcmp(str_command, "reload") &&
@@ -1126,8 +1108,18 @@ json_t * is_webradio_command_valid(struct config_elements * config, json_t * j_c
                  0 != o_strcmp(str_command, "save") &&
                  0 != o_strcmp(str_command, "reset_url")) {
         json_array_append_new(j_result, json_pack("{ss}", "command", "invalid command"));
-      }
-      if (o_strcmp(str_command, "history") == 0 ||
+      } else if (!is_admin && 0 != o_strcmp(webradio->username, username) && 
+                              (0 == o_strcmp(str_command, "stop") || 
+                               0 == o_strcmp(str_command, "append_list") || 
+                               0 == o_strcmp(str_command, "remove_list") || 
+                               0 == o_strcmp(str_command, "move") || 
+                               0 == o_strcmp(str_command, "attach_playlist") || 
+                               0 == o_strcmp(str_command, "reload") || 
+                               0 == o_strcmp(str_command, "rename") || 
+                               0 == o_strcmp(str_command, "save") || 
+                               0 == o_strcmp(str_command, "reset_url"))) {
+        json_array_append_new(j_result, json_pack("{ss}", "parameters", "User is not allowed to run this command"));
+      } else if (o_strcmp(str_command, "history") == 0 ||
           o_strcmp(str_command, "append_list") == 0 ||
           o_strcmp(str_command, "remove_list") == 0 ||
           //o_strcmp(str_command, "play_after") == 0 ||
@@ -1346,9 +1338,13 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
     ret = T_OK;
     j_result = media_append_list_to_media_list(config, json_object_get(j_command, "parameters"), username);
     if (check_result_value(j_result, T_OK)) {
-      if (file_list_add_media_list(config, webradio->file_list, json_object_get(j_result, "media")) != T_OK) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error appending to webradio");
-        ret = T_ERROR;
+      if (json_array_size(json_object_get(j_result, "media")) > 0) {
+        if (file_list_add_media_list(config, webradio->file_list, json_object_get(j_result, "media")) != T_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error appending to webradio");
+          ret = T_ERROR;
+        }
+      } else {
+        ret = T_ERROR_NOT_FOUND;
       }
     } else {
       y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error media_append_list_to_media_list");

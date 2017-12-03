@@ -465,7 +465,6 @@ json_int_t playlist_add(struct config_elements * config, const char * username, 
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add - Error executing j_query (1)");
   }
-  y_log_message(Y_LOG_LEVEL_DEBUG, "Got tpl_id: %"JSON_INTEGER_FORMAT, tpl_id);
   return tpl_id;
 }
 

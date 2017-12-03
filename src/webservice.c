@@ -835,7 +835,7 @@ int callback_taliesin_category_list (const struct _u_request * request, struct _
 							}
               if (u_map_get(request->map_url, "webradio") != NULL) {
 								format = "mp3";
-                j_fake_jukebox = json_pack("{sssssisO}", "description", u_map_get(request->map_url, "category"), "name", u_map_get(request->map_url, "category"), "tpl_id", 0, "media", json_object_get(j_result, "list"));
+                j_fake_jukebox = json_pack("{sssssisO}", "description", u_map_get(request->map_url, "category"), "name", u_map_get(request->map_url, "category"), "tpl_id", 0, "media", json_object_get(j_result, "media"));
                 j_stream_info = add_webradio_from_playlist(config, j_fake_jukebox, get_username(request, response, config), format, channels, sample_rate, bit_rate, (u_map_get(request->map_url, "random")!=NULL), u_map_get(request->map_url, "name"), &webradio);
                 if (check_result_value(j_stream_info, T_OK)) {
                   ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
@@ -853,7 +853,7 @@ int callback_taliesin_category_list (const struct _u_request * request, struct _
                 json_decref(j_stream_info);
                 json_decref(j_fake_jukebox);
               } else if (u_map_get(request->map_url, "jukebox") != NULL) {
-                j_fake_jukebox = json_pack("{sssssisO}", "description", u_map_get(request->map_url, "category"), "name", u_map_get(request->map_url, "category"), "tpl_id", 0, "media", json_object_get(j_result, "list"));
+                j_fake_jukebox = json_pack("{sssssisO}", "description", u_map_get(request->map_url, "category"), "name", u_map_get(request->map_url, "category"), "tpl_id", 0, "media", json_object_get(j_result, "media"));
                 j_stream_info = add_jukebox_from_playlist(config, j_fake_jukebox, get_username(request, response, config), format, channels, sample_rate, bit_rate, u_map_get(request->map_url, "name"));
                 if (check_result_value(j_stream_info, T_OK)) {
                   ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
@@ -1264,6 +1264,9 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
   } else {
     response->status = 404;
   }
+  if (response->shared_data != NULL) {
+    json_decref((json_t *)response->shared_data);
+  }
   return U_CALLBACK_COMPLETE;
 }
 
@@ -1286,16 +1289,26 @@ int callback_taliesin_stream_get_list (const struct _u_request * request, struct
 int callback_taliesin_stream_manage (const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct config_elements * config = (struct config_elements *)user_data;
   json_t * j_body = ulfius_get_json_body_request(request, NULL), * j_is_valid, * j_result_command;
-  int res = U_CALLBACK_CONTINUE;
+  int res = U_CALLBACK_COMPLETE, i;
   struct _t_webradio * current_webradio = NULL;
   struct _t_jukebox * current_playlist = NULL;
   
-  if ((current_webradio = webradio_get_stream(config, u_map_get(request->map_url, "stream_name"), get_username(request, response, config), has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin))) == NULL) {
-    current_playlist = jukebox_get_stream(config, u_map_get(request->map_url, "stream_name"), get_username(request, response, config), has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin));
+  for (i=0; i<config->nb_webradio; i++) {
+    if (0 == o_strcmp(u_map_get(request->map_url, "stream_name"), config->webradio_set[i]->name)) {
+      current_webradio = config->webradio_set[i];
+      break;
+    }
   }
-  
+  if (current_webradio == NULL) {
+    for (i=0; i<config->nb_jukebox; i++) {
+      if (0 == o_strcmp(u_map_get(request->map_url, "stream_name"), config->jukebox_set[i]->name)) {
+        current_playlist = config->jukebox_set[i];
+        break;
+      }
+    }
+  }
   if (current_webradio != NULL) {
-    j_is_valid = is_webradio_command_valid(config, j_body, get_username(request, response, config), has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin));
+    j_is_valid = is_webradio_command_valid(config, current_webradio, j_body, get_username(request, response, config), has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin));
     if (j_is_valid != NULL) {
       if (json_array_size(j_is_valid) == 0) {
         j_result_command = webradio_command(config, current_webradio, get_username(request, response, config), j_body);
@@ -1324,7 +1337,7 @@ int callback_taliesin_stream_manage (const struct _u_request * request, struct _
       res = U_CALLBACK_ERROR;
     }
   } else if (current_playlist != NULL) {
-    j_is_valid = is_jukebox_command_valid(config, j_body, get_username(request, response, config), has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin));
+    j_is_valid = is_jukebox_command_valid(config, current_playlist, j_body, get_username(request, response, config), has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin));
     if (j_is_valid != NULL) {
       if (json_array_size(j_is_valid) == 0) {
         j_result_command = jukebox_command(config, current_playlist, get_username(request, response, config), j_body);
@@ -1356,6 +1369,9 @@ int callback_taliesin_stream_manage (const struct _u_request * request, struct _
     response->status = 404;
   }
   json_decref(j_body);
+  if (response->shared_data != NULL) {
+    json_decref((json_t *)response->shared_data);
+  }
   return res;
 }
 
@@ -1633,9 +1649,9 @@ void callback_websocket_stream_incoming_message (const struct _u_request * reque
     }
   } else if (ws_stream->is_authenticated) {
     if (ws_stream->webradio != NULL) {
-      j_is_valid = is_webradio_command_valid(ws_stream->config, j_message, ws_stream->username, ws_stream->is_admin);
+      j_is_valid = is_webradio_command_valid(ws_stream->config, ws_stream->webradio, j_message, ws_stream->username, ws_stream->is_admin);
     } else if (ws_stream->jukebox != NULL) {
-      j_is_valid = is_jukebox_command_valid(ws_stream->config, j_message, ws_stream->username, ws_stream->is_admin);
+      j_is_valid = is_jukebox_command_valid(ws_stream->config, ws_stream->jukebox, j_message, ws_stream->username, ws_stream->is_admin);
     }
     if (j_is_valid != NULL) {
       if (json_array_size(j_is_valid) == 0) {
@@ -1787,6 +1803,9 @@ int callback_taliesin_stream_cover (const struct _u_request * request, struct _u
     json_decref(j_cover);
   } else {
     response->status = 404;
+  }
+  if (response->shared_data != NULL) {
+    json_decref((json_t *)response->shared_data);
   }
   return U_CALLBACK_COMPLETE;
 }
@@ -1983,9 +2002,13 @@ int callback_taliesin_playlist_add_media (const struct _u_request * request, str
         if (json_array_size(j_is_valid) == 0) {
           j_result = media_append_list_to_media_list(config, j_body, get_username(request, response, config));
           if (check_result_value(j_result, T_OK)) {
-            if (playlist_add_media(config, json_integer_value(json_object_get(json_object_get(j_playlist, "playlist"), "tpl_id")), json_object_get(j_result, "media")) != T_OK) {
-              y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_playlist_add_media - Error playlist_add_media");
-              res = U_CALLBACK_ERROR;
+            if (json_array_size(json_object_get(j_result, "media")) > 0) {
+              if (playlist_add_media(config, json_integer_value(json_object_get(json_object_get(j_playlist, "playlist"), "tpl_id")), json_object_get(j_result, "media")) != T_OK) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_playlist_add_media - Error playlist_add_media");
+                res = U_CALLBACK_ERROR;
+              }
+            } else {
+              response->status = 404;
             }
           } else {
             y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_playlist_add_media - Error media_append_list_to_media_list");

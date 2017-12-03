@@ -104,9 +104,9 @@ json_t * media_search(struct config_elements * config, const char * username_esc
 	size_t index;
   
   if (search_category == TALIESIN_SEARCH_CATEGORY_NONE) {
-    clause_search = msprintf("tm_name LIKE '%%%s%%' OR `tm_id` IN (SELECT `tm_id` FROM `%s` WHERE `tmd_value` LIKE '%%%s%%')", search_pattern_escape, TALIESIN_TABLE_META_DATA, search_pattern_escape);
+    clause_search = msprintf("`tm_name` LIKE '%%%s%%' OR `tm_id` IN (SELECT `tm_id` FROM `%s` WHERE `tmd_value` LIKE '%%%s%%')", search_pattern_escape, TALIESIN_TABLE_META_DATA, search_pattern_escape);
   } else if (search_category == TALIESIN_SEARCH_CATEGORY_FILE) {
-    clause_search = msprintf("tm_name LIKE '%%%s%%'", search_pattern_escape);
+    clause_search = msprintf("`tm_name` LIKE '%%%s%%'", search_pattern_escape);
   } else if (search_category == TALIESIN_SEARCH_CATEGORY_TITLE) {
     clause_search = msprintf("`tm_id` IN (SELECT `tm_id` FROM `%s` WHERE `tmd_value` LIKE '%%%s%%' AND `tmd_key`='title')", TALIESIN_TABLE_META_DATA, search_pattern_escape);
   } else if (search_category == TALIESIN_SEARCH_CATEGORY_ARTIST) {
@@ -118,7 +118,7 @@ json_t * media_search(struct config_elements * config, const char * username_esc
   } else if (search_category == TALIESIN_SEARCH_CATEGORY_GENRE) {
     clause_search = msprintf("`tm_id` IN (SELECT `tm_id` FROM `%s` WHERE `tmd_value` LIKE '%%%s%%' AND `tmd_key`='genre')", TALIESIN_TABLE_META_DATA, search_pattern_escape);
   }
-  query = msprintf("SELECT " TALIESIN_TABLE_DATA_SOURCE ".tds_id " TALIESIN_TABLE_DATA_SOURCE ".tds_name AS data_source, " TALIESIN_TABLE_MEDIA ".tm_name AS name, " TALIESIN_TABLE_MEDIA ".tm_path AS path FROM `" TALIESIN_TABLE_MEDIA "`, `" TALIESIN_TABLE_DATA_SOURCE "` WHERE `" TALIESIN_TABLE_DATA_SOURCE "`.`tds_id` in (SELECT `tds_id` FROM `%s` WHERE `tds_username`='%s' OR `tds_username` IS NULL) AND %s AND `" TALIESIN_TABLE_DATA_SOURCE "`.`tds_id` = `" TALIESIN_TABLE_MEDIA "`.`tds_id` LIMIT %d", TALIESIN_TABLE_DATA_SOURCE, username_escape, clause_search, TALIESIN_MEDIA_LIMIT_DEFAULT);
+  query = msprintf("SELECT " TALIESIN_TABLE_DATA_SOURCE ".tds_id, " TALIESIN_TABLE_DATA_SOURCE ".tds_name AS data_source, " TALIESIN_TABLE_MEDIA ".tm_name AS name, " TALIESIN_TABLE_MEDIA ".tm_path AS path FROM `" TALIESIN_TABLE_MEDIA "`, `" TALIESIN_TABLE_DATA_SOURCE "` WHERE `" TALIESIN_TABLE_DATA_SOURCE "`.`tds_id` in (SELECT `tds_id` FROM `%s` WHERE `tds_username`='%s' OR `tds_username` IS NULL) AND %s AND `" TALIESIN_TABLE_DATA_SOURCE "`.`tds_id` = `" TALIESIN_TABLE_MEDIA "`.`tds_id` LIMIT %d", TALIESIN_TABLE_DATA_SOURCE, username_escape, clause_search, TALIESIN_MEDIA_LIMIT_DEFAULT);
   o_free(clause_search);
   res = h_execute_query_json(config->conn, query, &j_result);
   o_free(query);

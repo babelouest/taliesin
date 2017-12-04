@@ -16,7 +16,7 @@ class ElementButtons extends Component {
 			subCategoryValue: props.subCategoryValue, 
 			element: props.element,
 			streamList: StateStore.getState().streamList,
-			playlist: StateStore.getState().playlist
+			playlist: StateStore.getState().playlists
 		};
 
 		this.playElement = this.playElement.bind(this);
@@ -28,10 +28,10 @@ class ElementButtons extends Component {
 		
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
-			if (reduxState.lastAction === "setPlaylist") {
-				this.setState({streamList: StateStore.getState().streamList});
+			if (reduxState.lastAction === "setPlaylists") {
+        this.setState({playlist: reduxState.playlists});
 			} else if (reduxState.lastAction === "setStreamList") {
-        this.setState({playlist: StateStore.getState().playlist});
+				this.setState({streamList: reduxState.streamList});
 			}
 		});
 	}
@@ -46,7 +46,7 @@ class ElementButtons extends Component {
 			subCategoryValue: nextProps.subCategoryValue, 
 			element: nextProps.element,
 			streamList: StateStore.getState().streamList,
-			playlist: StateStore.getState().playlist
+			playlist: StateStore.getState().playlists
 		});
 	}
   
@@ -149,10 +149,14 @@ class ElementButtons extends Component {
     }
 		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(stream) + "/manage", {command: "append_list", parameters: [parameters]})
     .then((result) => {
-			StateStore.getState().NotificationManager.addNotification({
-				message: 'Add to stream stream ok',
-				level: 'info'
-			});
+      StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(stream) + "/manage", {command: "info"})
+      .then((streamInfo) => {
+        StateStore.dispatch({type: "setStream", stream: streamInfo});
+        StateStore.getState().NotificationManager.addNotification({
+          message: 'Add to stream stream ok',
+          level: 'info'
+        });
+      });
     })
     .fail(() => {
 			StateStore.getState().NotificationManager.addNotification({
@@ -171,10 +175,14 @@ class ElementButtons extends Component {
     }
 		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/playlist/" + encodeURIComponent(playlist) + "/add_media", [parameters])
     .then((result) => {
-			StateStore.getState().NotificationManager.addNotification({
-				message: 'Add to stream stream ok',
-				level: 'info'
-			});
+      StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(playlist))
+      .then((newPlaylist) => {
+        StateStore.dispatch({type: "setPlaylist", playlist: newPlaylist});
+        StateStore.getState().NotificationManager.addNotification({
+          message: 'Add to stream stream ok',
+          level: 'info'
+        });
+      });
     })
     .fail(() => {
 			StateStore.getState().NotificationManager.addNotification({

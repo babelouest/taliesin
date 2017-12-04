@@ -20,6 +20,13 @@ class ManageStream extends Component {
 			curStream: false
 		};
 
+		StateStore.subscribe(() => {
+			var reduxState = StateStore.getState();
+			if (reduxState.lastAction === "setStreamList" || reduxState.lastAction === "setStream") {
+				this.setState({streamList: reduxState.streamList});
+			}
+		});
+
 		this.playStream = this.playStream.bind(this);
 		this.deleteStream = this.deleteStream.bind(this);
 		this.renameStream = this.renameStream.bind(this);

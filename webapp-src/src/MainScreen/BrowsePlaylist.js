@@ -10,7 +10,7 @@ class BrowsePlaylist extends Component {
     super(props);
 		
 		this.state = {
-			playlist: StateStore.getState().playlist,
+			playlist: StateStore.getState().playlists,
 			curPlaylist: {},
 			shownPlaylist: {},
       addPlaylistShow: false,
@@ -27,6 +27,13 @@ class BrowsePlaylist extends Component {
     
     this.getCovers();
 		
+		StateStore.subscribe(() => {
+			var reduxState = StateStore.getState();
+			if (reduxState.lastAction === "setPlaylists" || reduxState.lastAction === "setPlaylist") {
+        this.setState({playlist: reduxState.playlists});
+			}
+		});
+
 		this.getCovers = this.getCovers.bind(this);
 		this.getPlaylistCover = this.getPlaylistCover.bind(this);
 		this.canUpdate = this.canUpdate.bind(this);
@@ -50,7 +57,7 @@ class BrowsePlaylist extends Component {
 	
 	componentWillReceiveProps(nextProps) {
 		this.setState({
-			playlist: StateStore.getState().playlist,
+			playlist: StateStore.getState().playlists,
 			curPlaylist: {},
 			shownPlaylist: {},
       addPlaylistShow: false,
@@ -158,8 +165,9 @@ class BrowsePlaylist extends Component {
       StateStore.getState().APIManager.taliesinApiRequest("POST", "/playlist/", playlist)
       .then(() => {
         var list = this.state.playlist
+        playlist.elements = 0;
         list.push(playlist);
-        StateStore.dispatch({type: "setPlaylist", playlist: list});
+        StateStore.dispatch({type: "setPlaylists", playlists: list});
         this.setState({playlist: list, curPlaylist: false});
         StateStore.getState().NotificationManager.addNotification({
           message: 'Playlist added',
@@ -271,7 +279,7 @@ class BrowsePlaylist extends Component {
             list[i] = playlist;
           }
         }
-        StateStore.dispatch({type: "setPlaylist", playlist: list});
+        StateStore.dispatch({type: "setPlaylists", playlists: list});
         this.setState({playlist: list, curPlaylist: false});
         StateStore.getState().NotificationManager.addNotification({
           message: 'Playlist updated',
@@ -299,7 +307,7 @@ class BrowsePlaylist extends Component {
       .then((result) => {
         var list = this.state.playlist
         list.splice(this.state.playlist.indexOf(this.state.curPlaylist), 1);
-        StateStore.dispatch({type: "setPlaylist", playlist: list});
+        StateStore.dispatch({type: "setPlaylists", playlists: list});
         this.setState({modalDeleteShow: false, playlist: list, curPlaylist: false});
         StateStore.getState().NotificationManager.addNotification({
           message: 'Playlist deleted',
@@ -360,14 +368,14 @@ class BrowsePlaylist extends Component {
 	refreshPlaylists() {
 		StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist")
 		.then((result) => {
-			StateStore.dispatch({type: "setPlaylist", playlist: result});
+			StateStore.dispatch({type: "setPlaylists", playlists: result});
       StateStore.getState().NotificationManager.addNotification({
         message: 'Plylists refreshed',
         level: 'info'
       });
 		})
 		.fail((result) => {
-			StateStore.dispatch({type: "setPlaylist", playlist: []});
+			StateStore.dispatch({type: "setPlaylists", playlists: []});
       StateStore.getState().NotificationManager.addNotification({
         message: 'Error refreshing playlists',
         level: 'error'

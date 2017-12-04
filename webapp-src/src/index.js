@@ -74,10 +74,10 @@ StateStore.subscribe(() => {
 		// Get playlist list
 		StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist")
 		.then((result) => {
-			StateStore.dispatch({type: "setPlaylist", playlist: result});
+			StateStore.dispatch({type: "setPlaylists", playlists: result});
 		})
 		.fail((result) => {
-			StateStore.dispatch({type: "setPlaylist", playlist: []});
+			StateStore.dispatch({type: "setPlaylists", playlists: []});
 		});
 		
 		// Get server default config

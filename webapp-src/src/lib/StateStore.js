@@ -16,7 +16,7 @@ var defaultState = {
 	dataSourceList: [],
 	externalPlayerList: [],
   streamList: [],
-	playlist:[],
+	playlists:[],
 	serverConfig: {},
 	profile: {
 		isAdmin: false,
@@ -46,6 +46,7 @@ var defaultState = {
 }
 
 function stateStoreManager(state = defaultState, action) {
+  var i;
 	switch (action.type) {
 		case "connection":
 			state.APIManager = new APIManager({
@@ -84,6 +85,14 @@ function stateStoreManager(state = defaultState, action) {
 			break;
 		case "setStreamList":
 			state.streamList = action.streamList;
+			break;
+		case "setStream":
+      for (i in state.streamList) {
+        if (state.streamList[i].name === action.stream.name) {
+          state.streamList[i] = action.stream;
+          break;
+        }
+      }
 			break;
 		case "loadStreamAndPlay":
 			if (action.index || action.index === 0) {
@@ -173,8 +182,16 @@ function stateStoreManager(state = defaultState, action) {
 				state.profile.currentPlayerVolume = action.volume;
 			}
 			break;
+		case "setPlaylists":
+			state.playlists = action.playlists;
+			break;
 		case "setPlaylist":
-			state.playlist = action.playlist;
+      for (i in state.playlists) {
+        if (state.playlists[i].name === action.playlist.name) {
+          state.playlists[i] = action.playlist;
+          break;
+        }
+      }
 			break;
 		default:
 			break;

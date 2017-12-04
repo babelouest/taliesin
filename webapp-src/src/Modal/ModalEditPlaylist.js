@@ -51,7 +51,7 @@ class ModalAddPlaylist extends Component {
 	getNameValidationState() {
     if (this.state.add) {
       if (this.state.playlist.name) {
-        var found = StateStore.getState().playlist.find((playlist) => {
+        var found = StateStore.getState().playlists.find((playlist) => {
           return playlist.name === this.state.playlist.name;
         })
         if (found) {

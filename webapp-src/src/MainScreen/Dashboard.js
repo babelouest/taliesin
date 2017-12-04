@@ -11,8 +11,6 @@ class Dashboard extends Component {
     super(props);
 		
 		this.state = {
-			streamList: StateStore.getState().streamList,
-			playlist: StateStore.getState().playlist,
 			recent: [],
 			recentLoaded: false,
 			random: [],
@@ -28,8 +26,6 @@ class Dashboard extends Component {
 	
 	componentWillReceiveProps(nextProps) {
 		this.setState({
-			streamList: [],
-			playlist: [],
 			recent: [],
 			recentLoaded: false,
 			random: [],

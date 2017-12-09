@@ -4,6 +4,8 @@ Audio media server with a REST API interface and a React JS client application.
 
 Still in BETA mode, but it's close to being ready.
 
+![example snapshot](https://github.com/babelouest/taliesin/raw/master/doc/images/screenshot-1.png)
+
 Can be used as a cloud application for a set of media files.
 
 Main functionalities:

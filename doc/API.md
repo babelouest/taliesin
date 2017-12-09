@@ -32,8 +32,7 @@ Content
   {
     "name": string, max 128 characters
     "description": string, max 512 characters
-    "icon": string, max 16MB
-    "last_updated": integer
+    "last_updated": integer, epoch time of the last refresh
     "scope": string, values available are "me" or "all"
   }
 ]
@@ -70,8 +69,7 @@ Content
 {
   "name": string, max 128 characters
   "description": string, max 512 characters
-  "icon": string, max 16MB
-  "last_updated": integer
+  "last_updated": integer, epoch time of the last refresh
   "scope": string, values available are "me" or "all"
 }
 ```
@@ -103,7 +101,6 @@ Internal Error
   "name": string, max 128 characters, mandatory, must be unique for the current user, including data source for all users
   "description": string, max 512 characters, optional
   "path": string, max 1024 characters, mandatory, must correspond to a valid path on the server
-  "icon": string, max 16MB, optional
   "scope": string, optional, values available are "me" or "all", default "me", only an administrator can create a data source with the scope "all"
 }
 ```
@@ -149,7 +146,6 @@ Note: By design, the user can't change the data source path, name or scope
 ```javascript
 {
   "description": string, max 512 characters, optional
-  "icon": string, max 16MB, optional
 }
 ```
 
@@ -267,7 +263,7 @@ Content
 ```javascript
 {
   "status": string, values available are "not_running", "pending", "preparing", "running" and "error"
-	"read": integer, number of files read
+	"read": integer, number of files currently read
 	"total": integer, total number of files to refresh
 }
 ```
@@ -733,12 +729,17 @@ Content
     "name": string, max 128 characters
     "description": string, max 512 characters
     "scope": string, values available are "me" or "all"
-    "media": [ // List of all media in the playlist
-      {
-        "data_source": data_source name of the media
-        "path": relative path of the media
-      }
-    ]
+    "elements": integer, number of media files in the playlist
+		"media": [ Array of media files in theplaylist
+			{...}
+		],
+		"stream": [ // List of streams attached to this playlist
+			{
+				"name": string, name of the string
+				"display_name": string, display name of the stream
+				"webradio": boolean
+			}
+		]
   }
 ]
 ```
@@ -772,15 +773,20 @@ Code 200
 Content
 ```javascript
 {
-  "name": string, max 128 characters
-  "description": string, max 512 characters
-  "scope": string, values available are "me" or "all"
-  "media": [ // List of all media in the playlist
-    {
-      "data_source": data_source name of the media
-      "path": relative path of the media
-    }
-  ]
+	"name": string, max 128 characters
+	"description": string, max 512 characters
+	"scope": string, values available are "me" or "all"
+	"elements": integer, number of media files in the playlist
+	"media": [ Array of media files in theplaylist
+		{...}
+	],
+	"stream": [ // List of streams attached to this playlist
+		{
+			"name": string, name of the string
+			"display_name": string, display name of the stream
+			"webradio": boolean
+		}
+	]
 }
 ```
 
@@ -1040,13 +1046,13 @@ A webradio is a single stream that will play all songs at random or in sequence.
 
 #### URL
 
-`/data_source/@data_source/@data_source_name/browse/path/@relative_path_to_folder?[webradio|jukebox][&random][&recursive][&format=][&bitrate=][&sample_rate=][&channels=]`
+`/data_source/@data_source/@data_source_name/browse/path/@relative_path_to_folder?[webradio|jukebox][&random][&recursive][&format=][&bitrate=][&sample_rate=][&channels=][&name=]`
 
-`/data_source/@data_source/@data_source_name/browse/category/@level/@category/@sublevel/@subcategory?[webradio|jukebox][&random][&format=][&bitrate=][&sample_rate=][&channels=]`
+`/data_source/@data_source/@data_source_name/browse/category/@level/@category/@sublevel/@subcategory?[webradio|jukebox][&random][&format=][&bitrate=][&sample_rate=][&channels=][&name=]`
 
-`/data_source/@data_source/@data_source_name/browse/category/@level/@category/@sublevel/@subcategory?[webradio|jukebox][&random][&format=][&bitrate=][&sample_rate=][&channels=]`
+`/data_source/@data_source/@data_source_name/browse/category/@level/@category/@sublevel/@subcategory?[webradio|jukebox][&random][&format=][&bitrate=][&sample_rate=][&channels=][&name=]`
 
-Examples: `/data_source/dataSource1/browse/path/Open Goldberg Variation?webradio&recursive&format=vorbis`
+Examples: `/data_source/dataSource1/browse/path/Open Goldberg Variation?webradio&recursive`
           `/data_source/dataSource1/browse/path/Open Goldberg Variation/KIMIKO ISHIZAKA - Goldberg Variations BWV 988 - 01 - Aria__44k-24b.mp3?jukebox`
           `/data_source/dataSource1/browse/category/artist/Kimiko Ishizaka?jukebox&format=flac&sample_rate=48000`
 
@@ -1082,6 +1088,7 @@ Note: obviously you can't combine `webradio` and `jukebox` at the same time, if 
 `bitrate`: bitrate used for the stream, for `mp3` or `vorbis` formats only, values available are 32000, 96000, 128000, 192000, 256000, 320000, if format `flac` is used, bitrate is automatically set to 1411000
 `sample_rate`: sample rate (~frequency) used for the stream, values available are 8000, 11025, 22050, 32000, 44100, 48000
 `channels`: number of channels used for the stream, values available are 1 (mono) or 2 (stereo)
+`name`: display name for stream, optional, if not specified, the stream will have a display name corresponding to the path or the category
 
 ***Parameter used in webradio only***
 
@@ -1101,6 +1108,7 @@ Content
   "name": string, name of the stream, a 32 characters random sequence generated
   "display_name": string, display name of the stream
   "webradio": boolean true if the stream is a webradio
+	"elements": number of elements in the stream
   "format": string, audio format of the stream, values available are `mp3`, `vorbis` or `flac`
   "stereo": boolean, true if the audio stream is stereo
   "sample_rate": integer, sample rate of the audio stream
@@ -1108,6 +1116,12 @@ Content
   "nb_client": integer, number of clients currently listening to the stream
   "last_seen": integer, date in epoch format when the stream was used last, for jukebox streams only
   "stored_playlist": string, name of the playlist the stream is based on, optional
+	clients: [ Array of clients
+		{
+			"ip_address": string, ip address of the client
+			"user_agent": string, user agent of the client
+		}
+	]
 }
 ```
 
@@ -1129,9 +1143,9 @@ Internal Error
 
 #### URL
 
-`/playlist/@playlist_name/?[webradio|jukebox][&random][&format=][&bitrate=][&sample_rate=][&channels=]`
+`/playlist/@playlist_name/?[webradio|jukebox][&random][&format=][&bitrate=][&sample_rate=][&channels=][&name=]`
 
-Examples: `/playlist/playlist1?webradio&format=vorbis`
+Examples: `/playlist/playlist1?webradio`
           `/playlist/playlist2?jukebox`
           `/playlist/playlist1?jukebox&format=flac&sample_rate=48000`
 
@@ -1162,6 +1176,7 @@ Note: obviously you can't combine `webradio` and `jukebox` at the same time, if 
 `bitrate`: bitrate used for the stream, for `mp3` or `vorbis` formats only, values available are 32000, 96000, 128000, 192000, 256000, 320000, if format `flac` is used, bitrate is automatically set to 1411000
 `sample_rate`: sample rate (~frequency) used for the stream, values available are 8000, 11025, 22050, 32000, 44100, 48000
 `channels`: number of channels used for the stream, values available are 1 (mono) or 2 (stereo)
+`name`: display name for stream, optional, if not specified, the stream will have a display name corresponding to the path or the category
 
 ***Parameter used in webradio only***
 
@@ -1182,13 +1197,20 @@ Content
   "name": string, name of the stream, a 32 characters random sequence generated
   "display_name": string, display name of the stream
   "webradio": boolean true if the stream is a webradio
+	"elements": number of elements in the stream
   "format": string, audio format of the stream, values available are `mp3`, `vorbis` or `flac`
   "stereo": boolean, true if the audio stream is stereo
   "sample_rate": integer, sample rate of the audio stream
   "bitrate": integer, bitrate of the audio stream
   "nb_client": integer, number of clients currently listening to the stream
-  "last_seen": integer, date in epoch format when the stream was used last, for playlist streams only
+  "last_seen": integer, date in epoch format when the stream was used last, for jukebox streams only
   "stored_playlist": string, name of the playlist the stream is based on, optional
+	clients: [ Array of clients
+		{
+			"ip_address": string, ip address of the client
+			"user_agent": string, user agent of the client
+		}
+	]
 }
 ```
 
@@ -1411,16 +1433,23 @@ Content
 ```javascript
 [
   {
-    "name": string, name of the stream, a 32 characters random sequence generated
-    "display_name": string, display name of the stream
-    "webradio": boolean true if the stream is a webradio
-    "format": string, audio format of the stream, values available are `mp3`, `vorbis` or `flac`
-    "stereo": boolean, true if the audio stream is stereo
-    "sample_rate": integer, sample rate of the audio stream
-    "bitrate": integer, bitrate of the audio stream
-    "last_seen": integer, date in epoch format when the stream was used last, for playlist streams only
-    "stored_playlist": string, name of the playlist the stream is based on, optional
-		"elements": integer, number of elements in the playlist
+		"name": string, name of the stream, a 32 characters random sequence generated
+		"display_name": string, display name of the stream
+		"webradio": boolean true if the stream is a webradio
+		"elements": number of elements in the stream
+		"format": string, audio format of the stream, values available are `mp3`, `vorbis` or `flac`
+		"stereo": boolean, true if the audio stream is stereo
+		"sample_rate": integer, sample rate of the audio stream
+		"bitrate": integer, bitrate of the audio stream
+		"nb_client": integer, number of clients currently listening to the stream
+		"last_seen": integer, date in epoch format when the stream was used last, for jukebox streams only
+		"stored_playlist": string, name of the playlist the stream is based on, optional
+		clients: [ Array of clients
+			{
+				"ip_address": string, ip address of the client
+				"user_agent": string, user agent of the client
+			}
+		]
   }
 ]
 ```
@@ -1548,9 +1577,8 @@ The commands available are:
 - `now`: Return the current media information, for webradio only
 - `next`: Return the next media information, for webradio only
 - `list`: Return the list of all media available in this stream
-- `append_list`: Append a list of media in the current stream media list, parameter format is [{data_source: string, path: string}]
+- `append_list`: Append a list of media in the current stream media list, parameter format is [{data_source: string, path: string, recursive: boolean},{category: string, category_value: string, sub_category: string, sub_category_value: string}]
 - `remove_list`: Remove a media in the current stream media list, parameter format is {index: integer}
-- `play_after`: Play a specific media right at the end of the current one, for webradio only, parameter format is {index: integer}
 - `move`: Move a media in the stream list to a different index, parameter format is {index: integer, target: integer}
 - `attach_playlist`: Attach the stream to a stored playlist, parameter format is {name: string}
 - `reload`: Reload the stream media list with the attached stored playlist if one is specified
@@ -1583,26 +1611,25 @@ The returned data available are:
 
 - Command `info`
 ```javascript
-[
-  {
-    "name": string, name of the stream, a 32 characters random sequence generated
-    "display_name": string, display name of the stream
-    "webradio": boolean true if the stream is a webradio
-    "format": string, audio format of the stream, values available are `mp3`, `vorbis` or `flac`
-    "stereo": boolean, true if the audio stream is stereo
-    "sample_rate": integer, sample rate of the audio stream
-    "bitrate": integer, bitrate of the audio stream
-    "nb_client": integer, number of clients currently listening to the stream
-    "last_seen": integer, date in epoch format when the stream was used last, for playlist streams only
-    "stored_playlist": string, name of the playlist the stream is based on, optional
-    "clients": [ // List of clients currently connected to the stream
-      {
-        "ip_address": string, ip address of the client
-        "user_agent": string, user-agent of the client, empty if none specified
-      }
-    ]
-  }
-]
+{
+  "name": string, name of the stream, a 32 characters random sequence generated
+  "display_name": string, display name of the stream
+  "webradio": boolean true if the stream is a webradio
+	"elements": number of elements in the stream
+  "format": string, audio format of the stream, values available are `mp3`, `vorbis` or `flac`
+  "stereo": boolean, true if the audio stream is stereo
+  "sample_rate": integer, sample rate of the audio stream
+  "bitrate": integer, bitrate of the audio stream
+  "nb_client": integer, number of clients currently listening to the stream
+  "last_seen": integer, date in epoch format when the stream was used last, for jukebox streams only
+  "stored_playlist": string, name of the playlist the stream is based on, optional
+	clients: [ Array of clients
+		{
+			"ip_address": string, ip address of the client
+			"user_agent": string, user agent of the client
+		}
+	]
+}
 ```javascript
 
 - Command `now`
@@ -1721,7 +1748,6 @@ The commands available are:
 - `list`: Return the list of all media available in this stream
 - `append_list`: Append a list of media in the current stream media list, parameter format is [{data_source: string, path: string}]
 - `remove_list`: Remove a media in the current stream media list, parameter format is {index: integer}
-- `play_after`: Play a specific media right at the end of the current one, for webradio only, parameter format is {index: integer}
 - `move`: Move a media in the stream list to a different index, parameter format is {index: integer, target: integer}
 - `attach_playlist`: Attach the stream to a stored playlist, parameter format is {name: string}
 - `reload`: Reload the stream media list with the attached stored playlist if one is specified
@@ -1760,26 +1786,26 @@ The returned data available are:
 ```javascript
 {
   "command": "info"
-  "result": [
-    {
-      "name": string, name of the stream, a 32 characters random sequence generated
-      "display_name": string, display name of the stream
-      "webradio": boolean true if the stream is a webradio
-      "format": string, audio format of the stream, values available are `mp3`, `vorbis` or `flac`
-      "stereo": boolean, true if the audio stream is stereo
-      "sample_rate": integer, sample rate of the audio stream
-      "bitrate": integer, bitrate of the audio stream
-      "nb_client": integer, number of clients currently listening to the stream
-      "last_seen": integer, date in epoch format when the stream was used last, for playlist streams only
-      "stored_playlist": string, name of the playlist the stream is based on, optional
-      "clients": [ // List of clients currently connected to the stream
-        {
-          "ip_address": string, ip address of the client
-          "user_agent": string, user-agent of the client, empty if none specified
-        }
-      ]
-    }
-  ]
+  "result":
+	{
+		"name": string, name of the stream, a 32 characters random sequence generated
+		"display_name": string, display name of the stream
+		"webradio": boolean true if the stream is a webradio
+		"elements": number of elements in the stream
+		"format": string, audio format of the stream, values available are `mp3`, `vorbis` or `flac`
+		"stereo": boolean, true if the audio stream is stereo
+		"sample_rate": integer, sample rate of the audio stream
+		"bitrate": integer, bitrate of the audio stream
+		"nb_client": integer, number of clients currently listening to the stream
+		"last_seen": integer, date in epoch format when the stream was used last, for jukebox streams only
+		"stored_playlist": string, name of the playlist the stream is based on, optional
+		clients: [ Array of clients
+			{
+				"ip_address": string, ip address of the client
+				"user_agent": string, user agent of the client
+			}
+		]
+	}
 }
 ```javascript
 

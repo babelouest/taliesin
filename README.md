@@ -1,57 +1,23 @@
 # Taliesin
 
-Audio media server with a REST API.
+Audio media server with a REST API interface and a React JS client application.
 
-Beta version, still work in progress. Not yet easy user ready, but the API is almost complete.
+Still in BETA mode, but it's close to being ready.
 
-## Install
+Can be used as a cloud application for a set of media files.
 
-Requires a recent version of libav or ffmpeg, as in Debian Stretch or Ubuntu 17.04 version for example, I'm not sure about the version number, maybe 11 at least. Requires [ulfius](https://github.com/babelouest/ulfius), [hoel](https://github.com/babelouest/hoel), [libjwt](https://github.com/benmcollins/libjwt), libconfig and their dependencies.
+Main functionalities:
+- Play media files as a jukebox: the user chooses the songs to play
+- Play media files as a webradio: the files are played in sequence or at random in the same stream
+- Play media files in the client application, in an external player like VLC, or even control one or multiple MPD services with [Angharad House Automation System](https://github.com/babelouest/angharad)
+- Navigation modes: via file names or media tags
 
-```shell
-$ apt install -y libjansson-dev libavfilter-dev libavcodec-dev libavformat-dev libavresample-dev libavutil-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libsqlite3-dev libmariadbclient-dev libconfig8-dev
-$ git clone https://github.com/benmcollins/libjwt.git
-$ cd libjwt
-$ autoreconf -a && ./configure --without-openssl && make && sudo make install
-$ cd ..
+Database required: MariaDB/MySQL or SQLite3 are supported
 
-# Install Orcania
-$ git clone https://github.com/babelouest/orcania.git
-$ cd orcania/
-$ make
-$ sudo make install
-$ cd ../..
+Authentication method: An OAuth2 server providing JWT like [Glewlwyd](https://github.com/babelouest/glewlwyd), or no authentication.
 
-# Install Yder
-$ git clone https://github.com/babelouest/yder.git
-$ cd yder/src/
-$ make
-$ sudo make install
-$ cd ../..
+## Documentation
 
-# Install Ulfius
-$ git clone https://github.com/babelouest/ulfius.git
-$ cd ulfius/src/
-$ make
-$ sudo make install
-$ cd ../..
+Installation documentation is available in the file [INSTALL.md](https://github.com/babelouest/taliesin/blob/master/doc/INSTALL.md).
 
-# Install Hoel
-$ git clone https://github.com/babelouest/hoel.git
-$ cd hoel/src/
-$ make
-$ sudo make install
-$ cd ../..
-
-$ git clone git@github.com:babelouest/taliesin.git
-$ cd taliesin/src
-$ make && sudo make install
-$ mysql taliesin < ../taliesin.mariadb.sql # or sqlite /tmp/taliesin.db < ../taliesin.sqlite3.sql
-$ sudo mkdir -p /usr/local/etc/taliesin && sudo cp taliesin.conf.sample /usr/local/etc/taliesin/taliesin.conf
-# Edit /usr/local/etc/taliesin/taliesin.conf to your needs
-$ sudo cp taliesin.service /etc/systemd/system
-$ sudo systemctl enable taliesin.service
-$ sudo service taliesin start
-```
-
-Then open [http://localhost:8576/app/](http://localhost:8576/app/).
+Server API description is available in the file [API.md](https://github.com/babelouest/taliesin/blob/master/doc/API.md).

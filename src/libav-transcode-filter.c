@@ -207,10 +207,6 @@ int decode_audio_frame(AVFrame *frame,
       return 0;
     }
   }
-   /*if ((error = avcodec_decode_audio4(input_codec_context, frame, data_present, &input_packet)) < 0 && error != AVERROR_INVALIDDATA) {
-     y_log_message(Y_LOG_LEVEL_ERROR, "Could not decode frame (error '%s')", get_error_text(error));
-     av_packet_unref(&input_packet);
-     return error;*/
   if ((error = my_decode(input_codec_context, frame, data_present, &input_packet)) < 0) {
     if (error == AVERROR_EOF) {
       *finished = 1;
@@ -317,7 +313,6 @@ int init_output_frame(AVFrame **frame,
 int my_encode(AVCodecContext *output_codec_context, AVPacket *output_packet, AVFrame *frame, int * data_present) {
   int ret;
 
-  //y_log_message(Y_LOG_LEVEL_DEBUG, "avcodec_send_frame for %p %p", output_codec_context, frame->data);
   ret = avcodec_send_frame(output_codec_context, frame);
   if (ret < 0) {
     return ret;
@@ -346,15 +341,10 @@ int encode_audio_frame_and_return(AVFrame * frame,
   AVPacket output_packet;
   init_packet(&output_packet);
   
-  //y_log_message(Y_LOG_LEVEL_DEBUG, "inside encode_audio_frame_and_return");
   if (frame) {
     frame->pts = *pts;
     *pts += frame->nb_samples;
   }
-  /*if ((error = avcodec_encode_audio2(output_codec_context, &output_packet, frame, data_present)) < 0) {
-   y_log_message(Y_LOG_LEVEL_ERROR, "Could not encode frame (error '%s')", get_error_text(error));
-   av_packet_unref(&output_packet);
-   return error;*/
   if ((error = my_encode(output_codec_context, &output_packet, frame, data_present)) < 0) {
     if (error == AVERROR_EOF) {
       *data_present = 0;
@@ -667,7 +657,6 @@ int open_output_buffer_jukebox(struct _jukebox_audio_buffer * jukebox_audio_buff
         y_log_message(Y_LOG_LEVEL_ERROR, "Could not find output format '%s'", format);
         error = AVERROR(ENOMEM);
       } else {
-        //y_log_message(Y_LOG_LEVEL_DEBUG, "stream parameters are format: %s channels: %d sample_rate: %d bitrate: %d", jukebox_audio_buffer->jukebox->stream_format, jukebox_audio_buffer->jukebox->stream_channels, jukebox_audio_buffer->jukebox->stream_sample_rate, jukebox_audio_buffer->jukebox->stream_bitrate);
         avctx->channels       = jukebox_audio_buffer->jukebox->stream_channels;
         avctx->channel_layout = av_get_default_channel_layout(jukebox_audio_buffer->jukebox->stream_channels);
         avctx->sample_rate    = jukebox_audio_buffer->jukebox->stream_sample_rate;
@@ -723,8 +712,6 @@ int init_output_jpeg_image(AVCodecContext ** image_codec_context, int dst_width,
     (*image_codec_context)->bit_rate = 0;
     (*image_codec_context)->width = dst_width;
     (*image_codec_context)->height = dst_height;
-    //(*image_codec_context)->pkt_timebase.num = 0;
-    //(*image_codec_context)->pkt_timebase.den = 0;
     (*image_codec_context)->time_base.num = 1;
     (*image_codec_context)->time_base.den = 30;
     (*image_codec_context)->pix_fmt = AV_PIX_FMT_YUVJ420P;
@@ -763,7 +750,6 @@ int resize_image(AVCodecContext * original_image_codec_context, AVCodecContext *
           ret = -1;
         } else if (err > 0) {
           ret = my_encode(resized_image_codec_context, resized_image_cover_packet, output_frame, &data_present);
-          //y_log_message(Y_LOG_LEVEL_DEBUG, "my_encode for %d %p %p %d %p => %d", ret, resized_image_codec_context, resized_image_cover_packet->size, output_frame->data, ret);
         }
         sws_freeContext(sws_c);
       } else {

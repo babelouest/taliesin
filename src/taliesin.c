@@ -282,10 +282,8 @@ int main (int argc, char ** argv) {
     pthread_cond_wait(&global_handler_close_cond, &global_handler_close_lock);
     pthread_mutex_unlock(&global_handler_close_lock);
     for (i=0; i<config->nb_webradio; i++) {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "Send stop signal to existing streams");
       config->webradio_set[i]->audio_stream->status = TALIESIN_STREAM_STATUS_STOPPED;
       if (config->webradio_set[i]->audio_stream->first_buffer != NULL) {
-        y_log_message(Y_LOG_LEVEL_DEBUG, "Send client signal to first buffer");
         pthread_mutex_lock(&config->webradio_set[i]->audio_stream->buffer_lock);
         pthread_cond_signal(&config->webradio_set[i]->audio_stream->buffer_cond);
         pthread_mutex_unlock(&config->webradio_set[i]->audio_stream->buffer_lock);
@@ -293,7 +291,6 @@ int main (int argc, char ** argv) {
       pthread_mutex_lock(&config->stream_stop_lock);
       pthread_cond_wait(&config->stream_stop_cond, &config->stream_stop_lock);
       pthread_mutex_unlock(&config->stream_stop_lock);
-      y_log_message(Y_LOG_LEVEL_DEBUG, "signal received");
     }
     for (i=0; i<config->nb_jukebox; i++) {
       if (jukebox_close(config, config->jukebox_set[i]) != T_OK) {

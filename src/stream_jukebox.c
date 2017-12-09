@@ -401,7 +401,6 @@ json_t * add_jukebox_from_path(struct config_elements * config, json_t * j_data_
   j_media_list = media_scan_path(config, j_data_source, path, recursive);
   if (j_media_list != NULL && json_array_size(json_object_get(j_media_list, "media_list")) > 0) {
     if (!pthread_mutex_lock(&config->playlist_lock)) {
-      //y_log_message(Y_LOG_LEVEL_DEBUG, "realloc playlist_set at %d", (config->nb_jukebox + 1));
       config->jukebox_set = o_realloc(config->jukebox_set, (config->nb_jukebox + 1) * sizeof(struct _t_jukebox *));
       if (config->jukebox_set != NULL) {
         jukebox_index = config->nb_jukebox;
@@ -486,7 +485,6 @@ json_t * add_jukebox_from_playlist(struct config_elements * config, json_t * j_p
   int jukebox_index;
   
   if (!pthread_mutex_lock(&config->playlist_lock)) {
-    //y_log_message(Y_LOG_LEVEL_DEBUG, "realloc playlist_set at %d", (config->nb_jukebox + 1));
     config->jukebox_set = o_realloc(config->jukebox_set, (config->nb_jukebox + 1) * sizeof(struct _t_jukebox *));
     if (config->jukebox_set != NULL) {
       jukebox_index = config->nb_jukebox;
@@ -564,7 +562,6 @@ int add_jukebox_from_db_stream(struct config_elements * config, json_t * j_strea
   int jukebox_index, ret;
   
   if (!pthread_mutex_lock(&config->playlist_lock)) {
-    //y_log_message(Y_LOG_LEVEL_DEBUG, "realloc playlist_set at %d", (config->nb_jukebox + 1));
     config->jukebox_set = o_realloc(config->jukebox_set, (config->nb_jukebox + 1) * sizeof(struct _t_jukebox *));
     if (config->jukebox_set != NULL) {
       jukebox_index = config->nb_jukebox;
@@ -834,10 +831,9 @@ int jukebox_close(struct config_elements * config, struct _t_jukebox * jukebox) 
 int jukebox_audio_buffer_add_data(struct _jukebox_audio_buffer * jukebox_audio_buffer, uint8_t * buf, int buf_size) {
   int ret = -1;
   
-  //y_log_message(Y_LOG_LEVEL_DEBUG, "stream->nb_buffer is %d", stream->nb_buffer);
   if (jukebox_audio_buffer != NULL) {
 		if (pthread_mutex_lock(&jukebox_audio_buffer->write_lock)) {
-			y_log_message(Y_LOG_LEVEL_DEBUG, "Error pthread_mutex_lock");
+			y_log_message(Y_LOG_LEVEL_ERROR, "Error pthread_mutex_lock");
 		} else {
 			while (jukebox_audio_buffer->size + buf_size > jukebox_audio_buffer->max_size) {
 				jukebox_audio_buffer->data = o_realloc(jukebox_audio_buffer->data, jukebox_audio_buffer->max_size + TALIESIN_STREAM_BUFFER_INC_SIZE);
@@ -856,8 +852,6 @@ int jukebox_audio_buffer_add_data(struct _jukebox_audio_buffer * jukebox_audio_b
 			}
 			pthread_mutex_unlock(&jukebox_audio_buffer->write_lock);
 		}
-  } else {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "Error jukebox_audio_buffer is NULL");
   }
   return ret;
 }
@@ -1085,6 +1079,9 @@ json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * ju
         if (file_list_add_media_list(config, jukebox->file_list, json_object_get(j_result, "media")) != T_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error appending to jukebox");
           ret = T_ERROR;
+        } else if (jukebox_update_db_stream_media_list(config, jukebox) != T_OK) {
+					y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error webradio_update_db_stream_media_list");
+					ret = T_ERROR;
         }
       } else {
         ret = T_ERROR_NOT_FOUND;
@@ -1299,7 +1296,6 @@ void * jukebox_run_thread(void * args) {
       avio_flush(output_format_context->pb);
       av_free(output_format_context->pb->buffer);
       av_free(output_format_context->pb);
-      //avio_close(audio_stream->output_format_context->pb);
       avformat_free_context(output_format_context);
     }
     av_audio_fifo_free(fifo);
@@ -1311,7 +1307,6 @@ void * jukebox_run_thread(void * args) {
   }
   jukebox_audio_buffer_clean(client_data_jukebox->audio_buffer);
   clean_client_data_jukebox(client_data_jukebox);
-	y_log_message(Y_LOG_LEVEL_DEBUG, "End jukebox thread");
   return NULL;
 }
 
@@ -1319,7 +1314,6 @@ ssize_t u_jukebox_stream (void * cls, uint64_t pos, char * buf, size_t max) {
   struct _client_data_jukebox * client_data_jukebox = (struct _client_data_jukebox *)cls;
   size_t len;
   
-  //y_log_message(Y_LOG_LEVEL_DEBUG, "u_jukebox_stream - start");
   if (client_data_jukebox->audio_buffer->status != TALIESIN_STREAM_STATUS_STOPPED) {
     if (client_data_jukebox->audio_buffer->complete && client_data_jukebox->buffer_offset >= client_data_jukebox->audio_buffer->size) {
       return U_STREAM_END;
@@ -1330,7 +1324,6 @@ ssize_t u_jukebox_stream (void * cls, uint64_t pos, char * buf, size_t max) {
         usleep(50000);
       }
 			if (pthread_mutex_lock(&client_data_jukebox->audio_buffer->write_lock)) {
-				y_log_message(Y_LOG_LEVEL_DEBUG, "Error pthread_mutex_lock");
 				return U_STREAM_END;
 			} else {
 				if (client_data_jukebox->buffer_offset + max > client_data_jukebox->audio_buffer->size) {

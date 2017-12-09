@@ -525,7 +525,6 @@ int callback_taliesin_media_get_path (const struct _u_request * request, struct 
                     y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio");
                     response->status = 500;
                   } else {
-                    json_object_set_new(json_object_get(j_stream_info, "stream"), "media", json_deep_copy(json_object_get(j_result, "media")));
                     ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
                   }
                 } else if (check_result_value(j_stream_info, T_ERROR_NOT_FOUND)) {
@@ -536,10 +535,8 @@ int callback_taliesin_media_get_path (const struct _u_request * request, struct 
                 }
                 json_decref(j_stream_info);
               } else if (u_map_get(request->map_url, "jukebox") != NULL) {
-                //y_log_message(Y_LOG_LEVEL_DEBUG, "Start jukebox");
                 j_stream_info = add_jukebox_from_path(config, json_object_get(j_data_source, "data_source"), decode_path, get_username(request, response, config), format, channels, sample_rate, bit_rate, (u_map_get(request->map_url, "recursive")!=NULL), u_map_get(request->map_url, "name"));
                 if (check_result_value(j_stream_info, T_OK)) {
-                  json_object_set_new(json_object_get(j_stream_info, "stream"), "media", json_deep_copy(json_object_get(j_result, "media")));
                   ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
                 } else if (check_result_value(j_stream_info, T_ERROR_NOT_FOUND)) {
                   response->status = 404;
@@ -1093,7 +1090,6 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
     }
   }
   
-  //y_log_message(Y_LOG_LEVEL_DEBUG,"Start stream, %p", current_webradio);
   if (u_map_get_case(request->map_url, "index") != NULL) {
     jukebox_index = strtol(u_map_get_case(request->map_url, "index"), NULL, 10);
   }
@@ -1129,28 +1125,22 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
               if (client_data_webradio->audio_stream->nb_client_connected == 1) {
                 // First client to connect, jump to last_offset
                 time_offset = client_data_webradio->audio_stream->first_buffer->last_offset;
-                //y_log_message(Y_LOG_LEVEL_DEBUG, "get last_offset");
               } else {
                 // Not the first client to connect, calculate offset to jump to
                 clock_gettime(CLOCK_MONOTONIC_RAW, &now);
                 time_delta = (((uint64_t)now.tv_sec * 1000000000 + (uint64_t)now.tv_nsec) - ((uint64_t)client_data_webradio->audio_stream->first_buffer->start.tv_sec * 1000000000 + (uint64_t)client_data_webradio->audio_stream->first_buffer->start.tv_nsec));
-                //y_log_message(Y_LOG_LEVEL_DEBUG, "time_delta is %zu", time_delta);
-                //client_data_webradio->buffer_offset = time_offset - (time_offset % client_data_webradio->audio_stream->output_codec_context->frame
                 time_offset = ((time_delta * (client_data_webradio->audio_stream->stream_bitrate / 8)) / 1000000000);
-                //y_log_message(Y_LOG_LEVEL_DEBUG, "Calculat time offset");
               }
               i=0;
               while (i < client_data_webradio->audio_stream->first_buffer->nb_offset && client_data_webradio->audio_stream->first_buffer->offset_list[i] < time_offset) {
                 i++;
               }
-              //y_log_message(Y_LOG_LEVEL_DEBUG, "getting offset_list element %d", i);
               if (i < client_data_webradio->audio_stream->first_buffer->nb_offset) {
                 client_data_webradio->buffer_offset = client_data_webradio->audio_stream->first_buffer->offset_list[i];
               } else {
                 // This shouldn't happen
                 client_data_webradio->buffer_offset = 0;
               }
-              //y_log_message(Y_LOG_LEVEL_DEBUG, "jump to offset %zu while buffer_size is %zu", client_data_webradio->buffer_offset, client_data_webradio->audio_stream->first_buffer->size);
             } else {
               client_data_webradio->buffer_offset = 0;
             }
@@ -1436,7 +1426,6 @@ void callback_websocket_stream_manager (const struct _u_request * request, struc
   char * message;
   json_t * j_result, * j_message;
   
-  //y_log_message(Y_LOG_LEVEL_DEBUG, "Start websocket");
   if (ws_stream->webradio != NULL) {
     ws_stream->webradio->nb_websocket++;
     // Loop until websocket is closed by the server or the client
@@ -1444,7 +1433,6 @@ void callback_websocket_stream_manager (const struct _u_request * request, struc
       pthread_mutex_lock(&ws_stream->webradio->message_lock);
       pthread_cond_wait(&ws_stream->webradio->message_cond, &ws_stream->webradio->message_lock);
       pthread_mutex_unlock(&ws_stream->webradio->message_lock);
-      //y_log_message(Y_LOG_LEVEL_DEBUG, "Message received");
       
       if (ws_stream->is_authenticated) {
         if (ws_stream->webradio->message_type == TALIESIN_PLAYLIST_MESSAGE_TYPE_NEW_MEDIA) {
@@ -1490,7 +1478,6 @@ void callback_websocket_stream_manager (const struct _u_request * request, struc
       pthread_mutex_lock(&ws_stream->jukebox->message_lock);
       pthread_cond_wait(&ws_stream->jukebox->message_cond, &ws_stream->jukebox->message_lock);
       pthread_mutex_unlock(&ws_stream->jukebox->message_lock);
-      //y_log_message(Y_LOG_LEVEL_DEBUG, "Message received");
       
       if (ws_stream->is_authenticated) {
         if (ws_stream->jukebox->message_type == TALIESIN_PLAYLIST_MESSAGE_TYPE_CLOSING) {
@@ -1507,30 +1494,25 @@ void callback_websocket_stream_manager (const struct _u_request * request, struc
     }
     
     if (ws_stream->status == TALIESIN_WEBSOCKET_PLAYLIST_STATUS_CLOSING) {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "callback_websocket_stream_manager - Send close signal");
       ws_stream->status = TALIESIN_WEBSOCKET_PLAYLIST_STATUS_CLOSE;
     } else {
       ws_stream->status = TALIESIN_WEBSOCKET_PLAYLIST_STATUS_CLOSE;
     }
   }
-  y_log_message(Y_LOG_LEVEL_DEBUG, "End callback_websocket_stream_manager");
 }
 
 void callback_websocket_stream_onclose (const struct _u_request * request, struct _websocket_manager * websocket_manager, void * websocket_user_data) {
   struct _ws_stream * ws_stream = (struct _ws_stream *)websocket_user_data;
   
-  y_log_message(Y_LOG_LEVEL_DEBUG, "callback_websocket_stream_onclose - start");
   if (ws_stream->status != TALIESIN_WEBSOCKET_PLAYLIST_STATUS_CLOSE) {
     ws_stream->status = TALIESIN_WEBSOCKET_PLAYLIST_STATUS_CLOSING;
     if (ws_stream->jukebox != NULL) {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "callback_websocket_stream_onclose - Send closing signal");
       ws_stream->jukebox->message_type = TALIESIN_WEBSOCKET_PLAYLIST_STATUS_CLOSING;
       pthread_mutex_lock(&ws_stream->jukebox->message_lock);
       pthread_cond_signal(&ws_stream->jukebox->message_cond);
       pthread_mutex_unlock(&ws_stream->jukebox->message_lock);
       
       while (ws_stream->status != TALIESIN_WEBSOCKET_PLAYLIST_STATUS_CLOSE) {
-        y_log_message(Y_LOG_LEVEL_DEBUG, "callback_websocket_stream_onclose - wait for close signal");
         pthread_mutex_lock(&ws_stream->jukebox->message_lock);
         pthread_cond_wait(&ws_stream->jukebox->message_cond, &ws_stream->jukebox->message_lock);
         pthread_mutex_unlock(&ws_stream->jukebox->message_lock);
@@ -1550,7 +1532,6 @@ void callback_websocket_stream_onclose (const struct _u_request * request, struc
   }
   
   if (ws_stream->jukebox != NULL) {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "callback_websocket_stream_onclose - Send trash signal");
     ws_stream->jukebox->nb_websocket--;
     ws_stream->jukebox->message_type = TALIESIN_PLAYLIST_MESSAGE_TYPE_TRASH;
     pthread_mutex_lock(&ws_stream->jukebox->websocket_lock);
@@ -1565,8 +1546,6 @@ void callback_websocket_stream_onclose (const struct _u_request * request, struc
   }
   o_free(ws_stream->username);
   o_free(ws_stream);
-  
-  y_log_message(Y_LOG_LEVEL_DEBUG, "end callback_websocket_stream_onclose");
 }
 
 void callback_websocket_stream_incoming_message (const struct _u_request * request, struct _websocket_manager * websocket_manager, const struct _websocket_message * last_message, void * websocket_user_data) {
@@ -2145,7 +2124,6 @@ int callback_taliesin_playlist_load (const struct _u_request * request, struct _
         } else {
           j_stream_info = add_jukebox_from_playlist(config, json_object_get(j_playlist, "playlist"), get_username(request, response, config), format, channels, sample_rate, bit_rate, u_map_get(request->map_url, "name"));
           if (check_result_value(j_stream_info, T_OK)) {
-            json_object_set_new(json_object_get(j_stream_info, "stream"), "media", json_deep_copy(json_object_get(json_object_get(j_playlist, "playlist"), "media")));
             ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
           } else {
             y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get_path - Error creating playlist");

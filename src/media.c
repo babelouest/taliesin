@@ -258,11 +258,9 @@ json_t * media_get_metadata(struct config_elements * config, AVCodecContext * th
   if (j_metadata != NULL) {
     if (file_type == TALIESIN_FILE_TYPE_AUDIO || file_type == TALIESIN_FILE_TYPE_VIDEO || file_type == TALIESIN_FILE_TYPE_IMAGE) {
       if (!avformat_open_input(&full_size_cover_format_context, path, NULL, NULL)) {
-        //y_log_message(Y_LOG_LEVEL_DEBUG, "path is %s, pb is %p", path, full_size_cover_format_context->pb);
         /* Get information on the input file (number of streams etc.). */
         if (!avformat_find_stream_info(full_size_cover_format_context, NULL)) {
           json_object_set_new(j_metadata, "tags", media_get_tags(full_size_cover_format_context));
-          //y_log_message(Y_LOG_LEVEL_DEBUG, "path is %s, duration is %"PRId64", stored is %"PRId64, path, full_size_cover_format_context->duration, ((full_size_cover_format_context->duration*1000)/AV_TIME_BASE));
           json_object_set_new(j_metadata, "duration", json_integer(((full_size_cover_format_context->duration*1000)/AV_TIME_BASE)));
           j_format = get_format(config, full_size_cover_format_context, path);
           if (j_format != NULL) {
@@ -270,7 +268,6 @@ json_t * media_get_metadata(struct config_elements * config, AVCodecContext * th
               av_init_packet(&full_size_cover_packet);
               av_init_packet(&thumbnail_cover_packet);
               if ((ret = get_media_cover(full_size_cover_format_context, &full_size_cover_codec_context, &full_size_cover_packet)) == T_OK) {
-                //y_log_message(Y_LOG_LEVEL_DEBUG, "cover found: %d of %s", full_size_cover_packet.size, path);
                 if (resize_image(full_size_cover_codec_context, thumbnail_cover_codec_context, &full_size_cover_packet, &thumbnail_cover_packet, TALIESIN_COVER_THUMB_WIDTH, TALIESIN_COVER_THUMB_HEIGHT) >= 0) {
                   cover_b64 = o_malloc(2 * full_size_cover_packet.size * sizeof(char));
                   if (cover_b64 != NULL) {
@@ -490,7 +487,7 @@ json_t * media_get_file(struct config_elements * config, json_t * j_data_source,
   int res;
   size_t index_tag;
   
-  j_query = json_pack("{sss[ssssss]s{sIsoss}}",
+  j_query = json_pack("{sss[ssssss]s{sIsoss}ss}",
                       "table",
                       TALIESIN_TABLE_MEDIA,
                       "columns",
@@ -506,7 +503,9 @@ json_t * media_get_file(struct config_elements * config, json_t * j_data_source,
                         "tf_id",
                         tf_id==0?json_null():json_integer(tf_id),
                         "tm_name",
-                        file);
+                        file,
+											"order_by",
+											"path");
   if (j_query != NULL) {
     res = h_select(config->conn, j_query, &j_result, NULL);
     json_decref(j_query);
@@ -744,7 +743,6 @@ json_int_t cover_save_new_or_get_id(struct config_elements * config, json_int_t 
           tic_id = json_integer_value(json_object_get(json_array_get(j_result, 0), "tic_id"));
         } else {
           // There's no cover with this crc, so we add it
-          //y_log_message(Y_LOG_LEVEL_DEBUG, "Add new cover image for %s", json_string_value(json_object_get(j_media, "name")));
           j_query = json_pack("{sss{sossssss}}",
                               "table",
                               TALIESIN_TABLE_IMAGE_COVER,
@@ -902,7 +900,6 @@ int media_update(struct config_elements * config, json_int_t tm_id, json_t * j_m
           tic_id = json_integer_value(json_object_get(json_array_get(j_result, 0), "tic_id"));
         } else {
           // There's no cover with this crc, so we add it
-          //y_log_message(Y_LOG_LEVEL_DEBUG, "Add new cover image for %s", json_string_value(json_object_get(j_media, "name")));
           j_query = json_pack("{sss{ssssss}}",
                               "table",
                               TALIESIN_TABLE_IMAGE_COVER,
@@ -1041,7 +1038,6 @@ int scan_path_to_webradio(struct config_elements * config, json_t * j_data_sourc
   char * new_path, * full_path;
   size_t index;
   
-  y_log_message(Y_LOG_LEVEL_DEBUG, "scan_path_to_webradio");
   if (check_result_value(j_media, T_OK)) {
     if (json_is_array(json_object_get(j_media, "media"))) {
       json_array_foreach(json_object_get(j_media, "media"), index, j_element) {
@@ -1168,11 +1164,11 @@ json_t * media_get_audio_list_from_path(struct config_elements * config, json_t 
         json_array_foreach(json_object_get(j_result, "media"), index, j_element) {
           if (recursive && 0 == o_strcmp("folder", json_string_value(json_object_get(j_element, "type")))) {
             sub_path = msprintf("%s/%s", path, json_string_value(json_object_get(j_element, "name")));;
-            j_sub_result = media_get_file_list_from_path(config, j_data_source, sub_path, recursive);
+            j_sub_result = media_get_audio_list_from_path(config, j_data_source, sub_path, recursive);
             if (check_result_value(j_sub_result, T_OK)) {
               json_array_extend(json_object_get(j_return, "media"), json_object_get(j_sub_result, "media"));
             } else {
-              y_log_message(Y_LOG_LEVEL_ERROR, "media_get_file_list_from_path - Error media_get_file_list_from_path for sub_path %s", sub_path);
+              y_log_message(Y_LOG_LEVEL_ERROR, "media_get_audio_list_from_path - Error media_get_audio_list_from_path for sub_path %s", sub_path);
             }
             json_decref(j_sub_result);
             o_free(sub_path);
@@ -1182,14 +1178,14 @@ json_t * media_get_audio_list_from_path(struct config_elements * config, json_t 
           }
         }
       } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "media_get_file_list_from_path - Error allocating resources for j_return");
+        y_log_message(Y_LOG_LEVEL_ERROR, "media_get_audio_list_from_path - Error allocating resources for j_return");
       }
     } else {
       j_return = json_pack("{sis[O]}", "result", T_OK, "media", json_object_get(j_result, "media"));
       json_object_set(json_array_get(json_object_get(j_return, "media"), 0), "data_source_path", json_object_get(j_data_source, "path"));
     }
   } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "media_get_file_list_from_path - Error media_get_full");
+    y_log_message(Y_LOG_LEVEL_ERROR, "media_get_audio_list_from_path - Error media_get_full");
     j_return = json_pack("{si}", "result", T_ERROR);
   }
   json_decref(j_result);
@@ -2263,10 +2259,10 @@ int is_valid_path_element_parameter(struct config_elements * config, json_t * ju
       }
       json_decref(j_media);
     } else if (!check_result_value(j_data_source, T_ERROR_NOT_FOUND)) {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "Error get data source %s %s", username, json_string_value(json_object_get(jukebox_element, "data_source")));
+      y_log_message(Y_LOG_LEVEL_ERROR, "Error get data source %s %s", username, json_string_value(json_object_get(jukebox_element, "data_source")));
       res = 0;
     } else {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "Error data_source_get");
+      y_log_message(Y_LOG_LEVEL_ERROR, "Error data_source_get");
       res = 0;
     }
     json_decref(j_data_source);
@@ -2308,10 +2304,10 @@ int is_valid_category_element_parameter(struct config_elements * config, json_t 
     if (check_result_value(j_data_source, T_OK)) {
       res = 1;
     } else if (!check_result_value(j_data_source, T_ERROR_NOT_FOUND)) {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "Error get data source %s %s", username, json_string_value(json_object_get(category_element, "data_source")));
+      y_log_message(Y_LOG_LEVEL_ERROR, "Error get data source %s %s", username, json_string_value(json_object_get(category_element, "data_source")));
       res = 0;
     } else {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "Error data_source_get");
+      y_log_message(Y_LOG_LEVEL_ERROR, "Error data_source_get");
       res = 0;
     }
     json_decref(j_data_source);

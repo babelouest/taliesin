@@ -118,7 +118,7 @@ json_t * media_search(struct config_elements * config, const char * username_esc
   } else if (search_category == TALIESIN_SEARCH_CATEGORY_GENRE) {
     clause_search = msprintf("`tm_id` IN (SELECT `tm_id` FROM `%s` WHERE `tmd_value` LIKE '%%%s%%' AND `tmd_key`='genre')", TALIESIN_TABLE_META_DATA, search_pattern_escape);
   }
-  query = msprintf("SELECT " TALIESIN_TABLE_DATA_SOURCE ".tds_id, " TALIESIN_TABLE_DATA_SOURCE ".tds_name AS data_source, " TALIESIN_TABLE_MEDIA ".tm_name AS name, " TALIESIN_TABLE_MEDIA ".tm_path AS path FROM `" TALIESIN_TABLE_MEDIA "`, `" TALIESIN_TABLE_DATA_SOURCE "` WHERE `" TALIESIN_TABLE_DATA_SOURCE "`.`tds_id` in (SELECT `tds_id` FROM `%s` WHERE `tds_username`='%s' OR `tds_username` IS NULL) AND %s AND `" TALIESIN_TABLE_DATA_SOURCE "`.`tds_id` = `" TALIESIN_TABLE_MEDIA "`.`tds_id` LIMIT %d", TALIESIN_TABLE_DATA_SOURCE, username_escape, clause_search, TALIESIN_MEDIA_LIMIT_DEFAULT);
+  query = msprintf("SELECT " TALIESIN_TABLE_MEDIA ".tm_id, " TALIESIN_TABLE_DATA_SOURCE ".tds_name AS data_source, " TALIESIN_TABLE_MEDIA ".tm_name AS name, " TALIESIN_TABLE_MEDIA ".tm_path AS path FROM `" TALIESIN_TABLE_MEDIA "`, `" TALIESIN_TABLE_DATA_SOURCE "` WHERE `" TALIESIN_TABLE_DATA_SOURCE "`.`tds_id` in (SELECT `tds_id` FROM `%s` WHERE `tds_username`='%s' OR `tds_username` IS NULL) AND (%s) AND `" TALIESIN_TABLE_DATA_SOURCE "`.`tds_id` = `" TALIESIN_TABLE_MEDIA "`.`tds_id` LIMIT %d", TALIESIN_TABLE_DATA_SOURCE, username_escape, clause_search, TALIESIN_MEDIA_LIMIT_DEFAULT);
   o_free(clause_search);
   res = h_execute_query_json(config->conn, query, &j_result);
   o_free(query);
@@ -228,7 +228,7 @@ json_t * is_valid_media_advanced_search(struct config_elements * config, const c
     if (search_criteria == NULL || !json_is_object(search_criteria)) {
       json_array_append_new(j_return, json_pack("{ss}", "search_criteria", "search_criteria must be a JSON object"));
     } else {
-      if (json_object_get(search_criteria, "query") != NULL && (!json_is_string(json_object_get(search_criteria, "query")) || json_string_length(json_object_get(search_criteria, "query")) == 0)) {
+      if (json_object_get(search_criteria, "query") != NULL && (!json_is_string(json_object_get(search_criteria, "query")))) {
         json_array_append_new(j_return, json_pack("{ss}", "query", "query is optional and must be a non null JSON string"));
       }
       if (json_object_get(search_criteria, "type") != NULL && (!json_is_string(json_object_get(search_criteria, "type")) || 
@@ -238,16 +238,11 @@ json_t * is_valid_media_advanced_search(struct config_elements * config, const c
           o_strcmp(json_string_value(json_object_get(search_criteria, "type")), "image") != 0 && 
           o_strcmp(json_string_value(json_object_get(search_criteria, "type")), "subtitle") != 0 && 
           o_strcmp(json_string_value(json_object_get(search_criteria, "type")), "other") != 0 && 
-          o_strcmp(json_string_value(json_object_get(search_criteria, "type")), "unknown") != 0
+          o_strcmp(json_string_value(json_object_get(search_criteria, "type")), "unknown") != 0 && 
+          o_strcmp(json_string_value(json_object_get(search_criteria, "type")), "") != 0
           )
           )) {
         json_array_append_new(j_return, json_pack("{ss}", "type", "type is optional and must be a JSON string with one of the following values: 'audio', 'video', 'image', 'subtitle', 'other', 'unknown'"));
-      }
-      if (json_object_get(search_criteria, "limit") != NULL && (!json_is_integer(json_object_get(search_criteria, "limit")) || json_integer_value(json_object_get(search_criteria, "limit")) < 0)) {
-        json_array_append_new(j_return, json_pack("{ss}", "limit", "limit is optional and must be a positive or zero integer"));
-      }
-      if (json_object_get(search_criteria, "offset") != NULL && (!json_is_integer(json_object_get(search_criteria, "offset")) || json_integer_value(json_object_get(search_criteria, "offset")) < 0)) {
-        json_array_append_new(j_return, json_pack("{ss}", "offset", "offset is optional and must be a positive or zero integer"));
       }
       if (json_object_get(search_criteria, "data_source") != NULL && !json_is_array(json_object_get(search_criteria, "data_source"))) {
         json_array_append_new(j_return, json_pack("{ss}", "data_source", "data_source is optional and must be a JSON array"));
@@ -268,9 +263,9 @@ json_t * is_valid_media_advanced_search(struct config_elements * config, const c
         json_array_append_new(j_return, json_pack("{ss}", "tags", "tags is optional and must be a JSON array"));
       } else {
         json_array_foreach(json_object_get(search_criteria, "tags"), index, j_element) {
-          if (!json_is_object(j_element) || json_object_get(j_element, "key") == NULL || !json_is_string(json_object_get(j_element, "key")) || json_string_length(json_object_get(j_element, "key")) == 0 || json_string_length(json_object_get(j_element, "key")) > 128) {
+          if (!json_is_object(j_element) || json_object_get(j_element, "key") == NULL || !json_is_string(json_object_get(j_element, "key")) || json_string_length(json_object_get(j_element, "key")) > 128) {
             json_array_append_new(j_return, json_pack("{ss}", "tag", "a tag must have at least a key and a value of type string, maximum 128 characters"));
-          } else if (0 != o_strcmp(json_string_value(json_object_get(j_element, "operator")), "empty") && (json_object_get(j_element, "value") == NULL || !json_is_string(json_object_get(j_element, "value")) || json_string_length(json_object_get(j_element, "value")) == 0 || json_string_length(json_object_get(j_element, "value")) > 512)) {
+          } else if (0 != o_strcmp(json_string_value(json_object_get(j_element, "operator")), "empty") && (json_object_get(j_element, "value") == NULL || !json_is_string(json_object_get(j_element, "value")) || json_string_length(json_object_get(j_element, "value")) > 512)) {
             json_array_append_new(j_return, json_pack("{ss}", "tag", "a tag must have at least a value of type string, maximum 512 characters"));
           } else {
             if (0 != o_strcmp(json_string_value(json_object_get(j_element, "operator")), "equals") &&
@@ -281,7 +276,7 @@ json_t * is_valid_media_advanced_search(struct config_elements * config, const c
                 0 != o_strcmp(json_string_value(json_object_get(j_element, "operator")), "between") &&
                 0 != o_strcmp(json_string_value(json_object_get(j_element, "operator")), "empty")) {
               json_array_append_new(j_return, json_pack("{ss}", "operator", "operator is optional and must be 'equals', 'different', 'contains', 'lower', 'higher', 'between' or 'empty'"));
-            } else if (0 == o_strcmp(json_string_value(json_object_get(j_element, "operator")), "between") && (json_object_get(j_element, "value_max") == NULL || !json_is_string(json_object_get(j_element, "value_max")) || json_string_length(json_object_get(j_element, "value_max")) == 0 || json_string_length(json_object_get(j_element, "value_max")) > 512)) {
+            } else if (0 == o_strcmp(json_string_value(json_object_get(j_element, "operator")), "between") && (json_object_get(j_element, "value_max") == NULL || !json_is_string(json_object_get(j_element, "value_max")) || json_string_length(json_object_get(j_element, "value_max")) > 512)) {
               json_array_append_new(j_return, json_pack("{ss}", "between", "when using operator 'between', you must use a 'value_max' string"));
             }
           }
@@ -302,6 +297,8 @@ json_t * is_valid_media_advanced_search(struct config_elements * config, const c
           json_array_append_new(j_return, json_pack("{ss}", "operator", "nb_play operator is mandatory and must be 'equals', 'different', 'lower', 'higher' or 'between'"));
         } else if (json_object_get(json_object_get(search_criteria, "metrics"), "nb_play") != NULL && (json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "value") == NULL || !json_is_integer(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "value")) || json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "value")) < 0)) {
           json_array_append_new(j_return, json_pack("{ss}", "operator", "nb_play value is mandatory and must be a positive or null integer"));
+				} else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "operator")), "between") && (json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "value_max") == NULL || !json_is_integer(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "value_max")) || json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "value_max")) < json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "value")) || json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "value_max")) < 0)) {
+					json_array_append_new(j_return, json_pack("{ss}", "between", "when using operator 'between', you must use a 'value_max' positive integer value and inferior or equal to 'value'"));
         }
         if (json_object_get(json_object_get(search_criteria, "metrics"), "played_at") != NULL && !json_is_object(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"))) {
           json_array_append_new(j_return, json_pack("{ss}", "played_at", "played_at is optional and must be a JSON object"));
@@ -315,6 +312,8 @@ json_t * is_valid_media_advanced_search(struct config_elements * config, const c
           json_array_append_new(j_return, json_pack("{ss}", "operator", "played_at operator is mandatory and must be 'equals', 'different', 'lower', 'higher' or 'between'"));
         } else if (json_object_get(json_object_get(search_criteria, "metrics"), "played_at") != NULL && (json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "value") == NULL || !json_is_integer(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "value")) || json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "value")) < 0)) {
           json_array_append_new(j_return, json_pack("{ss}", "operator", "played_at value is mandatory and must be a positive or null integer"));
+				} else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "operator")), "between") && (json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "value_max") == NULL || !json_is_integer(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "value_max")) || json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "value_max")) < json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "value")) || json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "value_max")) < 0)) {
+					json_array_append_new(j_return, json_pack("{ss}", "between", "when using operator 'between', you must use a 'value_max' positive integer value and inferior or equal to 'value'"));
         }
         if (json_object_get(json_object_get(search_criteria, "metrics"), "last_seen") != NULL && !json_is_object(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"))) {
           json_array_append_new(j_return, json_pack("{ss}", "last_seen", "last_seen is optional and must be a JSON object"));
@@ -328,6 +327,8 @@ json_t * is_valid_media_advanced_search(struct config_elements * config, const c
           json_array_append_new(j_return, json_pack("{ss}", "operator", "last_seen operator is mandatory and must be 'equals', 'different', 'lower', 'higher' or 'between'"));
         } else if (json_object_get(json_object_get(search_criteria, "metrics"), "last_seen") != NULL && (json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "value") == NULL || !json_is_integer(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "value")) || json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "value")) < 0)) {
           json_array_append_new(j_return, json_pack("{ss}", "operator", "last_seen value is mandatory and must be a positive or null integer"));
+				} else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "operator")), "between") && (json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "value_max") == NULL || !json_is_integer(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "value_max")) || json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "value_max")) < json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "value")) || json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "value_max")) < 0)) {
+					json_array_append_new(j_return, json_pack("{ss}", "between", "when using operator 'between', you must use a 'value_max' positive integer value and inferior or equal to 'value'"));
         }
         if (json_object_get(json_object_get(search_criteria, "metrics"), "last_updated") != NULL && !json_is_object(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"))) {
           json_array_append_new(j_return, json_pack("{ss}", "last_updated", "last_updated is optional and must be a JSON object"));
@@ -341,6 +342,8 @@ json_t * is_valid_media_advanced_search(struct config_elements * config, const c
           json_array_append_new(j_return, json_pack("{ss}", "operator", "last_updated operator is mandatory and must be 'equals', 'different', 'lower', 'higher' or 'between'"));
         } else if (json_object_get(json_object_get(search_criteria, "metrics"), "last_updated") != NULL && (json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "value") == NULL || !json_is_integer(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "value")) || json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "value")) < 0)) {
           json_array_append_new(j_return, json_pack("{ss}", "operator", "last_updated value is mandatory and must be a positive or null integer"));
+				} else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "operator")), "between") && (json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "value_max") == NULL || !json_is_integer(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "value_max")) || json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "value_max")) < json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "value")) || json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "value_max")) < 0)) {
+					json_array_append_new(j_return, json_pack("{ss}", "between", "when using operator 'between', you must use a 'value_max' positive integer value and inferior or equal to 'value'"));
         }
       }
       if (json_object_get(search_criteria, "sort") != NULL && (!json_is_string(json_object_get(search_criteria, "sort")) ||
@@ -377,32 +380,46 @@ json_t * is_valid_media_advanced_search(struct config_elements * config, const c
  * - media last seen date
  */
 json_t * media_advanced_search(struct config_elements * config, const char * username, json_t * search_criteria) {
-  char * query, * clause_tags = NULL, * clause, * tmp, * escape_key, * escape_value, * escape_value_max, * escape;
+  char * query, * clause_tags = NULL, * clause, * tmp, * escape_key, * escape_value, * escape_value_max, * escape, * data_source_clause;
   json_t * j_element, * j_result = NULL, * j_tags;
   int res;
   size_t index;
   
   escape = h_escape_string(config->conn, username);
+	if (json_object_get(json_object_get(search_criteria, "metrics"), "nb_play") != NULL) {
+		tmp = "LEFT JOIN (SELECT `"TALIESIN_TABLE_MEDIA_HISTORY"`.`tm_id`, COUNT(`"TALIESIN_TABLE_MEDIA_HISTORY"`.`tmh_id`) AS `nb_h` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` GROUP BY `"TALIESIN_TABLE_MEDIA_HISTORY"`.`tm_id`) AS `th_count` ON `th_count`.`tm_id` = `"TALIESIN_TABLE_MEDIA"`.`tm_id`";
+	} else {
+		tmp = "";
+	}
   query = msprintf("SELECT `"TALIESIN_TABLE_MEDIA"`.`tm_id`, `"TALIESIN_TABLE_MEDIA"`.`tm_type` AS `type`, `"TALIESIN_TABLE_MEDIA"`.`tm_name` AS `name`, `"TALIESIN_TABLE_MEDIA"`.`tm_path` AS `path`, `"TALIESIN_TABLE_DATA_SOURCE"`.`tds_name` AS `data_source`, "
-                   "(SELECT COUNT(`tmh_id`) FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE `"TALIESIN_TABLE_MEDIA_HISTORY"`.`tm_id`=`"TALIESIN_TABLE_MEDIA"`.`tm_id`) AS `nb_play`,"
+                   "(SELECT COUNT(`tmh_id`) FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE `"TALIESIN_TABLE_MEDIA_HISTORY"`.`tm_id`=`"TALIESIN_TABLE_MEDIA"`.`tm_id`) AS `nb_play`, "
                    "(SELECT %s FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE `"TALIESIN_TABLE_MEDIA_HISTORY"`.`tm_id`=`"TALIESIN_TABLE_MEDIA"`.`tm_id` ORDER BY `tmh_datestamp` DESC LIMIT 1) AS `last_played` "
-                   "FROM `"TALIESIN_TABLE_MEDIA"`, `"TALIESIN_TABLE_DATA_SOURCE"` "
+                   "FROM `"TALIESIN_TABLE_DATA_SOURCE"`, `"TALIESIN_TABLE_MEDIA"` %s"
                    "WHERE `"TALIESIN_TABLE_MEDIA"`.`tds_id`=`"TALIESIN_TABLE_DATA_SOURCE"`.`tds_id` "
-                   "AND (`"TALIESIN_TABLE_DATA_SOURCE"`.`tds_username` IS NULL OR `"TALIESIN_TABLE_DATA_SOURCE"`.`tds_username`='%s') AND `"TALIESIN_TABLE_DATA_SOURCE"`.`tds_refresh_status`=%d",
-                   (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), escape, DATA_SOURCE_REFRESH_STATUS_NOT_RUNNING);
+                   "AND (`"TALIESIN_TABLE_DATA_SOURCE"`.`tds_username` IS NULL OR `"TALIESIN_TABLE_DATA_SOURCE"`.`tds_username`='%s') AND `"TALIESIN_TABLE_DATA_SOURCE"`.`tds_refresh_status`=%d", 
+                   (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), tmp, escape, DATA_SOURCE_REFRESH_STATUS_NOT_RUNNING);
   o_free(escape);
   
-  if (json_object_get(search_criteria, "data_source") != NULL) {
+  if (json_object_get(search_criteria, "data_source") != NULL && json_array_size(json_object_get(search_criteria, "data_source")) > 0) {
+		data_source_clause = NULL;
     json_array_foreach(json_object_get(search_criteria, "data_source"), index, j_element) {
       escape = h_escape_string(config->conn, json_string_value(j_element));
-      tmp = msprintf("%s AND `"TALIESIN_TABLE_DATA_SOURCE"`.`tds_name`='%s'", query, escape);
+			if (data_source_clause == NULL) {
+				tmp = msprintf("AND ( `"TALIESIN_TABLE_DATA_SOURCE"`.`tds_name`='%s'", escape);
+			} else {
+				tmp = msprintf("%s OR `"TALIESIN_TABLE_DATA_SOURCE"`.`tds_name`='%s'", data_source_clause, escape);
+			}
       o_free(escape);
-      o_free(query);
-      query = tmp;
+      o_free(data_source_clause);
+      data_source_clause = tmp;
     }
+		tmp = msprintf("%s %s )", query, data_source_clause);
+		o_free(data_source_clause);
+		o_free(query);
+		query = tmp;
   }
   
-  if (json_object_get(search_criteria, "query") != NULL) {
+  if (json_object_get(search_criteria, "query") != NULL && json_string_length(json_object_get(search_criteria, "query")) > 0) {
     escape = h_escape_string(config->conn, json_string_value(json_object_get(search_criteria, "query")));
     tmp = msprintf("%s AND (`"TALIESIN_TABLE_MEDIA"`.`tm_name` LIKE '%%%s%%' OR `"TALIESIN_TABLE_MEDIA"`.`tm_path` LIKE '%%%s%%' OR `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_META_DATA"` WHERE `tmd_value` LIKE '%%%s%%'))", query, escape, escape, escape);
     o_free(escape);
@@ -410,7 +427,7 @@ json_t * media_advanced_search(struct config_elements * config, const char * use
     query = tmp;
   }
   
-  if (json_object_get(search_criteria, "type") != NULL) {
+  if (json_object_get(search_criteria, "type") != NULL && json_string_length(json_object_get(search_criteria, "type")) > 0) {
     escape = h_escape_string(config->conn, json_string_value(json_object_get(search_criteria, "type")));
     tmp = msprintf("%s AND `"TALIESIN_TABLE_MEDIA"`.`tm_name` LIKE '%s'", query, escape);
     o_free(escape);
@@ -418,107 +435,109 @@ json_t * media_advanced_search(struct config_elements * config, const char * use
     query = tmp;
   }
   
-  if (json_object_get(search_criteria, "tags") != NULL) {
+  if (json_object_get(search_criteria, "tags") != NULL && json_array_size(json_object_get(search_criteria, "tags")) > 0) {
     json_array_foreach(json_object_get(search_criteria, "tags"), index, j_element) {
-      if (0 == o_strcmp(json_string_value(json_object_get(j_element, "operator")), "equals")) {
-        escape_key = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "key")));
-        escape_value = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "value")));
-        clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_META_DATA"` WHERE `tmd_key` LIKE '%s' AND `tmd_value` LIKE '%%%s%%')", escape_key, escape_value);
-        o_free(escape_key);
-        o_free(escape_value);
-        if (clause_tags == NULL) {
-          clause_tags = clause;
-        } else {
-          tmp = msprintf("%s %s", clause_tags, clause);
-          o_free(clause_tags);
-          o_free(clause);
-          clause_tags = tmp;
-        }
-      } else if (0 == o_strcmp(json_string_value(json_object_get(j_element, "operator")), "different")) {
-        escape_key = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "key")));
-        escape_value = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "value")));
-        clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_META_DATA"` WHERE `tmd_key` LIKE '%s' AND `tmd_value` NOT LIKE '%%%s%%')", escape_key, escape_value);
-        o_free(escape_key);
-        o_free(escape_value);
-        if (clause_tags == NULL) {
-          clause_tags = clause;
-        } else {
-          tmp = msprintf("%s %s", clause_tags, clause);
-          o_free(clause_tags);
-          o_free(clause);
-          clause_tags = tmp;
-        }
-      } else if (0 == o_strcmp(json_string_value(json_object_get(j_element, "operator")), "contains")) {
-        escape_key = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "key")));
-        escape_value = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "value")));
-        clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_META_DATA"` WHERE `tmd_key` LIKE '%s' AND `tmd_value` LIKE '%%%s%%')", escape_key, escape_value);
-        o_free(escape_key);
-        o_free(escape_value);
-        if (clause_tags == NULL) {
-          clause_tags = clause;
-        } else {
-          tmp = msprintf("%s %s", clause_tags, clause);
-          o_free(clause_tags);
-          o_free(clause);
-          clause_tags = tmp;
-        }
-      } else if (0 == o_strcmp(json_string_value(json_object_get(j_element, "operator")), "lower")) {
-        escape_key = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "key")));
-        escape_value = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "value")));
-        clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_META_DATA"` WHERE `tmd_key` LIKE '%s' AND `tmd_value` <= '%s')", escape_key, escape_value);
-        o_free(escape_key);
-        o_free(escape_value);
-        if (clause_tags == NULL) {
-          clause_tags = clause;
-        } else {
-          tmp = msprintf("%s %s", clause_tags, clause);
-          o_free(clause_tags);
-          o_free(clause);
-          clause_tags = tmp;
-        }
-      } else if (0 == o_strcmp(json_string_value(json_object_get(j_element, "operator")), "higher")) {
-        escape_key = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "key")));
-        escape_value = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "value")));
-        clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_META_DATA"` WHERE `tmd_key` LIKE '%s' AND `tmd_value` >= '%s')", escape_key, escape_value);
-        o_free(escape_key);
-        o_free(escape_value);
-        if (clause_tags == NULL) {
-          clause_tags = clause;
-        } else {
-          tmp = msprintf("%s %s", clause_tags, clause);
-          o_free(clause_tags);
-          o_free(clause);
-          clause_tags = tmp;
-        }
-      } else if (0 == o_strcmp(json_string_value(json_object_get(j_element, "operator")), "between")) {
-        escape_key = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "key")));
-        escape_value = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "value")));
-        escape_value_max = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "value_max")));
-        clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_META_DATA"` WHERE `tmd_key` LIKE '%s' AND `tmd_value` >= '%s' AND `tmd_value` <= '%s')", escape_key, escape_value, escape_value_max);
-        o_free(escape_key);
-        o_free(escape_value);
-        o_free(escape_value_max);
-        if (clause_tags == NULL) {
-          clause_tags = clause;
-        } else {
-          tmp = msprintf("%s %s", clause_tags, clause);
-          o_free(clause_tags);
-          o_free(clause);
-          clause_tags = tmp;
-        }
-      } else if (0 == o_strcmp(json_string_value(json_object_get(j_element, "operator")), "empty")) {
-        escape_key = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "key")));
-        clause = msprintf("AND (`"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_META_DATA"` WHERE `tmd_key` LIKE '%s' AND (`tmd_value` = '' OR `tmd_value` IS NULL)) OR `"TALIESIN_TABLE_MEDIA"`.`tm_id` NOT IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_META_DATA"` WHERE `tmd_key` LIKE '%s' AND (`tmd_value` != '' AND `tmd_value` IS NOT NULL)))", escape_key, escape_key);
-        o_free(escape_key);
-        if (clause_tags == NULL) {
-          clause_tags = clause;
-        } else {
-          tmp = msprintf("%s %s", clause_tags, clause);
-          o_free(clause_tags);
-          o_free(clause);
-          clause_tags = tmp;
-        }
-      }
+			if (json_string_length(json_object_get(j_element, "key")) > 0) {
+				if (0 == o_strcmp(json_string_value(json_object_get(j_element, "operator")), "equals")) {
+					escape_key = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "key")));
+					escape_value = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "value")));
+					clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_META_DATA"` WHERE `tmd_key` LIKE '%s' AND `tmd_value` LIKE '%%%s%%')", escape_key, escape_value);
+					o_free(escape_key);
+					o_free(escape_value);
+					if (clause_tags == NULL) {
+						clause_tags = clause;
+					} else {
+						tmp = msprintf("%s %s", clause_tags, clause);
+						o_free(clause_tags);
+						o_free(clause);
+						clause_tags = tmp;
+					}
+				} else if (0 == o_strcmp(json_string_value(json_object_get(j_element, "operator")), "different")) {
+					escape_key = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "key")));
+					escape_value = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "value")));
+					clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_META_DATA"` WHERE `tmd_key` LIKE '%s' AND `tmd_value` NOT LIKE '%%%s%%')", escape_key, escape_value);
+					o_free(escape_key);
+					o_free(escape_value);
+					if (clause_tags == NULL) {
+						clause_tags = clause;
+					} else {
+						tmp = msprintf("%s %s", clause_tags, clause);
+						o_free(clause_tags);
+						o_free(clause);
+						clause_tags = tmp;
+					}
+				} else if (0 == o_strcmp(json_string_value(json_object_get(j_element, "operator")), "contains")) {
+					escape_key = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "key")));
+					escape_value = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "value")));
+					clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_META_DATA"` WHERE `tmd_key` LIKE '%s' AND `tmd_value` LIKE '%%%s%%')", escape_key, escape_value);
+					o_free(escape_key);
+					o_free(escape_value);
+					if (clause_tags == NULL) {
+						clause_tags = clause;
+					} else {
+						tmp = msprintf("%s %s", clause_tags, clause);
+						o_free(clause_tags);
+						o_free(clause);
+						clause_tags = tmp;
+					}
+				} else if (0 == o_strcmp(json_string_value(json_object_get(j_element, "operator")), "lower")) {
+					escape_key = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "key")));
+					escape_value = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "value")));
+					clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_META_DATA"` WHERE `tmd_key` LIKE '%s' AND `tmd_value` <= '%s')", escape_key, escape_value);
+					o_free(escape_key);
+					o_free(escape_value);
+					if (clause_tags == NULL) {
+						clause_tags = clause;
+					} else {
+						tmp = msprintf("%s %s", clause_tags, clause);
+						o_free(clause_tags);
+						o_free(clause);
+						clause_tags = tmp;
+					}
+				} else if (0 == o_strcmp(json_string_value(json_object_get(j_element, "operator")), "higher")) {
+					escape_key = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "key")));
+					escape_value = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "value")));
+					clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_META_DATA"` WHERE `tmd_key` LIKE '%s' AND `tmd_value` >= '%s')", escape_key, escape_value);
+					o_free(escape_key);
+					o_free(escape_value);
+					if (clause_tags == NULL) {
+						clause_tags = clause;
+					} else {
+						tmp = msprintf("%s %s", clause_tags, clause);
+						o_free(clause_tags);
+						o_free(clause);
+						clause_tags = tmp;
+					}
+				} else if (0 == o_strcmp(json_string_value(json_object_get(j_element, "operator")), "between")) {
+					escape_key = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "key")));
+					escape_value = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "value")));
+					escape_value_max = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "value_max")));
+					clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_META_DATA"` WHERE `tmd_key` LIKE '%s' AND `tmd_value` >= '%s' AND `tmd_value` <= '%s')", escape_key, escape_value, escape_value_max);
+					o_free(escape_key);
+					o_free(escape_value);
+					o_free(escape_value_max);
+					if (clause_tags == NULL) {
+						clause_tags = clause;
+					} else {
+						tmp = msprintf("%s %s", clause_tags, clause);
+						o_free(clause_tags);
+						o_free(clause);
+						clause_tags = tmp;
+					}
+				} else if (0 == o_strcmp(json_string_value(json_object_get(j_element, "operator")), "empty")) {
+					escape_key = h_escape_string(config->conn, json_string_value(json_object_get(j_element, "key")));
+					clause = msprintf("AND (`"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_META_DATA"` WHERE `tmd_key` LIKE '%s' AND (`tmd_value` = '' OR `tmd_value` IS NULL)) OR `"TALIESIN_TABLE_MEDIA"`.`tm_id` NOT IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_META_DATA"` WHERE `tmd_key` LIKE '%s' AND (`tmd_value` != '' AND `tmd_value` IS NOT NULL)))", escape_key, escape_key);
+					o_free(escape_key);
+					if (clause_tags == NULL) {
+						clause_tags = clause;
+					} else {
+						tmp = msprintf("%s %s", clause_tags, clause);
+						o_free(clause_tags);
+						o_free(clause);
+						clause_tags = tmp;
+					}
+				}
+			}
     }
     tmp = msprintf("%s %s", query, clause_tags);
     o_free(query);
@@ -526,185 +545,143 @@ json_t * media_advanced_search(struct config_elements * config, const char * use
     query = tmp;
   }
   
-  if (json_object_get(json_object_get(search_criteria, "metrics"), "nb_play") != NULL) {
-    if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "operator")), "equals")) {
-      escape_value = h_escape_string(config->conn, json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "value")));
-      clause = msprintf("AND (SELECT COUNT `"TALIESIN_TABLE_MEDIA_HISTORY"`.tmh_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE `"TALIESIN_TABLE_MEDIA_HISTORY"`.`tm_id`=`"TALIESIN_TABLE_MEDIA"`.`tm_id`) = '%s'", escape_value);
-      o_free(escape_value);
-      tmp = msprintf("%s %s", query, clause);
-      o_free(query);
-      o_free(clause);
-      query = tmp;
-    } else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "operator")), "different")) {
-      escape_value = h_escape_string(config->conn, json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "value")));
-      clause = msprintf("AND (SELECT COUNT `"TALIESIN_TABLE_MEDIA_HISTORY"`.tmh_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE `"TALIESIN_TABLE_MEDIA_HISTORY"`.`tm_id`=`"TALIESIN_TABLE_MEDIA"`.`tm_id`) != '%s'", escape_value);
-      o_free(escape_value);
-      tmp = msprintf("%s %s", query, clause);
-      o_free(query);
-      o_free(clause);
-      query = tmp;
-    } else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "operator")), "lower")) {
-      escape_value = h_escape_string(config->conn, json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "value")));
-      clause = msprintf("AND (SELECT COUNT `"TALIESIN_TABLE_MEDIA_HISTORY"`.tmh_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE `"TALIESIN_TABLE_MEDIA_HISTORY"`.`tm_id`=`"TALIESIN_TABLE_MEDIA"`.`tm_id`) <= '%s'", escape_value);
-      o_free(escape_value);
-      tmp = msprintf("%s %s", query, clause);
-      o_free(query);
-      o_free(clause);
-      query = tmp;
-    } else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "operator")), "higher")) {
-      escape_value = h_escape_string(config->conn, json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "value")));
-      clause = msprintf("AND (SELECT COUNT `"TALIESIN_TABLE_MEDIA_HISTORY"`.tmh_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE `"TALIESIN_TABLE_MEDIA_HISTORY"`.`tm_id`=`"TALIESIN_TABLE_MEDIA"`.`tm_id`) >= '%s'", escape_value);
-      o_free(escape_value);
-      tmp = msprintf("%s %s", query, clause);
-      o_free(query);
-      o_free(clause);
-      query = tmp;
-    } else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "operator")), "between")) {
-      escape_value = h_escape_string(config->conn, json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "value")));
-      escape_value_max = h_escape_string(config->conn, json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "value_max")));
-      clause = msprintf("AND (SELECT COUNT `"TALIESIN_TABLE_MEDIA_HISTORY"`.tmh_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE `"TALIESIN_TABLE_MEDIA_HISTORY"`.`tm_id`=`"TALIESIN_TABLE_MEDIA"`.`tm_id`) >= '%s' AND (SELECT COUNT `"TALIESIN_TABLE_MEDIA_HISTORY"`.tmh_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE `"TALIESIN_TABLE_MEDIA_HISTORY"`.`tm_id`=`"TALIESIN_TABLE_MEDIA"`.`tm_id`) <= '%s'", escape_value_max);
-      o_free(escape_value);
-      o_free(escape_value_max);
-      tmp = msprintf("%s %s", query, clause);
-      o_free(query);
-      o_free(clause);
-      query = tmp;
-    }
-  }
-  
-  if (json_object_get(json_object_get(search_criteria, "metrics"), "played_at") != NULL) {
-    if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "operator")), "equals")) {
-      escape_value = h_escape_string(config->conn, json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "value")));
-      clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE %s='%s')", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), escape_value);
-      o_free(escape_value);
-      tmp = msprintf("%s %s", query, clause);
-      o_free(query);
-      o_free(clause);
-      query = tmp;
-    } else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "operator")), "different")) {
-      escape_value = h_escape_string(config->conn, json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "value")));
-      clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE %s!='%s')", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), escape_value);
-      o_free(escape_value);
-      tmp = msprintf("%s %s", query, clause);
-      o_free(query);
-      o_free(clause);
-      query = tmp;
-    } else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "operator")), "lower")) {
-      escape_value = h_escape_string(config->conn, json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "value")));
-      clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE %s<='%s')", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), escape_value);
-      o_free(escape_value);
-      tmp = msprintf("%s %s", query, clause);
-      o_free(query);
-      o_free(clause);
-      query = tmp;
-    } else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "operator")), "higher")) {
-      escape_value = h_escape_string(config->conn, json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "value")));
-      clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE %s>='%s')", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), escape_value);
-      o_free(escape_value);
-      tmp = msprintf("%s %s", query, clause);
-      o_free(query);
-      o_free(clause);
-      query = tmp;
-    } else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "operator")), "between")) {
-      escape_value = h_escape_string(config->conn, json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "value")));
-      clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE %s>='%s' AND %s<='%s')", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), escape_value);
-      o_free(escape_value);
-      tmp = msprintf("%s %s", query, clause);
-      o_free(query);
-      o_free(clause);
-      query = tmp;
-    }
-  }
-  
-  if (json_object_get(json_object_get(search_criteria, "metrics"), "last_seen") != NULL) {
-    if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "operator")), "equals")) {
-      escape_value = h_escape_string(config->conn, json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "value")));
-      clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE %s='%s' ORDER BY `tmh_datestamp` DESC LIMIT 1)", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), escape_value);
-      o_free(escape_value);
-      tmp = msprintf("%s %s", query, clause);
-      o_free(query);
-      o_free(clause);
-      query = tmp;
-    } else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "operator")), "different")) {
-      escape_value = h_escape_string(config->conn, json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "value")));
-      clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE %s!='%s' ORDER BY `tmh_datestamp` DESC LIMIT 1)", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), escape_value);
-      o_free(escape_value);
-      tmp = msprintf("%s %s", query, clause);
-      o_free(query);
-      o_free(clause);
-      query = tmp;
-    } else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "operator")), "lower")) {
-      escape_value = h_escape_string(config->conn, json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "value")));
-      clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE %s<='%s' ORDER BY `tmh_datestamp` DESC LIMIT 1)", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), escape_value);
-      o_free(escape_value);
-      tmp = msprintf("%s %s", query, clause);
-      o_free(query);
-      o_free(clause);
-      query = tmp;
-    } else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "operator")), "higher")) {
-      escape_value = h_escape_string(config->conn, json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "value")));
-      clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE %s>='%s' ORDER BY `tmh_datestamp` DESC LIMIT 1)", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), escape_value);
-      o_free(escape_value);
-      tmp = msprintf("%s %s", query, clause);
-      o_free(query);
-      o_free(clause);
-      query = tmp;
-    } else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "operator")), "between")) {
-      escape_value = h_escape_string(config->conn, json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "value")));
-      escape_value_max = h_escape_string(config->conn, json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "value_max")));
-      clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE %s>='%s' AND `tmh_datestamp`<='%s' ORDER BY %s DESC LIMIT 1)", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), escape_value, (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), escape_value_max);
-      o_free(escape_value);
-      o_free(escape_value_max);
-      tmp = msprintf("%s %s", query, clause);
-      o_free(query);
-      o_free(clause);
-      query = tmp;
-    }
-  }
-  
-  if (json_object_get(json_object_get(search_criteria, "metrics"), "last_updated") != NULL) {
-    if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "operator")), "equals")) {
-      escape_value = h_escape_string(config->conn, json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "value")));
-      clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.%s `='%s'", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tm_last_updated`)":"`tm_last_updated`"), escape_value);
-      o_free(escape_value);
-      tmp = msprintf("%s %s", query, clause);
-      o_free(query);
-      o_free(clause);
-      query = tmp;
-    } else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "operator")), "different")) {
-      escape_value = h_escape_string(config->conn, json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "value")));
-      clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.%s `!='%s'", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tm_last_updated`)":"`tm_last_updated`"), escape_value);
-      o_free(escape_value);
-      tmp = msprintf("%s %s", query, clause);
-      o_free(query);
-      o_free(clause);
-      query = tmp;
-    } else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "operator")), "lower")) {
-      escape_value = h_escape_string(config->conn, json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "value")));
-      clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.%s `<='%s'", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tm_last_updated`)":"`tm_last_updated`"), escape_value);
-      o_free(escape_value);
-      tmp = msprintf("%s %s", query, clause);
-      o_free(query);
-      o_free(clause);
-      query = tmp;
-    } else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "operator")), "higher")) {
-      escape_value = h_escape_string(config->conn, json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "value")));
-      clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.%s `>='%s'", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tm_last_updated`)":"`tm_last_updated`"), escape_value);
-      o_free(escape_value);
-      tmp = msprintf("%s %s", query, clause);
-      o_free(query);
-      o_free(clause);
-      query = tmp;
-    } else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "operator")), "between")) {
-      escape_value = h_escape_string(config->conn, json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "value")));
-      clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.%s `>='%s' AND `"TALIESIN_TABLE_MEDIA"`.%s <= '%s'", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tm_last_updated`)":"`tm_last_updated`"), escape_value, (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tm_last_updated`)":"`tm_last_updated`"), escape_value);
-      o_free(escape_value);
-      tmp = msprintf("%s %s", query, clause);
-      o_free(query);
-      o_free(clause);
-      query = tmp;
-    }
-  }
+	if (json_object_size(json_object_get(search_criteria, "metrics")) > 0) {
+		if (json_object_get(json_object_get(search_criteria, "metrics"), "nb_play") != NULL) {
+			if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "operator")), "equals")) {
+				clause = msprintf("AND IFNULL(`th_count`.`nb_h`, 0) = %" JSON_INTEGER_FORMAT, json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "value")));
+				tmp = msprintf("%s %s", query, clause);
+				o_free(query);
+				o_free(clause);
+				query = tmp;
+			} else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "operator")), "different")) {
+				clause = msprintf("AND IFNULL(`th_count`.`nb_h`, 0) != %" JSON_INTEGER_FORMAT, json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "value")));
+				tmp = msprintf("%s %s", query, clause);
+				o_free(query);
+				o_free(clause);
+				query = tmp;
+			} else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "operator")), "lower")) {
+				clause = msprintf("AND IFNULL(`th_count`.`nb_h`, 0) <= %" JSON_INTEGER_FORMAT, json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "value")));
+				tmp = msprintf("%s %s", query, clause);
+				o_free(query);
+				o_free(clause);
+				query = tmp;
+			} else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "operator")), "higher")) {
+				clause = msprintf("AND IFNULL(`th_count`.`nb_h`, 0) >= %" JSON_INTEGER_FORMAT, json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "value")));
+				tmp = msprintf("%s %s", query, clause);
+				o_free(query);
+				o_free(clause);
+				query = tmp;
+			} else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "operator")), "between")) {
+				clause = msprintf("AND IFNULL(`th_count`.`nb_h`, 0) >= %" JSON_INTEGER_FORMAT " AND IFNULL(`th_count`.`nb_h`, 0) <= %" JSON_INTEGER_FORMAT, json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "value")), json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "nb_play"), "value_max")));
+				tmp = msprintf("%s %s", query, clause);
+				o_free(query);
+				o_free(clause);
+				query = tmp;
+			}
+		}
+		
+		if (json_object_get(json_object_get(search_criteria, "metrics"), "played_at") != NULL) {
+			if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "operator")), "equals")) {
+				clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE %s=%" JSON_INTEGER_FORMAT ")", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "value")));
+				tmp = msprintf("%s %s", query, clause);
+				o_free(query);
+				o_free(clause);
+				query = tmp;
+			} else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "operator")), "different")) {
+				clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE %s!=%" JSON_INTEGER_FORMAT ")", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "value")));
+				tmp = msprintf("%s %s", query, clause);
+				o_free(query);
+				o_free(clause);
+				query = tmp;
+			} else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "operator")), "lower")) {
+				clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE %s<=%" JSON_INTEGER_FORMAT ")", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "value")));
+				tmp = msprintf("%s %s", query, clause);
+				o_free(query);
+				o_free(clause);
+				query = tmp;
+			} else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "operator")), "higher")) {
+				clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE %s>=%" JSON_INTEGER_FORMAT ")", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "value")));
+				tmp = msprintf("%s %s", query, clause);
+				o_free(query);
+				o_free(clause);
+				query = tmp;
+			} else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "operator")), "between")) {
+				clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE %s>=%" JSON_INTEGER_FORMAT " AND %s<=%" JSON_INTEGER_FORMAT ")", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "value")), (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "played_at"), "value_max")));
+				tmp = msprintf("%s %s", query, clause);
+				o_free(query);
+				o_free(clause);
+				query = tmp;
+			}
+		}
+		
+		if (json_object_get(json_object_get(search_criteria, "metrics"), "last_seen") != NULL) {
+			if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "operator")), "equals")) {
+				clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE %s=%" JSON_INTEGER_FORMAT " ORDER BY `tmh_datestamp` DESC)", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "value")));
+				tmp = msprintf("%s %s", query, clause);
+				o_free(query);
+				o_free(clause);
+				query = tmp;
+			} else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "operator")), "different")) {
+				clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE %s!=%" JSON_INTEGER_FORMAT " ORDER BY `tmh_datestamp` DESC)", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "value")));
+				tmp = msprintf("%s %s", query, clause);
+				o_free(query);
+				o_free(clause);
+				query = tmp;
+			} else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "operator")), "lower")) {
+				clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE %s<=%" JSON_INTEGER_FORMAT " ORDER BY `tmh_datestamp` DESC)", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "value")));
+				tmp = msprintf("%s %s", query, clause);
+				o_free(query);
+				o_free(clause);
+				query = tmp;
+			} else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "operator")), "higher")) {
+				clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE %s>=%" JSON_INTEGER_FORMAT " ORDER BY `tmh_datestamp` DESC)", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "value")));
+				tmp = msprintf("%s %s", query, clause);
+				o_free(query);
+				o_free(clause);
+				query = tmp;
+			} else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "operator")), "between")) {
+				clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.`tm_id` IN (SELECT `tm_id` FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE %s>=%" JSON_INTEGER_FORMAT " AND %s<=%" JSON_INTEGER_FORMAT " ORDER BY %s DESC)", (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "value")), (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tmh_datestamp`)":"`tmh_datestamp`"), json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_seen"), "value_max")));
+				tmp = msprintf("%s %s", query, clause);
+				o_free(query);
+				o_free(clause);
+				query = tmp;
+			}
+		}
+		
+		if (json_object_get(json_object_get(search_criteria, "metrics"), "last_updated") != NULL) {
+			if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "operator")), "equals")) {
+				clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.%s `=%" JSON_INTEGER_FORMAT, (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tm_last_updated`)":"`tm_last_updated`"), json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "value")));
+				tmp = msprintf("%s %s", query, clause);
+				o_free(query);
+				o_free(clause);
+				query = tmp;
+			} else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "operator")), "different")) {
+				clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.%s `!=%" JSON_INTEGER_FORMAT, (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tm_last_updated`)":"`tm_last_updated`"), json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "value")));
+				tmp = msprintf("%s %s", query, clause);
+				o_free(query);
+				o_free(clause);
+				query = tmp;
+			} else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "operator")), "lower")) {
+				clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.%s `<=%" JSON_INTEGER_FORMAT, (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tm_last_updated`)":"`tm_last_updated`"), json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "value")));
+				tmp = msprintf("%s %s", query, clause);
+				o_free(query);
+				o_free(clause);
+				query = tmp;
+			} else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "operator")), "higher")) {
+				clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.%s `>=%" JSON_INTEGER_FORMAT, (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tm_last_updated`)":"`tm_last_updated`"), json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "value")));
+				tmp = msprintf("%s %s", query, clause);
+				o_free(query);
+				o_free(clause);
+				query = tmp;
+			} else if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "operator")), "between")) {
+				clause = msprintf("AND `"TALIESIN_TABLE_MEDIA"`.%s `>=%" JSON_INTEGER_FORMAT " AND `"TALIESIN_TABLE_MEDIA"`.%s <= %" JSON_INTEGER_FORMAT, (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tm_last_updated`)":"`tm_last_updated`"), json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "value_max")), (config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(`tm_last_updated`)":"`tm_last_updated`"), json_integer_value(json_object_get(json_object_get(json_object_get(search_criteria, "metrics"), "last_updated"), "value_max")));
+				tmp = msprintf("%s %s", query, clause);
+				o_free(query);
+				o_free(clause);
+				query = tmp;
+			}
+		}
+	}
   
   if (0 == o_strcmp(json_string_value(json_object_get(search_criteria, "sort")), "name")) {
     tmp = msprintf("%s ORDER BY `"TALIESIN_TABLE_MEDIA"`.`tm_name` %s", query, (0==o_strcmp(json_string_value(json_object_get(search_criteria, "sort_direction")), "desc")?"DESC":"ASC"));

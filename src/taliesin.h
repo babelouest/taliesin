@@ -24,7 +24,7 @@
 #ifndef __TALIESIN_H_
 #define __TALIESIN_H_
 
-#define _TALIESIN_VERSION_ "0.9"
+#define _TALIESIN_VERSION_ "0.9.9"
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))

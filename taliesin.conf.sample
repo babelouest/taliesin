@@ -14,7 +14,7 @@ port=8576
 api_prefix="api"
 
 # path to static files to access webapp
-app_files_path="webapp"
+app_files_path="../webapp" # To point to your folder taliesin/webapp, we recommend modify the value to an absolute path
 
 # mime types for webapp files
 app_files_mime_types =
@@ -118,13 +118,17 @@ stream_channels    = 2
 stream_sample_rate = 44100
 stream_bitrate     = 128000
 
-# jwt parameters
+# jwt parameters, these parameters correspond to the JWT configuration of the OAuth2 server you rely on
 jwt =
 {
+   key_size = 512
+   
    use_rsa = false
-   rsa_pub_file = "public.pem"
+   rsa_pub_file = "public-rsa.pem"
+   
+   use_ecdsa = false
+   ecdsa_pub_file = "public-ecdsa.pem"
    
    use_sha = true
    sha_secret = "secret"
-   
 }

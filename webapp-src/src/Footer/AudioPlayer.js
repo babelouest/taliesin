@@ -46,6 +46,7 @@ class AudioPlayer extends Component {
 		this.handleOnPause = this.handleOnPause.bind(this);
 		this.handleChangeVolume = this.handleChangeVolume.bind(this);
 		this.loadMedia = this.loadMedia.bind(this);
+		this.dispatchPlayerStatus = this.dispatchPlayerStatus.bind(this);
     
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
@@ -59,8 +60,10 @@ class AudioPlayer extends Component {
 							this.handleStop();
 							break;
 						case "play":
-							this.handleStop();
 							this.handlePlay();
+							break;
+						case "pause":
+							this.handlePause();
 							break;
 						case "next":
 							this.handleNext();
@@ -80,6 +83,7 @@ class AudioPlayer extends Component {
 				}
 			}
 		});
+		
 		this.loadMedia();
 	}
 	
@@ -94,13 +98,7 @@ class AudioPlayer extends Component {
 		this.setState({
 			volume: this.rap.audioEl.volume * 100
 		}, () => {
-			StateStore.dispatch({
-				type: "setCurrentPlayerStatus",
-				status: this.state.play?"play":"stop",
-				repeat: this.state.jukeboxRepeat,
-				random: this.state.jukeboxRandom,
-				volume: this.state.volume
-			});
+			this.dispatchPlayerStatus({volume: this.state.volume});
 		});
 	}
 
@@ -109,6 +107,16 @@ class AudioPlayer extends Component {
 		if (this.state.interval) {
 			clearInterval(this.state.interval);
 		}
+	}
+	
+	dispatchPlayerStatus(newStatus) {
+		StateStore.dispatch({
+			type: "setCurrentPlayerStatus",
+			status: newStatus.status,
+			repeat: newStatus.repeat,
+			random: newStatus.random,
+			volume: newStatus.volume
+		});
 	}
 	
 	loadMedia() {
@@ -185,14 +193,20 @@ class AudioPlayer extends Component {
     this.rap.audioEl.pause();
     this.rap.audioEl.currentTime = 0;
     this.rap.audioEl.src = URL.createObjectURL(new Blob([], {type:"audio/mp3"}));
-		this.setState({play: false});
+		this.setState({play: false}, () => {
+			this.dispatchPlayerStatus({status: "stop"});
+		});
   }
 	
   handlePause() {
     if (this.state.stream.webradio) {
       this.handleStop();
     } else {
-      this.rap.audioEl.pause();
+			if (this.rap.audioEl.paused) {
+				this.rap.audioEl.play();
+			} else {
+				this.rap.audioEl.pause();
+			}
     }
   }
 	
@@ -210,7 +224,9 @@ class AudioPlayer extends Component {
 				this.loadMedia();
 				StateStore.dispatch({type: "setJukeboxIndex", index: this.state.jukeboxIndex});
 			}
-      this.setState(newState);
+      this.setState(newState, () => {
+				this.dispatchPlayerStatus({status: "play"});
+			});
       this.rap.audioEl.play();
 		}
   }
@@ -220,7 +236,9 @@ class AudioPlayer extends Component {
   }
 	
   handleRepeat() {
-		this.setState({jukeboxRepeat: !this.state.jukeboxRepeat});
+		this.setState({jukeboxRepeat: !this.state.jukeboxRepeat}, () => {
+			this.dispatchPlayerStatus({repeat: true});
+		});
   }
 	
   handleRandom() {
@@ -228,28 +246,40 @@ class AudioPlayer extends Component {
 		if (!this.state.jukeboxRandom) {
 			newState.jukeboxPlayedIndex = [];
 		}
-		this.setState(newState);
+		this.setState(newState, () => {
+			this.dispatchPlayerStatus({random: true});
+		});
   }
   
   handleOnPlay() {
-		this.setState({play: true});
+		this.setState({play: true}, () => {
+			this.dispatchPlayerStatus({status: "play"});
+		});
   }
 	
   handleOnEnded() {
 		if (this.state.stream.webradio) {
-			this.setState({play: false});
+			this.setState({play: false}, () =>{
+				this.dispatchPlayerStatus({status: "stop"});
+			});
 		} else {
 			this.nextSong();
 		}
   }
 	
   handleOnPause() {
-		this.setState({play: true});
+		if (this.state.stream.webradio) {
+			this.handleStop();
+		} else {
+			this.dispatchPlayerStatus({status: "pause"});
+		}
   }
 	
 	handleChangeVolume(event) {
 		this.rap.audioEl.volume = (event.target.value / 100);
-		this.setState({volume: event.target.value});
+		this.setState({volume: event.target.value}, () => {
+			this.dispatchPlayerStatus({volume: event.target.value});
+		});
 	}
 	
 	displayDuration(currentTime, duration) {
@@ -275,8 +305,9 @@ class AudioPlayer extends Component {
 				nextIndex = Math.floor(Math.random() * (this.state.stream.elements + 1));
 			} while (playedIndex.indexOf(nextIndex) >= 0);
 			playedIndex.push(nextIndex);
-			this.setState({jukeboxIndex: nextIndex, jukeboxPlayedIndex: playedIndex}, () => {(this.state.playerStatus!=="stop") && this.handlePlay()});
-			this.loadMedia();
+			this.setState({jukeboxIndex: nextIndex, jukeboxPlayedIndex: playedIndex}, () => {(this.state.playerStatus!=="stop") && this.handlePlay()}, () => {
+				this.loadMedia();
+			});
 			StateStore.dispatch({type: "setJukeboxIndex", index: nextIndex});
 		} else {
 			if (this.state.jukeboxIndex < this.state.stream.elements - 1) {
@@ -289,6 +320,7 @@ class AudioPlayer extends Component {
 				this.setState({jukeboxIndex: 0, jukeboxPlayedIndex: []}, () => {
 					(this.state.playerStatus!=="stop") && this.handlePlay();
 					this.loadMedia();
+					this.dispatchPlayerStatus({repeat: true});
 					StateStore.dispatch({type: "setJukeboxIndex", index: 0});
 				});
 			}
@@ -296,17 +328,31 @@ class AudioPlayer extends Component {
 	}
 	
   render() {
-    var playButton, duration, volume, metadata;
+    var playButton, duration, volume, metadata, streamName = "None";
+		if (this.state.stream && this.state.stream.display_name) {
+			if (this.state.stream.display_name.startsWith("{") && this.state.stream.display_name.indexOf("} - ") !== -1) {
+				streamName = this.state.stream.display_name.substring(this.state.stream.display_name.indexOf("} - ") + 3);
+			} else {
+				streamName = (this.state.stream.display_name||"no name");
+			}
+		}
 		metadata = 
 			<div>
 				<label className="hidden-xs">Current stream:&nbsp;</label>
-				<span>{this.state.stream?(this.state.stream.display_name||"no name"):"None"}</span>
+				<span>{streamName}</span>
 			</div>;
     if (this.state.play) {
-      playButton = 
-        <Button title="Play" onClick={this.handlePause}>
-					<FontAwesome name={"pause"} />
-        </Button>;
+			if (this.rap.audioEl.paused) {
+				playButton = 
+					<Button title="Play" onClick={this.handlePlay}>
+						<FontAwesome name={"play"} />
+					</Button>;
+			} else {
+				playButton = 
+					<Button title="Pause" onClick={this.handlePause}>
+						<FontAwesome name={"pause"} />
+					</Button>;
+			}
 			duration = this.displayDuration(this.state.currentTime, this.state.duration);
     } else {
       playButton = 

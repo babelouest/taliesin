@@ -25,6 +25,7 @@ class ElementButtons extends Component {
 		this.addToStream = this.addToStream.bind(this);
 		this.addToPlaylist = this.addToPlaylist.bind(this);
 		this.runPlayElementAdvanced = this.runPlayElementAdvanced.bind(this);
+		this.refreshFolder = this.refreshFolder.bind(this);
 		
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
@@ -51,7 +52,7 @@ class ElementButtons extends Component {
 	}
   
   playElement() {
-		var streamList = StateStore.getState().streamList, curStream = streamList.find((stream) => {return stream.display_name === (StateStore.getState().currentPlayer||"local")});
+		var streamList = StateStore.getState().streamList, curStream = streamList.find((stream) => {return stream.display_name.startsWith("{" + (StateStore.getState().profile.currentPlayer||"local") + "}")});
 		if (curStream) {
 			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(curStream.name) + "/manage", {command: "stop"})
 			.then(() => {
@@ -80,16 +81,19 @@ class ElementButtons extends Component {
   }
 	
 	runPlayElement() {
-		var url;
+		var url, streamName;
 		if (this.state.path) {
 			url = "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/path/" + encodeURI(this.state.path).replace(/#/g, "%23");
+			streamName = this.state.element.name;
 		} else {
 			url = "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/category/" + encodeURI(this.state.category) + "/" + encodeURI(this.state.categoryValue);
+			streamName = this.state.categoryValue;
 			if (this.state.subCategory) {
 				url += "/" + encodeURI(this.state.subCategory) + "/" + encodeURI(this.state.subCategoryValue);
+				streamName += " - " + this.state.subCategoryValue;
 			}
 		}
-    StateStore.getState().APIManager.taliesinApiRequest("GET", url + "?jukebox&recursive&name=" + (StateStore.getState().currentPlayer||"local"))
+    StateStore.getState().APIManager.taliesinApiRequest("GET", url + "?jukebox&recursive&name=" + encodeURI("{") + (StateStore.getState().profile.currentPlayer||"local") + encodeURI("} - ") + encodeURI(streamName))
     .then((result) => {
 			var streamList = StateStore.getState().streamList;
       streamList.push(result);
@@ -192,8 +196,24 @@ class ElementButtons extends Component {
     });
 	}
 	
+	refreshFolder() {
+		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/data_source/" + encodeURIComponent(this.state.dataSource) + "/refresh/" + encodeURI(this.state.path).replace(/#/g, "%23"))
+		.then((result) => {
+			StateStore.getState().NotificationManager.addNotification({
+				message: 'Folder refreshing',
+				level: 'info'
+			});
+		})
+		.fail(() => {
+			StateStore.getState().NotificationManager.addNotification({
+				message: 'Error refreshing folder',
+				level: 'error'
+			});
+		});
+	}
+	
 	render() {
-		var streamList = [], playlist = [];
+		var streamList = [], playlist = [], refreshButton, refreshButtonMenu;
 		this.state.streamList.forEach((stream, index) => {
 			streamList.push(
 				<MenuItem key={index} onClick={() => this.addToStream(stream.name)}>
@@ -208,6 +228,17 @@ class ElementButtons extends Component {
 				</MenuItem>
 			);
 		});
+		if (this.state.element.type === "folder" && (StateStore.getState().profile.isAdmin || StateStore.getState().profile.dataSource.scope === "me")) {
+			refreshButton = 
+				<Button title="Refresh folder" onClick={this.refreshFolder}>
+					<FontAwesome name={"refresh"} />
+				</Button>
+			refreshButtonMenu =
+				<MenuItem>
+					<FontAwesome name={"refresh"} />&nbsp;
+					Refresh folder
+				</MenuItem>
+		}
     return (
 			<div>
 				<ButtonGroup className="hidden-xs">
@@ -218,6 +249,7 @@ class ElementButtons extends Component {
 						<FontAwesome name={"play"} />&nbsp;
 						<FontAwesome name={"cog"} />
 					</Button>
+					{refreshButton}
 					<DropdownButton id={"add"-this.state.element.name} pullRight title={
 						<span><i className="fa fa-plus"></i></span>
 					}>
@@ -245,6 +277,7 @@ class ElementButtons extends Component {
 						<FontAwesome name={"cog"} />&nbsp;
 						Create stream
 					</MenuItem>
+					{refreshButtonMenu}
 					<MenuItem divider />
 					<MenuItem>
 						<FontAwesome name={"plus"} />&nbsp;

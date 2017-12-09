@@ -20,6 +20,7 @@ class BrowsePlaylist extends Component {
       add: false,
 			modalDeleteMessage: "",
       showPlaylist: false,
+			playlistToShow: props.playlist,
       mediaList: [],
       offset: 0,
       limit: 100
@@ -67,16 +68,29 @@ class BrowsePlaylist extends Component {
       add: false,
 			modalDeleteMessage: "",
       showPlaylist: false,
+			playlistToShow: nextProps.playlist,
       mediaList: [],
       offset: 0,
       limit: 100
 		}, () => {
       this.getCovers();
+			if (this.state.playlistToShow) {
+				var playlist = this.state.playlistToShow;
+				this.setState({playlistToShow: false}, () => {
+					this.showPlaylist(playlist);
+				});
+			}
     });
 	}
   
 	componentDidMount() {
 		this._ismounted = true;
+		if (this.state.playlistToShow) {
+			var playlist = this.state.playlistToShow;
+			this.setState({playlistToShow: false}, () => {
+				this.showPlaylist(playlist);
+			});
+		}
 	}
 
 	componentWillUnmount() {
@@ -206,7 +220,7 @@ class BrowsePlaylist extends Component {
 	}
 	
   playNow(playlist) {
-		var streamList = StateStore.getState().streamList, curStream = streamList.find((stream) => {return stream.display_name === (StateStore.getState().currentPlayer||"local")});
+		var streamList = StateStore.getState().streamList, curStream = streamList.find((stream) => {return stream.display_name.startsWith("{" + (StateStore.getState().profile.currentPlayer||"local") + "}")});
 		if (curStream) {
 			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(curStream.name) + "/manage", {command: "stop"})
 			.then(() => {
@@ -235,7 +249,7 @@ class BrowsePlaylist extends Component {
   }
 	
 	runPlayElement(playlist) {
-    StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(playlist.name) + "/load?jukebox&name=" + (StateStore.getState().currentPlayer||"local"))
+    StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(playlist.name) + "/load?jukebox&name={" + (StateStore.getState().profile.currentPlayer||"local") + "} - " + playlist.name)
     .then((result) => {
 			var streamList = StateStore.getState().streamList;
       streamList.push(result);

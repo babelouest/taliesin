@@ -15,6 +15,8 @@ class MPDController extends Component {
 			interval,
 			play: false,
 			stream: props.stream, 
+			playNow: props.play,
+			playIndex: props.index,
 			player: StateStore.getState().externalPlayerList.find((externalPlayer) => {return props.player === externalPlayer.name}),
 			now: false, 
 			next: false, 
@@ -45,17 +47,55 @@ class MPDController extends Component {
     } else {
       this.MPDConnect();
     }
+		
+		StateStore.subscribe(() => {
+			var reduxState = StateStore.getState();
+			if (this._ismounted) {
+				if (reduxState.lastAction === "setPlayerAction") {
+					switch (reduxState.profile.playerAction) {
+						case "previous":
+							this.handlePrevious();
+							break;
+						case "stop":
+							this.handleStop();
+							break;
+						case "play":
+							this.handlePlay();
+							break;
+						case "pause":
+							this.handlePause();
+							break;
+						case "next":
+							this.handleNext();
+							break;
+						case "repeat":
+							this.handleRepeat();
+							break;
+						case "random":
+							this.handleRandom();
+							break;
+						case "volume":
+							this.handleChangeVolume({target: {value: reduxState.profile.playerActionParameter}});
+							break;
+            default:
+              break;
+					}
+				}
+			}
+		});
+		
 	}
 	
 	componentWillReceiveProps(nextProps) {
-		var newStream = (this.state.stream.name !== nextProps.stream.name);
 		this.setState({
 			stream: nextProps.stream, 
+			playNow: nextProps.play,
+			playIndex: nextProps.index,
 			player: StateStore.getState().externalPlayerList.find((externalPlayer) => {return nextProps.player === externalPlayer.name})
 		}, () => {
-      if (this.state.stream.name && newStream) {
+      if (this.state.stream.name) {
         this.loadStream();
-      } else if (!this.state.stream.name) {
+      } else {
         this.MPDConnect();
       }
     });
@@ -84,6 +124,11 @@ class MPDController extends Component {
 		StateStore.getState().APIManager.angharadApiRequest("POST", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/playlist", playlist)
 		.then((status) => {
 			this.loadMedia();
+      if (this.state.playNow) {
+        this.setState({playNow: false, jukeboxIndex: this.state.playIndex}, () => {
+          this.handlePlay();
+        });
+      }
 		});
 	}
 	
@@ -158,7 +203,7 @@ class MPDController extends Component {
 			} else {
 				StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "list", parameters: {offset: this.state.jukeboxIndex, limit: 1}})
 				.then((result) => {
-					if (result[0].data_source !== StateStore.getState().profile.mediaNow.data_source && result[0].path !== StateStore.getState().profile.mediaNow.path) {
+					if (result[0] && result[0].data_source !== StateStore.getState().profile.mediaNow.data_source && result[0].path !== StateStore.getState().profile.mediaNow.path) {
 						StateStore.dispatch({type: "setMediaNow", media: result[0]});
 					}
 				});
@@ -279,7 +324,7 @@ class MPDController extends Component {
 	}
 	
   render() {
-    var playButton, volume, switchButton;
+    var playButton, volume, switchButton, streamName;
     if (this.state.play) {
       playButton = 
         <Button title="Play" onClick={this.handlePause}>
@@ -301,6 +346,13 @@ class MPDController extends Component {
 				<Button title="Player switch" onClick={this.handlePlayerSwitch} className={(this.state.switchOn)?"btn-primary":""}>
 					<FontAwesome name={"power-off"} />
 				</Button>
+		}
+		if (this.state.stream && this.state.stream.display_name) {
+			if (this.state.stream.display_name.startsWith("{") && this.state.stream.display_name.indexOf("} - ") !== -1) {
+				streamName = this.state.stream.display_name.substring(this.state.stream.display_name.indexOf("} - ") + 3);
+			} else {
+				streamName = (this.state.stream.display_name||"no name");
+			}
 		}
 		return (
       <div>
@@ -336,7 +388,7 @@ class MPDController extends Component {
 						Current stream:&nbsp;
 					</label>
 					<span>
-						{this.state.stream.name?(this.state.stream.display_name||"no name"):"None"}
+						{streamName}
 					</span>
 				</div>
       </div>

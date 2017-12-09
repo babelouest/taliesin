@@ -100,34 +100,36 @@ class Footer extends Component {
 					<AudioPlayer stream={this.state.stream} play={this.state.play} index={this.state.jukeboxIndex} />
 				</Col>;
 		}
-		middleButtons =
-			<Col md={2} sm={2} xs={2} className="text-center">
-        <ButtonGroup className="hidden-xs hidden-sm">
-          <Button title="Full-screen" onClick={ ()=> this.showFullScreen()}>
-            <FontAwesome name={"arrows-alt"} />
-          </Button>
-          <Button title="Extend" onClick={ ()=> this.setState({ folded: !this.state.folded, play: false })}>
-            <FontAwesome name={this.state.folded?"chevron-circle-up":"chevron-circle-down"} />
-          </Button>
-          <Button title="List media" onClick={ ()=> this.showMediaList()}>
-            <FontAwesome name={"list"} />
-          </Button>
-        </ButtonGroup>
-				<DropdownButton id={"center-dropdown"} title="" pullRight className="visible-xs visible-sm">
-					<MenuItem onClick={ ()=> this.showFullScreen()}>
-						<FontAwesome name={"arrows-alt"} />
-						&nbsp;Full-screen
-					</MenuItem>
-					<MenuItem onClick={ ()=> this.setState({ folded: !this.state.folded, play: false })}>
-						<FontAwesome name={this.state.folded?"chevron-circle-up":"chevron-circle-down"} />
-						&nbsp;{this.state.folded?"Extend":"Fold"}
-					</MenuItem>
-					<MenuItem onClick={ ()=> this.showMediaList()}>
-						<FontAwesome name={"list"} />
-						&nbsp;List media
-					</MenuItem>
-				</DropdownButton>
-			</Col>;
+		if (this.state.stream.name) {
+			middleButtons =
+				<Col md={2} sm={2} xs={2} className="text-center">
+					<ButtonGroup className="hidden-xs hidden-sm">
+						<Button title="Full-screen" onClick={ ()=> this.showFullScreen()}>
+							<FontAwesome name={"arrows-alt"} />
+						</Button>
+						<Button title="Extend" onClick={ ()=> this.setState({ folded: !this.state.folded, play: false })}>
+							<FontAwesome name={this.state.folded?"chevron-circle-up":"chevron-circle-down"} />
+						</Button>
+						<Button title="List media" onClick={ ()=> this.showMediaList()}>
+							<FontAwesome name={"list"} />
+						</Button>
+					</ButtonGroup>
+					<DropdownButton id={"center-dropdown"} title="" pullRight className="visible-xs visible-sm">
+						<MenuItem onClick={ ()=> this.showFullScreen()}>
+							<FontAwesome name={"arrows-alt"} />
+							&nbsp;Full-screen
+						</MenuItem>
+						<MenuItem onClick={ ()=> this.setState({ folded: !this.state.folded, play: false })}>
+							<FontAwesome name={this.state.folded?"chevron-circle-up":"chevron-circle-down"} />
+							&nbsp;{this.state.folded?"Extend":"Fold"}
+						</MenuItem>
+						<MenuItem onClick={ ()=> this.showMediaList()}>
+							<FontAwesome name={"list"} />
+							&nbsp;List media
+						</MenuItem>
+					</DropdownButton>
+				</Col>;
+		}
     return (
 			<div className="navbar-fixed-bottom footer">
 				<Row>

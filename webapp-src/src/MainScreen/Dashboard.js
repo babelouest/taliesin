@@ -11,28 +11,28 @@ class Dashboard extends Component {
     super(props);
 		
 		this.state = {
+			recentExpanded: false,
 			recent: [],
 			recentLoaded: false,
+			randomExpanded: false,
 			random: [],
 			randomLoaded: false
 		};
 		
 		this.loadRecent = this.loadRecent.bind(this);
 		this.loadRandom = this.loadRandom.bind(this);
-		
-		this.loadRecent();
-		this.loadRandom();
+		this.handleSelectRecentMedia = this.handleSelectRecentMedia.bind(this);
+		this.handleSelectRandomMedia = this.handleSelectRandomMedia.bind(this);
 	}
 	
 	componentWillReceiveProps(nextProps) {
 		this.setState({
+			recentExpanded: false,
 			recent: [],
 			recentLoaded: false,
+			randomExpanded: false,
 			random: [],
 			randomLoaded: false
-    }, () => {
-			this.loadRecent();
-			this.loadRandom();
 		});
 	}
 	
@@ -42,6 +42,22 @@ class Dashboard extends Component {
 
 	componentWillUnmount() {
 		this._ismounted = false;
+	}
+	
+	handleSelectRecentMedia() {
+		this.setState({recentExpanded: !this.state.recentExpanded, recent: [], recentLoaded: false}, () => {
+			if (this.state.recentExpanded) {
+				this.loadRecent();
+			}
+		});
+	}
+	
+	handleSelectRandomMedia() {
+		this.setState({randomExpanded: !this.state.randomExpanded, random: [], randomLoaded: false}, () => {
+			if (this.state.randomExpanded) {
+				this.loadRandom();
+			}
+		});
 	}
 	
 	loadRecent() {
@@ -116,7 +132,7 @@ class Dashboard extends Component {
 					<Panel collapsible header="Playlists" eventKey="2">
 						<BrowsePlaylist />
 					</Panel>
-					<Panel collapsible header="Albums recently added" eventKey="3">
+					<Panel collapsible header="Albums recently added" eventKey="3" onSelect={this.handleSelectRecentMedia}>
 						<Row>
 							<Col md={2} sm={2} xs={2}>
 								<Button title="Refresh" onClick={this.loadRecent}>
@@ -129,7 +145,7 @@ class Dashboard extends Component {
 							{this.state.recent}
 						</Row>
 					</Panel>
-					<Panel collapsible header="Random albums" eventKey="4">
+					<Panel collapsible header="Random albums" eventKey="4" onSelect={this.handleSelectRandomMedia}>
 						<Row>
 							<Col md={2} sm={2} xs={2}>
 								<Button title="Refresh" onClick={this.loadRandom}>

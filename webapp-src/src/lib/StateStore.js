@@ -36,7 +36,7 @@ var defaultState = {
 		view: "list",
 		jukeboxIndex: 0,
 		currentPlayer: false,
-		currentPlayerStatus: false,
+		currentPlayerStatus: "stop",
 		currentPlayerRepeat: false,
 		currentPlayerRandom: false,
 		currentPlayerVolume: 0,
@@ -192,6 +192,9 @@ function stateStoreManager(state = defaultState, action) {
           break;
         }
       }
+			break;
+		case "setCurrentPlaylist":
+			state.profile.playlist = action.playlist;
 			break;
 		default:
 			break;

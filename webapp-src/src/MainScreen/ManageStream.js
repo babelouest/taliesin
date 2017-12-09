@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Table, DropdownButton, Button, ButtonGroup, MenuItem } from 'react-bootstrap';
+import $ from 'jquery';
 import FontAwesome from 'react-fontawesome';
 import StateStore from '../lib/StateStore';
 import ModalConfirm from '../Modal/ModalConfirm';
@@ -23,11 +24,16 @@ class ManageStream extends Component {
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
 			if (reduxState.lastAction === "setStreamList" || reduxState.lastAction === "setStream") {
-				this.setState({streamList: reduxState.streamList});
+				this.setState({streamList: reduxState.streamList}, () => {
+					this.buildStreamExternalList();
+				});
 			}
 		});
+		
+		this.buildStreamExternalList();
 
 		this.playStream = this.playStream.bind(this);
+		this.playStreamExternal = this.playStreamExternal.bind(this);
 		this.deleteStream = this.deleteStream.bind(this);
 		this.renameStream = this.renameStream.bind(this);
 		this.saveStream = this.saveStream.bind(this);
@@ -38,6 +44,8 @@ class ManageStream extends Component {
 		this.confirmRename = this.confirmRename.bind(this);
 		this.confirmSave = this.confirmSave.bind(this);
 		this.reloadStreamList = this.reloadStreamList.bind(this);
+		this.buildStreamExternalList = this.buildStreamExternalList.bind(this);
+		this.buildStreamExternal = this.buildStreamExternal.bind(this);
 	}
   
 	componentWillReceiveProps(nextProps) {
@@ -50,7 +58,39 @@ class ManageStream extends Component {
 			modalMessage: "", 
 			modalValue: "",
 			curStream: false
+		}, () => {
+			this.buildStreamExternalList();
 		});
+	}
+	
+	componentDidMount() {
+		this._ismounted = true;
+	}
+
+	componentWillUnmount() {
+		this._ismounted = false;
+	}
+	
+	buildStreamExternalList() {
+		if (this._ismounted) {
+			var streamList = this.state.streamList;
+			streamList.forEach((stream) => {
+				stream.external = this.buildStreamExternal(stream);
+			});
+			this.setState({streamList: streamList});
+		}
+	}
+	
+	buildStreamExternal(stream) {
+		if (stream) {
+			if (stream.webradio) {
+				return "data:application/mpegurl;base64," + btoa("#EXTM3U\n\n#EXTINF:0," + (stream.display_name||"no name") + "\n" + StateStore.getState().taliesinApiUrl + "/stream/" + stream.name + "\n");
+			} else {
+				return StateStore.getState().taliesinApiUrl + "/stream/" + stream.name;
+			}
+		} else {
+			return "";
+		}
 	}
 
 	playStream(stream) {
@@ -218,6 +258,10 @@ class ManageStream extends Component {
 		});
 	}
   
+	playStreamExternal(stream) {
+		$("#play-external-anchor-"+stream.name)[0].click();
+	}
+	
   render() {
     var rows = [];
     this.state.streamList.forEach((stream, index) => {
@@ -233,25 +277,39 @@ class ManageStream extends Component {
       rows.push(
         <tr key={index}>
           <td>
-            {stream.display_name||"no name"}
+						<a role="button" onClick={() => this.detailsStream(stream)}>
+							{stream.display_name||"no name"}
+						</a>
           </td>
           <td>
-            {type} {random}
+						<a role="button" onClick={() => this.detailsStream(stream)}>
+							{type} {random}
+						</a>
           </td>
           <td className="hidden-xs">
-            {stream.elements}
+						<a role="button" onClick={() => this.detailsStream(stream)}>
+							{stream.elements}
+						</a>
           </td>
           <td className="hidden-xs">
-            {stream.format + " - " + (stream.stereo?"Stereo":"Mono") + " - " + stream.sample_rate + " kHz - " + (stream.bitrate/1000) + " bps"}
+						<a role="button" onClick={() => this.detailsStream(stream)}>
+							{stream.format + " - " + (stream.stereo?"Stereo":"Mono") + " - " + stream.sample_rate + " kHz - " + (stream.bitrate/1000) + " bps"}
+						</a>
           </td>
           <td className="hidden-xs">
-            {(stream.clients&&stream.clients.length)||0}
+						<a role="button" onClick={() => this.detailsStream(stream)}>
+							{(stream.clients&&stream.clients.length)||0}
+						</a>
           </td>
           <td className="text-center">
+						<a href={stream.external} style={{display: "none"}} id={"play-external-anchor-" + stream.name} download={(stream.display_name||"no name")+".m3u"}>External</a>
             <ButtonGroup className="hidden-xs hidden-sm">
               <Button title="Play now" onClick={() => this.playStream(stream)}>
                 <FontAwesome name={"play"} />
               </Button>
+							<Button title="Open in external player" onClick={() => this.playStreamExternal(stream)}>
+								<FontAwesome name={"external-link"} />
+							</Button>
               <Button title="Rename" onClick={() => this.renameStream(stream)}>
                 <FontAwesome name={"pencil"} />
               </Button>
@@ -277,6 +335,10 @@ class ManageStream extends Component {
 							<MenuItem onClick={() => this.playStream(stream)}>
 								<FontAwesome name={"play"} />&nbsp;
 								Play now
+							</MenuItem>
+							<MenuItem onClick={() => this.playStreamExternal(stream)}>
+								<FontAwesome name={"external-link"} />&nbsp;
+								Open in external player
 							</MenuItem>
 							<MenuItem onClick={() => this.renameStream(stream)}>
 								<FontAwesome name={"pencil"} />&nbsp;

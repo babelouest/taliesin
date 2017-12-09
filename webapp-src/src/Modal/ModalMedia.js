@@ -7,7 +7,7 @@ class ModalMedia extends Component {
   constructor(props) {
     super(props);
 		
-		this.state = {show: props.show, media: props.media, title: props.title, imgBlob: false};
+		this.state = {show: props.show, media: props.media, title: props.title, close: props.onClose, imgBlob: false};
 		
 		this.onCloseModal = this.onCloseModal.bind(this);
 		this.getMediaCover = this.getMediaCover.bind(this);
@@ -23,17 +23,21 @@ class ModalMedia extends Component {
 	}
 	
 	componentWillReceiveProps(nextProps) {
-		this.setState({show: nextProps.show, media: nextProps.media, title: nextProps.title, imgBlob: false}, () => {
+		this.setState({show: nextProps.show, media: nextProps.media, title: nextProps.title, close: nextProps.onClose, imgBlob: false}, () => {
 			this.getMediaCover();
 		});
 	}
 
   onCloseModal() {
-    this.setState({show: false});
+    this.setState({show: false}, () => {
+			if (this.state.close) {
+				this.state.close();
+			}
+		});
   }
 	
 	onPlayNow() {
-		var streamList = StateStore.getState().streamList, curStream = streamList.find((stream) => {return stream.display_name === (StateStore.getState().currentPlayer||"local")});
+		var streamList = StateStore.getState().streamList, curStream = streamList.find((stream) => {return stream.display_name.startsWith("{" + (StateStore.getState().profile.currentPlayer||"local") + "}")});
 		if (curStream) {
 			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(curStream.name) + "/manage", {command: "stop"})
 			.then(() => {
@@ -62,7 +66,7 @@ class ModalMedia extends Component {
 	}
 	
 	runPlayNow() {
-    StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.media.data_source) + "/browse/path/" + encodeURI(this.state.media.path).replace(/#/g, "%23") + "?jukebox&recursive&name=" + (StateStore.getState().currentPlayer||"local"))
+    StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.media.data_source) + "/browse/path/" + encodeURI(this.state.media.path).replace(/#/g, "%23") + "?jukebox&recursive&name={" + (StateStore.getState().profile.currentPlayer||"local") + "} - " + (this.state.media.tags.title||this.state.media.name))
     .then((result) => {
 			var streamList = StateStore.getState().streamList;
       streamList.push(result);

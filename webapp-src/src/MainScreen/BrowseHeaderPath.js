@@ -32,6 +32,15 @@ class BrowseHeaderPath extends Component {
   }
   
   render () {
+    var eltName = this.state.path;
+    if (eltName.indexOf("/") > -1) {
+      eltName = eltName.substring(eltName.lastIndexOf("/") + 1);
+    }
+    var element = {
+      type: "folder",
+      path: this.state.path,
+      name: eltName
+    }
     if (this.state.imgThumbBlob) {
       return (
         <Row>
@@ -43,7 +52,7 @@ class BrowseHeaderPath extends Component {
           </Col>
           <Col md={3} sm={3} xs={1} className="text-right">
             <div className="text-right">
-              <ElementButtons dataSource={this.state.dataSource} path={this.state.path} element={false}/>
+              <ElementButtons dataSource={this.state.dataSource} path={this.state.path} element={element}/>
             </div>
           </Col>
         </Row>
@@ -56,7 +65,7 @@ class BrowseHeaderPath extends Component {
           </Col>
           <Col md={3} sm={3} xs={6} className="text-right">
             <div className="text-right">
-              <ElementButtons dataSource={this.state.dataSource} path={this.state.path} element={false}/>
+              <ElementButtons dataSource={this.state.dataSource} path={this.state.path} element={element}/>
             </div>
           </Col>
         </Row>

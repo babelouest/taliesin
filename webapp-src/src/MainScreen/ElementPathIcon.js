@@ -4,6 +4,7 @@ import { Image, Col } from 'react-bootstrap';
 import VisibilitySensor from 'react-visibility-sensor';
 import StateStore from '../lib/StateStore';
 import ElementButtons from './ElementButtons';
+import ModalMedia from '../Modal/ModalMedia';
 
 class ElementPathIcon extends Component {
   constructor(props) {
@@ -38,6 +39,9 @@ class ElementPathIcon extends Component {
 	}
   
   handleOpenFile(name) {
+		var modalMedia = this.state.element;
+		modalMedia.data_source = this.state.dataSource;
+		this.setState({show: true, modalMedia: modalMedia, modalTitle: this.state.element.name});
   }
 	
 	onChangeVisibility(isVisible) {
@@ -187,6 +191,7 @@ class ElementPathIcon extends Component {
 				<div className="text-center">
 					<ElementButtons dataSource={this.state.dataSource} path={this.state.path + "/" + this.state.element.name} element={this.state.element}/>
 				</div>
+				<ModalMedia show={this.state.show} media={this.state.modalMedia} title={this.state.modalTitle} />
 			</Col>
 		);
 	}

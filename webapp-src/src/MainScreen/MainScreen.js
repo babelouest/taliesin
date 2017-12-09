@@ -5,6 +5,7 @@ import BrowsePath from './BrowsePath';
 import BrowsePlaylist from './BrowsePlaylist';
 import BrowseRecent from './BrowseRecent';
 import BrowseCategory from './BrowseCategory';
+import AdvancedSearch from './AdvancedSearch';
 import ManagePlayer from './ManagePlayer';
 import ManageStream from './ManageStream';
 import ManageDataSource from './ManageDataSource';
@@ -62,7 +63,7 @@ class MainScreen extends Component {
 				return (
 					<Grid className="main-screen">
 						<h2>Playlists</h2>
-						<BrowsePlaylist view={this.state.view} />
+						<BrowsePlaylist view={this.state.view} playlist={StateStore.getState().profile.playlist} />
 					</Grid>
 				);
 			} else if (this.state.browse === "recent") {
@@ -113,6 +114,13 @@ class MainScreen extends Component {
 					<Grid className="main-screen">
 						<h2>Stream media list</h2>
 						<StreamMediaList stream={StateStore.getState().profile.stream} />
+					</Grid>
+				);
+			} else if (this.state.browse === "advancedSearch") {
+				return (
+					<Grid className="main-screen">
+						<h2>Advanced Search</h2>
+						<AdvancedSearch />
 					</Grid>
 				);
 			} else {

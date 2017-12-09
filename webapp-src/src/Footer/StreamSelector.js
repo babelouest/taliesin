@@ -47,7 +47,11 @@ class StreamSelector extends Component {
 		});
     var streamName = "Select stream";
     if (this.state.selectedStream.name) {
-      streamName = this.state.selectedStream.display_name||"no name";
+			if (this.state.selectedStream.display_name.startsWith("{") && this.state.selectedStream.display_name.indexOf("} - ") !== -1) {
+				streamName = this.state.selectedStream.display_name.substring(this.state.selectedStream.display_name.indexOf("}") + 3);
+			} else {
+				streamName = this.state.selectedStream.display_name||"no name";
+			}
       if (streamName.length > 10) {
         streamName = streamName.substring(0, 10) + "...";
       }

@@ -36,14 +36,16 @@ class StreamMediaList extends Component {
 	}
 	
 	getMediaList() {
-		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "list", parameters: {offset: this.state.offset, limit: this.state.limit}})
-		.then((result) => {
-			var list = [];
-			result.forEach((media, index) => {
-				list.push(<MediaRow stream={this.state.stream.webradio?false:this.state.stream.name} elements={this.state.stream.elements} media={media} index={index} key={index} />);
+		if (this.state.stream.name) {
+			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "list", parameters: {offset: this.state.offset, limit: this.state.limit}})
+			.then((result) => {
+				var list = [];
+				result.forEach((media, index) => {
+					list.push(<MediaRow stream={this.state.stream.webradio?false:this.state.stream.name} elements={this.state.stream.elements} media={media} index={index} key={index} />);
+				});
+				this.setState({list: list, listLoaded: true});
 			});
-			this.setState({list: list, listLoaded: true});
-		});
+		}
 	}
 	
 	handleMediaListPrevious() {

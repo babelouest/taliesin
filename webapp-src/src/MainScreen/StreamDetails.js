@@ -467,7 +467,7 @@ class StreamDetails extends Component {
 								<FontAwesome name={"external-link"} />
 							</Button>
 						</ButtonGroup>
-						<DropdownButton className="visible-xs" id={"xs-manage"-this.state.stream.name} pullLeft title={
+						<DropdownButton className="visible-xs" id={"xs-manage"-this.state.stream.name} title={
 							<span><i className="fa fa-cog"></i></span>
 						}>
 							<MenuItem onClick={this.renameStream}>

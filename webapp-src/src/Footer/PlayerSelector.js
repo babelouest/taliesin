@@ -20,10 +20,10 @@ class PlayerSelector extends Component {
 		StateStore.dispatch({type: "setCurrentBrowse", browse: "managePlayer"});
 	}
 	
-	handleSelectPlayer(event) {
+	handleSelectPlayer(player) {
     StateStore.dispatch({type: "loadStream", stream: {name: false, webradio: false}});
-		StateStore.dispatch({type: "setCurrentPlayer", currentPlayer: event});
-		this.setState({player: event});
+		StateStore.dispatch({type: "setCurrentPlayer", currentPlayer: player});
+		this.setState({player: player});
 	}
 	
   render() {

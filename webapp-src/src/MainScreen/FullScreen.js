@@ -33,11 +33,16 @@ class FullScreen extends Component {
 					this.setState({show: StateStore.getState().showFullScreen}, () => {this.loadMedia();});
 				} else if (StateStore.getState().lastAction === "loadStream" || StateStore.getState().lastAction === "loadStreamAndPlay") {
 					this.setState({stream: StateStore.getState().profile.stream}, () => {this.loadMedia();});
+				} else if (StateStore.getState().lastAction === "setCurrentPlayerStatus") {
+					this.setState({
+						status: StateStore.getState().profile.currentPlayerStatus,
+						repeat: StateStore.getState().profile.currentPlayerRepeat,
+						random: StateStore.getState().profile.currentPlayerRandom,
+						volume: StateStore.getState().profile.currentPlayerVolume
+					});
 				}
 			}
 		});
-		
-		this.loadMedia();
 		
 		this.loadMedia = this.loadMedia.bind(this);
 		this.buildTitle = this.buildTitle.bind(this);
@@ -49,6 +54,8 @@ class FullScreen extends Component {
 		this.handleSelectGenre = this.handleSelectGenre.bind(this);
 		this.handlePlayerAction = this.handlePlayerAction.bind(this);
 		this.handleChangeVolume = this.handleChangeVolume.bind(this);
+		
+		this.loadMedia();
 	}
 
 	componentWillReceiveProps(nextProps) {
@@ -86,7 +93,6 @@ class FullScreen extends Component {
 	buildTitle() {
 		var title = "";
 		if (!!this.state.media) {
-			console.log("title", this.state.jukeboxIndex, this.state.stream);
 			if (this.state.jukeboxIndex > -1 && !this.state.stream.webradio) {
 				title += ((this.state.jukeboxIndex+1)<10?"0"+(this.state.jukeboxIndex+1):(this.state.jukeboxIndex+1)) + "/" + (this.state.stream.elements<10?"0"+this.state.stream.elements:this.state.stream.elements) + " - ";
 			}
@@ -156,32 +162,32 @@ class FullScreen extends Component {
 	}
 	
 	render() {
-		var mediaImage, metadata = [], separator, playButton, randomButton, repeatButton;
+		var mediaImage, metadata = [], separator, playButton;
 		if (this.state.imgBlob) {
 			mediaImage = <Image src={"data:image/jpeg;base64," + this.state.imgBlob} className="cover-image-full center-block" responsive />;
 		} else {
 			mediaImage = <Image src="images/generic-album.png" className="cover-image-full center-block" responsive />;
 		}
-    if (this.state.play) {
-      playButton = 
-        <Button title="Play" onClick={() => {this.handlePlayerAction("pause")}}>
-					<FontAwesome name={"pause"} />
-        </Button>;
-    } else {
+    if (this.state.status === "stop") {
       playButton = 
         <Button title="Play" onClick={() => {this.handlePlayerAction("play")}}>
 					<FontAwesome name={"play"} />
         </Button>;
-    }
-		if (!this.state.stream.webradio) {
-			randomButton =
-				<Button title="Repeat list" onClick={() => {this.handlePlayerAction("repeat")}} disabled={this.state.stream.webradio} className={(this.state.repeat&&!this.state.stream.webradio)?"btn-primary":""}>
-					<FontAwesome name={"repeat"} />
-				</Button>;
-			repeatButton =
-				<Button title="Random" onClick={() => {this.handlePlayerAction("random")}} disabled={this.state.stream.webradio} className={(this.state.random&&!this.state.stream.webradio)?"btn-primary":""}>
-					<FontAwesome name={"random"} />
-				</Button>;
+    } else if (this.state.status === "pause") {
+      playButton = 
+        <Button title="Play" onClick={() => {this.handlePlayerAction("pause")}}>
+					<FontAwesome name={"play"} />
+        </Button>;
+    } else if (!this.state.stream.webradio) {
+      playButton = 
+        <Button title="Pause" onClick={() => {this.handlePlayerAction("pause")}}>
+					<FontAwesome name={"pause"} />
+        </Button>;
+    } else {
+      playButton = 
+        <Button title="Play" disabled={true}>
+					<FontAwesome name={"play"} />
+        </Button>;
 		}
 		if (this.state.media) {
 			if (this.state.media.tags.title) {
@@ -262,8 +268,12 @@ class FullScreen extends Component {
               <Button title="Next song" onClick={() => {this.handlePlayerAction("next")}}>
                 <FontAwesome name={"fast-forward"} />
               </Button>
-							{randomButton}
-							{repeatButton}
+							<Button title="Repeat list" onClick={() => {this.handlePlayerAction("repeat")}} className={(this.state.repeat&&!this.state.stream.webradio)?"btn-primary":""} disabled={this.state.stream.webradio}>
+								<FontAwesome name={"repeat"} />
+							</Button>
+							<Button title="Random" onClick={() => {this.handlePlayerAction("random")}} className={(this.state.random&&!this.state.stream.webradio)?"btn-primary":""} disabled={this.state.stream.webradio}>
+								<FontAwesome name={"random"} />
+							</Button>
               <DropdownButton title={<FontAwesome name={"volume-up"} />} id="dropdown-volume">
                 <MenuItem eventKey="1"><input type="range" onChange={this.handleChangeVolume} value={this.state.volume} min="0" max="100" step="1"/></MenuItem>
               </DropdownButton>

@@ -27,7 +27,7 @@ install-dev:
 dev:
 	npm start
 
-build:
+build-webapp:
 	npm run build
 	find $(WEBAPP_DEST) ! -name config.json ! -name webapp -delete
 	cp -R build/* $(WEBAPP_DEST)

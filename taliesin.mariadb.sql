@@ -107,7 +107,7 @@ CREATE TABLE `t_media_history` (
   `tmh_stream_name` VARCHAR(32),
   `tm_id` INT(11) NOT NULL,
   `tpl_id` INT(11),
-  FOREIGN KEY(`tpl_id`) REFERENCES `t_playlist`(`tpl_id`) ON DELETE CASCADE,
+  FOREIGN KEY(`tpl_id`) REFERENCES `t_playlist`(`tpl_id`) ON DELETE SET NULL,
   FOREIGN KEY(`tm_id`) REFERENCES `t_media`(`tm_id`) ON DELETE CASCADE
 );
 
@@ -142,7 +142,7 @@ CREATE TABLE `t_stream` (
   `ts_channels` TINYINT(1),
   `ts_sample_rate` INT(11),
   `ts_bitrate` INT(11),
-  FOREIGN KEY(`tpl_id`) REFERENCES `t_playlist`(`tpl_id`) ON DELETE CASCADE
+  FOREIGN KEY(`tpl_id`) REFERENCES `t_playlist`(`tpl_id`) ON DELETE SET NULL
 );
 CREATE INDEX `i_ts_name` ON `t_stream`(`ts_name`);
 

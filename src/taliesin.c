@@ -744,7 +744,7 @@ int build_config_from_file(struct config_elements * config) {
     }
   }
   
-  if (config_lookup_int(&cfg, "use_oauth2_authentication", &cur_use_oauth2_authentication) == CONFIG_TRUE) {
+  if (config_lookup_bool(&cfg, "use_oauth2_authentication", &cur_use_oauth2_authentication) == CONFIG_TRUE) {
     config->use_oauth2_authentication = cur_use_oauth2_authentication;
   }
   

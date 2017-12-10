@@ -112,7 +112,7 @@ int callback_taliesin_check_access (const struct _u_request * request, struct _u
     return callback_check_glewlwyd_access_token(request, response, config->glewlwyd_resource_config);
   } else {
     scope = msprintf("%s %s", config->oauth_scope_user, config->oauth_scope_admin);
-    response->shared_data = (void*)json_pack("{ssso}", "username", TALIESIN_NO_AUTHENTICATION_USERNAME, "scope", scope);
+    response->shared_data = (void*)json_pack("{ssss}", "username", TALIESIN_NO_AUTHENTICATION_USERNAME, "scope", scope);
     o_free(scope);
     return U_CALLBACK_CONTINUE;
   }

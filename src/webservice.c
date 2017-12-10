@@ -191,7 +191,7 @@ int callback_taliesin_data_source_get (const struct _u_request * request, struct
   
   j_result = data_source_get(config, get_username(request, response, config), u_map_get(request->map_url, "data_source"), 0);
   if (check_result_value(j_result, T_OK)) {
-    if (set_response_json_body_and_clean(response, 200, json_copy(json_object_get(j_result, "data_source"))) != U_OK) {
+    if (ulfius_set_json_body_response(response, 200, json_object_get(j_result, "data_source")) != U_OK) {
       y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_data_source_get - Error setting json response");
       res = U_CALLBACK_ERROR;
     }

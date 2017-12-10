@@ -718,7 +718,7 @@ json_t * webradio_get_clients(struct _t_webradio * webradio) {
 }
 
 json_t * webradio_get_info(struct _t_webradio * webradio) {
-  json_t * j_stream = NULL;
+  json_t * j_stream = NULL, * j_client;
   
   if (webradio != NULL && webradio->audio_stream != NULL) {
     j_stream = json_pack("{sis{sssssososisssosisi}}",
@@ -745,6 +745,13 @@ json_t * webradio_get_info(struct _t_webradio * webradio) {
                             webradio->audio_stream->stream_bitrate);
     if (webradio->playlist_name != NULL) {
       json_object_set_new(json_object_get(j_stream, "webradio"), "stored_playlist", json_string(webradio->playlist_name));
+      j_client = webradio_get_clients(webradio);
+      if (check_result_value(j_client, T_OK)) {
+        json_object_set(json_object_get(j_stream, "webradio"), "clients", json_object_get(j_client, "clients"));
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "webradio_get_info - Error webradio_get_clients");
+      }
+      json_decref(j_client);
     }
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "webradio_get_info - Error webradio is invalid");

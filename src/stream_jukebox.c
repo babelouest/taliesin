@@ -224,7 +224,7 @@ static int jukebox_delete_db_stream_media(struct config_elements * config, struc
         ret = T_ERROR_DB;
       }
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_update_db_stream_media_list - stream not found");
+      y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_delete_db_stream_media - stream not found");
       ret = T_ERROR_NOT_FOUND;
     }
     json_decref(j_result);
@@ -692,7 +692,7 @@ json_t * jukebox_get_clients(struct _t_jukebox * jukebox) {
 }
 
 json_t * jukebox_get_info(struct _t_jukebox * jukebox) {
-  json_t * j_stream = NULL;
+  json_t * j_stream = NULL, * j_client;
   
   if (jukebox != NULL) {
     j_stream = json_pack("{sis{sssssosisssosisisisi}}",
@@ -721,6 +721,13 @@ json_t * jukebox_get_info(struct _t_jukebox * jukebox) {
                             jukebox->last_seen);
     if (jukebox->playlist_name != NULL) {
       json_object_set_new(json_object_get(j_stream, "jukebox"), "stored_playlist", json_string(jukebox->playlist_name));
+      j_client = jukebox_get_clients(jukebox);
+      if (check_result_value(j_client, T_OK)) {
+        json_object_set(json_object_get(j_stream, "jukebox"), "clients", json_object_get(j_client, "clients"));
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_get_info - Error jukebox_get_clients");
+      }
+      json_decref(j_client);
     }
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_get_info - Error jukebox is invalid");

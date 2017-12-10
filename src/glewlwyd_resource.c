@@ -71,7 +71,7 @@ int callback_check_glewlwyd_access_token (const struct _u_request * request, str
             o_free(response_value);
           } else {
             res = U_CALLBACK_CONTINUE;
-            response->shared_data = (void*)json_pack("{ssso}", "username", json_string_value(json_object_get(json_object_get(j_access_token, "grants"), "username")), "scope", json_copy(json_object_get(j_res_scope, "scope")));
+            response->shared_data = (void*)json_pack("{sssO}", "username", json_string_value(json_object_get(json_object_get(j_access_token, "grants"), "username")), "scope", json_object_get(j_res_scope, "scope"));
             if (response->shared_data == NULL) {
               res = U_CALLBACK_ERROR;
             }
@@ -121,7 +121,7 @@ json_t * access_token_check_scope(struct _glewlwyd_resource_config * config, jso
           }
         }
         if (json_array_size(j_scope_final_list) > 0) {
-          j_res = json_pack("{siso}", "result", G_OK, "scope", json_copy(j_scope_final_list));
+          j_res = json_pack("{sisO}", "result", G_OK, "scope", j_scope_final_list);
         } else {
           j_res = json_pack("{si}", "result", G_ERROR_INSUFFICIENT_SCOPE);
         }

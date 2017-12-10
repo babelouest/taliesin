@@ -28,28 +28,16 @@
  */
 json_t * stream_list(struct config_elements * config, const char * username) {
   int i;
-  json_t * j_result = json_pack("{sis[]}", "result", T_OK, "stream"), * j_stream_info, * j_clients, * j_stream;
+  json_t * j_result = json_pack("{sis[]}", "result", T_OK, "stream"), * j_stream_info;
   
   if (j_result != NULL) {
     for (i=0; i<config->nb_webradio; i++) {
       if (config->webradio_set[i]->username == NULL || 0 == o_strcmp(config->webradio_set[i]->username, username)) {
         j_stream_info = webradio_get_info(config->webradio_set[i]);
         if (check_result_value(j_stream_info, T_OK)) {
-          j_stream = json_copy(json_object_get(j_stream_info, "webradio"));
-          if (j_stream != NULL) {
-            j_clients = webradio_get_clients(config->webradio_set[i]);
-            if (check_result_value(j_clients, T_OK)) {
-              json_object_set(j_stream, "clients", json_object_get(j_clients, "clients"));
-            } else {
-              y_log_message(Y_LOG_LEVEL_ERROR, "stream_list - Error webradio_get_clients");
-            }
-            json_decref(j_clients);
-            json_array_append_new(json_object_get(j_result, "stream"), j_stream);
-          } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "stream_list - Error allocating resources for j_stream");
-          }
+          json_array_append(json_object_get(j_result, "stream"), json_object_get(j_stream_info, "webradio"));
         } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "stream_list - Error j_stream_info");
+          y_log_message(Y_LOG_LEVEL_ERROR, "stream_list - Error webradio_get_info");
         }
         json_decref(j_stream_info);
       }
@@ -58,21 +46,9 @@ json_t * stream_list(struct config_elements * config, const char * username) {
       if (config->jukebox_set[i]->username == NULL || 0 == o_strcmp(config->jukebox_set[i]->username, username)) {
         j_stream_info = jukebox_get_info(config->jukebox_set[i]);
         if (check_result_value(j_stream_info, T_OK)) {
-          j_stream = json_copy(json_object_get(j_stream_info, "jukebox"));
-          if (j_stream != NULL) {
-            j_clients = jukebox_get_clients(config->jukebox_set[i]);
-            if (check_result_value(j_clients, T_OK)) {
-              json_object_set(j_stream, "clients", json_object_get(j_clients, "clients"));
-            } else {
-              y_log_message(Y_LOG_LEVEL_ERROR, "stream_list - Error jukebox_get_clients");
-            }
-            json_decref(j_clients);
-            json_array_append_new(json_object_get(j_result, "stream"), j_stream);
-          } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "stream_list - Error allocating resources for j_stream");
-          }
+          json_array_append(json_object_get(j_result, "stream"), json_object_get(j_stream_info, "jukebox"));
         } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "stream_list - Error j_stream_info");
+          y_log_message(Y_LOG_LEVEL_ERROR, "stream_list - Error jukebox_get_info");
         }
         json_decref(j_stream_info);
       }

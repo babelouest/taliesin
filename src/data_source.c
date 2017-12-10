@@ -64,7 +64,7 @@ json_t * data_source_list(struct config_elements * config, const char * username
       json_object_set_new(j_element, "scope", json_string(data_source_scope));
       json_object_del(j_element, "tds_username");
     }
-    j_return = json_pack("{siso}", "result", T_OK, "data_source", json_copy(j_result));
+    j_return = json_pack("{sisO}", "result", T_OK, "data_source", j_result);
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "data_source_list - Error getting data source list");
     j_return = json_pack("{si}", "result", T_ERROR_DB);
@@ -132,7 +132,7 @@ json_t * data_source_get(struct config_elements * config, const char * username,
         }
         json_object_set_new(json_array_get(j_result, 0), "scope", json_string(data_source_scope));
         json_object_del(json_array_get(j_result, 0), "tds_username");
-        j_return = json_pack("{siso}", "result", T_OK, "data_source", json_copy(json_array_get(j_result, 0)));
+        j_return = json_pack("{sisO}", "result", T_OK, "data_source", json_array_get(j_result, 0));
       } else {
         j_return = json_pack("{si}", "result", T_ERROR_NOT_FOUND);
       }

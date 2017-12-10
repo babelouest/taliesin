@@ -309,36 +309,36 @@ json_t * media_get_metadata(struct config_elements * config, AVCodecContext * th
 }
 
 json_t * media_get_tags_from_id(struct config_elements * config, json_int_t tm_id) {
-	json_t * j_query, * j_result, * j_tag, * j_return;
-	size_t index;
-	int res;
-	
-	j_query = json_pack("{sss[ss]s{sI}}",
-											"table",
-											TALIESIN_TABLE_META_DATA,
-											"columns",
-												"tmd_key",
-												"tmd_value",
-											"where",
-												"tm_id",
-												tm_id);
-	res = h_select(config->conn, j_query, &j_result, NULL);
-	json_decref(j_query);
-	if (res == H_OK) {
-		j_return = json_pack("{sis{}}", "result", T_OK, "tags");
-		if (j_return != NULL) {
-			json_array_foreach(j_result, index, j_tag) {
-				json_object_set_new(json_object_get(j_return, "tags"), json_string_value(json_object_get(j_tag, "tmd_key")), json_copy(json_object_get(j_tag, "tmd_value")));
-			}
-		} else {
-			y_log_message(Y_LOG_LEVEL_ERROR, "media_get_tags_from_id - Error allocating resources for j_return");
-		}
-		json_decref(j_result);
-	} else {
-		y_log_message(Y_LOG_LEVEL_ERROR, "media_get_tags_from_id - Error executing j_query");
-		j_return = json_pack("{si}", "result", T_ERROR_DB);
-	}
-	return j_return;
+  json_t * j_query, * j_result, * j_tag, * j_return;
+  size_t index;
+  int res;
+  
+  j_query = json_pack("{sss[ss]s{sI}}",
+                      "table",
+                      TALIESIN_TABLE_META_DATA,
+                      "columns",
+                        "tmd_key",
+                        "tmd_value",
+                      "where",
+                        "tm_id",
+                        tm_id);
+  res = h_select(config->conn, j_query, &j_result, NULL);
+  json_decref(j_query);
+  if (res == H_OK) {
+    j_return = json_pack("{sis{}}", "result", T_OK, "tags");
+    if (j_return != NULL) {
+      json_array_foreach(j_result, index, j_tag) {
+        json_object_set(json_object_get(j_return, "tags"), json_string_value(json_object_get(j_tag, "tmd_key")), json_object_get(j_tag, "tmd_value"));
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "media_get_tags_from_id - Error allocating resources for j_return");
+    }
+    json_decref(j_result);
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "media_get_tags_from_id - Error executing j_query");
+    j_return = json_pack("{si}", "result", T_ERROR_DB);
+  }
+  return j_return;
 }
 
 json_int_t folder_get_id(struct config_elements * config, json_t * j_data_source, json_int_t tf_parent_id, const char * path) {
@@ -440,7 +440,7 @@ json_t * media_get_by_id(struct config_elements * config, json_int_t tm_id) {
           json_decref(j_query);
           if (res == H_OK) {
             json_array_foreach(j_result_tag, index_tag, j_tag) {
-              json_object_set_new(json_object_get(j_element, "tags"), json_string_value(json_object_get(j_tag, "tmd_key")), json_copy(json_object_get(j_tag, "tmd_value")));
+              json_object_set(json_object_get(j_element, "tags"), json_string_value(json_object_get(j_tag, "tmd_key")), json_object_get(j_tag, "tmd_value"));
             }
             json_decref(j_result_tag);
           } else {
@@ -504,8 +504,8 @@ json_t * media_get_file(struct config_elements * config, json_t * j_data_source,
                         tf_id==0?json_null():json_integer(tf_id),
                         "tm_name",
                         file,
-											"order_by",
-											"path");
+                      "order_by",
+                      "path");
   if (j_query != NULL) {
     res = h_select(config->conn, j_query, &j_result, NULL);
     json_decref(j_query);
@@ -530,7 +530,7 @@ json_t * media_get_file(struct config_elements * config, json_t * j_data_source,
           json_decref(j_query);
           if (res == H_OK) {
             json_array_foreach(j_result_tag, index_tag, j_tag) {
-              json_object_set_new(json_object_get(j_element, "tags"), json_string_value(json_object_get(j_tag, "tmd_key")), json_copy(json_object_get(j_tag, "tmd_value")));
+              json_object_set(json_object_get(j_element, "tags"), json_string_value(json_object_get(j_tag, "tmd_key")), json_object_get(j_tag, "tmd_value"));
             }
             json_decref(j_result_tag);
           } else {
@@ -600,7 +600,7 @@ json_t * media_list_folder(struct config_elements * config, json_t * j_data_sour
           json_decref(j_query);
           if (res == H_OK) {
             json_array_foreach(j_result_tag, index_tag, j_tag) {
-              json_object_set_new(json_object_get(j_element, "tags"), json_string_value(json_object_get(j_tag, "tmd_key")), json_copy(json_object_get(j_tag, "tmd_value")));
+              json_object_set(json_object_get(j_element, "tags"), json_string_value(json_object_get(j_tag, "tmd_key")), json_object_get(j_tag, "tmd_value"));
             }
             json_decref(j_result_tag);
           } else {
@@ -1243,7 +1243,7 @@ json_t * media_get_full(struct config_elements * config, json_t * j_data_source,
           if (j_result != NULL) {
             json_array_foreach(j_result_folders, index, j_element) {
               json_object_set_new(j_element, "type", json_string("folder"));
-              json_array_append_new(json_object_get(j_result, "media"), json_copy(j_element));
+              json_array_append(json_object_get(j_result, "media"), j_element);
             }
             json_decref(j_result_folders);
             j_result_files = media_list_folder(config, j_data_source, tf_id, 1);
@@ -1591,7 +1591,7 @@ json_t * media_category_list(struct config_elements * config, json_t * j_data_so
   int res = H_ERROR;
   char * clause_data_source, * escape_category = NULL, * clause_category = NULL;
   json_int_t tds_id = json_integer_value(json_object_get(j_data_source, "tds_id"));
-	size_t index;
+  size_t index;
   
   clause_data_source = msprintf("`tm_id` IN (SELECT `tm_id` FROM `%s` WHERE `tds_id`=%" JSON_INTEGER_FORMAT ")", TALIESIN_TABLE_MEDIA, tds_id);
   escape_category = h_escape_string(config->conn, category);
@@ -1608,7 +1608,7 @@ json_t * media_category_list(struct config_elements * config, json_t * j_data_so
                       "table",
                       TALIESIN_TABLE_MEDIA,
                       "columns",
-												"`tm_id`",
+                        "`tm_id`",
                         "`tm_name` AS name",
                         "`tm_path` AS path",
                         "'media' AS type",
@@ -1633,19 +1633,19 @@ json_t * media_category_list(struct config_elements * config, json_t * j_data_so
   json_decref(j_query);
   if (res == H_OK) {
     if (json_array_size(j_result) > 0) {
-			if (!with_id) {
-				json_array_foreach(j_result, index, j_element) {
-					json_object_set(j_element, "data_source", json_object_get(j_data_source, "name"));
-					j_tags = media_get_tags_from_id(config, json_integer_value(json_object_get(j_element, "tm_id")));
-					if (check_result_value(j_tags, T_OK)) {
-						json_object_set(j_element, "tags", json_object_get(j_tags, "tags"));
-					} else {
-						y_log_message(Y_LOG_LEVEL_ERROR, "media_category_list - Error media_get_tags_from_id");
-					}
-					json_decref(j_tags);
-					json_object_del(j_element, "tm_id");
-				}
-			}
+      if (!with_id) {
+        json_array_foreach(j_result, index, j_element) {
+          json_object_set(j_element, "data_source", json_object_get(j_data_source, "name"));
+          j_tags = media_get_tags_from_id(config, json_integer_value(json_object_get(j_element, "tm_id")));
+          if (check_result_value(j_tags, T_OK)) {
+            json_object_set(j_element, "tags", json_object_get(j_tags, "tags"));
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "media_category_list - Error media_get_tags_from_id");
+          }
+          json_decref(j_tags);
+          json_object_del(j_element, "tm_id");
+        }
+      }
       j_return = json_pack("{siso}", "result", T_OK, "media", j_result);
     } else {
       json_decref(j_result);
@@ -1786,7 +1786,7 @@ json_t * media_subcategory_list(struct config_elements * config, json_t * j_data
   int res = H_ERROR;
   char * clause_data_source, * escape_category = NULL, * clause_category = NULL, * escape_subcategory = NULL, * clause_subcategory = NULL;
   json_int_t tds_id = json_integer_value(json_object_get(j_data_source, "tds_id"));
-	size_t index;
+  size_t index;
   
   escape_category = h_escape_string(config->conn, category);
   if (o_strcmp(level, "artist") == 0) {
@@ -1845,19 +1845,19 @@ json_t * media_subcategory_list(struct config_elements * config, json_t * j_data
   json_decref(j_query);
   if (res == H_OK) {
     if (json_array_size(j_result) > 0) {
-			if (!with_id) {
-				json_array_foreach(j_result, index, j_element) {
-					json_object_set(j_element, "data_source", json_object_get(j_data_source, "name"));
-					j_tags = media_get_tags_from_id(config, json_integer_value(json_object_get(j_element, "tm_id")));
-					if (check_result_value(j_tags, T_OK)) {
-						json_object_set(j_element, "tags", json_object_get(j_tags, "tags"));
-					} else {
-						y_log_message(Y_LOG_LEVEL_ERROR, "media_category_list - Error media_get_tags_from_id");
-					}
-					json_decref(j_tags);
-					json_object_del(j_element, "tm_id");
-				}
-			}
+      if (!with_id) {
+        json_array_foreach(j_result, index, j_element) {
+          json_object_set(j_element, "data_source", json_object_get(j_data_source, "name"));
+          j_tags = media_get_tags_from_id(config, json_integer_value(json_object_get(j_element, "tm_id")));
+          if (check_result_value(j_tags, T_OK)) {
+            json_object_set(j_element, "tags", json_object_get(j_tags, "tags"));
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "media_category_list - Error media_get_tags_from_id");
+          }
+          json_decref(j_tags);
+          json_object_del(j_element, "tm_id");
+        }
+      }
       j_return = json_pack("{siso}", "result", T_OK, "media", j_result);
     } else {
       json_decref(j_result);
@@ -2362,5 +2362,5 @@ json_t * media_append_list_to_media_list(struct config_elements * config, json_t
     y_log_message(Y_LOG_LEVEL_ERROR, "media_append_list_to_media_list - Error allocating resources for j_media_list");
     j_return = json_pack("{si}", "result", T_ERROR_MEMORY);
   }
-	return j_return;
+  return j_return;
 }

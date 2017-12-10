@@ -20,6 +20,6 @@ Authentication method: An OAuth2 server providing JWT like [Glewlwyd](https://gi
 
 ## Documentation
 
-Installation documentation is available in the file [INSTALL.md](https://github.com/babelouest/taliesin/blob/master/doc/INSTALL.md).
+Installation documentation is available in the file [INSTALL.md](https://github.com/babelouest/taliesin/blob/master/docs/INSTALL.md).
 
-Server API description is available in the file [API.md](https://github.com/babelouest/taliesin/blob/master/doc/API.md).
+Server API description is available in the file [API.md](https://github.com/babelouest/taliesin/blob/master/docs/API.md).

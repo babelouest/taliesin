@@ -132,7 +132,7 @@ class ElementButtons extends Component {
 				var streamList = StateStore.getState().streamList;
 				streamList.push(result);
 				StateStore.dispatch({type: "setStreamList", streamList: streamList});
-				StateStore.dispatch({type: "loadStream", stream: result});
+				StateStore.dispatch({type: (player.playNow?"loadStreamAndPlay":"loadStream"), stream: result, index: 0});
 			})
 			.fail(() => {
 				StateStore.getState().NotificationManager.addNotification({
@@ -291,7 +291,17 @@ class ElementButtons extends Component {
 					</MenuItem>
 					{playlist}
 				</DropdownButton>
-        <ModalEditStream show={this.state.show} dataSource={this.state.dataSource} element={this.state.element} path={this.state.path} category={this.state.category} categoryValue={this.state.categoryValue} subCategory={this.state.subCategory} subCategoryValue={this.state.subCategoryValue} onCloseCb={this.runPlayElementAdvanced} />
+        <ModalEditStream 
+          show={this.state.show} 
+          dataSource={this.state.dataSource} 
+          element={this.state.element} 
+          path={this.state.path} 
+          category={this.state.category} 
+          categoryValue={this.state.categoryValue} 
+          subCategory={this.state.subCategory} 
+          subCategoryValue={this.state.subCategoryValue} 
+          onCloseCb={this.runPlayElementAdvanced} 
+        />
 			</div>
     );
 	}

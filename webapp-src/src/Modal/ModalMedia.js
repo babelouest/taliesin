@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Modal, Row, Col, Image, Button } from 'react-bootstrap';
+import { Modal, Row, Col, Image, Button, ButtonGroup, DropdownButton, MenuItem } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
 import StateStore from '../lib/StateStore';
 
@@ -7,7 +7,15 @@ class ModalMedia extends Component {
   constructor(props) {
     super(props);
 		
-		this.state = {show: props.show, media: props.media, title: props.title, close: props.onClose, imgBlob: false};
+		this.state = {
+      show: props.show, 
+      media: props.media, 
+      title: props.title, 
+      close: props.onClose, 
+      imgBlob: false,
+			streamList: StateStore.getState().streamList,
+			playlist: StateStore.getState().playlists
+    };
 		
 		this.onCloseModal = this.onCloseModal.bind(this);
 		this.getMediaCover = this.getMediaCover.bind(this);
@@ -23,17 +31,35 @@ class ModalMedia extends Component {
 	}
 	
 	componentWillReceiveProps(nextProps) {
-		this.setState({show: nextProps.show, media: nextProps.media, title: nextProps.title, close: nextProps.onClose, imgBlob: false}, () => {
+		this.setState({
+      show: nextProps.show, 
+      media: nextProps.media, 
+      title: nextProps.title, 
+      close: nextProps.onClose, 
+      imgBlob: false,
+			streamList: StateStore.getState().streamList,
+			playlist: StateStore.getState().playlists
+    }, () => {
 			this.getMediaCover();
 		});
 	}
 
+	componentDidMount() {
+		this._ismounted = true;
+	}
+
+	componentWillUnmount() {
+		this._ismounted = false;
+	}
+	
   onCloseModal() {
-    this.setState({show: false}, () => {
-			if (this.state.close) {
-				this.state.close();
-			}
-		});
+    if (this._ismounted) {
+      this.setState({show: false}, () => {
+        if (this.state.close) {
+          this.state.close();
+        }
+      });
+    }
   }
 	
 	onPlayNow() {
@@ -87,13 +113,15 @@ class ModalMedia extends Component {
 	}
 	
 	getMediaCover() {
-		this.state.media && StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.media.data_source) + "/browse/path/" + encodeURI(this.state.media.path).replace(/#/g, "%23").replace(/\+/g, "%2B") + "?cover&base64")
-		.then((result) => {
-			this.setState({imgBlob: result});
-		})
-		.fail(() => {
-			this.setState({imgBlob: false});
-		});
+    if (this._ismounted && this.state.media) {
+      this.state.media && StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.media.data_source) + "/browse/path/" + encodeURI(this.state.media.path).replace(/#/g, "%23").replace(/\+/g, "%2B") + "?cover&base64")
+      .then((result) => {
+        this.setState({imgBlob: result});
+      })
+      .fail(() => {
+        this.setState({imgBlob: false});
+      });
+    }
 	}
 	
 	handleSelectDataSource() {
@@ -136,10 +164,48 @@ class ModalMedia extends Component {
 		});
 	}
 	
+	addToStream(stream) {
+		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(stream) + "/manage", {command: "append_list", parameters: [{data_source: this.state.media.data_source, path: this.state.media.path}]})
+    .then((result) => {
+      StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(stream) + "/manage", {command: "info"})
+      .then((streamInfo) => {
+        StateStore.dispatch({type: "setStream", stream: streamInfo});
+        StateStore.getState().NotificationManager.addNotification({
+          message: 'Add to stream stream ok',
+          level: 'info'
+        });
+      });
+    })
+    .fail(() => {
+			StateStore.getState().NotificationManager.addNotification({
+				message: 'Error adding to stream',
+				level: 'error'
+			});
+    });
+	}
+	
+	addToPlaylist(playlist) {
+		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/playlist/" + encodeURIComponent(playlist) + "/add_media", [{data_source: this.state.media.data_source, path: this.state.media.path}])
+    .then((result) => {
+      StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(playlist))
+      .then((newPlaylist) => {
+        StateStore.dispatch({type: "setPlaylist", playlist: newPlaylist});
+        StateStore.getState().NotificationManager.addNotification({
+          message: 'Add to stream stream ok',
+          level: 'info'
+        });
+      });
+    })
+    .fail(() => {
+			StateStore.getState().NotificationManager.addNotification({
+				message: 'Error adding to stream',
+				level: 'error'
+			});
+    });
+	}
+	
   render() {
-		var metadata = [];
-		var mediaImage = "";
-		var separator = "";
+		var metadata = [], mediaImage = "", separator = "", streamList = [], playlist = [];
 		if (this.state.media) {
 			if (this.state.media.tags && this.state.media.tags.title) {
 				metadata.push(
@@ -202,13 +268,42 @@ class ModalMedia extends Component {
 			if (this.state.imgBlob) {
 				mediaImage = <Image src={"data:image/jpeg;base64," + this.state.imgBlob} className="cover-image-full center-block" responsive />;
 			}
+      this.state.streamList.forEach((stream, index) => {
+        streamList.push(
+          <MenuItem key={index} onClick={() => this.addToStream(stream.name)}>
+            - {stream.display_name||"no name"}
+          </MenuItem>
+        );
+      });
+      this.state.playlist.forEach((pl, index) => {
+        playlist.push(
+          <MenuItem key={index} onClick={() => this.addToPlaylist(pl.name)}>
+            - {pl.name}
+          </MenuItem>
+        );
+      });
 			return (
 					<Modal show={this.state.show} onHide={this.onCloseModal}>
 						<Modal.Header closeButton>
 							<Modal.Title>
-								<Button onClick={this.onPlayNow} className="btn" title="Play now">
-									<FontAwesome name={"play"} />
-								</Button>&nbsp;
+                <ButtonGroup>
+                  <Button onClick={this.onPlayNow} className="btn" title="Play now">
+                    <FontAwesome name={"play"} />
+                  </Button>
+                  <DropdownButton id={"add"} pullRight title={
+                    <span><i className="fa fa-plus"></i></span>
+                  }>
+                    <MenuItem>
+                      Add to stream
+                    </MenuItem>
+                    {streamList}
+                    <MenuItem divider />
+                    <MenuItem>
+                      Add to playlist
+                    </MenuItem>
+                    {playlist}
+                  </DropdownButton>
+                </ButtonGroup>&nbsp;
 								{this.state.title}
 							</Modal.Title>
 						</Modal.Header>

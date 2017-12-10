@@ -316,9 +316,6 @@ class ManageStream extends Component {
               <Button title="Save as playlist" onClick={() => this.saveStream(stream)}>
                 <FontAwesome name={"floppy-o"} />
               </Button>
-              <Button title="Details" onClick={() => this.detailsStream(stream)}>
-                <FontAwesome name={"eye"} />
-              </Button>
               <Button title="Reload" onClick={() => this.reloadStream(stream)}>
                 <FontAwesome name={"exchange"} />
               </Button>
@@ -347,10 +344,6 @@ class ManageStream extends Component {
 							<MenuItem onClick={() => this.saveStream(stream)}>
 								<FontAwesome name={"floppy-o"} />&nbsp;
 								Save as playlist
-							</MenuItem>
-							<MenuItem onClick={() => this.detailsStream(stream)}>
-								<FontAwesome name={"eye"} />&nbsp;
-								Details
 							</MenuItem>
 							<MenuItem onClick={() => this.reloadStream(stream)}>
 								<FontAwesome name={"exchange"} />&nbsp;

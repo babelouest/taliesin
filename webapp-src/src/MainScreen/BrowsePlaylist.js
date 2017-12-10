@@ -4,6 +4,7 @@ import FontAwesome from 'react-fontawesome';
 import StateStore from '../lib/StateStore';
 import ModalConfirm from '../Modal/ModalConfirm';
 import ModalEditPlaylist from '../Modal/ModalEditPlaylist';
+import ModalEditStream from '../Modal/ModalEditStream';
 
 class BrowsePlaylist extends Component {	
   constructor(props) {
@@ -40,6 +41,7 @@ class BrowsePlaylist extends Component {
 		this.canUpdate = this.canUpdate.bind(this);
 		this.playNow = this.playNow.bind(this);
 		this.playAdvanced = this.playAdvanced.bind(this);
+		this.runPlaylistAdvanced = this.runPlaylistAdvanced.bind(this);
 		this.showPlaylist = this.showPlaylist.bind(this);
 		this.showList = this.showList.bind(this);
 		this.addPlaylist = this.addPlaylist.bind(this);
@@ -254,7 +256,7 @@ class BrowsePlaylist extends Component {
 			var streamList = StateStore.getState().streamList;
       streamList.push(result);
       StateStore.dispatch({type: "setStreamList", streamList: streamList});
-      StateStore.dispatch({type: "loadStream", stream: result});
+      StateStore.dispatch({type: "loadStreamAndPlay", stream: result, index: 0});
 			StateStore.getState().NotificationManager.addNotification({
 				message: 'Play new stream',
 				level: 'info'
@@ -273,9 +275,28 @@ class BrowsePlaylist extends Component {
 			this.setState({
 				curPlaylist: playlist,
 				editStreamShow: true
-			});
+      });
 		}
 	}
+  
+  runPlaylistAdvanced(player) {
+		if (player) {
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(this.state.curPlaylist.name) + "/load?" + player.type + (player.recursive?"&recursive":"") + "&format=" + player.format + "&channels=" + player.channels + "&bitrate=" + player.bitrate + "&sample_rate=" + player.sampleRate + (player.random?"&random":"") + "&name=" + this.state.curPlaylist.name)
+			.then((result) => {
+				var streamList = StateStore.getState().streamList;
+				streamList.push(result);
+				StateStore.dispatch({type: "setStreamList", streamList: streamList});
+				StateStore.dispatch({type: (player.playNow?"loadStreamAndPlay":"loadStream"), stream: result, index: 0});
+			})
+			.fail(() => {
+				StateStore.getState().NotificationManager.addNotification({
+					message: 'Error Play stream',
+					level: 'error'
+				});
+			});
+		}
+    this.setState({editStreamShow: false});
+  }
 	
 	editPlaylist(playlist) {
 		if (this._ismounted) {
@@ -502,6 +523,11 @@ class BrowsePlaylist extends Component {
           </Table>
           <ModalConfirm show={this.state.modalDeleteShow} title={"Delete playlist"} message={this.state.modalDeleteMessage} onCloseCb={this.onDeletePlaylist}/>
           <ModalEditPlaylist show={this.state.addPlaylistShow} onCloseCb={this.onSavePlaylist} add={this.state.add} playlist={this.state.curPlaylist} />
+          <ModalEditStream 
+            show={this.state.editStreamShow} 
+            playlist={this.state.curPlaylist} 
+            onCloseCb={this.runPlaylistAdvanced} 
+          />
         </div>
       );
     } else {

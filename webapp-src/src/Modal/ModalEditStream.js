@@ -84,7 +84,8 @@ class ModalEditStream extends Component {
 				format: this.state.format,
 				channels: this.state.channels,
 				bitrate: this.state.bitrate,
-				sampleRate: this.state.sampleRate
+				sampleRate: this.state.sampleRate,
+        playNow: this.state.playNow
 			});
 		} else {
 			this.state.onCloseCb(false);

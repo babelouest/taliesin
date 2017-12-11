@@ -25,7 +25,7 @@ class MPDController extends Component {
 			duration: 0,
 			volume: 0,
 			switchOn: false,
-			jukeboxIndex: 0,
+			jukeboxIndex: -1,
 			jukeboxPlayedIndex: [],
 			jukeboxNextIndex: 0,
 			jukeboxRepeat: false,
@@ -87,17 +87,18 @@ class MPDController extends Component {
 	}
 	
 	componentWillReceiveProps(nextProps) {
+		console.log("nextProps", nextProps);
 		this.setState({
 			stream: nextProps.stream, 
 			playNow: nextProps.play,
 			playIndex: nextProps.index,
 			player: StateStore.getState().externalPlayerList.find((externalPlayer) => {return nextProps.player === externalPlayer.name})
 		}, () => {
-      if (this.state.stream.name) {
-        this.loadStream();
-      } else {
-        this.MPDConnect();
-      }
+			if (this.state.stream.name) {
+				this.loadStream();
+			} else {
+				this.MPDConnect();
+			}
     });
 	}
 	
@@ -107,9 +108,10 @@ class MPDController extends Component {
 
 	componentWillUnmount() {
 		if (this.state.interval) {
+			console.log("clear interval");
 			clearInterval(this.state.interval);
 		}
-		 this._ismounted = false;
+		this._ismounted = false;
 	}
 	
 	loadStream() {
@@ -128,7 +130,9 @@ class MPDController extends Component {
         this.setState({playNow: false, jukeboxIndex: this.state.playIndex}, () => {
           this.handlePlay();
         });
-      }
+      } else {
+        this.setState({playNow: false, jukeboxIndex: -1});
+			}
 		});
 	}
 	
@@ -282,7 +286,13 @@ class MPDController extends Component {
 				this.setState({switchOn: !this.state.switchOn});
 			});
 		}
-		StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/play/")
+		var url;
+		if (this.state.jukeboxIndex > -1) {
+			url = "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/playpos/" + this.state.jukeboxIndex;
+		} else {
+			url = "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/play/";
+		}
+		StateStore.getState().APIManager.angharadApiRequest("PUT", url)
 		.then(() => {
 			StateStore.getState().NotificationManager.addNotification({
 				message: 'Play',

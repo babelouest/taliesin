@@ -8,7 +8,7 @@ class BrowseHeaderPath extends Component {
   constructor(props) {
     super(props);
     
-    this.state = {dataSource: props.dataSource, path: props.path, imgThumbBlob: false};
+    this.state = {dataSource: props.dataSource, path: props.path||"/", imgThumbBlob: false};
     
     this.loadCover = this.loadCover.bind(this);
     
@@ -16,7 +16,7 @@ class BrowseHeaderPath extends Component {
   }
   
   componentWillReceiveProps(nextProps) {
-    this.setState({dataSource: nextProps.dataSource, path: nextProps.path, imgThumbBlob: false}, () => {
+    this.setState({dataSource: nextProps.dataSource, path: nextProps.path||"/", imgThumbBlob: false}, () => {
       this.loadCover();
     });
   }

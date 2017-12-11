@@ -5,7 +5,7 @@ import StateStore from '../lib/StateStore';
 class PlayerSelector extends Component {
   constructor(props) {
     super(props);
-		this.state = {player: false, loaded: false, currentList: props.currentList};
+		this.state = {player: false, loaded: false, currentList: props.currentList, isAdmin: props.isAdmin};
 		
 		this.handleManagePlayers = this.handleManagePlayers.bind(this);
 		this.handleSelectPlayer = this.handleSelectPlayer.bind(this);
@@ -13,7 +13,7 @@ class PlayerSelector extends Component {
 	}
 	
 	componentWillReceiveProps(nextProps) {
-		this.setState({currentList: nextProps.currentList});
+		this.setState({currentList: nextProps.currentList, isAdmin: nextProps.isAdmin});
 	}
 	
 	handleManagePlayers() {
@@ -42,7 +42,7 @@ class PlayerSelector extends Component {
         playerName = playerName.substring(0, 10) + "...";
       }
     }
-		if (StateStore.getState().profile.isAdmin) {
+		if (this.state.isAdmin) {
 			separator = <MenuItem divider />;
 			manager = <MenuItem onClick={this.handleManagePlayers}>Manage Players</MenuItem>;
 		}

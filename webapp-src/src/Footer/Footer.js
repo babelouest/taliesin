@@ -16,6 +16,7 @@ class Footer extends Component {
     this.state = {
 			streamList: StateStore.getState().streamList,
 			playerList: StateStore.getState().externalPlayerList,
+			isAdmin: StateStore.getState().profile.isAdmin,
 			stream: StateStore.getState().profile.stream, 
 			jukeboxIndex: 0,
 			mediaNow: StateStore.getState().profile.mediaNow,
@@ -28,22 +29,25 @@ class Footer extends Component {
 		
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
+			console.log("footer got action", reduxState.lastAction);
 			if (reduxState.lastAction === "setStreamList") {
-				this.setState({streamList: reduxState.streamList, play: false});
+				this.setState({streamList: reduxState.streamList});
 			} else if (reduxState.lastAction === "setExternalPlayerList") {
-				this.setState({playerList: StateStore.getState().externalPlayerList, play: false});
+				this.setState({playerList: StateStore.getState().externalPlayerList});
+			} else if (reduxState.lastAction === "setUserList") {
+				this.setState({isAdmin: StateStore.getState().profile.isAdmin});
 			} else if (reduxState.lastAction === "setCurrentPlayer") {
-				this.setState({currentPlayer: StateStore.getState().profile.currentPlayer, play: false});
+				this.setState({currentPlayer: StateStore.getState().profile.currentPlayer});
 			} else if (reduxState.lastAction === "loadStream") {
-				this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, play: false});
+				this.setState({stream: StateStore.getState().profile.stream, mediaNow: false});
 			} else if (reduxState.lastAction === "loadStreamAndPlay") {
 				this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, jukeboxIndex: StateStore.getState().profile.jukeboxIndex, play: true});
 			} else if (reduxState.lastAction === "setJukeboxIndex") {
-				this.setState({jukeboxIndex: StateStore.getState().profile.jukeboxIndex, play: false});
+				this.setState({jukeboxIndex: StateStore.getState().profile.jukeboxIndex});
 			} else if (reduxState.lastAction === "setMediaNow") {
-				this.setState({mediaNow: StateStore.getState().profile.mediaNow, play: false});
+				this.setState({mediaNow: StateStore.getState().profile.mediaNow});
 			} else if (reduxState.lastAction === "setMediaNext") {
-				this.setState({mediaNext: StateStore.getState().profile.mediaNext, play: false});
+				this.setState({mediaNext: StateStore.getState().profile.mediaNext});
 			}
 		});
 		
@@ -86,7 +90,7 @@ class Footer extends Component {
 			<Col md={2} sm={4} xs={4}>
 				<ButtonGroup>
 					<StreamSelector streamList={this.state.streamList} stream={this.state.stream} />
-					<PlayerSelector currentList={this.state.playerList} />
+					<PlayerSelector currentList={this.state.playerList} isAdmin={this.state.isAdmin} />
 				</ButtonGroup>
 			</Col>;
 		if (this.state.currentPlayer) {

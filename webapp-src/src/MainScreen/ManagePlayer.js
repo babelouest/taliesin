@@ -39,18 +39,44 @@ class ManagePlayer extends Component {
 		.then((services) => {
 			services.forEach((service) => {
 				if (service.name === "service-mpd") {
+					service.element.forEach((player) => {
+						var storedPlayer = StateStore.getState().externalPlayerList.find((externalPlayer) => {
+							return externalPlayer.name === player.name;
+						});
+						if (storedPlayer) {
+							player.enabled = storedPlayer.enabled;
+							player.switch = storedPlayer.switch;
+						} else {
+							player.enabled = false;
+							player.switch = false;
+						}
+					});
 					this.setState({playerList: service.element});
 				}
 			});
 		});
 	}
 	
+	componentWillReceiveProps(nextProps) {
+		this.setState({playerList: [], switchList: []}, () => {
+			this.getInitialList()
+		});
+	}
+	
 	handleSelectSwitch(player, device, switcher) {
-		if (!!device && !!switcher) {
-			player.switch = {device: device, name: switcher};
-		} else {
-			player.switch = false;
+		var playerList = this.state.playerList;
+		
+		for (var i in playerList) {
+			if (playerList[i].name === player.name) {
+				if (!!device && !!switcher) {
+					playerList[i].switch = {device: device, name: switcher};
+				} else {
+					playerList[i].switch = false;
+				}
+				break;
+			}
 		}
+		this.setState({playerList: playerList});
 	}
 	
 	handleSavePlayers() {
@@ -63,6 +89,10 @@ class ManagePlayer extends Component {
 		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/config/external_player", objectsSaved)
 		.then(() => {
 			StateStore.dispatch({ type: 'setExternalPlayerList', externalPlayerList: objectStored });
+			StateStore.getState().NotificationManager.addNotification({
+				message: 'External player list saved',
+				level: 'info'
+			});
 		});
 	}
 	
@@ -72,16 +102,6 @@ class ManagePlayer extends Component {
 		
 		this.state.playerList.forEach((player, index) => {
 			var enabledSwitch, switches = [<MenuItem key="0" eventKey="0" onClick={() => this.handleSelectSwitch(player)} className={!player.switch?"bg-success":""}>None</MenuItem>];
-			var storedPlayer = StateStore.getState().externalPlayerList.find((externalPlayer) => {
-				return externalPlayer.name === player.name;
-			});
-			if (storedPlayer) {
-				player.enabled = storedPlayer.enabled;
-				player.switch = storedPlayer.switch;
-			} else {
-				player.enabled = false;
-				player.switch = false;
-			}
 			if (player.enabled) {
 				enabledSwitch = 
 					<ToggleButtonGroup type="checkbox" defaultValue={["1"]}>
@@ -111,7 +131,7 @@ class ManagePlayer extends Component {
 			<tr key={index}>
 				<td>{player.name}</td>
 				<td>
-					<DropdownButton id={"switch-" + player.name} title={player.switch?player.switch.name:"None"}>
+					<DropdownButton id={"switch-" + player.name} title={player.switch?this.state.switchList.find((switcher) => {return switcher.name === player.switch.name}).display:"None"}>
 						{switches}
 					</DropdownButton>
 				</td>

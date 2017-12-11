@@ -408,6 +408,7 @@ class BrowsePlaylist extends Component {
         message: 'Plylists refreshed',
         level: 'info'
       });
+			this.getCovers();
 		})
 		.fail((result) => {
 			StateStore.dispatch({type: "setPlaylists", playlists: []});

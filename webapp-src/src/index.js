@@ -39,46 +39,48 @@ config.fetchConfig()
 
 StateStore.subscribe(() => {
 	if (StateStore.getState().lastAction === "connection") {
-		// Check if user is admin or not by getting users list
-		StateStore.getState().APIManager.taliesinApiRequest("GET", "/users")
-		.then((users) => {
-			StateStore.dispatch({ type: 'setUserList', userList: users, isAdmin: true });
-		});
-		
-		// Get external players list
-		StateStore.getState().APIManager.taliesinApiRequest("GET", "/config/external_player")
-		.then((externalPlayerList) => {
-			var parsedList = [];
-			externalPlayerList.forEach((strPlayer) => {parsedList.push(JSON.parse(strPlayer))});
-			StateStore.dispatch({ type: 'setExternalPlayerList', externalPlayerList: parsedList });
-		});
-		
-		// Get current stream list
-		StateStore.getState().APIManager.taliesinApiRequest("GET", "/stream")
-		.then((result) => {
-			StateStore.dispatch({type: "setStreamList", streamList: result});
-		})
-		.fail((result) => {
-			StateStore.dispatch({type: "setStreamList", streamList: []});
-		});
-		
-		// Get data source list
-		StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source")
-		.then((result) => {
-			StateStore.dispatch({type: "setDataSource", dataSourceList: result, currentDataSource: (result.length?result[0]:false)});
-		})
-		.fail((result) => {
-			StateStore.dispatch({type: "setDataSource", dataSourceList: [], currentDataSource: false});
-		});
-		
-		// Get playlist list
-		StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist")
-		.then((result) => {
-			StateStore.dispatch({type: "setPlaylists", playlists: result});
-		})
-		.fail((result) => {
-			StateStore.dispatch({type: "setPlaylists", playlists: []});
-		});
+		if (StateStore.getState().status === "connected") {
+			// Check if user is admin or not by getting users list
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/users")
+			.then((users) => {
+				StateStore.dispatch({ type: 'setUserList', userList: users, isAdmin: true });
+			});
+			
+			// Get external players list
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/config/external_player")
+			.then((externalPlayerList) => {
+				var parsedList = [];
+				externalPlayerList.forEach((strPlayer) => {parsedList.push(JSON.parse(strPlayer))});
+				StateStore.dispatch({ type: 'setExternalPlayerList', externalPlayerList: parsedList });
+			});
+			
+			// Get current stream list
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/stream")
+			.then((result) => {
+				StateStore.dispatch({type: "setStreamList", streamList: result});
+			})
+			.fail((result) => {
+				StateStore.dispatch({type: "setStreamList", streamList: []});
+			});
+			
+			// Get data source list
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source")
+			.then((result) => {
+				StateStore.dispatch({type: "setDataSource", dataSourceList: result, currentDataSource: (result.length?result[0]:false)});
+			})
+			.fail((result) => {
+				StateStore.dispatch({type: "setDataSource", dataSourceList: [], currentDataSource: false});
+			});
+			
+			// Get playlist list
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist")
+			.then((result) => {
+				StateStore.dispatch({type: "setPlaylists", playlists: result});
+			})
+			.fail((result) => {
+				StateStore.dispatch({type: "setPlaylists", playlists: []});
+			});
+		}
 		
 		// Get server default config
 		StateStore.getState().APIManager.taliesinApiRequest("GET", "/../config")

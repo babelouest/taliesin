@@ -115,52 +115,61 @@ class Dashboard extends Component {
 	}
   
   render() {
-		var recentLoading, randomLoading;
-		if (!this.state.recentLoaded) {
-			recentLoading = <FontAwesome name="spinner" spin />;
+		if (StateStore.getState().status === "connected") {
+			var recentLoading, randomLoading;
+			if (!this.state.recentLoaded) {
+				recentLoading = <FontAwesome name="spinner" spin />;
+			}
+			if (!this.state.randomLoaded) {
+				randomLoading = <FontAwesome name="spinner" spin />;
+			}
+			return (
+				<div>
+					<h2>Taliesin Streaming server</h2>
+					<PanelGroup>
+						<Panel collapsible header="Streams" eventKey="1" defaultExpanded={true}>
+							<ManageStream />
+						</Panel>
+						<Panel collapsible header="Playlists" eventKey="2">
+							<BrowsePlaylist />
+						</Panel>
+						<Panel collapsible header="Albums recently added" eventKey="3" onSelect={this.handleSelectRecentMedia}>
+							<Row>
+								<Col md={2} sm={2} xs={2}>
+									<Button title="Refresh" onClick={this.loadRecent}>
+										<FontAwesome name={"refresh"} />
+									</Button>
+								</Col>
+							</Row>
+							{recentLoading}
+							<Row>
+								{this.state.recent}
+							</Row>
+						</Panel>
+						<Panel collapsible header="Random albums" eventKey="4" onSelect={this.handleSelectRandomMedia}>
+							<Row>
+								<Col md={2} sm={2} xs={2}>
+									<Button title="Refresh" onClick={this.loadRandom}>
+										<FontAwesome name={"refresh"} />
+									</Button>
+								</Col>
+							</Row>
+							{randomLoading}
+							<Row>
+								{this.state.random}
+							</Row>
+						</Panel>
+					</PanelGroup>
+				</div>
+			);
+		} else {
+			return (
+				<div>
+					<h2>Taliesin Streaming server</h2>
+					<h3>Please connect to the application</h3>
+				</div>
+			);
 		}
-		if (!this.state.randomLoaded) {
-			randomLoading = <FontAwesome name="spinner" spin />;
-		}
-		return (
-			<div>
-				<h2>Taliesin Streaming server</h2>
-				<PanelGroup>
-					<Panel collapsible header="Streams" eventKey="1" defaultExpanded={true}>
-						<ManageStream />
-					</Panel>
-					<Panel collapsible header="Playlists" eventKey="2">
-						<BrowsePlaylist />
-					</Panel>
-					<Panel collapsible header="Albums recently added" eventKey="3" onSelect={this.handleSelectRecentMedia}>
-						<Row>
-							<Col md={2} sm={2} xs={2}>
-								<Button title="Refresh" onClick={this.loadRecent}>
-									<FontAwesome name={"refresh"} />
-								</Button>
-							</Col>
-						</Row>
-						{recentLoading}
-						<Row>
-							{this.state.recent}
-						</Row>
-					</Panel>
-					<Panel collapsible header="Random albums" eventKey="4" onSelect={this.handleSelectRandomMedia}>
-						<Row>
-							<Col md={2} sm={2} xs={2}>
-								<Button title="Refresh" onClick={this.loadRandom}>
-									<FontAwesome name={"refresh"} />
-								</Button>
-							</Col>
-						</Row>
-						{randomLoading}
-						<Row>
-							{this.state.random}
-						</Row>
-					</Panel>
-				</PanelGroup>
-			</div>
-		);
 	}
 }
 

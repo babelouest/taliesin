@@ -12,11 +12,19 @@ class JukeboxNow extends Component {
 			index: props.index
 		};
     this.loadCover();
+		this.setPageTitle();
 		
+		this.loadCover = this.loadCover.bind(this);
+		this.setPageTitle = this.setPageTitle.bind(this);
 	}
 	
 	componentWillUnmount() {
 		this.setState({media: false});
+		this._ismounted = false;
+	}
+	
+	componentDidMount() {
+		this._ismounted = true;
 	}
 	
 	componentWillReceiveProps(nextProps) {
@@ -24,6 +32,7 @@ class JukeboxNow extends Component {
 		this.setState({folded: nextProps.folded, media: nextProps.media, index: nextProps.index}, () => {
 			if (newMedia) {
 				this.loadCover();
+				this.setPageTitle();
 			}
 		});
 	}
@@ -40,6 +49,36 @@ class JukeboxNow extends Component {
 		}
 	}
 	
+	setPageTitle() {
+		if (this._ismounted) {
+			if (this.state.media) {
+				document.title = this.buildTitle(this.state.media) + " - Taliesin"
+			} else {
+				document.title = "Taliesin";
+			}
+		}
+	}
+	
+	buildTitle(media, index, total) {
+		var title = "";
+		if (!!media) {
+			if (index > -1) {
+				title += ((index+1)<10?"0"+(index+1):(index+1)) + "/" + (total<10?"0"+total:total) + " - ";
+			}
+			if (!!media.tags) {
+				if (index === -1) {
+					if (media.tags.artist || media.tags.album_artist) {
+						title += (media.tags.artist || media.tags.album_artist) + " - ";
+					}
+				}
+				title += (media.tags.title || media.name.replace(/\.[^/.]+$/, ""));
+			} else {
+				title += media.name.replace(/\.[^/.]+$/, "");
+			}
+		}
+		return title;
+	}
+  
   render() {
 		return (
       <MediaInfo media={this.state.media} imgThumbBlob={this.state.imgThumbBlob} meta="Jukebox" folded={this.state.folded} index={this.state.index} total={StateStore.getState().profile.stream.elements}/>

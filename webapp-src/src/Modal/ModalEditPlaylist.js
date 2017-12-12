@@ -98,7 +98,7 @@ class ModalAddPlaylist extends Component {
 					self.setState({playlist: playlist});
 				} else {
 					StateStore.getState().NotificationManager.addNotification({
-						message: 'File too large, must be at least ~10MB',
+						message: 'File too large, must be at most ~10MB',
 						level: 'error'
 					});
 				}
@@ -106,7 +106,7 @@ class ModalAddPlaylist extends Component {
 			fr.readAsBinaryString(file);
 		} else {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'File error, only images allowed, must be at least ~10MB',
+				message: 'File error, only images allowed, must be at most ~10MB',
 				level: 'error'
 			});
 		}

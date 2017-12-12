@@ -87,17 +87,30 @@ class MPDController extends Component {
 	}
 	
 	componentWillReceiveProps(nextProps) {
-		console.log("nextProps", nextProps);
-		this.setState({
-			stream: nextProps.stream, 
-			playNow: nextProps.play,
-			playIndex: nextProps.index,
+		var newStream = (nextProps.stream && nextProps.stream.name !== this.state.stream.name);
+		var newState = {
 			player: StateStore.getState().externalPlayerList.find((externalPlayer) => {return nextProps.player === externalPlayer.name})
-		}, () => {
-			if (this.state.stream.name) {
-				this.loadStream();
-			} else {
-				this.MPDConnect();
+		};
+		if (nextProps.play) {
+			newState.playNow = nextProps.play;
+		}
+		if (nextProps.stream) {
+			newState.stream = nextProps.stream;
+		}
+		if (nextProps.index > -1) {
+			newState.playIndex = nextProps.index;
+		}
+		this.setState(newState, () => {
+			if (newStream) {
+				if (nextProps.stream) {
+					this.loadStream();
+				} else {
+					this.MPDConnect();
+				}
+			} else if (this.state.playNow) {
+        this.setState({playNow: false, jukeboxIndex: this.state.playIndex}, () => {
+          this.handlePlay();
+        });
 			}
     });
 	}
@@ -108,7 +121,6 @@ class MPDController extends Component {
 
 	componentWillUnmount() {
 		if (this.state.interval) {
-			console.log("clear interval");
 			clearInterval(this.state.interval);
 		}
 		this._ismounted = false;
@@ -146,8 +158,17 @@ class MPDController extends Component {
 				} else if (this.state.stream.webradio) {
 					this.loadMedia();
 				}
+				if (!this.state.play) {
+					document.title = "Taliesin";
+				}
 			});
 		});
+		if (this.state.player.switch) {
+			StateStore.getState().APIManager.angharadApiRequest("GET", "/benoic/device/" + encodeURIComponent(this.state.player.switch.device) + "/switch/" + encodeURIComponent(this.state.player.switch.name))
+			.then((status) => {
+				this.setState({switchOn: !!status.value});
+			});
+		}
 	}
 	
 	MPDConnect() {
@@ -165,7 +186,7 @@ class MPDController extends Component {
 						var currentStream = StateStore.getState().streamList.find((stream) => {
 							return streamName.indexOf(stream.name) > -1;
 						});
-						if (!!currentStream) {
+						if (!!currentStream && currentStream.name !== StateStore.getState().profile.stream.name) {
 							this.setState({stream: currentStream}, () => {
 								this.loadMedia();
 								StateStore.dispatch({type: "loadStream", stream: currentStream});
@@ -288,7 +309,7 @@ class MPDController extends Component {
 		}
 		var url;
 		if (this.state.jukeboxIndex > -1) {
-			url = "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/playpos/" + this.state.jukeboxIndex;
+			url = "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/playpos/" + this.state.jukeboxIndex;
 		} else {
 			url = "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/play/";
 		}

@@ -197,199 +197,216 @@ class TopMenu extends Component {
 	}
 	
 	render() {
-		var searchOverlay = 
-			<Popover id="searchResult">
-					Searching... <FontAwesome name="spinner" spin />
-			</Popover>;
-		if (!this.state.searching) {
-			var playlistResult, streamResult, folderResult, mediaResult;
-			if (this.state.searchResult.playlist) {
-				var playlistList = [];
-				this.state.searchResult.playlist.forEach((pl, index) => {
-					if (index < 10) {
-						var cover;
-						if (pl.cover) {
-							cover = <Image src={"data:image/jpeg;base64," + pl.cover} responsive style={{maxWidth: "40px", maxHeight: "40px"}}/>
-						}
-						playlistList.push(
-							<ListGroupItem key={index} onClick={() => {this.openPlaylist(pl)}}>
-								<Row>
-									<Col xs={4}>
-										{cover}
-									</Col>
-									<Col xs={8}>
-										{pl.name}
-									</Col>
-								</Row>
-							</ListGroupItem>
-						);
-					}
-				});
-				playlistResult = 
-				<Panel collapsible defaultExpanded header="Playlists">
-					<ListGroup fill>
-						{playlistList}
-					</ListGroup>
-				</Panel>
-			}
-			if (this.state.searchResult.stream) {
-				var streamList = [];
-				this.state.searchResult.stream.forEach((str, index) => {
-					if (index < 10) {
-						streamList.push(
-							<ListGroupItem key={index} onClick={() => {this.openStream(str)}}>
-								<Row>
-									<Col xs={12}>
-										{str.display_name}
-									</Col>
-								</Row>
-							</ListGroupItem>
-						);
-					}
-				});
-				streamResult = 
-				<Panel collapsible defaultExpanded header="Streams">
-					<ListGroup fill>
-						{streamList}
-					</ListGroup>
-				</Panel>
-			}
-			if (this.state.searchResult.folder) {
-				var folderList = [];
-				this.state.searchResult.folder.forEach((folder, index) => {
-					if (index < 10) {
-						var cover;
-						if (folder.cover) {
-							cover = <Image src={"data:image/jpeg;base64," + folder.cover} responsive style={{maxWidth: "40px", maxHeight: "40px"}}/>
-						}
-						folderList.push(
-							<ListGroupItem key={index} onClick={() => {this.openFolder(folder)}}>
-								<Row>
-									<Col xs={4}>
-										{cover}
-									</Col>
-									<Col xs={8}>
-										{folder.name}
-									</Col>
-								</Row>
-							</ListGroupItem>
-						);
-					}
-				});
-				folderResult = 
-				<Panel collapsible defaultExpanded header="Folders">
-					<ListGroup fill>
-						{folderList}
-					</ListGroup>
-				</Panel>
-			}
-			if (this.state.searchResult.media) {
-				var mediaList = [];
-				this.state.searchResult.media.forEach((media, index) => {
-					if (index < 10) {
-						var title = media.name;
-						if (media.tags) {
-							if (media.tags.artist) {
-								title = media.tags.artist + " - ";
-							} else if (media.tags.album_artist) {
-								title = media.tags.album_artist + " - ";
-							} else {
-								title = "";
-							}
-							if (media.tags.title) {
-								title += media.tags.title;
-							} else {
-								title += media.name;
-							}
-						}
-						var cover;
-						if (media.cover) {
-							cover = <Image src={"data:image/jpeg;base64," + media.cover} responsive style={{maxWidth: "40px", maxHeight: "40px"}}/>
-						}
-						mediaList.push(
-							<ListGroupItem key={index} onClick={() => {this.openMedia(media)}}>
-								<Row>
-									<Col xs={4}>
-										{cover}
-									</Col>
-									<Col xs={8}>
-										{title}
-									</Col>
-								</Row>
-							</ListGroupItem>
-						);
-					}
-				});
-				mediaResult = 
-				<Panel collapsible defaultExpanded header="Media">
-					<ListGroup fill>
-						{mediaList}
-					</ListGroup>
-				</Panel>
-			}
-			searchOverlay =
+		if (StateStore.getState().status === "connected") {
+			var searchOverlay = 
 				<Popover id="searchResult">
-						Search results for <strong>{this.state.searchPattern}</strong>
-						&nbsp;<Button title="Close" onClick={this.closeSearch}>
-							<FontAwesome name={"close"} />
-						</Button>
-						{playlistResult}
-						{streamResult}
-						{folderResult}
-						{mediaResult}
+						Searching... <FontAwesome name="spinner" spin />
 				</Popover>;
-		}
-		return (
-			<div>
+			if (!this.state.searching) {
+				var playlistResult, streamResult, folderResult, mediaResult;
+				if (this.state.searchResult.playlist) {
+					var playlistList = [];
+					this.state.searchResult.playlist.forEach((pl, index) => {
+						if (index < 10) {
+							var cover;
+							if (pl.cover) {
+								cover = <Image src={"data:image/jpeg;base64," + pl.cover} responsive style={{maxWidth: "40px", maxHeight: "40px"}}/>
+							}
+							playlistList.push(
+								<ListGroupItem key={index} onClick={() => {this.openPlaylist(pl)}}>
+									<Row>
+										<Col xs={4}>
+											{cover}
+										</Col>
+										<Col xs={8}>
+											{pl.name}
+										</Col>
+									</Row>
+								</ListGroupItem>
+							);
+						}
+					});
+					playlistResult = 
+					<Panel collapsible defaultExpanded header="Playlists">
+						<ListGroup fill>
+							{playlistList}
+						</ListGroup>
+					</Panel>
+				}
+				if (this.state.searchResult.stream) {
+					var streamList = [];
+					this.state.searchResult.stream.forEach((str, index) => {
+						if (index < 10) {
+							streamList.push(
+								<ListGroupItem key={index} onClick={() => {this.openStream(str)}}>
+									<Row>
+										<Col xs={12}>
+											{str.display_name}
+										</Col>
+									</Row>
+								</ListGroupItem>
+							);
+						}
+					});
+					streamResult = 
+					<Panel collapsible defaultExpanded header="Streams">
+						<ListGroup fill>
+							{streamList}
+						</ListGroup>
+					</Panel>
+				}
+				if (this.state.searchResult.folder) {
+					var folderList = [];
+					this.state.searchResult.folder.forEach((folder, index) => {
+						if (index < 10) {
+							var cover;
+							if (folder.cover) {
+								cover = <Image src={"data:image/jpeg;base64," + folder.cover} responsive style={{maxWidth: "40px", maxHeight: "40px"}}/>
+							}
+							folderList.push(
+								<ListGroupItem key={index} onClick={() => {this.openFolder(folder)}}>
+									<Row>
+										<Col xs={4}>
+											{cover}
+										</Col>
+										<Col xs={8}>
+											{folder.name}
+										</Col>
+									</Row>
+								</ListGroupItem>
+							);
+						}
+					});
+					folderResult = 
+					<Panel collapsible defaultExpanded header="Folders">
+						<ListGroup fill>
+							{folderList}
+						</ListGroup>
+					</Panel>
+				}
+				if (this.state.searchResult.media) {
+					var mediaList = [];
+					this.state.searchResult.media.forEach((media, index) => {
+						if (index < 10) {
+							var title = media.name;
+							if (media.tags) {
+								if (media.tags.artist) {
+									title = media.tags.artist + " - ";
+								} else if (media.tags.album_artist) {
+									title = media.tags.album_artist + " - ";
+								} else {
+									title = "";
+								}
+								if (media.tags.title) {
+									title += media.tags.title;
+								} else {
+									title += media.name;
+								}
+							}
+							var cover;
+							if (media.cover) {
+								cover = <Image src={"data:image/jpeg;base64," + media.cover} responsive style={{maxWidth: "40px", maxHeight: "40px"}}/>
+							}
+							mediaList.push(
+								<ListGroupItem key={index} onClick={() => {this.openMedia(media)}}>
+									<Row>
+										<Col xs={4}>
+											{cover}
+										</Col>
+										<Col xs={8}>
+											{title}
+										</Col>
+									</Row>
+								</ListGroupItem>
+							);
+						}
+					});
+					mediaResult = 
+					<Panel collapsible defaultExpanded header="Media">
+						<ListGroup fill>
+							{mediaList}
+						</ListGroup>
+					</Panel>
+				}
+				searchOverlay =
+					<Popover id="searchResult">
+							Search results for <strong>{this.state.searchPattern}</strong>
+							&nbsp;<Button title="Close" onClick={this.closeSearch}>
+								<FontAwesome name={"close"} />
+							</Button>
+							{playlistResult}
+							{streamResult}
+							{folderResult}
+							{mediaResult}
+					</Popover>;
+			}
+			return (
+				<div>
+					<Navbar collapseOnSelect>
+						<Navbar.Header>
+							<Navbar.Brand>
+								Taliesin
+							</Navbar.Brand>
+							<Navbar.Toggle />
+						</Navbar.Header>
+						<Navbar.Collapse>
+							<Nav>
+								<NavDropdown title="Browse" id="nav-categories">
+									<MenuItem onClick={() => this.handleBrowseDashboard()} className={this.state.browse==="dashboard"?"bg-success":""}>Dashboard</MenuItem>
+									<MenuItem onClick={() => this.handleBrowsePath()} className={this.state.browse==="file"?"bg-success":""}>Files</MenuItem>
+									<MenuItem onClick={() => this.handleBrowsePlylist()} className={this.state.browse==="playlist"?"bg-success":""}>Playlists</MenuItem>
+									<MenuItem onClick={() => this.handleBrowseRecent()} className={this.state.browse==="recent"?"bg-success":""}>Recent media</MenuItem>
+									<MenuItem divider />
+									<MenuItem onClick={() => this.handleSelectCategory("artist")}>Artists</MenuItem>
+									<MenuItem onClick={() => this.handleSelectCategory("album")}>Albums</MenuItem>
+									<MenuItem onClick={() => this.handleSelectCategory("year")}>Years</MenuItem>
+									<MenuItem onClick={() => this.handleSelectCategory("genre")}>Genres</MenuItem>
+								</NavDropdown>
+								<DataSourceList list={this.state.dataSourceList} dataSource={this.state.dataSource}/>
+								<NavDropdown title="View" id="nav-view">
+									<MenuItem onClick={() => {this.handleSelectView("list")}} className={this.state.view==="list"?"bg-success":""}>List</MenuItem>
+									<MenuItem onClick={() => {this.handleSelectView("icon")}} className={this.state.view==="icon"?"bg-success":""}>Icons</MenuItem>
+								</NavDropdown>
+								<NavItem onClick={() => this.handleAdvancedSearch()}>Advanced Search</NavItem>
+							</Nav>
+							<Nav pullRight>
+								<LoginButton></LoginButton>
+							</Nav>
+							<Navbar.Form>
+								<FormGroup>
+									<OverlayTrigger ref='myPopover' container={document.body} trigger={null} placement="bottom" overlay={searchOverlay}>
+										<InputGroup>
+											<FormControl type="text" placeholder="Search" value={this.state.searchPattern} onChange={this.handleChangeSearchPattern} />
+											<InputGroup.Button>
+												<Button onClick={this.runSimpleSearch}>
+													<FontAwesome name={"search"} />
+												</Button>
+											</InputGroup.Button>
+										</InputGroup>
+									</OverlayTrigger>
+								</FormGroup>
+							</Navbar.Form>
+						</Navbar.Collapse>
+					</Navbar>
+					<ModalMedia show={this.state.modalShow} media={this.state.modalMedia} title={this.state.modalTitle} onClose={this.closeMedia} />
+				</div>
+			);
+		} else {
+			return (
 				<Navbar collapseOnSelect>
 					<Navbar.Header>
 						<Navbar.Brand>
 							Taliesin
 						</Navbar.Brand>
-						<Navbar.Toggle />
 					</Navbar.Header>
 					<Navbar.Collapse>
-						<Nav>
-							<NavDropdown title="Browse" id="nav-categories">
-								<MenuItem onClick={() => this.handleBrowseDashboard()} className={this.state.browse==="dashboard"?"bg-success":""}>Dashboard</MenuItem>
-								<MenuItem onClick={() => this.handleBrowsePath()} className={this.state.browse==="file"?"bg-success":""}>Files</MenuItem>
-								<MenuItem onClick={() => this.handleBrowsePlylist()} className={this.state.browse==="playlist"?"bg-success":""}>Playlists</MenuItem>
-								<MenuItem onClick={() => this.handleBrowseRecent()} className={this.state.browse==="recent"?"bg-success":""}>Recent media</MenuItem>
-								<MenuItem divider />
-								<MenuItem onClick={() => this.handleSelectCategory("artist")}>Artists</MenuItem>
-								<MenuItem onClick={() => this.handleSelectCategory("album")}>Albums</MenuItem>
-								<MenuItem onClick={() => this.handleSelectCategory("year")}>Years</MenuItem>
-								<MenuItem onClick={() => this.handleSelectCategory("genre")}>Genres</MenuItem>
-							</NavDropdown>
-              <DataSourceList list={this.state.dataSourceList} dataSource={this.state.dataSource}/>
-							<NavDropdown title="View" id="nav-view">
-								<MenuItem onClick={() => {this.handleSelectView("list")}} className={this.state.view==="list"?"bg-success":""}>List</MenuItem>
-								<MenuItem onClick={() => {this.handleSelectView("icon")}} className={this.state.view==="icon"?"bg-success":""}>Icons</MenuItem>
-							</NavDropdown>
-							<NavItem onClick={() => this.handleAdvancedSearch()}>Advanced Search</NavItem>
-						</Nav>
 						<Nav pullRight>
 							<LoginButton></LoginButton>
 						</Nav>
-						<Navbar.Form>
-							<FormGroup>
-								<OverlayTrigger ref='myPopover' container={document.body} trigger={null} placement="bottom" overlay={searchOverlay}>
-									<InputGroup>
-										<FormControl type="text" placeholder="Search" value={this.state.searchPattern} onChange={this.handleChangeSearchPattern} />
-										<InputGroup.Button>
-											<Button onClick={this.runSimpleSearch}>
-												<FontAwesome name={"search"} />
-											</Button>
-										</InputGroup.Button>
-									</InputGroup>
-								</OverlayTrigger>
-							</FormGroup>
-						</Navbar.Form>
 					</Navbar.Collapse>
 				</Navbar>
-				<ModalMedia show={this.state.modalShow} media={this.state.modalMedia} title={this.state.modalTitle} onClose={this.closeMedia} />
-			</div>
-		);
+			);
+		}
 	}
 }
 

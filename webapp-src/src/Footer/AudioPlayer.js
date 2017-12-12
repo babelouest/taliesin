@@ -195,6 +195,7 @@ class AudioPlayer extends Component {
     this.rap.audioEl.src = URL.createObjectURL(new Blob([], {type:"audio/mp3"}));
 		this.setState({play: false}, () => {
 			this.dispatchPlayerStatus({status: "stop"});
+			document.title = "Taliesin";
 		});
   }
 	

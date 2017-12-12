@@ -11,6 +11,7 @@ class WebradioNow extends Component {
 			media: StateStore.getState().profile.mediaNow,
 		};
     this.loadCover();
+    this.setPageTitle();
 
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
@@ -20,10 +21,18 @@ class WebradioNow extends Component {
 				}
 			}
 		});
+		
+		this.loadCover = this.loadCover.bind(this);
+		this.setPageTitle = this.setPageTitle.bind(this);
 	}
 	
 	componentWillUnmount() {
 		this.setState({media: false});
+		this._ismounted = false;
+	}
+	
+	componentDidMount() {
+		this._ismounted = true;
 	}
 	
 	componentWillReceiveProps(nextProps) {
@@ -31,6 +40,7 @@ class WebradioNow extends Component {
 		this.setState({folded: nextProps.folded, media: nextProps.media}, () => {
 			if (newMedia) {
 				this.loadCover();
+				this.setPageTitle();
 			}
 		});
 	}
@@ -47,6 +57,29 @@ class WebradioNow extends Component {
     }
 	}
 	
+	setPageTitle() {
+		if (this._ismounted) {
+			if (this.state.media) {
+				document.title = this.buildTitle(this.state.media) + " - Taliesin"
+			} else {
+				document.title = "Taliesin";
+			}
+		}
+	}
+	
+	buildTitle(media) {
+		var title = "";
+		if (!!media.tags) {
+			if (media.tags.artist || media.tags.album_artist) {
+				title += (media.tags.artist || media.tags.album_artist) + " - ";
+			}
+			title += (media.tags.title || media.name.replace(/\.[^/.]+$/, ""));
+		} else {
+			title += media.name.replace(/\.[^/.]+$/, "");
+		}
+		return title;
+	}
+  
   render() {
 		return (
       <MediaInfo media={this.state.media} imgThumbBlob={this.state.imgThumbBlob} meta="Playing now" folded={this.state.folded} index={-1}/>

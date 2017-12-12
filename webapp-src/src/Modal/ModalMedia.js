@@ -26,6 +26,8 @@ class ModalMedia extends Component {
 		this.handleSelectGenre = this.handleSelectGenre.bind(this);
 		this.onPlayNow = this.onPlayNow.bind(this);
 		this.runPlayNow = this.runPlayNow.bind(this);
+		this.addToNewPlaylist = this.addToNewPlaylist.bind(this);
+		this.onSavePlaylist = this.onSavePlaylist.bind(this);
 		
 		this.getMediaCover();
 	}
@@ -204,8 +206,43 @@ class ModalMedia extends Component {
     });
 	}
 	
+	addToNewPlaylist() {
+		this.setState({addPlaylistShow: true});
+	}
+	
+	onSavePlaylist(result, playlist) {
+		this.setState({addPlaylistShow: false}, () => {
+			if (result) {
+				var parameters;
+				if (this.state.path) {
+					parameters = {data_source: this.state.dataSource, path: this.state.path, recursive: true};
+				} else {
+					parameters = {data_source: this.state.dataSource, category: this.state.category, category_value: this.state.categoryValue, sub_category: (this.state.subCategory?this.state.subCategory:undefined), sub_category_value: (this.state.subCategoryValue?this.state.subCategoryValue:undefined) };
+				}
+				playlist.media = [parameters]
+				StateStore.getState().APIManager.taliesinApiRequest("POST", "/playlist/", playlist)
+				.then(() => {
+					var list = this.state.playlist
+					list.push(playlist);
+					StateStore.dispatch({type: "setPlaylists", playlists: list});
+					this.setState({playlist: list, curPlaylist: false});
+					StateStore.getState().NotificationManager.addNotification({
+						message: 'Playlist added',
+						level: 'info'
+					});
+				})
+				.fail(() => {
+					StateStore.getState().NotificationManager.addNotification({
+						message: 'Error adding playlist',
+						level: 'error'
+					});
+				});
+			}
+		});
+	}
+	
   render() {
-		var metadata = [], mediaImage = "", separator = "", streamList = [], playlist = [];
+		var metadata = [], mediaImage = "", separator = "", streamList = [], playlist = [<MenuItem key={0} onClick={() => this.addToNewPlaylist()}>New playlist</MenuItem>];
 		if (this.state.media) {
 			if (this.state.media.tags && this.state.media.tags.title) {
 				metadata.push(
@@ -277,7 +314,7 @@ class ModalMedia extends Component {
       });
       this.state.playlist.forEach((pl, index) => {
         playlist.push(
-          <MenuItem key={index} onClick={() => this.addToPlaylist(pl.name)}>
+          <MenuItem key={index+1} onClick={() => this.addToPlaylist(pl.name)}>
             - {pl.name}
           </MenuItem>
         );

@@ -13,6 +13,7 @@ class BrowsePlaylist extends Component {
 		this.state = {
 			playlist: StateStore.getState().playlists,
 			curPlaylist: {},
+			isAdmin: StateStore.getState().profile.isAdmin,
 			shownPlaylist: {},
       addPlaylistShow: false,
 			modalEditShow: false,
@@ -62,6 +63,7 @@ class BrowsePlaylist extends Component {
 		this.setState({
 			playlist: StateStore.getState().playlists,
 			curPlaylist: {},
+			isAdmin: StateStore.getState().profile.isAdmin,
 			shownPlaylist: {},
       addPlaylistShow: false,
 			modalEditShow: false,
@@ -181,7 +183,6 @@ class BrowsePlaylist extends Component {
       StateStore.getState().APIManager.taliesinApiRequest("POST", "/playlist/", playlist)
       .then(() => {
         var list = this.state.playlist
-        playlist.elements = 0;
         list.push(playlist);
         StateStore.dispatch({type: "setPlaylists", playlists: list});
         this.setState({playlist: list, curPlaylist: false});
@@ -439,7 +440,7 @@ class BrowsePlaylist extends Component {
               {aPlaylist.description}
             </td>
             <td className="hidden-xs">
-              {aPlaylist.elements}
+              {aPlaylist.elements||"N/A"}
             </td>
             <td>
               {aPlaylist.scope==="all"?<FontAwesome name={"users"} />:<FontAwesome name={"user"} />}

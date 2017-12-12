@@ -3,6 +3,8 @@ import FontAwesome from 'react-fontawesome';
 import { DropdownButton, MenuItem, ButtonGroup, Button } from 'react-bootstrap';
 import StateStore from '../lib/StateStore';
 import ModalEditStream from '../Modal/ModalEditStream';
+import ModalEditPlaylist from '../Modal/ModalEditPlaylist';
+import ModalEditCategory from '../Modal/ModalEditCategory';
 
 class ElementButtons extends Component {
   constructor(props) {
@@ -16,7 +18,9 @@ class ElementButtons extends Component {
 			subCategoryValue: props.subCategoryValue, 
 			element: props.element,
 			streamList: StateStore.getState().streamList,
-			playlist: StateStore.getState().playlists
+			playlist: StateStore.getState().playlists,
+			addPlaylistShow: false,
+			editCategoryShow: false
 		};
 
 		this.playElement = this.playElement.bind(this);
@@ -24,8 +28,12 @@ class ElementButtons extends Component {
 		this.playElementAdvanced = this.playElementAdvanced.bind(this);
 		this.addToStream = this.addToStream.bind(this);
 		this.addToPlaylist = this.addToPlaylist.bind(this);
+		this.addToNewPlaylist = this.addToNewPlaylist.bind(this);
+		this.onSavePlaylist = this.onSavePlaylist.bind(this);
 		this.runPlayElementAdvanced = this.runPlayElementAdvanced.bind(this);
 		this.refreshFolder = this.refreshFolder.bind(this);
+		this.viewCategory = this.viewCategory.bind(this);
+		this.onCloseCategory = this.onCloseCategory.bind(this);
 		
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
@@ -47,7 +55,9 @@ class ElementButtons extends Component {
 			subCategoryValue: nextProps.subCategoryValue, 
 			element: nextProps.element,
 			streamList: StateStore.getState().streamList,
-			playlist: StateStore.getState().playlists
+			playlist: StateStore.getState().playlists,
+			addPlaylistShow: false,
+			editCategoryShow: false
 		});
 	}
   
@@ -196,6 +206,41 @@ class ElementButtons extends Component {
     });
 	}
 	
+	addToNewPlaylist() {
+		this.setState({addPlaylistShow: true});
+	}
+	
+	onSavePlaylist(result, playlist) {
+		this.setState({addPlaylistShow: false}, () => {
+			if (result) {
+				var parameters;
+				if (this.state.path) {
+					parameters = {data_source: this.state.dataSource, path: this.state.path, recursive: true};
+				} else {
+					parameters = {data_source: this.state.dataSource, category: this.state.category, category_value: this.state.categoryValue, sub_category: (this.state.subCategory?this.state.subCategory:undefined), sub_category_value: (this.state.subCategoryValue?this.state.subCategoryValue:undefined) };
+				}
+				playlist.media = [parameters]
+				StateStore.getState().APIManager.taliesinApiRequest("POST", "/playlist/", playlist)
+				.then(() => {
+					var list = this.state.playlist
+					list.push(playlist);
+					StateStore.dispatch({type: "setPlaylists", playlists: list});
+					this.setState({playlist: list, curPlaylist: false});
+					StateStore.getState().NotificationManager.addNotification({
+						message: 'Playlist added',
+						level: 'info'
+					});
+				})
+				.fail(() => {
+					StateStore.getState().NotificationManager.addNotification({
+						message: 'Error adding playlist',
+						level: 'error'
+					});
+				});
+			}
+		});
+	}
+	
 	refreshFolder() {
 		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/data_source/" + encodeURIComponent(this.state.dataSource) + "/refresh/" + encodeURI(this.state.path).replace(/#/g, "%23"))
 		.then((result) => {
@@ -212,8 +257,16 @@ class ElementButtons extends Component {
 		});
 	}
 	
+	viewCategory() {
+		this.setState({editCategoryShow: true});
+	}
+	
+	onCloseCategory() {
+		this.setState({editCategoryShow: false});
+	}
+	
 	render() {
-		var streamList = [], playlist = [], refreshButton, refreshButtonMenu;
+		var streamList = [], playlist = [<MenuItem key={0} onClick={() => this.addToNewPlaylist()}>New playlist</MenuItem>], refreshButton, refreshButtonMenu, categoryButton, categoryButtonMenu;
 		this.state.streamList.forEach((stream, index) => {
 			streamList.push(
 				<MenuItem key={index} onClick={() => this.addToStream(stream.name)}>
@@ -223,7 +276,7 @@ class ElementButtons extends Component {
 		});
 		this.state.playlist.forEach((pl, index) => {
 			playlist.push(
-				<MenuItem key={index} onClick={() => this.addToPlaylist(pl.name)}>
+				<MenuItem key={index+1} onClick={() => this.addToPlaylist(pl.name)}>
 					- {pl.name}
 				</MenuItem>
 			);
@@ -239,6 +292,17 @@ class ElementButtons extends Component {
 					Refresh folder
 				</MenuItem>
 		}
+		if (!this.state.path) {
+			categoryButton = 
+				<Button title="View category" onClick={this.viewCategory}>
+					<FontAwesome name={"eye"} />
+				</Button>
+			categoryButtonMenu =
+				<MenuItem>
+					<FontAwesome name={"eye"} />&nbsp;
+					View category
+				</MenuItem>
+		}
     return (
 			<div>
 				<ButtonGroup className="hidden-xs">
@@ -250,6 +314,7 @@ class ElementButtons extends Component {
 						<FontAwesome name={"cog"} />
 					</Button>
 					{refreshButton}
+					{categoryButton}
 					<DropdownButton id={"add"-this.state.element.name} pullRight title={
 						<span><i className="fa fa-plus"></i></span>
 					}>
@@ -278,6 +343,7 @@ class ElementButtons extends Component {
 						Create stream
 					</MenuItem>
 					{refreshButtonMenu}
+					{categoryButtonMenu}
 					<MenuItem divider />
 					<MenuItem>
 						<FontAwesome name={"plus"} />&nbsp;
@@ -302,6 +368,8 @@ class ElementButtons extends Component {
           subCategoryValue={this.state.subCategoryValue} 
           onCloseCb={this.runPlayElementAdvanced} 
         />
+				<ModalEditPlaylist show={this.state.addPlaylistShow} onCloseCb={this.onSavePlaylist} add={true} playlist={false} />
+				<ModalEditCategory show={this.state.editCategoryShow} onCloseCb={this.onCloseCategory} dataSource={this.state.dataSource} category={this.state.subCategory||this.state.category} categoryValue={this.state.subCategoryValue||this.state.categoryValue} />
 			</div>
     );
 	}

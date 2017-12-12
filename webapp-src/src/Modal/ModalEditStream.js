@@ -138,7 +138,7 @@ class ModalEditStream extends Component {
 	}
 	
   render() {
-		var recursive, random, path, playlist;
+		var recursive, random, path;
 		if (this.state.element && this.state.element.type === "folder") {
 			recursive = 
 				<div>
@@ -180,6 +180,23 @@ class ModalEditStream extends Component {
 						</Col>
 					</Row>
 				</div>;
+		} else if (this.state.playlist) {
+			path =
+				<div>
+					<Row>
+						<Col md={4}>
+							<Label>Playlist</Label>
+						</Col>
+						<Col md={8}>
+							{this.state.playlist.name}
+						</Col>
+					</Row>
+					<Row>
+						<Col md={12}>
+							<hr/>
+						</Col>
+					</Row>
+				</div>;
 		} else {
 			var categoryPath = this.state.category + " / " + this.state.categoryValue;
 			if (this.state.subCategory) {
@@ -193,24 +210,6 @@ class ModalEditStream extends Component {
 						</Col>
 						<Col md={8}>
 							{categoryPath}
-						</Col>
-					</Row>
-					<Row>
-						<Col md={12}>
-							<hr/>
-						</Col>
-					</Row>
-				</div>;
-		}
-		if (this.state.playlist) {
-			playlist =
-				<div>
-					<Row>
-						<Col md={4}>
-							<Label>Playlist</Label>
-						</Col>
-						<Col md={8}>
-							{this.state.playlist.name}
 						</Col>
 					</Row>
 					<Row>
@@ -251,7 +250,6 @@ class ModalEditStream extends Component {
 				</Modal.Header>
 				<Modal.Body>
 					<form onSubmit={(e) => {this.close(true, e)}}>
-						{playlist}
 						{path}
 						{recursive}
 						<Row>

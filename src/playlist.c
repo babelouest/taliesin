@@ -299,7 +299,7 @@ json_t * is_playlist_element_list_valid(struct config_elements * config, int is_
       }
     }
   } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "is_playlist_valid - Error allocating resources for j_return");
+    y_log_message(Y_LOG_LEVEL_ERROR, "is_playlist_element_list_valid - Error allocating resources for j_return");
   }
   return j_return;
 }
@@ -337,7 +337,7 @@ json_t * is_playlist_valid(struct config_elements * config, const char * usernam
       if (with_media) {
         if (json_object_get(j_playlist, "media") != NULL && !json_is_array(json_object_get(j_playlist, "media"))) {
           json_array_append_new(j_return, json_pack("{ss}", "media", "media must be a JSON array"));
-        } else {
+        } else if (json_object_get(j_playlist, "media") != NULL) {
           json_array_foreach(json_object_get(j_playlist, "media"), index, j_element) {
             if (!is_valid_path_element_parameter(config, j_element, username, is_admin) && !is_valid_category_element_parameter(config, j_element, username, is_admin)) {
               json_array_append_new(j_return, json_pack("{ss}", "media", "media is not a valid object or does not exist"));

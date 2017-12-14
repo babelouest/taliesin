@@ -1811,7 +1811,7 @@ json_t * media_subcategory_list(struct config_elements * config, json_t * j_data
     clause_subcategory = msprintf("`tm_id` IN (SELECT `tm_id` FROM " TALIESIN_TABLE_META_DATA " WHERE `tmd_key`='genre' AND TRIM(`tmd_value`)='%s')", escape_subcategory);
   }
   clause_data_source = msprintf("`tm_id` IN (SELECT `tm_id` FROM `%s` WHERE `tds_id`=%" JSON_INTEGER_FORMAT ")", TALIESIN_TABLE_MEDIA, tds_id);
-  j_query = json_pack("{sss[ssss]s{s{ssss}s{ssss}s{ssss}}ss}",
+  j_query = json_pack("{sss[sssss]s{s{ssss}s{ssss}s{ssss}}ss}",
                       "table",
                       TALIESIN_TABLE_MEDIA,
                       "columns",
@@ -1853,7 +1853,7 @@ json_t * media_subcategory_list(struct config_elements * config, json_t * j_data
           if (check_result_value(j_tags, T_OK)) {
             json_object_set(j_element, "tags", json_object_get(j_tags, "tags"));
           } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "media_category_list - Error media_get_tags_from_id");
+            y_log_message(Y_LOG_LEVEL_ERROR, "media_subcategory_list - Error media_get_tags_from_id");
           }
           json_decref(j_tags);
           json_object_del(j_element, "tm_id");
@@ -1865,7 +1865,7 @@ json_t * media_subcategory_list(struct config_elements * config, json_t * j_data
       j_return = json_pack("{si}", "result", T_ERROR_NOT_FOUND);
     }
   } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "media_category_list - Error executing j_query");
+    y_log_message(Y_LOG_LEVEL_ERROR, "media_subcategory_list - Error executing j_query");
     j_return = json_pack("{si}", "result", T_ERROR_DB);
   }
   return j_return;

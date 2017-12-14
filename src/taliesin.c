@@ -66,7 +66,7 @@ int main (int argc, char ** argv) {
   config->conn = NULL;
   config->instance = o_malloc(sizeof(struct _u_instance));
   config->allow_origin = NULL;
-  config->use_oauth2_authentication = 1;
+  config->use_oauth2_authentication = 0;
   config->glewlwyd_resource_config = o_malloc(sizeof(struct _glewlwyd_resource_config));
   config->static_file_config = o_malloc(sizeof(struct _static_file_config));
   config->use_secure_connection = 0;
@@ -868,22 +868,40 @@ int build_config_from_file(struct config_elements * config) {
         return 0;
       }
     } else {
-      fprintf(stderr, "Error stream_format unknown, use values 'mp3', 'ogg' or 'flac', exiting\n");
+      fprintf(stderr, "Error stream_format unknown, use values 'mp3', 'ogg' or 'flac'\n");
       config_destroy(&cfg);
       return 0;
     }
   }
   
   if (config_lookup_int(&cfg, "stream_channels", &cur_stream_channels) == CONFIG_TRUE) {
-    config->stream_channels = cur_stream_channels;
+    if (cur_stream_channels == 1 || cur_stream_channels == 2) {
+      config->stream_channels = cur_stream_channels;
+    } else {
+      fprintf(stderr, "Error stream_channels, use values 1 or 2\n");
+      config_destroy(&cfg);
+      return 0;
+    }
   }
   
   if (config_lookup_int(&cfg, "stream_sample_rate", &cur_stream_sample_rate) == CONFIG_TRUE) {
-    config->stream_sample_rate = cur_stream_sample_rate;
+    if (cur_stream_sample_rate != 8000 && cur_stream_sample_rate != 11025 && cur_stream_sample_rate != 22050 && cur_stream_sample_rate != 32000 && cur_stream_sample_rate != 44100 && cur_stream_sample_rate != 48000) {
+      fprintf(stderr, "Error stream_sample_rate, use values 8000, 11025, 22050, 32000, 44100 or 48000\n");
+      config_destroy(&cfg);
+      return 0;
+    } else {
+      config->stream_sample_rate = cur_stream_sample_rate;
+    }
   }
   
   if (config_lookup_bool(&cfg, "stream_bitrate", &cur_stream_bit_rate) == CONFIG_TRUE) {
-    config->stream_bitrate = cur_stream_bit_rate;
+    if (0 != o_strcasecmp("flac", config->stream_format) && cur_stream_bit_rate != 32000 && cur_stream_bit_rate != 96000 && cur_stream_bit_rate != 128000 && cur_stream_bit_rate != 192000 && cur_stream_bit_rate != 256000 && cur_stream_bit_rate != 320000) {
+      fprintf(stderr, "Error stream_bitrate, use values 32000, 96000, 128000, 192000, 256000 or 320000\n");
+      config_destroy(&cfg);
+      return 0;
+    } else {
+      config->stream_bitrate = cur_stream_bit_rate;
+    }
   }
   
   if (config_lookup_bool(&cfg, "user_can_create_data_source", &cur_user_can_create_data_source) == CONFIG_TRUE) {

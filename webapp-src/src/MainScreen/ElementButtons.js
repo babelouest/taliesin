@@ -20,7 +20,8 @@ class ElementButtons extends Component {
 			streamList: StateStore.getState().streamList,
 			playlist: StateStore.getState().playlists,
 			addPlaylistShow: false,
-			editCategoryShow: false
+			editCategoryShow: false,
+			onEditCategory: props.onEditCategory
 		};
 
 		this.playElement = this.playElement.bind(this);
@@ -57,7 +58,8 @@ class ElementButtons extends Component {
 			streamList: StateStore.getState().streamList,
 			playlist: StateStore.getState().playlists,
 			addPlaylistShow: false,
-			editCategoryShow: false
+			editCategoryShow: false,
+			onEditCategory: nextProps.onEditCategory
 		});
 	}
   
@@ -262,11 +264,15 @@ class ElementButtons extends Component {
 	}
 	
 	onCloseCategory() {
-		this.setState({editCategoryShow: false});
+		this.setState({editCategoryShow: false}, () => {
+			if (!!this.state.onEditCategory) {
+				this.state.onEditCategory();
+			}
+		});
 	}
 	
 	render() {
-		var streamList = [], playlist = [<MenuItem key={0} onClick={() => this.addToNewPlaylist()}>New playlist</MenuItem>], refreshButton, refreshButtonMenu, categoryButton, categoryButtonMenu;
+		var streamList = [], playlist = [<MenuItem key={0} onClick={() => this.addToNewPlaylist()}>New playlist</MenuItem>], refreshButton, refreshButtonMenu, categoryButton, categoryButtonMenu, modalCategory;
 		this.state.streamList.forEach((stream, index) => {
 			streamList.push(
 				<MenuItem key={index} onClick={() => this.addToStream(stream.name)}>
@@ -293,6 +299,8 @@ class ElementButtons extends Component {
 				</MenuItem>
 		}
 		if (!this.state.path) {
+			modalCategory = 
+				<ModalEditCategory show={this.state.editCategoryShow} onCloseCb={this.onCloseCategory} dataSource={this.state.dataSource} category={this.state.subCategory||this.state.category} categoryValue={this.state.subCategoryValue||this.state.categoryValue} />;
 			categoryButton = 
 				<Button title="View category" onClick={this.viewCategory}>
 					<FontAwesome name={"eye"} />
@@ -369,7 +377,7 @@ class ElementButtons extends Component {
           onCloseCb={this.runPlayElementAdvanced} 
         />
 				<ModalEditPlaylist show={this.state.addPlaylistShow} onCloseCb={this.onSavePlaylist} add={true} playlist={false} />
-				<ModalEditCategory show={this.state.editCategoryShow} onCloseCb={this.onCloseCategory} dataSource={this.state.dataSource} category={this.state.subCategory||this.state.category} categoryValue={this.state.subCategoryValue||this.state.categoryValue} />
+				{modalCategory}
 			</div>
     );
 	}

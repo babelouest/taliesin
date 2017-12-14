@@ -46,22 +46,12 @@ class ModalMedia extends Component {
 		});
 	}
 
-	componentDidMount() {
-		this._ismounted = true;
-	}
-
-	componentWillUnmount() {
-		this._ismounted = false;
-	}
-	
   onCloseModal() {
-    if (this._ismounted) {
-      this.setState({show: false}, () => {
-        if (this.state.close) {
-          this.state.close();
-        }
-      });
-    }
+		this.setState({show: false}, () => {
+			if (this.state.close) {
+				this.state.close();
+			}
+		});
   }
 	
 	onPlayNow() {
@@ -115,7 +105,7 @@ class ModalMedia extends Component {
 	}
 	
 	getMediaCover() {
-    if (this._ismounted && this.state.media) {
+    if (this.state.show && this.state.media) {
       this.state.media && StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.media.data_source) + "/browse/path/" + encodeURI(this.state.media.path).replace(/#/g, "%23").replace(/\+/g, "%2B") + "?cover&base64")
       .then((result) => {
         this.setState({imgBlob: result});

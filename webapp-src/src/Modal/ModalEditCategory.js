@@ -6,6 +6,7 @@ import StateStore from '../lib/StateStore';
 class ModalEditCategory extends Component {
   constructor(props) {
     super(props);
+		this._ismounted = false;
 		
 		this.state = {
 			show: props.show,
@@ -54,7 +55,7 @@ class ModalEditCategory extends Component {
 	}
 	
 	loadCategoryContent() {
-		if (this._ismounted) {
+		if (this._ismounted && this.state.show) {
 			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.dataSource) + "/info/category/" + encodeURI(this.state.category) + "/" + encodeURI(this.state.categoryValue))
 			.then((result) => {
 				var categoryContent = this.state.categoryContent;

@@ -60,14 +60,12 @@ class ElementCategoryIcon extends Component {
 		if (!this.state.thumb) {
 			var url;
 			if (this.state.element.type !== "media") {
-				url = "/data_source/" + encodeURIComponent(this.state.dataSource) + "/info/category/" + encodeURI(this.state.category);
-				if (this.state.categoryValue) {
-					url += "/" + encodeURIComponent(this.state.categoryValue);
-					if (this.state.subCategory) {
-						url += "/" + encodeURIComponent(this.state.subCategory);
-					}
+				url = "/data_source/" + encodeURIComponent(this.state.dataSource) + "/info/category/";
+				if (this.state.subCategoryValue) {
+					url += encodeURIComponent(this.state.subCategory) + "/" + encodeURIComponent(this.state.subCategoryValue);
+				} else {
+					url += encodeURIComponent(this.state.category) + "/" + encodeURIComponent(this.state.categoryValue);
 				}
-				url += "/" + encodeURIComponent(this.state.element.name);
 			} else {
 				url = "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/path/" + encodeURI(this.state.element.path).replace(/#/g, "%23").replace(/\+/g, "%2B");
 			}

@@ -138,7 +138,9 @@ class BrowseCategory extends Component {
 					<Row style={{marginBottom: "10px"}}>
 						<input type="text" placeholder="Filter" value={this.filter} className="form-control" onChange={this.filterList}/>
 					</Row>
+					<Row>
 					{currentList}
+					</Row>
 					<Row style={{marginTop: "10px"}}>
 						<Col md={6} sm={8} xs={8}>
 							<CategoryButtons category={this.state.category} categoryValue={this.state.categoryValue} subCategory={this.state.subCategory} subCategoryValue={this.state.subCategoryValue}/>

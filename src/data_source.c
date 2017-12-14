@@ -640,7 +640,7 @@ int data_source_clean_removed(struct config_elements * config, json_int_t tds_id
     }
     json_decref(j_query);
     
-    if (media_image_cover_clean_orphan(config, tds_id) != T_OK) {
+    if (media_image_cover_clean_orphan(config, tds_id, 0) != T_OK) {
       y_log_message(Y_LOG_LEVEL_ERROR, "data_source_clean_removed - error media_image_cover_clean_orphan");
     }
     

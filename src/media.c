@@ -1815,6 +1815,7 @@ json_t * media_subcategory_list(struct config_elements * config, json_t * j_data
                       "table",
                       TALIESIN_TABLE_MEDIA,
                       "columns",
+                        "`tm_id`",
                         "`tm_name` AS name",
                         "`tm_path` AS path",
                         "'media' AS type",
@@ -1902,14 +1903,16 @@ json_t * media_category_get_info(struct config_elements * config, json_t * j_dat
   return j_return;
 }
 
-int media_image_cover_clean_orphan(struct config_elements * config, json_int_t tds_id) {
+int media_image_cover_clean_orphan(struct config_elements * config, json_int_t tds_id, json_int_t tic_id) {
   int res;
   json_t * j_query;
-  char * clause_where = msprintf("\
-`tic_id` NOT IN (SELECT DISTINCT `tic_id` FROM `"TALIESIN_TABLE_FOLDER"`) \
-AND `tic_id` NOT IN (SELECT DISTINCT `tic_id` FROM `"TALIESIN_TABLE_MEDIA"`) \
-AND `tic_id` NOT IN (SELECT DISTINCT `tic_id` FROM `"TALIESIN_TABLE_PLAYLIST"`) \
-AND `tic_id` NOT IN (SELECT DISTINCT `tic_id` FROM `"TALIESIN_TABLE_CATEGORY_INFO"`)");
+  char * clause_where;
+  
+  if (tic_id != 0) {
+    clause_where = msprintf("`tic_id`= %"JSON_INTEGER_FORMAT" AND NOT EXISTS (SELECT 1 FROM `"TALIESIN_TABLE_MEDIA"` WHERE `"TALIESIN_TABLE_MEDIA"`.`tic_id`=`"TALIESIN_TABLE_IMAGE_COVER"`.`tic_id`) AND NOT EXISTS (SELECT 1 FROM `"TALIESIN_TABLE_FOLDER"` WHERE `"TALIESIN_TABLE_FOLDER"`.`tic_id`=`"TALIESIN_TABLE_IMAGE_COVER"`.`tic_id`) AND NOT EXISTS (SELECT 1 FROM `"TALIESIN_TABLE_PLAYLIST"` WHERE `"TALIESIN_TABLE_PLAYLIST"`.`tic_id`=`"TALIESIN_TABLE_IMAGE_COVER"`.`tic_id`) AND NOT EXISTS (SELECT 1 FROM `"TALIESIN_TABLE_CATEGORY_INFO"` WHERE `"TALIESIN_TABLE_CATEGORY_INFO"`.`tic_id`=`"TALIESIN_TABLE_IMAGE_COVER"`.`tic_id`)", tic_id);
+  } else {
+    clause_where = o_strdup("NOT EXISTS (SELECT 1 FROM `"TALIESIN_TABLE_MEDIA"` WHERE `"TALIESIN_TABLE_MEDIA"`.`tic_id`=`"TALIESIN_TABLE_IMAGE_COVER"`.`tic_id`) AND NOT EXISTS (SELECT 1 FROM `"TALIESIN_TABLE_FOLDER"` WHERE `"TALIESIN_TABLE_FOLDER"`.`tic_id`=`"TALIESIN_TABLE_IMAGE_COVER"`.`tic_id`) AND NOT EXISTS (SELECT 1 FROM `"TALIESIN_TABLE_PLAYLIST"` WHERE `"TALIESIN_TABLE_PLAYLIST"`.`tic_id`=`"TALIESIN_TABLE_IMAGE_COVER"`.`tic_id`) AND NOT EXISTS (SELECT 1 FROM `"TALIESIN_TABLE_CATEGORY_INFO"` WHERE `"TALIESIN_TABLE_CATEGORY_INFO"`.`tic_id`=`"TALIESIN_TABLE_IMAGE_COVER"`.`tic_id`)");
+  }
   
   j_query = json_pack("{sss{s{ssss}}}",
                       "table",
@@ -1938,14 +1941,15 @@ AND `tic_id` NOT IN (SELECT DISTINCT `tic_id` FROM `"TALIESIN_TABLE_CATEGORY_INF
 }
 
 int media_category_delete_info(struct config_elements * config, json_t * j_data_source, const char * level, const char * category) {
-  json_t * j_query;
+  json_t * j_query, * j_result = NULL;
   int res, ret;
   
-  j_query = json_pack("{sss[s]s{sssssI}}",
+  j_query = json_pack("{sss[ss]s{sssssI}}",
                       "table",
                       TALIESIN_TABLE_CATEGORY_INFO,
                       "columns",
-                        "tci_content AS info",
+                        "tci_id",
+                        "tic_id",
                       "where",
                         "tci_level",
                         level,
@@ -1953,12 +1957,37 @@ int media_category_delete_info(struct config_elements * config, json_t * j_data_
                         category,
                         "tds_id",
                         json_integer_value(json_object_get(j_data_source, "tds_id")));
-  res = h_delete(config->conn, j_query, NULL);
+  res = h_select(config->conn, j_query, &j_result, NULL);
   json_decref(j_query);
   if (res == H_OK) {
-    ret = media_image_cover_clean_orphan(config, json_integer_value(json_object_get(j_data_source, "tds_id")));
+    if (json_array_size(j_result) > 0) {
+      j_query = json_pack("{sss[s]s{sI}}",
+                          "table",
+                          TALIESIN_TABLE_CATEGORY_INFO,
+                          "columns",
+                            "tci_content AS info",
+                          "where",
+                            "tci_id",
+                            json_integer_value(json_object_get(json_array_get(j_result, 0), "tci_id")));
+      res = h_delete(config->conn, j_query, NULL);
+      json_decref(j_query);
+      if (res == H_OK) {
+        if (json_object_get(json_array_get(j_result, 0), "tic_id") != json_null()) {
+          ret = media_image_cover_clean_orphan(config, json_integer_value(json_object_get(j_data_source, "tds_id")), json_integer_value(json_object_get(json_array_get(j_result, 0), "tic_id")));
+        } else {
+          ret = T_OK;
+        }
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "media_category_delete_info - Error executing j_query (2)");
+        ret = T_ERROR_DB;
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "media_category_delete_info - Error category not found");
+      ret = T_ERROR_NOT_FOUND;
+    }
+    json_decref(j_result);
   } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "media_category_delete_info - Error executing j_query");
+    y_log_message(Y_LOG_LEVEL_ERROR, "media_category_delete_info - Error executing j_query (1)");
     ret = T_ERROR_DB;
   }
   return ret;
@@ -2062,11 +2091,12 @@ int media_category_set_info(struct config_elements * config, json_t * j_data_sou
   int res, ret;
   json_int_t tic_id = media_cover_save(config, json_integer_value(json_object_get(j_data_source, "tds_id")), (const unsigned char *)json_string_value(json_object_get(j_info, "cover")));
   
-  j_query = json_pack("{sss[s]s{sIssss}}",
+  j_query = json_pack("{sss[ss]s{sIssss}}",
                       "table",
                       TALIESIN_TABLE_CATEGORY_INFO,
                       "columns",
                         "tci_id",
+                        "tic_id",
                       "where",
                         "tds_id",
                         json_integer_value(json_object_get(j_data_source, "tds_id")),
@@ -2093,7 +2123,11 @@ int media_category_set_info(struct config_elements * config, json_t * j_data_sou
       res = h_update(config->conn, j_query, NULL);
       json_decref(j_query);
       if (res == H_OK) {
-        ret = media_image_cover_clean_orphan(config, json_integer_value(json_object_get(j_data_source, "tds_id")));
+        if (json_object_get(json_array_get(j_result, 0), "tic_id") != json_null()) {
+          ret = media_image_cover_clean_orphan(config, json_integer_value(json_object_get(j_data_source, "tds_id")), json_integer_value(json_object_get(json_array_get(j_result, 0), "tic_id")));
+        } else {
+          ret = T_OK;
+        }
       } else {
         y_log_message(Y_LOG_LEVEL_ERROR, "media_category_set_info - Error executing j_query (2)");
         ret = T_ERROR_DB;

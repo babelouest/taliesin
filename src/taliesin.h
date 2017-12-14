@@ -589,7 +589,7 @@ json_int_t folder_get_id(struct config_elements * config, json_t * j_data_source
 json_t   * folder_get_all(struct config_elements * config, json_t * j_data_source, json_int_t tf_id);
 int        media_add_history(struct config_elements * config, const char * stream_name, json_int_t tpl_id, json_int_t tm_id);
 json_t   * media_get_history(struct config_elements * config, const char * stream_name, json_int_t offset, json_int_t limit);
-int        media_image_cover_clean_orphan(struct config_elements * config, json_int_t tds_id);
+int        media_image_cover_clean_orphan(struct config_elements * config, json_int_t tds_id, json_int_t tic_id);
 int        is_valid_b64_image(const unsigned char * base64_image);
 json_int_t media_cover_save(struct config_elements * config, json_int_t tds_id, const unsigned char * image_base64);
 json_t *   media_get_tags_from_id(struct config_elements * config, json_int_t tm_id);

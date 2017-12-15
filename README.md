@@ -24,3 +24,7 @@ Authentication method: An OAuth2 server providing JWT like [Glewlwyd](https://gi
 Installation documentation is available in the file [INSTALL.md](https://github.com/babelouest/taliesin/blob/master/docs/INSTALL.md).
 
 Server API description is available in the file [API.md](https://github.com/babelouest/taliesin/blob/master/docs/API.md).
+
+## Screenshots
+
+Some screenshots examples are available in the [images](https://github.com/babelouest/taliesin/tree/master/docs/images) folder.

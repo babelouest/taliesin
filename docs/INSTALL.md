@@ -94,7 +94,7 @@ Taliesin front-end is a React JS application with Redux, it will need a non conf
 
 ## Setup the web application
 
-The web application is located in `webapp`, its source is located in `webapp-src`, go to `webapp/README.md` if you want more details on the front-end implementation.
+The web application is located in `webapp`, its source is located in `webapp-src`, go to `webapp-src/README.md` if you want more details on the front-end implementation.
 
 You can either use Taliesin built-in static file server or host the web application in another place, e.g. an Apache or nginx instance.
 

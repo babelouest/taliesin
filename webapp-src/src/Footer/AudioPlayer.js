@@ -276,10 +276,10 @@ class AudioPlayer extends Component {
 		}
   }
 	
-	handleChangeVolume(event) {
-		this.rap.audioEl.volume = (event.target.value / 100);
-		this.setState({volume: event.target.value}, () => {
-			this.dispatchPlayerStatus({volume: event.target.value});
+	handleChangeVolume(volume) {
+		this.rap.audioEl.volume = ((this.state.volume+volume) / 100);
+		this.setState({volume: this.state.volume+volume}, () => {
+			this.dispatchPlayerStatus({volume: (this.state.volume+volume)});
 		});
 	}
 	
@@ -390,7 +390,11 @@ class AudioPlayer extends Component {
 							<FontAwesome name={"random"} />
 						</Button>
 						<DropdownButton title={volume} id="dropdown-volume">
-							<MenuItem eventKey="1"><input type="range" onChange={this.handleChangeVolume} value={this.state.volume} min="0" max="100" step="1"/></MenuItem>
+              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(5)}}>+5%</MenuItem>
+              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(1)}}>+1%</MenuItem>
+              <MenuItem className="text-center">Current: {this.state.volume} %</MenuItem>
+              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-1)}}>-1%</MenuItem>
+              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-5)}}>-5%</MenuItem>
 						</DropdownButton>
 					</ButtonGroup>
 					<div>

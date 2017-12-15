@@ -141,9 +141,9 @@ class FullScreen extends Component {
 		StateStore.dispatch({type: "setPlayerAction", action: action});
 	}
 	
-	handleChangeVolume(event) {
+	handleChangeVolume(volume) {
 		if (this._ismounted) {
-			this.setState({volume: event.target.value}, () => {
+			this.setState({volume: (this.state.volume+volume)}, () => {
 				StateStore.dispatch({type: "setPlayerAction", action: "volume", parameter: (this.state.volume)});
 			});
 		}
@@ -275,7 +275,11 @@ class FullScreen extends Component {
 								<FontAwesome name={"random"} />
 							</Button>
               <DropdownButton title={<FontAwesome name={"volume-up"} />} id="dropdown-volume">
-                <MenuItem eventKey="1"><input type="range" onChange={this.handleChangeVolume} value={this.state.volume} min="0" max="100" step="1"/></MenuItem>
+                <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(5)}}>+5%</MenuItem>
+                <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(1)}}>+1%</MenuItem>
+                <MenuItem className="text-center">Current: {this.state.volume} %</MenuItem>
+                <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-1)}}>-1%</MenuItem>
+                <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-5)}}>-5%</MenuItem>
               </DropdownButton>
             </ButtonGroup>
 					</Col>

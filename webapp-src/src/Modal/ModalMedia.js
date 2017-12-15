@@ -317,7 +317,7 @@ class ModalMedia extends Component {
                   <Button onClick={this.onPlayNow} className="btn" title="Play now">
                     <FontAwesome name={"play"} />
                   </Button>
-                  <DropdownButton id={"add"} pullRight title={
+                  <DropdownButton id={"add"} title={
                     <span><i className="fa fa-plus"></i></span>
                   }>
                     <MenuItem>

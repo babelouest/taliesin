@@ -4,7 +4,7 @@ Audio media server with a REST API interface and a React JS client application.
 
 Copyright 2017 - Nicolas Mora <mail@babelouest.org>
 
-![example snapshot](https://github.com/babelouest/taliesin/raw/master/doc/images/dashboard.png)
+![example snapshot](https://github.com/babelouest/taliesin/raw/master/docs/images/dashboard.png)
 
 Can be used as a cloud application for a set of media files.
 
@@ -24,3 +24,7 @@ Authentication method: An OAuth2 server providing JWT like [Glewlwyd](https://gi
 Installation documentation is available in the file [INSTALL.md](https://github.com/babelouest/taliesin/blob/master/docs/INSTALL.md).
 
 Server API description is available in the file [API.md](https://github.com/babelouest/taliesin/blob/master/docs/API.md).
+
+## Screenshots
+
+Some screenshots examples are available in the [images](https://github.com/babelouest/taliesin/tree/master/docs/images) folder.

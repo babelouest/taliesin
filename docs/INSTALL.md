@@ -2,7 +2,7 @@
 
 ## Install dependencies and compile Taliesin
 
-Taliesin requires a recent version of libav or ffmpeg, as in Debian Stretch or Ubuntu 17.04 version for example, I'm not sure about the version number, maybe 11 at least. Requires [ulfius](https://github.com/babelouest/ulfius), [hoel](https://github.com/babelouest/hoel), [libjwt](https://github.com/benmcollins/libjwt), libconfig and their dependencies.
+Taliesin requires [libav](https://libav.org/) version 11, or equivalent ffmpeg, available in Debian Stretch or Ubuntu 17.04. It also requires [ulfius](https://github.com/babelouest/ulfius), [hoel](https://github.com/babelouest/hoel), [libjwt](https://github.com/benmcollins/libjwt), [libconfig](http://www.hyperrealm.com/libconfig/libconfig.html) and their dependencies.
 
 ```shell
 $ # Install libraries
@@ -90,11 +90,11 @@ If you use a [Glewlwyd](https://github.com/babelouest/glewlwyd) instance as Oaut
 
 Taliesin front-end is a React JS application with Redux, it will need a non confidential client_id, and the authorization types `code` and/or `token`.
 
-![glewlwyd client configuration](https://github.com/babelouest/taliesin/raw/master/doc/images/glewlwyd.png)
+![glewlwyd client configuration](https://github.com/babelouest/taliesin/raw/master/docs/images/glewlwyd.png)
 
 ## Setup the web application
 
-The web application is located in `webapp`, its source is located in `webapp-src`, go to `webapp/README.md` if you want more details on the front-end implementation.
+The web application is located in `webapp`, its source is located in `webapp-src`, go to `webapp-src/README.md` if you want more details on the front-end implementation.
 
 You can either use Taliesin built-in static file server or host the web application in another place, e.g. an Apache or nginx instance.
 

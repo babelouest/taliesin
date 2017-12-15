@@ -4,7 +4,7 @@ Audio media server with a REST API interface and a React JS client application.
 
 Copyright 2017 - Nicolas Mora <mail@babelouest.org>
 
-![example snapshot](https://github.com/babelouest/taliesin/raw/master/doc/images/dashboard.png)
+![example snapshot](https://github.com/babelouest/taliesin/raw/master/docs/images/dashboard.png)
 
 Can be used as a cloud application for a set of media files.
 

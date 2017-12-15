@@ -1,9 +1,8 @@
-
 # Taliesin installation
 
 ## Install dependencies and compile Taliesin
 
-Taliesin requires libav or ffmpeg version 11, as in Debian Stretch or Ubuntu 17.04 version for example. It also requires [ulfius](https://github.com/babelouest/ulfius), [hoel](https://github.com/babelouest/hoel), [libjwt](https://github.com/benmcollins/libjwt), libconfig and their dependencies.
+Taliesin requires a recent version of libav or ffmpeg, as in Debian Stretch or Ubuntu 17.04 version for example, I'm not sure about the version number, maybe 11 at least. Requires [ulfius](https://github.com/babelouest/ulfius), [hoel](https://github.com/babelouest/hoel), [libjwt](https://github.com/benmcollins/libjwt), libconfig and their dependencies.
 
 ```shell
 $ # Install libraries

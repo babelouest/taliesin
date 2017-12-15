@@ -2,9 +2,9 @@
 
 Audio media server with a REST API interface and a React JS client application.
 
-Still in BETA mode, but it's close to being ready.
+Copyright 2017 - Nicolas Mora <mail@babelouest.org>
 
-![example snapshot](https://github.com/babelouest/taliesin/raw/master/docs/images/screenshot-1.png)
+![example snapshot](https://github.com/babelouest/taliesin/raw/master/doc/images/dashboard.png)
 
 Can be used as a cloud application for a set of media files.
 
@@ -12,7 +12,8 @@ Main functionalities:
 - Play media files as a jukebox: the user chooses the songs to play
 - Play media files as a webradio: the files are played in sequence or at random in the same stream
 - Play media files in the client application, in an external player like VLC, or even control one or multiple MPD services with [Angharad House Automation System](https://github.com/babelouest/angharad)
-- Navigation modes: via file names or media tags
+
+Navigation modes: via file names or media metadata.
 
 Database required: MariaDB/MySQL or SQLite3 are supported
 

@@ -479,11 +479,11 @@ json_t * add_webradio_from_path(struct config_elements * config, json_t * j_data
         config->nb_webradio++;
         config->webradio_set[webradio_index] = o_malloc(sizeof(struct _t_webradio));
         if (config->webradio_set[webradio_index] != NULL) {
-					if (name == NULL) {
-						display_name = strrchr(path, '/')!=NULL?(strrchr(path, '/') + 1):path;
-					} else {
-						display_name = name;
-					}
+          if (name == NULL) {
+            display_name = strrchr(path, '/')!=NULL?(strrchr(path, '/') + 1):path;
+          } else {
+            display_name = name;
+          }
           if (o_strlen(display_name) <= 0) {
             display_name = json_string_value(json_object_get(j_data_source, "name"));
           }
@@ -501,7 +501,7 @@ json_t * add_webradio_from_path(struct config_elements * config, json_t * j_data
               *new_webradio = config->webradio_set[webradio_index];
             }
             if (webradio_add_db_stream(config, config->webradio_set[webradio_index]) == T_OK) {
-              j_result = json_pack("{sis{sssssssssisisosis[]}}",
+              j_result = json_pack("{sis{sssssssosisisosisos[]}}",
                                     "result",
                                     T_OK,
                                     "stream",
@@ -521,6 +521,8 @@ json_t * add_webradio_from_path(struct config_elements * config, json_t * j_data
                                       json_true(),
                                       "elements",
                                       config->webradio_set[webradio_index]->file_list->nb_files,
+                                      "random",
+                                      random?json_true():json_false(),
                                       "clients");
             } else {
               y_log_message(Y_LOG_LEVEL_ERROR, "add_webradio_from_path - Error webradio_add_db_stream");
@@ -569,11 +571,11 @@ json_t * add_webradio_from_playlist(struct config_elements * config, json_t * j_
           config->webradio_set[webradio_index]->config = config;
           config->webradio_set[webradio_index]->username = o_strdup(username);
           config->webradio_set[webradio_index]->random = random;
-					if (name == NULL) {
-						config->webradio_set[webradio_index]->display_name = o_strdup(json_string_value(json_object_get(j_playlist, "name")));
-					} else {
-						config->webradio_set[webradio_index]->display_name = o_strdup(name);
-					}
+          if (name == NULL) {
+            config->webradio_set[webradio_index]->display_name = o_strdup(json_string_value(json_object_get(j_playlist, "name")));
+          } else {
+            config->webradio_set[webradio_index]->display_name = o_strdup(name);
+          }
           config->webradio_set[webradio_index]->playlist_name = o_strdup(json_string_value(json_object_get(j_playlist, "name")));
           config->webradio_set[webradio_index]->tpl_id = json_integer_value(json_object_get(j_playlist, "tpl_id"));
           json_array_foreach(json_object_get(j_playlist, "media"), index, j_element) {
@@ -607,8 +609,8 @@ json_t * add_webradio_from_playlist(struct config_elements * config, json_t * j_
                                     json_true(),
                                     "elements",
                                     config->webradio_set[webradio_index]->file_list->nb_files,
-																		"random",
-																		random?json_true():json_false(),
+                                    "random",
+                                    random?json_true():json_false(),
                                     "clients");
           } else {
             y_log_message(Y_LOG_LEVEL_ERROR, "add_webradio_from_playlist - Error webradio_add_db_stream");
@@ -743,15 +745,15 @@ json_t * webradio_get_info(struct _t_webradio * webradio) {
                             webradio->audio_stream->stream_sample_rate,
                             "bitrate",
                             webradio->audio_stream->stream_bitrate);
+    j_client = webradio_get_clients(webradio);
+    if (check_result_value(j_client, T_OK)) {
+      json_object_set(json_object_get(j_stream, "webradio"), "clients", json_object_get(j_client, "clients"));
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "webradio_get_info - Error webradio_get_clients");
+    }
+    json_decref(j_client);
     if (webradio->playlist_name != NULL) {
       json_object_set_new(json_object_get(j_stream, "webradio"), "stored_playlist", json_string(webradio->playlist_name));
-      j_client = webradio_get_clients(webradio);
-      if (check_result_value(j_client, T_OK)) {
-        json_object_set(json_object_get(j_stream, "webradio"), "clients", json_object_get(j_client, "clients"));
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "webradio_get_info - Error webradio_get_clients");
-      }
-      json_decref(j_client);
     }
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "webradio_get_info - Error webradio is invalid");
@@ -1137,7 +1139,7 @@ json_t * is_webradio_command_valid(struct config_elements * config, struct _t_we
             json_array_append_new(j_result, json_pack("{ss}", "parameters", "parameters must be a json array of at least one element"));
           } else {
             json_array_foreach(json_object_get(j_command, "parameters"), index, j_element) {
-              if (!is_valid_path_element_parameter(config, j_element, username, is_admin) && !is_valid_category_element_parameter(config, j_element, username, is_admin)) {
+              if (!is_valid_path_element_parameter(config, j_element, username, is_admin) && !is_valid_category_element_parameter(config, j_element, username, is_admin) && !is_valid_playlist_element_parameter(config, j_element, username)) {
                 json_array_append_new(j_result, json_pack("{ss}", "parameter", "parameter is not a valid playlist element"));
               }
             }
@@ -1332,9 +1334,9 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
           y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error appending to webradio");
           ret = T_ERROR;
         } else if (webradio_update_db_stream_media_list(config, webradio) != T_OK) {
-					y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error webradio_update_db_stream_media_list");
-					ret = T_ERROR;
-				}
+          y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error webradio_update_db_stream_media_list");
+          ret = T_ERROR;
+        }
       } else {
         ret = T_ERROR_NOT_FOUND;
       }
@@ -1429,11 +1431,11 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
     }
   } else if (0 == o_strcmp(str_command, "save")) {
     if ((tpl_id = playlist_add(config, username, json_object_get(j_command, "parameters"), webradio->file_list)) != -1) {
-			if (webradio_set_playlist_db_stream(config, webradio->name, tpl_id) == T_OK) {
-				j_return = json_pack("{sis{ss}}", "result", T_OK, "command", "name", json_string_value(json_object_get(json_object_get(j_command, "parameters"), "name")));
-			} else {
-				j_return = json_pack("{si}", "result", T_ERROR);
-			}
+      if (webradio_set_playlist_db_stream(config, webradio->name, tpl_id) == T_OK) {
+        j_return = json_pack("{sis{ss}}", "result", T_OK, "command", "name", json_string_value(json_object_get(json_object_get(j_command, "parameters"), "name")));
+      } else {
+        j_return = json_pack("{si}", "result", T_ERROR);
+      }
     } else {
       j_return = json_pack("{si}", "result", T_ERROR);
     }

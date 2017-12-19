@@ -107,11 +107,11 @@ int jukebox_audio_buffer_init (struct _jukebox_audio_buffer * jukebox_audio_buff
         pthread_mutexattr_init ( &mutexattr );
         pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_RECURSIVE_NP );
         if (!pthread_mutex_init(&jukebox_audio_buffer->write_lock, &mutexattr)) {
-					return T_OK;
-				} else {
-					y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_audio_buffer_init - Error init write_lock");
-					return T_ERROR;
-				}
+          return T_OK;
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_audio_buffer_init - Error init write_lock");
+          return T_ERROR;
+        }
     } else {
       y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_audio_buffer_init - Error init mutex");
       return T_ERROR;
@@ -408,11 +408,11 @@ json_t * add_jukebox_from_path(struct config_elements * config, json_t * j_data_
         config->jukebox_set[jukebox_index] = o_malloc(sizeof(struct _t_jukebox));
         if (config->jukebox_set[jukebox_index] != NULL) {
           if (jukebox_init(config->jukebox_set[jukebox_index], format, channels, sample_rate, bit_rate) == T_OK) {
-						if (name == NULL) {
-							display_name = strrchr(path, '/')!=NULL?(strrchr(path, '/') + 1):path;
-						} else {
-							display_name = name;
-						}
+            if (name == NULL) {
+              display_name = strrchr(path, '/')!=NULL?(strrchr(path, '/') + 1):path;
+            } else {
+              display_name = name;
+            }
             if (o_strlen(display_name) <= 0) {
               display_name = json_string_value(json_object_get(j_data_source, "name"));
             }
@@ -494,11 +494,11 @@ json_t * add_jukebox_from_playlist(struct config_elements * config, json_t * j_p
         if (jukebox_init(config->jukebox_set[jukebox_index], format, channels, sample_rate, bit_rate) == T_OK) {
           config->jukebox_set[jukebox_index]->config = config;
           config->jukebox_set[jukebox_index]->username = o_strdup(username);
-					if (name == NULL) {
-						config->jukebox_set[jukebox_index]->display_name = o_strdup(json_string_value(json_object_get(j_playlist, "name")));
-					} else {
-						config->jukebox_set[jukebox_index]->display_name = o_strdup(name);
-					}
+          if (name == NULL) {
+            config->jukebox_set[jukebox_index]->display_name = o_strdup(json_string_value(json_object_get(j_playlist, "name")));
+          } else {
+            config->jukebox_set[jukebox_index]->display_name = o_strdup(name);
+          }
           config->jukebox_set[jukebox_index]->playlist_name = o_strdup(json_string_value(json_object_get(j_playlist, "name")));
           config->jukebox_set[jukebox_index]->tpl_id = json_integer_value(json_object_get(j_playlist, "tpl_id"));
           json_array_foreach(json_object_get(j_playlist, "media"), index, j_element) {
@@ -719,15 +719,15 @@ json_t * jukebox_get_info(struct _t_jukebox * jukebox) {
                             jukebox->nb_client,
                             "last_seen",
                             jukebox->last_seen);
+    j_client = jukebox_get_clients(jukebox);
+    if (check_result_value(j_client, T_OK)) {
+      json_object_set(json_object_get(j_stream, "jukebox"), "clients", json_object_get(j_client, "clients"));
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_get_info - Error jukebox_get_clients");
+    }
+    json_decref(j_client);
     if (jukebox->playlist_name != NULL) {
       json_object_set_new(json_object_get(j_stream, "jukebox"), "stored_playlist", json_string(jukebox->playlist_name));
-      j_client = jukebox_get_clients(jukebox);
-      if (check_result_value(j_client, T_OK)) {
-        json_object_set(json_object_get(j_stream, "jukebox"), "clients", json_object_get(j_client, "clients"));
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_get_info - Error jukebox_get_clients");
-      }
-      json_decref(j_client);
     }
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_get_info - Error jukebox is invalid");
@@ -839,26 +839,26 @@ int jukebox_audio_buffer_add_data(struct _jukebox_audio_buffer * jukebox_audio_b
   int ret = -1;
   
   if (jukebox_audio_buffer != NULL) {
-		if (pthread_mutex_lock(&jukebox_audio_buffer->write_lock)) {
-			y_log_message(Y_LOG_LEVEL_ERROR, "Error pthread_mutex_lock");
-		} else {
-			while (jukebox_audio_buffer->size + buf_size > jukebox_audio_buffer->max_size) {
-				jukebox_audio_buffer->data = o_realloc(jukebox_audio_buffer->data, jukebox_audio_buffer->max_size + TALIESIN_STREAM_BUFFER_INC_SIZE);
-				if (jukebox_audio_buffer->data == NULL) {
-					y_log_message(Y_LOG_LEVEL_ERROR, "Error reallocating jukebox_audio_buffer->data");
-					jukebox_audio_buffer->max_size = 0;
-				} else {
-					//y_log_message(Y_LOG_LEVEL_ERROR, "reallocating jukebox_audio_buffer->data");
-					jukebox_audio_buffer->max_size += TALIESIN_STREAM_BUFFER_INC_SIZE;
-				}
-			}
-			if (jukebox_audio_buffer->max_size) {
-				memcpy(jukebox_audio_buffer->data + jukebox_audio_buffer->size, buf, buf_size);
-				jukebox_audio_buffer->size += buf_size;
-				ret = 0;
-			}
-			pthread_mutex_unlock(&jukebox_audio_buffer->write_lock);
-		}
+    if (pthread_mutex_lock(&jukebox_audio_buffer->write_lock)) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "Error pthread_mutex_lock");
+    } else {
+      while (jukebox_audio_buffer->size + buf_size > jukebox_audio_buffer->max_size) {
+        jukebox_audio_buffer->data = o_realloc(jukebox_audio_buffer->data, jukebox_audio_buffer->max_size + TALIESIN_STREAM_BUFFER_INC_SIZE);
+        if (jukebox_audio_buffer->data == NULL) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "Error reallocating jukebox_audio_buffer->data");
+          jukebox_audio_buffer->max_size = 0;
+        } else {
+          //y_log_message(Y_LOG_LEVEL_ERROR, "reallocating jukebox_audio_buffer->data");
+          jukebox_audio_buffer->max_size += TALIESIN_STREAM_BUFFER_INC_SIZE;
+        }
+      }
+      if (jukebox_audio_buffer->max_size) {
+        memcpy(jukebox_audio_buffer->data + jukebox_audio_buffer->size, buf, buf_size);
+        jukebox_audio_buffer->size += buf_size;
+        ret = 0;
+      }
+      pthread_mutex_unlock(&jukebox_audio_buffer->write_lock);
+    }
   }
   return ret;
 }
@@ -941,7 +941,7 @@ json_t * is_jukebox_command_valid(struct config_elements * config, struct _t_juk
             json_array_append_new(j_result, json_pack("{ss}", "parameters", "parameters must be a json array of at least one element"));
           } else {
             json_array_foreach(json_object_get(j_command, "parameters"), index, j_element) {
-              if (!is_valid_path_element_parameter(config, j_element, username, is_admin) && !is_valid_category_element_parameter(config, j_element, username, is_admin)) {
+              if (!is_valid_path_element_parameter(config, j_element, username, is_admin) && !is_valid_category_element_parameter(config, j_element, username, is_admin) && !is_valid_playlist_element_parameter(config, j_element, username)) {
                 json_array_append_new(j_result, json_pack("{ss}", "parameter", "parameter is not a valid jukebox element"));
               }
             }
@@ -1087,8 +1087,8 @@ json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * ju
           y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error appending to jukebox");
           ret = T_ERROR;
         } else if (jukebox_update_db_stream_media_list(config, jukebox) != T_OK) {
-					y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error webradio_update_db_stream_media_list");
-					ret = T_ERROR;
+          y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error webradio_update_db_stream_media_list");
+          ret = T_ERROR;
         }
       } else {
         ret = T_ERROR_NOT_FOUND;
@@ -1192,11 +1192,11 @@ json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * ju
     }
   } else if (0 == o_strcmp(str_command, "save")) {
     if ((tpl_id = playlist_add(config, username, json_object_get(j_command, "parameters"), jukebox->file_list)) != -1) {
-			if (jukebox_set_playlist_db_stream(config, jukebox->name, tpl_id) == T_OK) {
-				j_return = json_pack("{sis{ss}}", "result", T_OK, "command", "name", json_string_value(json_object_get(json_object_get(j_command, "parameters"), "name")));
-			} else {
-				j_return = json_pack("{si}", "result", T_ERROR);
-			}
+      if (jukebox_set_playlist_db_stream(config, jukebox->name, tpl_id) == T_OK) {
+        j_return = json_pack("{sis{ss}}", "result", T_OK, "command", "name", json_string_value(json_object_get(json_object_get(j_command, "parameters"), "name")));
+      } else {
+        j_return = json_pack("{si}", "result", T_ERROR);
+      }
     } else {
       j_return = json_pack("{si}", "result", T_ERROR);
     }
@@ -1239,7 +1239,6 @@ void * jukebox_run_thread(void * args) {
   
   if (!open_output_buffer_jukebox(client_data_jukebox->audio_buffer, &output_format_context, &output_codec_context, &fifo)) {
     if (!open_input_file(client_data_jukebox->audio_buffer->file->path, &input_format_context, &input_codec_context, AVMEDIA_TYPE_AUDIO) && !init_resampler(input_codec_context, output_codec_context, &resample_context)) {
-      y_log_message(Y_LOG_LEVEL_INFO, "Processing file '%s', duration: %" PRId64, client_data_jukebox->audio_buffer->file->path, (input_format_context->duration/AV_TIME_BASE));
       if (media_add_history(config, client_data_jukebox->jukebox->name, client_data_jukebox->jukebox->tpl_id, client_data_jukebox->audio_buffer->file->tm_id) != T_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_run_thread - Error media_add_history");
       }
@@ -1269,7 +1268,6 @@ void * jukebox_run_thread(void * args) {
           break;
         }
       }
-      y_log_message(Y_LOG_LEVEL_INFO, "End processing file");
       if (client_data_jukebox->audio_buffer->status != TALIESIN_STREAM_STATUS_STOPPED) {
         if (av_write_trailer(output_format_context)) {
           y_log_message(Y_LOG_LEVEL_ERROR, "Error av_write_trailer");
@@ -1330,20 +1328,20 @@ ssize_t u_jukebox_stream (void * cls, uint64_t pos, char * buf, size_t max) {
              client_data_jukebox->audio_buffer->status == TALIESIN_STREAM_STATUS_STARTED) {
         usleep(50000);
       }
-			if (pthread_mutex_lock(&client_data_jukebox->audio_buffer->write_lock)) {
-				return U_STREAM_END;
-			} else {
-				if (client_data_jukebox->buffer_offset + max > client_data_jukebox->audio_buffer->size) {
-					len = (client_data_jukebox->audio_buffer->size - client_data_jukebox->buffer_offset);
-				} else {
-					len = max;
-				}
-				
-				memcpy(buf, client_data_jukebox->audio_buffer->data + client_data_jukebox->buffer_offset, len);
-				client_data_jukebox->buffer_offset += len;
-				pthread_mutex_unlock(&client_data_jukebox->audio_buffer->write_lock);
-				return len;
-			}
+      if (pthread_mutex_lock(&client_data_jukebox->audio_buffer->write_lock)) {
+        return U_STREAM_END;
+      } else {
+        if (client_data_jukebox->buffer_offset + max > client_data_jukebox->audio_buffer->size) {
+          len = (client_data_jukebox->audio_buffer->size - client_data_jukebox->buffer_offset);
+        } else {
+          len = max;
+        }
+        
+        memcpy(buf, client_data_jukebox->audio_buffer->data + client_data_jukebox->buffer_offset, len);
+        client_data_jukebox->buffer_offset += len;
+        pthread_mutex_unlock(&client_data_jukebox->audio_buffer->write_lock);
+        return len;
+      }
     }
   } else {
     return U_STREAM_END;

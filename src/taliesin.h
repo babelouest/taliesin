@@ -554,6 +554,7 @@ int      jukebox_audio_buffer_add_data(struct _jukebox_audio_buffer * jukebox_au
 int      jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukebox, char ** m3u_data);
 int      is_valid_path_element_parameter(struct config_elements * config, json_t * jukebox_element, const char * username, int is_admin);
 int      is_valid_category_element_parameter(struct config_elements * config, json_t * category_element, const char * username, int is_admin);
+int      is_valid_playlist_element_parameter(struct config_elements * config, json_t * j_playlist, const char * username);
 void   * jukebox_run_thread(void * args);
 json_t * add_jukebox_from_path(struct config_elements * config, json_t * j_data_source, const char * path, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, int recursive, const char * name);
 json_t * add_jukebox_from_playlist(struct config_elements * config, json_t * j_playlist, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, const char * name);

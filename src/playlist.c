@@ -293,7 +293,7 @@ json_t * is_playlist_element_list_valid(struct config_elements * config, int is_
       json_array_append_new(j_return, json_pack("{ss}", "parameters", "parameters must be a json array of at least one element"));
     } else {
       json_array_foreach(j_element_list, index, j_element) {
-        if (!is_valid_path_element_parameter(config, j_element, username, is_admin) && !is_valid_category_element_parameter(config, j_element, username, is_admin)) {
+        if (!is_valid_path_element_parameter(config, j_element, username, is_admin) && !is_valid_category_element_parameter(config, j_element, username, is_admin) && !is_valid_playlist_element_parameter(config, j_element, username)) {
           json_array_append_new(j_return, json_pack("{ss}", "parameter", "parameter is not a valid element"));
         }
       }
@@ -339,7 +339,7 @@ json_t * is_playlist_valid(struct config_elements * config, const char * usernam
           json_array_append_new(j_return, json_pack("{ss}", "media", "media must be a JSON array"));
         } else if (json_object_get(j_playlist, "media") != NULL) {
           json_array_foreach(json_object_get(j_playlist, "media"), index, j_element) {
-            if (!is_valid_path_element_parameter(config, j_element, username, is_admin) && !is_valid_category_element_parameter(config, j_element, username, is_admin)) {
+            if (!is_valid_path_element_parameter(config, j_element, username, is_admin) && !is_valid_category_element_parameter(config, j_element, username, is_admin) && !is_valid_playlist_element_parameter(config, j_element, username)) {
               json_array_append_new(j_return, json_pack("{ss}", "media", "media is not a valid object or does not exist"));
             }
           }

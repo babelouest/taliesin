@@ -5,6 +5,7 @@ import StateStore from '../lib/StateStore';
 import ModalConfirm from '../Modal/ModalConfirm';
 import ModalEditPlaylist from '../Modal/ModalEditPlaylist';
 import ModalEditStream from '../Modal/ModalEditStream';
+import i18n from '../lib/i18n';
 
 class BrowsePlaylist extends Component {	
   constructor(props) {
@@ -12,6 +13,7 @@ class BrowsePlaylist extends Component {
 		
 		this.state = {
 			playlist: StateStore.getState().playlists,
+			streamList: StateStore.getState().streamList,
 			curPlaylist: {},
 			isAdmin: StateStore.getState().profile.isAdmin,
 			shownPlaylist: {},
@@ -34,6 +36,8 @@ class BrowsePlaylist extends Component {
 			var reduxState = StateStore.getState();
 			if (reduxState.lastAction === "setPlaylists" || reduxState.lastAction === "setPlaylist") {
         this.setState({playlist: reduxState.playlists});
+			} else if (reduxState.lastAction === "setStreamList" || reduxState.lastAction === "setStream") {
+        this.setState({streamList: reduxState.streamList});
 			}
 		});
 
@@ -137,7 +141,7 @@ class BrowsePlaylist extends Component {
 			})
 			.fail(() => {
 				StateStore.getState().NotificationManager.addNotification({
-					message: 'Error getting playlist',
+					message: i18n.t("playlist.message_error_getting_playlist"),
 					level: 'error'
 				});
 			});
@@ -187,13 +191,13 @@ class BrowsePlaylist extends Component {
         StateStore.dispatch({type: "setPlaylists", playlists: list});
         this.setState({playlist: list, curPlaylist: false});
         StateStore.getState().NotificationManager.addNotification({
-          message: 'Playlist added',
+          message: i18n.t("playlist.message_playlist_added"),
           level: 'info'
         });
       })
       .fail(() => {
         StateStore.getState().NotificationManager.addNotification({
-          message: 'Error adding playlist',
+          message: i18n.t("playlist.message_error_adding_playlist"),
           level: 'error'
         });
       });
@@ -242,7 +246,7 @@ class BrowsePlaylist extends Component {
 			})
 			.fail(() => {
 				StateStore.getState().NotificationManager.addNotification({
-					message: 'Error delete stream',
+					message: i18n.t("common.message_error_delete_stream"),
 					level: 'error'
 				});
 			});
@@ -259,13 +263,13 @@ class BrowsePlaylist extends Component {
       StateStore.dispatch({type: "setStreamList", streamList: streamList});
       StateStore.dispatch({type: "loadStreamAndPlay", stream: result, index: 0});
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Play new stream',
+				message: i18n.t("common.message_play_stream_ok"),
 				level: 'info'
 			});
     })
     .fail(() => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Error Play',
+				message: i18n.t("common.message_error_play"),
 				level: 'error'
 			});
     });
@@ -291,7 +295,7 @@ class BrowsePlaylist extends Component {
 			})
 			.fail(() => {
 				StateStore.getState().NotificationManager.addNotification({
-					message: 'Error Play stream',
+					message: i18n.t("common.message_error_play_stream"),
 					level: 'error'
 				});
 			});
@@ -318,13 +322,13 @@ class BrowsePlaylist extends Component {
         StateStore.dispatch({type: "setPlaylists", playlists: list});
         this.setState({playlist: list, curPlaylist: false});
         StateStore.getState().NotificationManager.addNotification({
-          message: 'Playlist updated',
+          message: i18n.t("playlist.message_playlist_updated"),
           level: 'info'
         });
       })
       .fail(() => {
         StateStore.getState().NotificationManager.addNotification({
-          message: 'Error updating playlist',
+          message: i18n.t("playlist.message_error_updating_playlist"),
           level: 'error'
         });
       });
@@ -333,7 +337,7 @@ class BrowsePlaylist extends Component {
 	
 	deletePlaylist(playlist) {
 		if (this._ismounted) {
-			this.setState({modalDeleteShow: true, modalDeleteMessage: "Are you sure you want to delete the playlist '" + playlist.name + "'?", curPlaylist: playlist});
+			this.setState({modalDeleteShow: true, modalDeleteMessage: i18n.t("playlist.message_confirm_delete", {playlist: playlist.name}), curPlaylist: playlist});
 		}
 	}
 	
@@ -346,13 +350,13 @@ class BrowsePlaylist extends Component {
         StateStore.dispatch({type: "setPlaylists", playlists: list});
         this.setState({modalDeleteShow: false, playlist: list, curPlaylist: false});
         StateStore.getState().NotificationManager.addNotification({
-          message: 'Playlist deleted',
+          message: i18n.t("playlist.message_playlist_deleted"),
           level: 'info'
         });
       })
       .fail(() => {
         StateStore.getState().NotificationManager.addNotification({
-          message: 'Error delete playlist',
+          message: i18n.t("playlist.message_error_delete_playlist"),
           level: 'error'
         });
       });
@@ -369,13 +373,13 @@ class BrowsePlaylist extends Component {
 					StateStore.dispatch({type: "setStreamList", streamList: streamList});
 					StateStore.dispatch({type: "loadStream", stream: result});
 					StateStore.getState().NotificationManager.addNotification({
-						message: 'Play new stream',
+						message: i18n.t("playlist.message_play_playlist_ok"),
 						level: 'info'
 					});
 				})
 				.fail(() => {
 					StateStore.getState().NotificationManager.addNotification({
-						message: 'Error Play stream',
+						message: i18n.t("playlists.message_error_play_playlist"),
 						level: 'error'
 					});
 				});
@@ -394,7 +398,7 @@ class BrowsePlaylist extends Component {
 			})
 			.fail(() => {
 				StateStore.getState().NotificationManager.addNotification({
-					message: 'Error deleting media',
+					message: i18n.t("common.message_error_delete_media"),
 					level: 'error'
 				});
 			});
@@ -406,7 +410,7 @@ class BrowsePlaylist extends Component {
 		.then((result) => {
 			StateStore.dispatch({type: "setPlaylists", playlists: result});
       StateStore.getState().NotificationManager.addNotification({
-        message: 'Plylists refreshed',
+        message: i18n.t("playlist.message_playlists_refreshed"),
         level: 'info'
       });
 			this.getCovers();
@@ -414,17 +418,73 @@ class BrowsePlaylist extends Component {
 		.fail((result) => {
 			StateStore.dispatch({type: "setPlaylists", playlists: []});
       StateStore.getState().NotificationManager.addNotification({
-        message: 'Error refreshing playlists',
+        message: i18n.t("playlist.message_error_refreshing_playlists"),
         level: 'error'
       });
 		});
+	}
+	
+	addToStream(stream, playlist) {
+		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(stream) + "/manage", {command: "append_list", parameters: [{playlist: playlist}]})
+    .then((result) => {
+      StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(stream) + "/manage", {command: "info"})
+      .then((streamInfo) => {
+        StateStore.dispatch({type: "setStream", stream: streamInfo});
+        StateStore.getState().NotificationManager.addNotification({
+          message: i18n.t("common.message_adding_stream_ok"),
+          level: 'info'
+        });
+      });
+    })
+    .fail(() => {
+			StateStore.getState().NotificationManager.addNotification({
+				message: i18n.t("common.message_error_adding_stream"),
+				level: 'error'
+			});
+    });
+	}
+	
+	addToPlaylist(playlist, curPlaylist) {
+		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/playlist/" + encodeURIComponent(playlist) + "/add_media", [{playlist: curPlaylist}])
+    .then((result) => {
+      StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(playlist))
+      .then((newPlaylist) => {
+        StateStore.dispatch({type: "setPlaylist", playlist: newPlaylist});
+        StateStore.getState().NotificationManager.addNotification({
+          message: i18n.t("common.message_adding_stream_ok"),
+          level: 'info'
+        });
+      });
+    })
+    .fail(() => {
+			StateStore.getState().NotificationManager.addNotification({
+				message: i18n.t("common.message_error_adding_stream"),
+				level: 'error'
+			});
+    });
 	}
 	
   render() {
     if (!this.state.showPlaylist) {
       var displayList = [];
       this.state.playlist.forEach((aPlaylist, index) => {
-        var cover;
+        var cover, streamList = [], playlist = [];
+				this.state.streamList.forEach((stream, index) => {
+					streamList.push(
+						<MenuItem key={index} onClick={() => this.addToStream(stream.name, aPlaylist.name)}>
+							- {stream.display_name||i18n.t("common.no_name")}
+						</MenuItem>
+					);
+				});
+				this.state.playlist.forEach((pl, index) => {
+					if (pl.name !== aPlaylist.name) {
+						playlist.push(
+							<MenuItem key={index+1} onClick={() => this.addToPlaylist(pl.name, aPlaylist.name)}>
+								- {pl.name}
+							</MenuItem>
+						);
+					}
+				});
         if (aPlaylist.cover) {
           cover = <Image src={"data:image/jpeg;base64," + aPlaylist.cover} responsive style={{maxWidth: "100px", maxHeight: "100px"}}/>
         }
@@ -447,17 +507,30 @@ class BrowsePlaylist extends Component {
             </td>
             <td className="text-center">
               <ButtonGroup className="hidden-xs">
-                <Button title="Play now" onClick={() => {this.playNow(aPlaylist)}}>
+                <Button title={i18n.t("common.play_now")} onClick={() => {this.playNow(aPlaylist)}}>
                   <FontAwesome name={"play"} />
                 </Button>
-                <Button title="Create stream" onClick={() => {this.playAdvanced(aPlaylist)}}>
+                <Button title={i18n.t("common.create_stream")} onClick={() => {this.playAdvanced(aPlaylist)}}>
                   <FontAwesome name={"play"} />&nbsp;
                   <FontAwesome name={"cog"} />
                 </Button>
-                <Button title="Edit" onClick={() => this.editPlaylist(aPlaylist)} disabled={!this.canUpdate(aPlaylist)}>
+                <Button title={i18n.t("common.edit")} onClick={() => this.editPlaylist(aPlaylist)} disabled={!this.canUpdate(aPlaylist)}>
                   <FontAwesome name={"pencil"} />
                 </Button>
-                <Button title="Delete" onClick={() => this.deletePlaylist(aPlaylist)} disabled={!this.canUpdate(aPlaylist)}>
+								<DropdownButton id={"add-playlist"} pullRight title={
+									<span><i className="fa fa-plus"></i></span>
+								}>
+									<MenuItem>
+										{i18n.t("common.add_to_stream")}
+									</MenuItem>
+									{streamList}
+									<MenuItem divider />
+									<MenuItem>
+										{i18n.t("common.add_to_playlist")}
+									</MenuItem>
+									{playlist}
+								</DropdownButton>
+                <Button title={i18n.t("common.delete")} onClick={() => this.deletePlaylist(aPlaylist)} disabled={!this.canUpdate(aPlaylist)}>
                   <FontAwesome name={"trash"} />
                 </Button>
               </ButtonGroup>
@@ -466,21 +539,32 @@ class BrowsePlaylist extends Component {
               }>
                 <MenuItem onClick={() => {this.playNow(aPlaylist)}}>
                   <FontAwesome name={"play"} />&nbsp;
-                  Play now
+                  {i18n.t("common.play_now")}
                 </MenuItem>
                 <MenuItem divider />
                 <MenuItem onClick={() => {this.playAdvanced(aPlaylist)}}>
                   <FontAwesome name={"play"} />
                   <FontAwesome name={"cog"} />&nbsp;
-                  Create stream
+                  {i18n.t("common.create_stream")}
                 </MenuItem>
                 <MenuItem onClick={() => this.editPlaylist(aPlaylist)} disabled={!this.canUpdate(aPlaylist)}>
                   <FontAwesome name={"pencil"} />&nbsp;
-                  Edit
+                  {i18n.t("common.edit")}
                 </MenuItem>
+								<MenuItem>
+									<FontAwesome name={"plus"} />&nbsp;
+									{i18n.t("common.add_to_stream")}
+								</MenuItem>
+								{streamList}
+								<MenuItem divider />
+								<MenuItem>
+									<FontAwesome name={"plus"} />&nbsp;
+									{i18n.t("common.add_to_playlist")}
+								</MenuItem>
+								{playlist}
                 <MenuItem onClick={() => this.deletePlaylist(aPlaylist)} disabled={!this.canUpdate(aPlaylist)}>
                   <FontAwesome name={"trash"} />&nbsp;
-                  Delete
+                  {i18n.t("common.delete")}
                 </MenuItem>
               </DropdownButton>
             </td>
@@ -490,10 +574,10 @@ class BrowsePlaylist extends Component {
       return (
         <div>
 					<ButtonGroup>
-						<Button title="Add a new playlist" onClick={() => this.addPlaylist()}>
+						<Button title={i18n.t("playlist.add_playlist")} onClick={() => this.addPlaylist()}>
 							<FontAwesome name={"plus"} />
 						</Button>
-						<Button title="Refresh list" onClick={() => this.refreshPlaylists()}>
+						<Button title={i18n.t("playlist.refresh_list")} onClick={() => this.refreshPlaylists()}>
 							<FontAwesome name={"refresh"} />
 						</Button>
 					</ButtonGroup>
@@ -501,19 +585,19 @@ class BrowsePlaylist extends Component {
             <thead>
               <tr>
                 <th>
-                  Icon
+                  {i18n.t("common.icon")}
                 </th>
                 <th>
-                  Name
+                  {i18n.t("common.name")}
                 </th>
                 <th className="hidden-xs">
-                  Description
+                  {i18n.t("common.description")}
                 </th>
                 <th className="hidden-xs">
-                  Elements
+                  {i18n.t("common.elements")}
                 </th>
                 <th>
-                  Scope
+                  {i18n.t("common.scope")}
                 </th>
                 <th>
                 </th>
@@ -523,7 +607,7 @@ class BrowsePlaylist extends Component {
               {displayList}
             </tbody>
           </Table>
-          <ModalConfirm show={this.state.modalDeleteShow} title={"Delete playlist"} message={this.state.modalDeleteMessage} onCloseCb={this.onDeletePlaylist}/>
+          <ModalConfirm show={this.state.modalDeleteShow} title={i18n.t("playlist.delete_playlist")} message={this.state.modalDeleteMessage} onCloseCb={this.onDeletePlaylist}/>
           <ModalEditPlaylist show={this.state.addPlaylistShow} onCloseCb={this.onSavePlaylist} add={this.state.add} playlist={this.state.curPlaylist} />
           <ModalEditStream 
             show={this.state.editStreamShow} 
@@ -552,7 +636,7 @@ class BrowsePlaylist extends Component {
             </td>
             <td>
               <ButtonGroup>
-                <Button title="Delete element" onClick={() => this.deleteMedia(media)}>
+                <Button title={i18n.t("playlist.delete_element")} onClick={() => this.deleteMedia(media)}>
                   <FontAwesome name={"trash"} />
                 </Button>
               </ButtonGroup>
@@ -564,7 +648,7 @@ class BrowsePlaylist extends Component {
 				<div>
 					<Row>
 						<Col md={12} sm={12} xs={12}>
-							<Button title="Show all playlists" onClick={() => this.showList()}>
+							<Button title={i18n.t("playlist.show_all_playlists")} onClick={() => this.showList()}>
 								<FontAwesome name={"list"} />
 							</Button>
 						</Col>
@@ -573,13 +657,13 @@ class BrowsePlaylist extends Component {
 						<thead>
 							<tr>
 								<th>
-									Cover
+									{i18n.t("common.cover")}
 								</th>
 								<th>
-									Data Source
+									{i18n.t("common.data_source")}
 								</th>
 								<th>
-									Path
+									{i18n.t("common.path")}
 								</th>
 								<th>
 								</th>

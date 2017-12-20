@@ -5,6 +5,7 @@ import StateStore from '../lib/StateStore';
 import BrowsePlaylist from './BrowsePlaylist';
 import ManageStream from './ManageStream';
 import ElementPathIcon from './ElementPathIcon';
+import i18n from '../lib/i18n';
 
 class Dashboard extends Component {	
   constructor(props) {
@@ -125,18 +126,18 @@ class Dashboard extends Component {
 			}
 			return (
 				<div>
-					<h2>Taliesin Streaming server</h2>
+					<h2>{i18n.t("dashboard.title")}</h2>
 					<PanelGroup>
-						<Panel collapsible header="Streams" eventKey="1" defaultExpanded={true}>
+						<Panel collapsible header={i18n.t("dashboard.streams")} eventKey="1" defaultExpanded={true}>
 							<ManageStream />
 						</Panel>
-						<Panel collapsible header="Playlists" eventKey="2">
+						<Panel collapsible header={i18n.t("dashboard.playlists")} eventKey="2">
 							<BrowsePlaylist />
 						</Panel>
-						<Panel collapsible header="Albums recently added" eventKey="3" onSelect={this.handleSelectRecentMedia}>
+						<Panel collapsible header={i18n.t("dashboard.recent")} eventKey="3" onSelect={this.handleSelectRecentMedia}>
 							<Row>
 								<Col md={2} sm={2} xs={2}>
-									<Button title="Refresh" onClick={this.loadRecent}>
+									<Button title={i18n.t("dashboard.refresh")} onClick={this.loadRecent}>
 										<FontAwesome name={"refresh"} />
 									</Button>
 								</Col>
@@ -146,10 +147,10 @@ class Dashboard extends Component {
 								{this.state.recent}
 							</Row>
 						</Panel>
-						<Panel collapsible header="Random albums" eventKey="4" onSelect={this.handleSelectRandomMedia}>
+						<Panel collapsible header={i18n.t("dashboard.random")} eventKey="4" onSelect={this.handleSelectRandomMedia}>
 							<Row>
 								<Col md={2} sm={2} xs={2}>
-									<Button title="Refresh" onClick={this.loadRandom}>
+									<Button title={i18n.t("dashboard.refresh")} onClick={this.loadRandom}>
 										<FontAwesome name={"refresh"} />
 									</Button>
 								</Col>
@@ -165,8 +166,8 @@ class Dashboard extends Component {
 		} else {
 			return (
 				<div>
-					<h2>Taliesin Streaming server</h2>
-					<h3>Please connect to the application</h3>
+					<h2>{i18n.t("dashboard.title")}</h2>
+					<h3>{i18n.t("dashboard.connect_message")}</h3>
 				</div>
 			);
 		}

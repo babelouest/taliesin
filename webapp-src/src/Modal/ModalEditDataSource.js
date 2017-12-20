@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Button, Modal, FormControl, FormGroup, Row, Col, Label } from 'react-bootstrap';
 import StateStore from '../lib/StateStore';
+import i18n from '../lib/i18n';
 
 class ModalEditDataSource extends Component {
   constructor(props) {
@@ -90,7 +91,7 @@ class ModalEditDataSource extends Component {
 	}
 	
   render() {
-		var title = this.state.add?"Add a new Data Source":"Edit Data Source '"+this.state.dataSource.name+"'", path = "";
+		var title = this.state.add?i18n.t("modal.title_add_data_source"):i18n.t("modal.title_edit_data_source", {data_source: this.state.dataSource.name}), path = "";
 		var scopeInput = <span>{this.state.dataSource.scope==="me"?"Me":"All"}</span>;
 		if (StateStore.getState().profile.isAdmin && this.state.add) {
 			scopeInput =
@@ -99,10 +100,10 @@ class ModalEditDataSource extends Component {
 					onChange={this.handleChangeScope}
 					disabled={!this.state.add}
 					componentClass="select"
-					placeholder="select"
+					placeholder={i18n.t("common.select")}
 				>
-					<option value={"me"}>Me</option>
-					<option value={"all"}>All</option>
+					<option value={"me"}>{i18n.t("common.scope_me")}</option>
+					<option value={"all"}>{i18n.t("common.scope_all")}</option>
 				</FormControl>;
 		}
 		if (this.state.add) {
@@ -115,13 +116,13 @@ class ModalEditDataSource extends Component {
 					</Row>
 					<Row>
 						<Col md={4}>
-							<Label>Path on server</Label>
+							<Label>{i18n.t("modal.path_on_server")}</Label>
 						</Col>
 						<Col md={8}>
 							<FormControl
 								type="text"
 								value={this.state.dataSource.path}
-								placeholder="Enter a valid path"
+								placeholder={i18n.t("modal.enter_valid_path")}
 								onChange={this.handleChangePath}
 							/>
 						</Col>
@@ -142,13 +143,13 @@ class ModalEditDataSource extends Component {
 						>
 							<Row>
 								<Col md={4}>
-									<Label>Name</Label>
+									<Label>{i18n.t("common.name")}</Label>
 								</Col>
 								<Col md={8}>
 									<FormControl
 										type="text"
 										value={this.state.dataSource.name}
-										placeholder="Name"
+										placeholder={i18n.t("common.name")}
 										onChange={this.handleChangeName}
 										disabled={!this.state.add}
 									/>
@@ -162,13 +163,13 @@ class ModalEditDataSource extends Component {
 						</Row>
 						<Row>
 							<Col md={4}>
-								<Label>Description</Label>
+								<Label>{i18n.t("common.description")}</Label>
 							</Col>
 							<Col md={8}>
 								<FormControl
 									type="text"
 									value={this.state.dataSource.description}
-									placeholder="Description"
+									placeholder={i18n.t("common.description")}
 									onChange={this.handleChangeDescription}
 								/>
 							</Col>
@@ -180,7 +181,7 @@ class ModalEditDataSource extends Component {
 						</Row>
 						<Row>
 							<Col md={4}>
-								<Label>Scope</Label>
+								<Label>{i18n.t("common.scope")}</Label>
 							</Col>
 							<Col md={8}>
 								{scopeInput}

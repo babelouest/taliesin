@@ -5,6 +5,7 @@ import StateStore from '../lib/StateStore';
 import ModalEditStream from '../Modal/ModalEditStream';
 import ModalEditPlaylist from '../Modal/ModalEditPlaylist';
 import ModalEditCategory from '../Modal/ModalEditCategory';
+import i18n from '../lib/i18n';
 
 class ElementButtons extends Component {
   constructor(props) {
@@ -83,7 +84,7 @@ class ElementButtons extends Component {
 			})
 			.fail(() => {
 				StateStore.getState().NotificationManager.addNotification({
-					message: 'Error delete stream',
+					message: i18n.t("common.message_error_delete_stream"),
 					level: 'error'
 				});
 			});
@@ -112,13 +113,13 @@ class ElementButtons extends Component {
       StateStore.dispatch({type: "setStreamList", streamList: streamList});
       StateStore.dispatch({type: "loadStreamAndPlay", stream: result, index: 0});
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Play new stream',
+				message: i18n.t("common.message_play_stream_ok"),
 				level: 'info'
 			});
     })
     .fail(() => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Error Play',
+				message: i18n.t("common.message_error_play"),
 				level: 'error'
 			});
     });
@@ -148,7 +149,7 @@ class ElementButtons extends Component {
 			})
 			.fail(() => {
 				StateStore.getState().NotificationManager.addNotification({
-					message: 'Error Play stream',
+					message: i18n.t("common.message_error_play_stream"),
 					level: 'error'
 				});
 			});
@@ -169,14 +170,14 @@ class ElementButtons extends Component {
       .then((streamInfo) => {
         StateStore.dispatch({type: "setStream", stream: streamInfo});
         StateStore.getState().NotificationManager.addNotification({
-          message: 'Add to stream stream ok',
+          message: i18n.t("common.message_adding_stream_ok"),
           level: 'info'
         });
       });
     })
     .fail(() => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Error adding to stream',
+				message: i18n.t("common.message_error_adding_stream"),
 				level: 'error'
 			});
     });
@@ -195,14 +196,14 @@ class ElementButtons extends Component {
       .then((newPlaylist) => {
         StateStore.dispatch({type: "setPlaylist", playlist: newPlaylist});
         StateStore.getState().NotificationManager.addNotification({
-          message: 'Add to stream stream ok',
+          message: i18n.t("common.message_adding_stream_ok"),
           level: 'info'
         });
       });
     })
     .fail(() => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Error adding to stream',
+				message: i18n.t("common.message_error_adding_stream"),
 				level: 'error'
 			});
     });
@@ -229,13 +230,13 @@ class ElementButtons extends Component {
 					StateStore.dispatch({type: "setPlaylists", playlists: list});
 					this.setState({playlist: list, curPlaylist: false});
 					StateStore.getState().NotificationManager.addNotification({
-						message: 'Playlist added',
+						message: i18n.t("playlist.message_playlist_added"),
 						level: 'info'
 					});
 				})
 				.fail(() => {
 					StateStore.getState().NotificationManager.addNotification({
-						message: 'Error adding playlist',
+						message: i18n.t("playlist.message_error_adding_playlist"),
 						level: 'error'
 					});
 				});
@@ -247,13 +248,13 @@ class ElementButtons extends Component {
 		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/data_source/" + encodeURIComponent(this.state.dataSource) + "/refresh/" + encodeURI(this.state.path).replace(/#/g, "%23"))
 		.then((result) => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Folder refreshing',
+				message: i18n.t("common.message_folder_refreshing"),
 				level: 'info'
 			});
 		})
 		.fail(() => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Error refreshing folder',
+				message: i18n.t("common.message_error_refreshing_folder"),
 				level: 'error'
 			});
 		});
@@ -276,7 +277,7 @@ class ElementButtons extends Component {
 		this.state.streamList.forEach((stream, index) => {
 			streamList.push(
 				<MenuItem key={index} onClick={() => this.addToStream(stream.name)}>
-					- {stream.display_name||"no name"}
+					- {stream.display_name||i18n.t("common.no_name")}
 				</MenuItem>
 			);
 		});
@@ -289,35 +290,35 @@ class ElementButtons extends Component {
 		});
 		if (this.state.element.type === "folder" && (StateStore.getState().profile.isAdmin || StateStore.getState().profile.dataSource.scope === "me")) {
 			refreshButton = 
-				<Button title="Refresh folder" onClick={this.refreshFolder}>
+				<Button title={i18n.t("common.refresh_folder")} onClick={this.refreshFolder}>
 					<FontAwesome name={"refresh"} />
 				</Button>
 			refreshButtonMenu =
 				<MenuItem>
 					<FontAwesome name={"refresh"} />&nbsp;
-					Refresh folder
+					{i18n.t("common.refresh_folder")}
 				</MenuItem>
 		}
 		if (!this.state.path) {
 			modalCategory = 
 				<ModalEditCategory show={this.state.editCategoryShow} onCloseCb={this.onCloseCategory} dataSource={this.state.dataSource} category={this.state.subCategory||this.state.category} categoryValue={this.state.subCategoryValue||this.state.categoryValue} />;
 			categoryButton = 
-				<Button title="View category" onClick={this.viewCategory}>
+				<Button title={i18n.t("common.view_category")} onClick={this.viewCategory}>
 					<FontAwesome name={"eye"} />
 				</Button>
 			categoryButtonMenu =
 				<MenuItem>
 					<FontAwesome name={"eye"} />&nbsp;
-					View category
+					{i18n.t("common.view_category")}
 				</MenuItem>
 		}
     return (
 			<div>
 				<ButtonGroup className="hidden-xs">
-					<Button title="Play now" onClick={this.playElement}>
+					<Button title={i18n.t("common.play_now")} onClick={this.playElement}>
 						<FontAwesome name={"play"} />
 					</Button>
-					<Button title="Create stream" onClick={this.playElementAdvanced}>
+					<Button title={i18n.t("common.create_stream")} onClick={this.playElementAdvanced}>
 						<FontAwesome name={"play"} />&nbsp;
 						<FontAwesome name={"cog"} />
 					</Button>
@@ -327,12 +328,12 @@ class ElementButtons extends Component {
 						<span><i className="fa fa-plus"></i></span>
 					}>
 						<MenuItem>
-							Add to stream
+							{i18n.t("common.add_to_stream")}
 						</MenuItem>
 						{streamList}
 						<MenuItem divider />
 						<MenuItem>
-							Add to playlist
+							{i18n.t("common.add_to_playlist")}
 						</MenuItem>
 						{playlist}
 					</DropdownButton>
@@ -342,26 +343,26 @@ class ElementButtons extends Component {
 				}>
 					<MenuItem onClick={this.playElement}>
 						<FontAwesome name={"play"} />&nbsp;
-						Play now
+						{i18n.t("common.play_now")}
 					</MenuItem>
 					<MenuItem divider />
 					<MenuItem onClick={this.playElementAdvanced}>
 						<FontAwesome name={"play"} />
 						<FontAwesome name={"cog"} />&nbsp;
-						Create stream
+						{i18n.t("common.create_stream")}
 					</MenuItem>
 					{refreshButtonMenu}
 					{categoryButtonMenu}
 					<MenuItem divider />
 					<MenuItem>
 						<FontAwesome name={"plus"} />&nbsp;
-						Add to stream
+						{i18n.t("common.add_to_stream")}
 					</MenuItem>
 					{streamList}
 					<MenuItem divider />
 					<MenuItem>
 						<FontAwesome name={"plus"} />&nbsp;
-						Add to playlist
+						{i18n.t("common.add_to_playlist")}
 					</MenuItem>
 					{playlist}
 				</DropdownButton>

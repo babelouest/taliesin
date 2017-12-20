@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { DropdownButton, MenuItem } from 'react-bootstrap';
 import StateStore from '../lib/StateStore';
+import i18n from '../lib/i18n';
 
 class PlayerSelector extends Component {
   constructor(props) {
@@ -27,7 +28,7 @@ class PlayerSelector extends Component {
 	}
 	
   render() {
-		var playerList = [<MenuItem key={0} eventKey={0} onClick={() => this.handleSelectPlayer(false)} className={!this.state.player?"bg-success":""}>{"Local"}</MenuItem>], separator, manager;
+		var playerList = [<MenuItem key={0} eventKey={0} onClick={() => this.handleSelectPlayer(false)} className={!this.state.player?"bg-success":""}>{i18n.t("player.local")}</MenuItem>], separator, manager;
 		this.state.currentList.forEach((player, index) => {
 			if (player.enabled) {
 				playerList.push(
@@ -35,7 +36,7 @@ class PlayerSelector extends Component {
 				)
 			}
 		});
-    var playerName = "Local";
+    var playerName = i18n.t("player.local");
     if (this.state.player) {
       playerName = this.state.player;
       if (playerName.length > 10) {

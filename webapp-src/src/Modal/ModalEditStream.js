@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Button, Modal, Row, Col, Label, FormControl, ToggleButton, ToggleButtonGroup } from 'react-bootstrap';
 import StateStore from '../lib/StateStore';
+import i18n from '../lib/i18n';
 
 class ModalEditStream extends Component {
   constructor(props) {
@@ -151,7 +152,7 @@ class ModalEditStream extends Component {
 								<ToggleButton
 									value={this.state.recursive}
 									onChange={this.handleChangeRecursive}>
-										{this.state.recursive?"Recursive":"Non recursive"}
+										{this.state.recursive?i18n.t("modal.recursive"):i18n.t("modal.non_recursive")}
 								</ToggleButton>
 							</ToggleButtonGroup>
 						</Col>
@@ -168,7 +169,7 @@ class ModalEditStream extends Component {
 				<div>
 					<Row>
 						<Col md={4}>
-							<Label>Path</Label>
+							<Label>{i18n.t("common.path")}</Label>
 						</Col>
 						<Col md={8}>
 							{this.state.dataSource + " - " + this.state.path}
@@ -185,7 +186,7 @@ class ModalEditStream extends Component {
 				<div>
 					<Row>
 						<Col md={4}>
-							<Label>Playlist</Label>
+							<Label>{i18n.t("common.playlist")}</Label>
 						</Col>
 						<Col md={8}>
 							{this.state.playlist.name}
@@ -206,7 +207,7 @@ class ModalEditStream extends Component {
 				<div>
 					<Row>
 						<Col md={4}>
-							<Label>Category</Label>
+							<Label>{i18n.t("common.category")}</Label>
 						</Col>
 						<Col md={8}>
 							{categoryPath}
@@ -224,14 +225,14 @@ class ModalEditStream extends Component {
 			<div>
 				<Row>
 					<Col md={4}>
-						<Label>Random</Label>
+						<Label>{i18n.t("common.random")}</Label>
 					</Col>
 					<Col md={8}>
 						<ToggleButtonGroup type="checkbox">
 							<ToggleButton
 								value={this.state.random}
 								onChange={this.handleChangeRandom}>
-									{this.state.random?"Random":"Non random"}
+									{this.state.random?i18n.t("common.random"):i18n.t("common.non_random")}
 							</ToggleButton>
 						</ToggleButtonGroup>
 					</Col>
@@ -246,7 +247,7 @@ class ModalEditStream extends Component {
 		return (
 			<Modal show={this.state.show}>
 				<Modal.Header>
-					<Modal.Title>Create Stream</Modal.Title>
+					<Modal.Title>{i18n.t("modal.create_stream")}</Modal.Title>
 				</Modal.Header>
 				<Modal.Body>
 					<form onSubmit={(e) => {this.close(true, e)}}>
@@ -254,12 +255,12 @@ class ModalEditStream extends Component {
 						{recursive}
 						<Row>
 							<Col md={4}>
-								<Label>Play as</Label>
+								<Label>{i18n.t("modal.play_as")}</Label>
 							</Col>
 							<Col md={8}>
 								<FormControl componentClass="select" placeholder="select" value={this.state.type} onChange={this.handleChangeType}>
-									<option value="jukebox">Jukebox</option>
-									<option value="webradio">Webradio</option>
+									<option value="jukebox">{i18n.t("common.jukebox")}</option>
+									<option value="webradio">{i18n.t("common.webradio")}</option>
 								</FormControl>
 							</Col>
 						</Row>
@@ -271,54 +272,54 @@ class ModalEditStream extends Component {
 						{random}
 						<Row>
 							<Col md={4}>
-								<Label>Format</Label>
+								<Label>{i18n.t("common.format")}</Label>
 							</Col>
 							<Col md={8}>
-								<FormControl componentClass="select" placeholder="select" value={this.state.format} onChange={this.handleChangeFormat} disabled={this.state.formatDisabled}>
-									<option value="mp3">MP3</option>
-									<option value="vorbis">OGG/Vorbis</option>
-									<option value="flac">FLAC</option>
+								<FormControl componentClass="select" placeholder={i18n.t("common.select")} value={this.state.format} onChange={this.handleChangeFormat} disabled={this.state.formatDisabled}>
+									<option value="mp3">{i18n.t("common.format_mp3")}</option>
+									<option value="vorbis">{i18n.t("common.format_ogg")}</option>
+									<option value="flac">{i18n.t("common.format_flac")}</option>
 								</FormControl>
 							</Col>
 						</Row>
 						<Row>
 							<Col md={4}>
-								<Label>Channels</Label>
+								<Label>{i18n.t("common.channels")}</Label>
 							</Col>
 							<Col md={8}>
-								<FormControl componentClass="select" placeholder="select" value={this.state.channels} onChange={this.handleChangeChannels} disabled={this.state.channelsDisabled}>
-									<option value="1">Mono</option>
-									<option value="2">Stereo</option>
+								<FormControl componentClass="select" placeholder={i18n.t("common.select")} value={this.state.channels} onChange={this.handleChangeChannels} disabled={this.state.channelsDisabled}>
+									<option value="1">{i18n.t("common.channels_mono")}</option>
+									<option value="2">{i18n.t("common.channels_stereo")}</option>
 								</FormControl>
 							</Col>
 						</Row>
 						<Row>
 							<Col md={4}>
-								<Label>Bit rate</Label>
+								<Label>{i18n.t("common.bitrate")}</Label>
 							</Col>
 							<Col md={8}>
-								<FormControl componentClass="select" placeholder="select" value={this.state.bitrate} onChange={this.handleChangeBitrate} disabled={this.state.bitrateDisabled}>
-									<option value="32000">32 kbps</option>
-									<option value="96000">96 kbps</option>
-									<option value="128000">128 kbps</option>
-									<option value="192000">192 kbps</option>
-									<option value="256000">256 kbps</option>
-									<option value="320000">320 kbps</option>
+								<FormControl componentClass="select" placeholder={i18n.t("common.select")} value={this.state.bitrate} onChange={this.handleChangeBitrate} disabled={this.state.bitrateDisabled}>
+									<option value="32000">{i18n.t("common.bitrate_bps", {bps: 32})}</option>
+									<option value="96000">{i18n.t("common.bitrate_bps", {bps: 96})}</option>
+									<option value="128000">{i18n.t("common.bitrate_bps", {bps: 128})}</option>
+									<option value="192000">{i18n.t("common.bitrate_bps", {bps: 192})}</option>
+									<option value="256000">{i18n.t("common.bitrate_bps", {bps: 256})}</option>
+									<option value="320000">{i18n.t("common.bitrate_bps", {bps: 320})}</option>
 								</FormControl>
 							</Col>
 						</Row>
 						<Row>
 							<Col md={4}>
-								<Label>Sample rate</Label>
+								<Label>{i18n.t("common.sample_rate")}</Label>
 							</Col>
 							<Col md={8}>
-								<FormControl componentClass="select" placeholder="select" value={this.state.sampleRate} onChange={this.handleChangeSampleRate} disabled={this.state.sampleRateDisabled}>
-									<option value="8000">8 kHz</option>
-									<option value="11025">11 kHz</option>
-									<option value="22050">22 kHz</option>
-									<option value="32000">32 kHz</option>
-									<option value="44100">44.1 kHz</option>
-									<option value="48000">48 kHz</option>
+								<FormControl componentClass="select" placeholder={i18n.t("common.select")} value={this.state.sampleRate} onChange={this.handleChangeSampleRate} disabled={this.state.sampleRateDisabled}>
+									<option value="8000">{i18n.t("common.sample_rate_khz", {khz: 8})}</option>
+									<option value="11025">{i18n.t("common.sample_rate_khz", {khz: 11})}</option>
+									<option value="22050">{i18n.t("common.sample_rate_khz", {khz: 22})}</option>
+									<option value="32000">{i18n.t("common.sample_rate_khz", {khz: 32})}</option>
+									<option value="44100">{i18n.t("common.sample_rate_khz", {khz: 44.1})}</option>
+									<option value="48000">{i18n.t("common.sample_rate_khz", {khz: 48})}</option>
 								</FormControl>
 							</Col>
 						</Row>
@@ -329,14 +330,14 @@ class ModalEditStream extends Component {
 						</Row>
 						<Row>
 							<Col md={4}>
-								<Label>Play Now in selected player</Label>
+								<Label>{i18n.t("modal.play_now_current_player")}</Label>
 							</Col>
 							<Col md={8}>
 								<ToggleButtonGroup type="checkbox">
 									<ToggleButton
 										value={this.state.playNow}
 										onChange={this.handleChangePlayNow}>
-											{this.state.playNow?"Yes":"No"}
+											{this.state.playNow?i18n.t("common.yes"):i18n.t("common.no")}
 									</ToggleButton>
 								</ToggleButtonGroup>
 							</Col>

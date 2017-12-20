@@ -4,6 +4,7 @@ import BreadCrumbMenuCategory from './BreadCrumbMenuCategory';
 import ElementButtons from './ElementButtons';
 import StateStore from '../lib/StateStore';
 import ModalEditCategory from '../Modal/ModalEditCategory';
+import i18n from '../lib/i18n';
 
 class BrowseHeaderCategory extends Component {	
   constructor(props) {
@@ -87,7 +88,7 @@ class BrowseHeaderCategory extends Component {
 						<BreadCrumbMenuCategory dataSource={this.state.dataSource} category={this.state.category} categoryValue={this.state.categoryValue} subCategory={this.state.subCategory} subCategoryValue={this.state.subCategoryValue} />
           </Col>
           <Col md={3} sm={3} xs={3} className="text-right">
-						<a role="button" onClick={this.onOpenCategory} title="View category content">
+						<a role="button" onClick={this.onOpenCategory} title={i18n.t("browse.view_category_content")}>
 							<Image src={"data:image/jpeg;base64," + this.state.imgThumbBlob} thumbnail responsive />
 						</a>
           </Col>

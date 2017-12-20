@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import NotificationSystem from 'react-notification-system';
+import { I18n } from 'react-i18next';
+
 import TopMenu from './TopMenu/TopMenu';
 import MainScreen from './MainScreen/MainScreen';
 import FullScreen from './MainScreen/FullScreen';
@@ -15,10 +17,18 @@ class App extends Component {
 		return (
 			<div className="container-fluid">
 				<NotificationSystem ref="notificationSystem" />
-				<FullScreen />
-				<TopMenu/>
-				<MainScreen/>
-				<Footer/>
+				<I18n ns="translations">
+					{
+						(t, { i18n }) => (
+							<div>
+								<FullScreen />
+								<TopMenu/>
+								<MainScreen/>
+								<Footer/>
+							</div>
+						)
+					}
+				</I18n>
 			</div>
 		);
 	}

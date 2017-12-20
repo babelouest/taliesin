@@ -5,6 +5,7 @@ import StateStore from '../lib/StateStore';
 import ElementCategoryList from './ElementCategoryList';
 import ElementCategoryIcon from './ElementCategoryIcon';
 import CategoryButtons from './CategoryButtons';
+import i18n from '../lib/i18n';
 
 class BrowseCategory extends Component {
   constructor(props) {
@@ -121,13 +122,13 @@ class BrowseCategory extends Component {
 						<Col md={6} sm={4} xs={4} className="text-right">
 							<ButtonGroup>
 								<Button disabled={!this.state.offset} onClick={() => {this.navigate(-100)}}>
-									<span className="hidden-sm hidden-xs">Previous page</span>
+									<span className="hidden-sm hidden-xs">{i18n.t("common.previous_page")}</span>
 									<span className="visible-sm visible-xs">
 										<FontAwesome name="chevron-left" />
 									</span>
 								</Button>
 								<Button disabled={(this.state.offset + this.state.limit) >= currentList.length} onClick={() => {this.navigate(100)}}>
-									<span className="hidden-sm hidden-xs">Next page</span>
+									<span className="hidden-sm hidden-xs">{i18n.t("common.next_page")}</span>
 									<span className="visible-sm visible-xs">
 										<FontAwesome name="chevron-right" />
 									</span>
@@ -136,7 +137,7 @@ class BrowseCategory extends Component {
 						</Col>
 					</Row>
 					<Row style={{marginBottom: "10px"}}>
-						<input type="text" placeholder="Filter" value={this.filter} className="form-control" onChange={this.filterList}/>
+						<input type="text" placeholder={i18n.t("common.filter")} value={this.filter} className="form-control" onChange={this.filterList}/>
 					</Row>
 					<Row>
 					{currentList}
@@ -148,13 +149,13 @@ class BrowseCategory extends Component {
 						<Col md={6} sm={4} xs={4} className="text-right">
 							<ButtonGroup>
 								<Button disabled={!this.state.offset} onClick={() => {this.navigate(-100)}}>
-									<span className="hidden-sm hidden-xs">Previous page</span>
+									<span className="hidden-sm hidden-xs">{i18n.t("common.previous_page")}</span>
 									<span className="visible-sm visible-xs">
 										<FontAwesome name="chevron-left" />
 									</span>
 								</Button>
 								<Button disabled={(this.state.offset + this.state.limit) >= currentList.length} onClick={() => {this.navigate(100)}}>
-									<span className="hidden-sm hidden-xs">Next page</span>
+									<span className="hidden-sm hidden-xs">{i18n.t("common.next_page")}</span>
 									<span className="visible-sm visible-xs">
 										<FontAwesome name="chevron-right" />
 									</span>

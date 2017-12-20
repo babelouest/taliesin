@@ -4,6 +4,7 @@ import FontAwesome from 'react-fontawesome';
 import StateStore from '../lib/StateStore';
 import ElementPathIcon from './ElementPathIcon';
 import ElementPathList from './ElementPathList';
+import i18n from '../lib/i18n';
 
 class BrowseRecent extends Component {
   constructor(props) {
@@ -93,42 +94,42 @@ class BrowseRecent extends Component {
 					<span className="hidden-xs">Group by</span>
 					<ButtonToolbar className="hidden-xs">
 						<ToggleButtonGroup type="radio" name="groupBy" value={this.state.groupBy} onChange={this.handleChangeGroupBy}>
-							<ToggleButton value={0}>File</ToggleButton>
-							<ToggleButton value={1}>Folder</ToggleButton>
-							<ToggleButton value={2}>Artist</ToggleButton>
-							<ToggleButton value={3}>Album</ToggleButton>
-							<ToggleButton value={4}>Date</ToggleButton>
+							<ToggleButton value={0}>{i18n.t("common.file")}</ToggleButton>
+							<ToggleButton value={1}>{i18n.t("common.folder")}</ToggleButton>
+							<ToggleButton value={2}>{i18n.t("common.artist")}</ToggleButton>
+							<ToggleButton value={3}>{i18n.t("common.album")}</ToggleButton>
+							<ToggleButton value={4}>{i18n.t("common.date")}</ToggleButton>
 						</ToggleButtonGroup>
 					</ButtonToolbar>
 					<DropdownButton className="visible-xs" id={"grouypBy"} title={
 						<span>Group by</span>
 					}>
 						<MenuItem onClick={() => this.handleChangeGroupBy(0)} className={this.state.groupBy===0?"bg-success":""}>
-							File
+							{i18n.t("common.file")}
 						</MenuItem>
 						<MenuItem onClick={() => this.handleChangeGroupBy(1)} className={this.state.groupBy===1?"bg-success":""}>
-							Folder
+							{i18n.t("common.folder")}
 						</MenuItem>
 						<MenuItem onClick={() => this.handleChangeGroupBy(2)} className={this.state.groupBy===2?"bg-success":""}>
-							Artist
+							{i18n.t("common.artist")}
 						</MenuItem>
 						<MenuItem onClick={() => this.handleChangeGroupBy(3)} className={this.state.groupBy===3?"bg-success":""}>
-							Album
+							{i18n.t("common.album")}
 						</MenuItem>
 						<MenuItem onClick={() => this.handleChangeGroupBy(4)} className={this.state.groupBy===4?"bg-success":""}>
-							Date
+							{i18n.t("common.date")}
 						</MenuItem>
 					</DropdownButton>
 				</Col>
 				<Col md={6} sm={6} xs={6} className="text-right">
-					<span className="hidden-xs">Navigation - </span>page {(this.state.offset/100)+1}&nbsp;<br className="hidden-xs"/>
+					<span className="hidden-xs">{i18n.t("common.navigation")} - </span>{i18n.t("common.page", {page: ((this.state.offset/100)+1)})}&nbsp;<br className="hidden-xs"/>
 					<ButtonGroup>
 						<Button onClick={this.handleNavigationPrevious} disabled={!this.state.offset}>
-							<span className="hidden-xs">Previous page</span>
+							<span className="hidden-xs">{i18n.t("common.previous_page")}</span>
 							<FontAwesome name="chevron-left" className="visible-xs" />
 						</Button>
 						<Button onClick={this.handleNavigationNext}>
-							<span className="hidden-xs">Next page</span>
+							<span className="hidden-xs">{i18n.t("common.next_page")}</span>
 							<FontAwesome name="chevron-right" className="visible-xs" />
 						</Button>
 					</ButtonGroup>
@@ -164,7 +165,7 @@ class BrowseRecent extends Component {
 					<div>
 						{header}
 						<Row>
-							<input type="text" placeholder="Filter" value={this.filter} className="form-control" onChange={this.filterList}/>
+							<input type="text" placeholder={i18n.t("common.filter")} value={this.filter} className="form-control" onChange={this.filterList}/>
 						</Row>
 						{currentList}
 					</div>

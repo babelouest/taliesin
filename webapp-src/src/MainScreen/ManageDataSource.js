@@ -4,6 +4,7 @@ import FontAwesome from 'react-fontawesome';
 import StateStore from '../lib/StateStore';
 import ModalEditDataSource from '../Modal/ModalEditDataSource';
 import ModalConfirm from '../Modal/ModalConfirm';
+import i18n from '../lib/i18n';
 
 class ManageDataSource extends Component {	
   constructor(props) {
@@ -102,7 +103,7 @@ class ManageDataSource extends Component {
 				StateStore.getState().APIManager.taliesinApiRequest("POST", "/data_source/", dataSource)
 				.then(() => {
 					StateStore.getState().NotificationManager.addNotification({
-						message: 'Data Source added',
+						message: i18n.t("data_source.message_added_ok"),
 						level: 'info'
 					});
 					var dataSourceList = this.state.dataSourceList;
@@ -112,7 +113,7 @@ class ManageDataSource extends Component {
 				})
 				.fail((error) => {
 					StateStore.getState().NotificationManager.addNotification({
-						message: 'Data Source add error: ',
+						message: i18n.t("data_source.message_add_error"),
 						level: 'error'
 					});
 				});
@@ -120,7 +121,7 @@ class ManageDataSource extends Component {
 				StateStore.getState().APIManager.taliesinApiRequest("PUT", "/data_source/" + encodeURIComponent(dataSource.name), dataSource)
 				.then(() => {
 					StateStore.getState().NotificationManager.addNotification({
-						message: 'Data Source updated',
+						message: i18n.t("data_source.message_updated_ok"),
 						level: 'info'
 					});
 					var dataSourceList = this.state.dataSourceList;
@@ -134,7 +135,7 @@ class ManageDataSource extends Component {
 				})
 				.fail((error) => {
 					StateStore.getState().NotificationManager.addNotification({
-						message: 'Data Source update error',
+						message: i18n.t("data_source.message_update_error"),
 						level: 'error'
 					});
 				});
@@ -148,14 +149,14 @@ class ManageDataSource extends Component {
 		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/data_source/" + encodeURIComponent(dataSource.name) + "/refresh/")
 		.then(() => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Data Source refresh started',
+				message: i18n.t("data_source.message_refresh_started"),
 				level: 'info'
 			});
 			this.getRefreshStatus(dataSource);
 		})
 		.fail((error) => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Data Source refresh error',
+				message: i18n.t("data_source.message_refresh_error"),
 				level: 'error'
 			});
 		});
@@ -165,14 +166,14 @@ class ManageDataSource extends Component {
 		StateStore.getState().APIManager.taliesinApiRequest("DELETE", "/data_source/" + encodeURIComponent(dataSource.name) + "/refresh/")
 		.then(() => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Data Source refresh stopped',
+				message: i18n.t("data_source.message_refresh_stopped"),
 				level: 'info'
 			});
 			this.getRefreshStatus(dataSource);
 		})
 		.fail((error) => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Data Source refresh stop error',
+				message: i18n.t("data_source.message_refresh_stop_error"),
 				level: 'error'
 			});
 		});
@@ -182,7 +183,7 @@ class ManageDataSource extends Component {
 		StateStore.getState().APIManager.taliesinApiRequest("POST", "/data_source/" + encodeURIComponent(dataSource.name) + "/clean/")
 		.then(() => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Data Source cleaning started',
+				message: i18n.t("data_source.message_clean_started"),
 				level: 'info'
 			});
 			var refreshStatus = this.state.refreshStatus;
@@ -192,14 +193,14 @@ class ManageDataSource extends Component {
 		})
 		.fail((error) => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Data Source cleaning error',
+				message: i18n.t("data_source.message_clean_error"),
 				level: 'error'
 			});
 		});
 	}
 	
 	deleteDataSource(dataSource) {
-		this.setState({dataSourceToDelete: dataSource, modalDeleteShow: true, modalDeleteMessage: "Are you sure you want to delete the Data Source '" + dataSource.name + "'?"});
+		this.setState({dataSourceToDelete: dataSource, modalDeleteShow: true, modalDeleteMessage: i18n.t("data_source.message_confirm_delete", {data_source: dataSource.name})});
 	}
 	
 	confirmDeleteDataSource(result) {
@@ -208,7 +209,7 @@ class ManageDataSource extends Component {
 				StateStore.getState().APIManager.taliesinApiRequest("DELETE", "/data_source/" + encodeURIComponent(this.state.dataSourceToDelete.name))
 				.then(() => {
 					StateStore.getState().NotificationManager.addNotification({
-						message: 'Data Source deleted',
+						message: i18n.t("data_source.message_delete_ok"),
 						level: 'info'
 					});
 					var dataSourceList = this.state.dataSourceList;
@@ -225,7 +226,7 @@ class ManageDataSource extends Component {
 				})
 				.fail((error) => {
 					StateStore.getState().NotificationManager.addNotification({
-						message: 'Data Source delete error',
+						message: i18n.t("data_source.message_delete_error"),
 						level: 'error'
 					});
 				});
@@ -256,7 +257,7 @@ class ManageDataSource extends Component {
 					refresh = 
 					<div>
 						<FontAwesome name="spinner" spin />&nbsp;
-						<span>Preparing...</span>
+						<span>{i18n.t("data_source.refresh_prepare")}</span>
 					</div>;
 				} else if (this.state.refreshStatus[dataSource.name].status === "error") {
 					refresh = <FontAwesome name={"exclamation-circle"} />;
@@ -283,19 +284,19 @@ class ManageDataSource extends Component {
 					</td>
 					<td className="text-center">
             <ButtonGroup className="hidden-xs">
-              <Button title="Edit" onClick={() => this.editDataSource(dataSource)} disabled={!this.canUpdate(dataSource)}>
+              <Button title={i18n.t("common.edit")} onClick={() => this.editDataSource(dataSource)} disabled={!this.canUpdate(dataSource)}>
                 <FontAwesome name={"pencil"} />
               </Button>
-              <Button title="Refresh" onClick={() => this.refreshDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) !== "not running"}>
+              <Button title={i18n.t("data_source.refresh")} onClick={() => this.refreshDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) !== "not running"}>
                 <FontAwesome name={"refresh"} />
               </Button>
-              <Button title="Stop refresh" onClick={() => this.stopRefreshDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) === "not running"}>
+              <Button title={i18n.t("data_source.stop_refresh")} onClick={() => this.stopRefreshDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) === "not running"}>
                 <FontAwesome name={"stop"} />
               </Button>
-              <Button title="Clean" onClick={() => this.cleanDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) !== "not running"}>
+              <Button title={i18n.t("data_source.clean")} onClick={() => this.cleanDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) !== "not running"}>
                 <FontAwesome name={"eraser"} />
               </Button>
-              <Button title="Delete" onClick={() => this.deleteDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) !== "not running"}>
+              <Button title={i18n.t("common.delete")} onClick={() => this.deleteDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) !== "not running"}>
                 <FontAwesome name={"trash"} />
               </Button>
             </ButtonGroup>
@@ -304,23 +305,23 @@ class ManageDataSource extends Component {
 						}>
 							<MenuItem onClick={() => this.editDataSource(dataSource)} disabled={!this.canUpdate(dataSource)}>
 								<FontAwesome name={"pencil"} />&nbsp;
-								Edit
+								{i18n.t("common.edit")}
 							</MenuItem>
 							<MenuItem onClick={() => this.refreshDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) !== "not running"}>
 								<FontAwesome name={"refresh"} />&nbsp;
-								Refresh
+								{i18n.t("data_source.refresh")}
 							</MenuItem>
 							<MenuItem onClick={() => this.stopRefreshDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) === "not running"}>
 								<FontAwesome name={"stop"} />&nbsp;
-								Refresh
+								{i18n.t("data_source.stop_refresh")}
 							</MenuItem>
 							<MenuItem onClick={() => this.cleanDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) !== "not running"}>
 								<FontAwesome name={"eraser"} />&nbsp;
-								Clean
+								{i18n.t("data_source.clean")}
 							</MenuItem>
 							<MenuItem onClick={() => this.deleteDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) !== "not running"}>
 								<FontAwesome name={"trash"} />&nbsp;
-								Delete
+								{i18n.t("common.delete")}
 							</MenuItem>
 						</DropdownButton>
 					</td>
@@ -336,19 +337,19 @@ class ManageDataSource extends Component {
 					<thead>
 						<tr>
 							<th>
-								Name
+								{i18n.t("common.name")}
 							</th>
 							<th className="hidden-xs">
-								Description
+								{i18n.t("common.description")}
 							</th>
 							<th>
-								Scope
+								{i18n.t("common.scope")}
 							</th>
 							<th className="hidden-xs">
-								Last update
+								{i18n.t("data_source.last_refresh")}
 							</th>
 							<th>
-								Refresh status
+								{i18n.t("data_source.refresh_status")}
 							</th>
 							<th>
 							</th>

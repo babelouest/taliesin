@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import StateStore from '../lib/StateStore';
 import MediaInfo from './MediaInfo';
+import i18n from '../lib/i18n';
 
 class WebradioNext extends Component {
   constructor(props) {
@@ -49,7 +50,7 @@ class WebradioNext extends Component {
 	
   render() {
 		return (
-      <MediaInfo media={this.state.media} imgThumbBlob={this.state.imgThumbBlob} meta="Playing next" folded={this.state.folded} index={-1}/>
+      <MediaInfo media={this.state.media} imgThumbBlob={this.state.imgThumbBlob} meta={i18n.t("player.play_next")} folded={this.state.folded} index={-1}/>
 		);
   }
 }

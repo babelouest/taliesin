@@ -9,6 +9,7 @@ import MPDController from './MPDController';
 import WebradioNow from './WebradioNow'
 import WebradioNext from './WebradioNext'
 import JukeboxNow from './JukeboxNow'
+import i18n from '../lib/i18n';
 
 class Footer extends Component {
   constructor(props) {
@@ -108,13 +109,13 @@ class Footer extends Component {
 				middleButtons =
 					<Col md={2} sm={2} xs={2} className="text-center">
 						<ButtonGroup className="hidden-xs hidden-sm">
-							<Button title="Full-screen" onClick={ ()=> this.showFullScreen()}>
+							<Button title={i18n.t("player.full_screen")} onClick={ ()=> this.showFullScreen()}>
 								<FontAwesome name={"arrows-alt"} />
 							</Button>
-							<Button title="Extend" onClick={ ()=> this.setState({ folded: !this.state.folded, play: false })}>
+							<Button title={i18n.t("player.extend")} onClick={ ()=> this.setState({ folded: !this.state.folded, play: false })}>
 								<FontAwesome name={this.state.folded?"chevron-circle-up":"chevron-circle-down"} />
 							</Button>
-							<Button title="List media" onClick={ ()=> this.showMediaList()}>
+							<Button title={i18n.t("player.list_media")} onClick={ ()=> this.showMediaList()}>
 								<FontAwesome name={"list"} />
 							</Button>
 						</ButtonGroup>

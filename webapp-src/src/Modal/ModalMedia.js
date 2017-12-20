@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Modal, Row, Col, Image, Button, ButtonGroup, DropdownButton, MenuItem } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
 import StateStore from '../lib/StateStore';
+import i18n from '../lib/i18n';
 
 class ModalMedia extends Component {
   constructor(props) {
@@ -74,7 +75,7 @@ class ModalMedia extends Component {
 			})
 			.fail(() => {
 				StateStore.getState().NotificationManager.addNotification({
-					message: 'Error delete stream',
+					message: i18n.t("common.message_error_delete_stream"),
 					level: 'error'
 				});
 			});
@@ -91,14 +92,14 @@ class ModalMedia extends Component {
       StateStore.dispatch({type: "setStreamList", streamList: streamList});
       StateStore.dispatch({type: "loadStreamAndPlay", stream: result, index: 0});
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Play new stream',
+				message: i18n.t("common.message_play_stream_ok"),
 				level: 'info'
 			});
 			this.setState({show: false});
     })
     .fail(() => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Error Play',
+				message: i18n.t("common.message_error_play"),
 				level: 'error'
 			});
     });
@@ -163,14 +164,14 @@ class ModalMedia extends Component {
       .then((streamInfo) => {
         StateStore.dispatch({type: "setStream", stream: streamInfo});
         StateStore.getState().NotificationManager.addNotification({
-          message: 'Add to stream stream ok',
+          message: i18n.t("common.message_adding_stream_ok"),
           level: 'info'
         });
       });
     })
     .fail(() => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Error adding to stream',
+				message: i18n.t("common.message_error_adding_stream"),
 				level: 'error'
 			});
     });
@@ -183,14 +184,14 @@ class ModalMedia extends Component {
       .then((newPlaylist) => {
         StateStore.dispatch({type: "setPlaylist", playlist: newPlaylist});
         StateStore.getState().NotificationManager.addNotification({
-          message: 'Add to stream stream ok',
+          message: i18n.t("common.message_adding_stream_ok"),
           level: 'info'
         });
       });
     })
     .fail(() => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Error adding to stream',
+				message: i18n.t("common.message_error_adding_stream"),
 				level: 'error'
 			});
     });
@@ -217,13 +218,13 @@ class ModalMedia extends Component {
 					StateStore.dispatch({type: "setPlaylists", playlists: list});
 					this.setState({playlist: list, curPlaylist: false});
 					StateStore.getState().NotificationManager.addNotification({
-						message: 'Playlist added',
+						message: i18n.t("playlist.message_playlist_added"),
 						level: 'info'
 					});
 				})
 				.fail(() => {
 					StateStore.getState().NotificationManager.addNotification({
-						message: 'Error adding playlist',
+						message: i18n.t("playlist.message_error_adding_playlist"),
 						level: 'error'
 					});
 				});
@@ -232,13 +233,13 @@ class ModalMedia extends Component {
 	}
 	
   render() {
-		var metadata = [], mediaImage = "", separator = "", streamList = [], playlist = [<MenuItem key={0} onClick={() => this.addToNewPlaylist()}>New playlist</MenuItem>];
+		var metadata = [], mediaImage = "", separator = "", streamList = [], playlist = [<MenuItem key={0} onClick={() => this.addToNewPlaylist()}>{i18n.t("common.new_playlist")}</MenuItem>];
 		if (this.state.media) {
 			if (this.state.media.tags && this.state.media.tags.title) {
 				metadata.push(
 					<Row key={0}>
 						<Col xs={6}>
-							<label>Title</label>
+							<label>{i18n.t("common.title")}</label>
 						</Col>
 						<Col xs={6}>
 							<span>{this.state.media.tags.title}</span>
@@ -249,7 +250,7 @@ class ModalMedia extends Component {
 				metadata.push(
 					<Row key={1}>
 						<Col xs={6}>
-							<label>Artist</label>
+							<label>{i18n.t("common.artist")}</label>
 						</Col>
 						<Col xs={6}>
 							<span><a role="button" onClick={() => {this.handleSelectArtist(this.state.media.tags.artist)}}>{this.state.media.tags.artist}</a></span>
@@ -260,7 +261,7 @@ class ModalMedia extends Component {
 				metadata.push(
 					<Row key={2}>
 						<Col xs={6}>
-							<label>Album</label>
+							<label>{i18n.t("common.album")}</label>
 						</Col>
 						<Col xs={6}>
 							<span><a role="button" onClick={() => {this.handleSelectAlbum(this.state.media.tags.album)}}>{this.state.media.tags.album}</a></span>
@@ -271,7 +272,7 @@ class ModalMedia extends Component {
 				metadata.push(
 					<Row key={3}>
 						<Col xs={6}>
-							<label>Date</label>
+							<label>{i18n.t("common.date")}</label>
 						</Col>
 						<Col xs={6}>
 							<span><a role="button" onClick={() => {this.handleSelectYear(this.state.media.tags.date)}}>{this.state.media.tags.date}</a></span>
@@ -282,7 +283,7 @@ class ModalMedia extends Component {
 				metadata.push(
 					<Row key={4}>
 						<Col xs={6}>
-							<label>Genre</label>
+							<label>{i18n.t("common.genre")}</label>
 						</Col>
 						<Col xs={6}>
 							<span><a role="button" onClick={() => {this.handleSelectGenre(this.state.media.tags.genre)}}>{this.state.media.tags.genre}</a></span>
@@ -298,7 +299,7 @@ class ModalMedia extends Component {
       this.state.streamList.forEach((stream, index) => {
         streamList.push(
           <MenuItem key={index} onClick={() => this.addToStream(stream.name)}>
-            - {stream.display_name||"no name"}
+            - {stream.display_name||i18n.t("common.no_name")}
           </MenuItem>
         );
       });
@@ -314,19 +315,19 @@ class ModalMedia extends Component {
 						<Modal.Header closeButton>
 							<Modal.Title>
                 <ButtonGroup>
-                  <Button onClick={this.onPlayNow} className="btn" title="Play now">
+                  <Button onClick={this.onPlayNow} className="btn" title={i18n.t("common.play_now")}>
                     <FontAwesome name={"play"} />
                   </Button>
                   <DropdownButton id={"add"} title={
                     <span><i className="fa fa-plus"></i></span>
                   }>
                     <MenuItem>
-                      Add to stream
+                      {i18n.t("common.add_to_stream")}
                     </MenuItem>
                     {streamList}
                     <MenuItem divider />
                     <MenuItem>
-                      Add to playlist
+                      {i18n.t("common.add_to_playlist")}
                     </MenuItem>
                     {playlist}
                   </DropdownButton>
@@ -339,7 +340,7 @@ class ModalMedia extends Component {
 							{separator}
 							<Row>
 								<Col xs={6}>
-									<label>Data Source</label>
+									<label>{i18n.t("common.data_source")}</label>
 								</Col>
 								<Col xs={6}>
 									<span><a role="button" onClick={this.handleSelectDataSource}>{this.state.media.data_source}</a></span>
@@ -347,7 +348,7 @@ class ModalMedia extends Component {
 							</Row>
 							<Row>
 								<Col xs={6}>
-									<label>Name</label>
+									<label>{i18n.t("common.name")}</label>
 								</Col>
 								<Col xs={6}>
 									<span>{this.state.media.name}</span>
@@ -355,7 +356,7 @@ class ModalMedia extends Component {
 							</Row>
 							<Row>
 								<Col xs={6}>
-									<label>Path</label>
+									<label>{i18n.t("common.path")}</label>
 								</Col>
 								<Col xs={6}>
 									<span>{this.state.media.path}</span>
@@ -372,7 +373,7 @@ class ModalMedia extends Component {
 							<Row style={{marginTop: "10px"}}>
 								<Col xs={12} className="text-center">
 									<Button onClick={this.onCloseModal} className="btn btn-success">
-										Close
+										{i18n.t("common.close")}
 									</Button>
 								</Col>
 							</Row>

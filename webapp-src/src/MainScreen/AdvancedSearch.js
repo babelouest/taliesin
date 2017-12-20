@@ -5,6 +5,7 @@ import Datetime from 'react-datetime';
 import 'react-datetime/css/react-datetime.css';
 import StateStore from '../lib/StateStore';
 import ModalMedia from '../Modal/ModalMedia';
+import i18n from '../lib/i18n';
 
 class AdvancedSearch extends Component {
   constructor(props) {
@@ -152,26 +153,26 @@ class AdvancedSearch extends Component {
     var metricsList = [<option key="0" value="">Select new metrics</option>], addMetrics;
     if (!this.state.criteria.metrics.nb_play) {
       metricsList.push(
-        <option key="1" value="nb_play">Number of times played</option>
+        <option key="1" value="nb_play">{i18n.t("advanced_search.number_times_played")}</option>
       );
     }
     if (!this.state.criteria.metrics.played_at) {
       metricsList.push(
-        <option key="2" value="played_at">Date played</option>
+        <option key="2" value="played_at">{i18n.t("advanced_search.date_played")}</option>
       );
     }
     if (!this.state.criteria.metrics.last_seen) {
       metricsList.push(
-        <option key="3" value="last_seen">Date last seen</option>
+        <option key="3" value="last_seen">{i18n.t("advanced_search.date_last_seen")}</option>
       );
     }
     if (!this.state.criteria.metrics.last_updated) {
       metricsList.push(
-        <option key="4" value="last_updated">Date last updated</option>
+        <option key="4" value="last_updated">{i18n.t("advanced_search.date_last_updated")}</option>
       );
     }
     addMetrics = 
-    <FormControl componentClass="select" placeholder="select" onChange={(e) => this.handleSetMetrics(e)}>
+    <FormControl componentClass="select" placeholder={i18n.t("advanced_search.select")} onChange={(e) => this.handleSetMetrics(e)}>
     {metricsList}
     </FormControl>;
     this.setState({addMetrics: addMetrics});
@@ -312,17 +313,17 @@ class AdvancedSearch extends Component {
 						<ControlLabel>Key</ControlLabel>
 						<InputGroup>
 							<DropdownButton title={keyName||"Select key"} id="keyList" className="form-control">
-								<MenuItem onClick={() => this.handleSetTagKey(index, "title")}>Title</MenuItem>
-								<MenuItem onClick={() => this.handleSetTagKey(index, "artist")}>Artist</MenuItem>
-								<MenuItem onClick={() => this.handleSetTagKey(index, "album")}>Album</MenuItem>
-								<MenuItem onClick={() => this.handleSetTagKey(index, "date")}>Year</MenuItem>
-								<MenuItem onClick={() => this.handleSetTagKey(index, "genre")}>Genre</MenuItem>
+								<MenuItem onClick={() => this.handleSetTagKey(index, "title")}>{i18n.t("common.title")}</MenuItem>
+								<MenuItem onClick={() => this.handleSetTagKey(index, "artist")}>{i18n.t("common.artist")}</MenuItem>
+								<MenuItem onClick={() => this.handleSetTagKey(index, "album")}>{i18n.t("common.album")}</MenuItem>
+								<MenuItem onClick={() => this.handleSetTagKey(index, "date")}>{i18n.t("common.year")}</MenuItem>
+								<MenuItem onClick={() => this.handleSetTagKey(index, "genre")}>{i18n.t("common.genre")}</MenuItem>
 								<MenuItem divider />
 								<MenuItem>
 									<FormControl
 										type="text"
 										value={keyName}
-										placeholder="Tag key"
+										placeholder={i18n.t("advanced_search.tag_key")}
 										autoFocus
 										onChange={(e) => {this.handleChangeTagKey(index, e)}}
 									/>
@@ -331,30 +332,30 @@ class AdvancedSearch extends Component {
 						</InputGroup>
 					</Col>
 					<Col xs={4}>
-						<ControlLabel>Operator</ControlLabel>
-            <FormControl componentClass="select" placeholder="select" value={tag.operator} onChange={(e) => this.handleSetTagOperator(index, e)}>
-              <option value="contains">Contains</option>
-              <option value="equals">Equals</option>
-              <option value="different">Different</option>
-              <option value="lower">Lower</option>
-              <option value="higher">Higher</option>
-              <option value="empty">Empty</option>
+						<ControlLabel>{i18n.t("advanced_search.operator")}</ControlLabel>
+            <FormControl componentClass="select" placeholder={i18n.t("advanced_search.select")} value={tag.operator} onChange={(e) => this.handleSetTagOperator(index, e)}>
+              <option value="contains">{i18n.t("advanced_search.operator_contains")}</option>
+              <option value="equals">{i18n.t("advanced_search.operator_equals")}</option>
+              <option value="different">{i18n.t("advanced_search.operator_different")}</option>
+              <option value="lower">{i18n.t("advanced_search.operator_lower")}</option>
+              <option value="higher">{i18n.t("advanced_search.operator_higher")}</option>
+              <option value="empty">{i18n.t("advanced_search.operator_empty")}</option>
             </FormControl>
 					</Col>
 					<Col xs={4}>
-						<ControlLabel>Value</ControlLabel>
+						<ControlLabel>{i18n.t("advanced_search.value")}</ControlLabel>
 						<FormControl
 							type="text"
 							value={tag.name}
-							placeholder="Tag name"
+							placeholder={i18n.t("advanced_search.tag_name")}
 							onChange={(e) => {this.handleChangeTagValue(index, e)}}
 							disabled={tag.operator==="empty"}
 						/>
 					</Col>
 					<Col xs={2}>
-						<ControlLabel>Remove</ControlLabel>
+						<ControlLabel>{i18n.t("advanced_search.remove")}</ControlLabel>
 						<InputGroup>
-							<Button title="Remove" onClick={() => this.handleRemoveTag(index)}>
+							<Button title={i18n.t("advanced_search.remove")} onClick={() => this.handleRemoveTag(index)}>
 								<FontAwesome name="times"/>
 							</Button>
 						</InputGroup>
@@ -366,7 +367,7 @@ class AdvancedSearch extends Component {
       addMetrics = 
       <Row>
         <Col>
-          <ControlLabel>New metrics value</ControlLabel>
+          <ControlLabel>{i18n.t("advanced_search.new_metric_value")}</ControlLabel>
           {this.state.addMetrics}
         </Col>
       </Row>;
@@ -377,11 +378,11 @@ class AdvancedSearch extends Component {
       if (this.state.criteria.metrics.nb_play.operator === "between") {
         valueMax =
         <div>
-          <ControlLabel>Value max</ControlLabel>
+          <ControlLabel>{i18n.t("advanced_search.value_max")}</ControlLabel>
           <FormControl
             type="text"
             value={this.state.criteria.metrics.nb_play.value_max}
-            placeholder="Value"
+            placeholder={i18n.t("advanced_search.value")}
             onChange={(e) => {this.handleChangeMetricsValueMax("nb_play", e)}}
           />
         </div>
@@ -390,33 +391,34 @@ class AdvancedSearch extends Component {
         <Row key={0}>
           <Col xs={2}>
             <span className="label label-info">
-              Number of times played
+              {i18n.t("advanced_search.number_times_played")}
             </span>
           </Col>
           <Col xs={4}>
-						<ControlLabel>Operator</ControlLabel>
-            <FormControl componentClass="select" placeholder="select" value={this.state.criteria.metrics.nb_play.operator} onChange={(e) => this.handleSetMetricsOperator("nb_play", e)}>
-              <option value="equals">Equals</option>
-              <option value="different">Different</option>
-              <option value="lower">Lower</option>
-              <option value="higher">Higher</option>
-              <option value="between">Between</option>
+						<ControlLabel>{i18n.t("advanced_search.operator")}</ControlLabel>
+            <FormControl componentClass="select" placeholder={i18n.t("advanced_search.select")} value={this.state.criteria.metrics.nb_play.operator} onChange={(e) => this.handleSetMetricsOperator("nb_play", e)}>
+              <option value="contains">{i18n.t("advanced_search.operator_contains")}</option>
+              <option value="equals">{i18n.t("advanced_search.operator_equals")}</option>
+              <option value="different">{i18n.t("advanced_search.operator_different")}</option>
+              <option value="lower">{i18n.t("advanced_search.operator_lower")}</option>
+              <option value="higher">{i18n.t("advanced_search.operator_higher")}</option>
+              <option value="empty">{i18n.t("advanced_search.operator_empty")}</option>
             </FormControl>
           </Col>
           <Col xs={4}>
-						<ControlLabel>Value</ControlLabel>
+						<ControlLabel>{i18n.t("advanced_search.value")}</ControlLabel>
 						<FormControl
 							type="text"
 							value={this.state.criteria.metrics.nb_play.value}
-							placeholder="Value"
+							placeholder={i18n.t("advanced_search.value")}
 							onChange={(e) => {this.handleChangeMetricsValue("nb_play", e)}}
 						/>
             {valueMax}
           </Col>
           <Col xs={2}>
-						<ControlLabel>Remove</ControlLabel>
+						<ControlLabel>{i18n.t("advanced_search.remove")}</ControlLabel>
 						<InputGroup>
-							<Button title="Remove" onClick={() => this.handleRemoveMetrics("nb_play")}>
+							<Button title={i18n.t("advanced_search.remove")} onClick={() => this.handleRemoveMetrics("nb_play")}>
 								<FontAwesome name="times"/>
 							</Button>
 						</InputGroup>
@@ -437,28 +439,28 @@ class AdvancedSearch extends Component {
         <Row key={1}>
           <Col xs={2}>
             <span className="label label-info">
-              Played at
+              {i18n.t("advanced_search.played_at")}
             </span>
           </Col>
           <Col xs={4}>
-						<ControlLabel>Operator</ControlLabel>
-            <FormControl componentClass="select" placeholder="select" value={this.state.criteria.metrics.played_at.operator} onChange={(e) => this.handleSetMetricsOperator("played_at", e)}>
-              <option value="equals">On</option>
-              <option value="different">Not on</option>
-              <option value="lower">Before</option>
-              <option value="higher">After</option>
-              <option value="between">Between</option>
+						<ControlLabel>{i18n.t("advanced_search.operator")}</ControlLabel>
+            <FormControl componentClass="select" placeholder={i18n.t("advanced_search.select")} value={this.state.criteria.metrics.played_at.operator} onChange={(e) => this.handleSetMetricsOperator("played_at", e)}>
+              <option value="equals">{i18n.t("advanced_search.operator_on")}</option>
+              <option value="different">{i18n.t("advanced_search.operator_not_on")}</option>
+              <option value="lower">{i18n.t("advanced_search.operator_before")}</option>
+              <option value="higher">{i18n.t("advanced_search.operator_after")}</option>
+              <option value="between">{i18n.t("advanced_search.operator_between")}</option>
             </FormControl>
           </Col>
           <Col xs={4}>
-						<ControlLabel>Value</ControlLabel>
+						<ControlLabel>{i18n.t("advanced_search.value")}</ControlLabel>
             <Datetime value={this.state.criteria.metrics.played_at.value*1000} onChange={this.handleChangeMetricsPlayedAt}/>
             {valueMax}
           </Col>
           <Col xs={2}>
-						<ControlLabel>Remove</ControlLabel>
+						<ControlLabel>{i18n.t("advanced_search.remove")}</ControlLabel>
 						<InputGroup>
-							<Button title="Remove" onClick={() => this.handleRemoveMetrics("played_at")}>
+							<Button title={i18n.t("advanced_search.remove")} onClick={() => this.handleRemoveMetrics("played_at")}>
 								<FontAwesome name="times"/>
 							</Button>
 						</InputGroup>
@@ -471,7 +473,7 @@ class AdvancedSearch extends Component {
       if (this.state.criteria.metrics.last_seen.operator === "between") {
         valueMax =
         <div>
-          <ControlLabel>Value max</ControlLabel>
+          <ControlLabel>{i18n.t("advanced_search.value_max")}</ControlLabel>
           <Datetime value={this.state.criteria.metrics.last_seen.value_max*1000} onChange={this.handleChangeMetricsLastSeenMax}/>
         </div>
       }
@@ -479,17 +481,17 @@ class AdvancedSearch extends Component {
         <Row key={2}>
           <Col xs={2}>
             <span className="label label-info">
-              Last seen
+              {i18n.t("advanced_search.last_seen")}
             </span>
           </Col>
           <Col xs={4}>
-						<ControlLabel>Operator</ControlLabel>
-            <FormControl componentClass="select" placeholder="select" value={this.state.criteria.metrics.last_seen.operator} onChange={(e) => this.handleSetMetricsOperator("last_seen", e)}>
-              <option value="equals">On</option>
-              <option value="different">Not on</option>
-              <option value="lower">Before</option>
-              <option value="higher">After</option>
-              <option value="between">Between</option>
+						<ControlLabel>{i18n.t("advanced_search.operator")}</ControlLabel>
+            <FormControl componentClass="select" placeholder={i18n.t("advanced_search.select")} value={this.state.criteria.metrics.last_seen.operator} onChange={(e) => this.handleSetMetricsOperator("last_seen", e)}>
+              <option value="equals">{i18n.t("advanced_search.operator_on")}</option>
+              <option value="different">{i18n.t("advanced_search.operator_not_on")}</option>
+              <option value="lower">{i18n.t("advanced_search.operator_before")}</option>
+              <option value="higher">{i18n.t("advanced_search.operator_after")}</option>
+              <option value="between">{i18n.t("advanced_search.operator_between")}</option>
             </FormControl>
           </Col>
           <Col xs={4}>
@@ -498,9 +500,9 @@ class AdvancedSearch extends Component {
             {valueMax}
           </Col>
           <Col xs={2}>
-						<ControlLabel>Remove</ControlLabel>
+						<ControlLabel>{i18n.t("advanced_search.remove")}</ControlLabel>
 						<InputGroup>
-							<Button title="Remove" onClick={() => this.handleRemoveMetrics("last_seen")}>
+							<Button title={i18n.t("advanced_search.remove")} onClick={() => this.handleRemoveMetrics("last_seen")}>
 								<FontAwesome name="times"/>
 							</Button>
 						</InputGroup>
@@ -513,7 +515,7 @@ class AdvancedSearch extends Component {
       if (this.state.criteria.metrics.last_updated.operator === "between") {
         valueMax =
         <div>
-          <ControlLabel>Value max</ControlLabel>
+          <ControlLabel>{i18n.t("advanced_search.value_max")}</ControlLabel>
           <Datetime value={this.state.criteria.metrics.last_updated.value_max*1000} onChange={this.handleChangeMetricsLastUpdatedMax}/>
         </div>
       }
@@ -521,28 +523,28 @@ class AdvancedSearch extends Component {
         <Row key={3}>
           <Col xs={2}>
             <span className="label label-info">
-              Last Updated
+              {i18n.t("advanced_search.last_updated")}
             </span>
           </Col>
           <Col xs={4}>
-						<ControlLabel>Operator</ControlLabel>
-            <FormControl componentClass="select" placeholder="select" value={this.state.criteria.metrics.last_updated.operator} onChange={(e) => this.handleSetMetricsOperator("last_updated", e)}>
-              <option value="equals">On</option>
-              <option value="different">Not on</option>
-              <option value="lower">Before</option>
-              <option value="higher">After</option>
-              <option value="between">Between</option>
+						<ControlLabel>{i18n.t("advanced_search.operator")}</ControlLabel>
+            <FormControl componentClass="select" placeholder={i18n.t("advanced_search.select")} value={this.state.criteria.metrics.last_updated.operator} onChange={(e) => this.handleSetMetricsOperator("last_updated", e)}>
+              <option value="equals">{i18n.t("advanced_search.operator_on")}</option>
+              <option value="different">{i18n.t("advanced_search.operator_not_on")}</option>
+              <option value="lower">{i18n.t("advanced_search.operator_before")}</option>
+              <option value="higher">{i18n.t("advanced_search.operator_after")}</option>
+              <option value="between">{i18n.t("advanced_search.operator_between")}</option>
             </FormControl>
           </Col>
           <Col xs={4}>
-						<ControlLabel>Value</ControlLabel>
+						<ControlLabel>{i18n.t("advanced_search.value")}</ControlLabel>
 						<Datetime value={this.state.criteria.metrics.last_updated.value*1000} onChange={this.handleChangeMetricsLastUpdated}/>
             {valueMax}
           </Col>
           <Col xs={2}>
-						<ControlLabel>Remove</ControlLabel>
+						<ControlLabel>{i18n.t("advanced_search.remove")}</ControlLabel>
 						<InputGroup>
-							<Button title="Remove" onClick={() => this.handleRemoveMetrics("last_updated")}>
+							<Button title={i18n.t("advanced_search.remove")} onClick={() => this.handleRemoveMetrics("last_updated")}>
 								<FontAwesome name="times"/>
 							</Button>
 						</InputGroup>
@@ -583,7 +585,7 @@ class AdvancedSearch extends Component {
 		resultEmpty =
 			<tr>
 				<td colspan="4">
-					<strong>No result found</strong>
+					<strong>{i18n.t("advanced_search.no_result_found")}</strong>
 				</td>
 			</tr>;
 		if (!this.state.firstLoad) {
@@ -593,16 +595,16 @@ class AdvancedSearch extends Component {
 						<thead>
 							<tr>
 								<th>
-									Data Source
+									{i18n.t("common.data_source")}
 								</th>
 								<th>
-									Name
+									{i18n.t("common.name")}
 								</th>
 								<th>
-									Path
+									{i18n.t("common.path")}
 								</th>
 								<th>
-									Cover
+									{i18n.t("common.cover")}
 								</th>
 							</tr>
 						</thead>
@@ -613,7 +615,7 @@ class AdvancedSearch extends Component {
 			} else {
 				resultTable =
 					<div>
-						Searching... <FontAwesome name="spinner" spin />
+						{i18n.t("advanced_search.searching")} <FontAwesome name="spinner" spin />
 					</div>
 			}
 		}
@@ -624,32 +626,32 @@ class AdvancedSearch extends Component {
 						controlId="formBasicText"
 						validationState={this.getValidationState()}
 					>
-						<Panel collapsible header="Search query" onSelect={this.handleSelectPanel} expanded={this.state.searchPanel}>
+						<Panel collapsible header={i18n.t("advanced_search.search_query")} onSelect={this.handleSelectPanel} expanded={this.state.searchPanel}>
 							<Row>
-								<ControlLabel>Search query</ControlLabel>
+								<ControlLabel>{i18n.t("advanced_search.search_query")}</ControlLabel>
 								<FormControl
 									type="text"
 									value={this.state.criteria.query}
-									placeholder="Text to search"
+									placeholder={i18n.t("advanced_search.text_to_search")}
 									onChange={this.handleChangeQuery}
 								/>
 							</Row>
 							<Row>
-								<ControlLabel>Media type</ControlLabel>
-								<FormControl componentClass="select" placeholder="select" value={this.state.criteria.type} onChange={this.handleChangeType}>
-									<option value="">All</option>
-									<option value="audio">Audio</option>
-									<option value="video">Video</option>
-									<option value="image">Image</option>
-									<option value="subtitle">Subtitle</option>
-									<option value="unknown">Unknown</option>
+								<ControlLabel>{i18n.t("advanced_search.media_type")}</ControlLabel>
+								<FormControl componentClass="select" placeholder={i18n.t("advanced_search.select")} value={this.state.criteria.type} onChange={this.handleChangeType}>
+									<option value="">{i18n.t("advanced_search.type_all")}</option>
+									<option value="audio">{i18n.t("advanced_search.type_audio")}</option>
+									<option value="video">{i18n.t("advanced_search.type_video")}</option>
+									<option value="image">{i18n.t("advanced_search.type_image")}</option>
+									<option value="subtitle">{i18n.t("advanced_search.type_subtitle")}</option>
+									<option value="unknown">{i18n.t("advanced_search.type_unknown")}</option>
 								</FormControl>
 							</Row>
 							<Row>
 								<hr/>
 							</Row>
 							<Row>
-								<h3>Data source</h3>
+								<h3>{i18n.t("common.data_source")}</h3>
 							</Row>
 							<Row>
 								{dataSourceList}
@@ -658,7 +660,7 @@ class AdvancedSearch extends Component {
 								<hr/>
 							</Row>
 							<Row>
-								<h3>Tags</h3>
+								<h3>{i18n.t("common.tags")}</h3>
 							</Row>
 							<Row>
 								{tagList}
@@ -672,12 +674,12 @@ class AdvancedSearch extends Component {
 								<hr/>
 							</Row>
 							<Row>
-								<h3>Metrics</h3>
+								<h3>{i18n.t("advanced_search.metrics")}</h3>
 							</Row>
 							{metricsList}
 							{addMetrics}
 							<Row style={{paddingTop: "10px"}}>
-								<Button title="Add tag" onClick={this.handleAddMetrics}>
+								<Button title={i18n.t("advanced_search.add_tag")} onClick={this.handleAddMetrics}>
 									<FontAwesome name="plus" />
 								</Button>
 							</Row>
@@ -686,8 +688,8 @@ class AdvancedSearch extends Component {
 							</Row>
 						</Panel>
 						<Row>
-							<Button title="Search" onClick={this.runSearch}>
-								Search&nbsp;<FontAwesome name="search" />
+							<Button title={i18n.t("advanced_search.search")} onClick={this.runSearch}>
+								{i18n.t("advanced_search.search")} <FontAwesome name="search" />
 							</Button>
 						</Row>
 					</FormGroup>

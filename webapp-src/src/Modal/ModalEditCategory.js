@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Button, Modal, FormControl, Row, Col, Label, Image } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
 import StateStore from '../lib/StateStore';
+import i18n from '../lib/i18n';
 
 class ModalEditCategory extends Component {
   constructor(props) {
@@ -96,14 +97,14 @@ class ModalEditCategory extends Component {
 		.then(() => {
 			this.setState({categoryContent: this.state.categoryContentEdit, edit: false});
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Category saved',
+				message: i18n.t("modal.category_save_ok"),
 				level: 'info'
 			});
 		})
 		.fail(() => {
 			this.setState({categoryContent: {content: "", cover: false}, edit: false});
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Error saving category',
+				message: i18n.t("modal.cagegory_save_error"),
 				level: 'error'
 			});
 		});
@@ -136,7 +137,7 @@ class ModalEditCategory extends Component {
 					self.setState({categoryContent: categoryContent});
 				} else {
 					StateStore.getState().NotificationManager.addNotification({
-						message: 'File too large, must be at most ~10MB',
+						message: i18n.t("modal.file_toot_large"),
 						level: 'error'
 					});
 				}
@@ -144,7 +145,7 @@ class ModalEditCategory extends Component {
 			fr.readAsBinaryString(file);
 		} else {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'File error, only images allowed, must be at most ~10MB',
+				message: i18n.t("modal.file_error"),
 				level: 'error'
 			});
 		}
@@ -162,7 +163,7 @@ class ModalEditCategory extends Component {
           </Row>
           <Row>
             <Col md={4}>
-              <Label>Image</Label>
+              <Label>{i18n.t("common.image")}</Label>
             </Col>
             <Col md={8}>
               <Image src={"data:image/jpeg;base64," + (this.state.edit?this.state.categoryContentEdit.cover:this.state.categoryContent.cover)} responsive/>
@@ -180,12 +181,12 @@ class ModalEditCategory extends Component {
 					</Row>
 					<Row>
 						<Col md={4}>
-							<Label>Select image</Label>
+							<Label>{i18n.t("modal.select_image")}</Label>
 						</Col>
 						<Col md={8}>
 							<FormControl
 								type="file"
-								placeholder="Image file"
+								placeholder={i18n.t("modal.image_file")}
 								onChange={this.handleUploadIcon}
 							/>
 						</Col>
@@ -204,7 +205,7 @@ class ModalEditCategory extends Component {
 			<Modal show={this.state.show}>
 				<Modal.Header>
 					<Modal.Title>
-						<Button onClick={this.handleEdit} className="btn" title="Edit">
+						<Button onClick={this.handleEdit} className="btn" title={i18n.t("common.edit")}>
 							<FontAwesome name={"pencil"} />
 						</Button>&nbsp;
 						{this.state.category}: {this.state.categoryValue}
@@ -214,7 +215,7 @@ class ModalEditCategory extends Component {
 					<form onSubmit={(e) => {this.close(e)}}>
 						<Row>
 							<Col md={4}>
-								<Label>Content</Label>
+								<Label>{i18n.t("modal.content")}</Label>
 							</Col>
 							<Col md={8}>
 								{content}

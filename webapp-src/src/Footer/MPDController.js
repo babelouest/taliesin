@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { ButtonGroup, Button, DropdownButton, MenuItem } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
 import StateStore from '../lib/StateStore';
+import i18n from '../lib/i18n';
 
 class MPDController extends Component {
   constructor(props) {
@@ -241,7 +242,7 @@ class MPDController extends Component {
       StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/previous/")
       .then(() => {
 				StateStore.getState().NotificationManager.addNotification({
-					message: 'Previous song',
+					message: i18n.t("player.previous"),
 					level: 'success'
 				});
 				this.MPDStatus();
@@ -254,7 +255,7 @@ class MPDController extends Component {
 			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "skip"})
       .then((result) => {
 				StateStore.getState().NotificationManager.addNotification({
-					message: 'Next song',
+					message: i18n.t("player.next"),
 					level: 'success'
 				});
 				this.MPDStatus();
@@ -263,7 +264,7 @@ class MPDController extends Component {
       StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/next/")
       .then(() => {
 				StateStore.getState().NotificationManager.addNotification({
-					message: 'Next song',
+					message: i18n.t("player.next"),
 					level: 'success'
 				});
 				this.MPDStatus();
@@ -316,7 +317,7 @@ class MPDController extends Component {
 		StateStore.getState().APIManager.angharadApiRequest("PUT", url)
 		.then(() => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Play',
+				message: i18n.t("common.play"),
 				level: 'success'
 			});
 			this.MPDStatus();
@@ -357,12 +358,12 @@ class MPDController extends Component {
     var playButton, volume, switchButton, streamName;
     if (this.state.play) {
       playButton = 
-        <Button title="Play" onClick={this.handlePause}>
+        <Button title={i18n.t("common.play")} onClick={this.handlePause}>
 					<FontAwesome name={"pause"} />
         </Button>;
     } else {
       playButton = 
-        <Button title="Play" onClick={this.handlePlay}>
+        <Button title={i18n.t("common.play")} onClick={this.handlePlay}>
 					<FontAwesome name={"play"} />
         </Button>;
     }
@@ -373,7 +374,7 @@ class MPDController extends Component {
 		}
 		if (this.state.player.switch) {
 			switchButton = 
-				<Button title="Player switch" onClick={this.handlePlayerSwitch} className={(this.state.switchOn)?"btn-primary":""}>
+				<Button title={i18n.t("player.switch")} onClick={this.handlePlayerSwitch} className={(this.state.switchOn)?"btn-primary":""}>
 					<FontAwesome name={"power-off"} />
 				</Button>
 		}
@@ -381,45 +382,45 @@ class MPDController extends Component {
 			if (this.state.stream.display_name.startsWith("{") && this.state.stream.display_name.indexOf("} - ") !== -1) {
 				streamName = this.state.stream.display_name.substring(this.state.stream.display_name.indexOf("} - ") + 3);
 			} else {
-				streamName = (this.state.stream.display_name||"no name");
+				streamName = (this.state.stream.display_name||i18n.t("common.no_name"));
 			}
 		}
 		return (
       <div>
 				<div>
 					<ButtonGroup>
-						<Button title="Previous song" onClick={this.handlePrevious}>
+						<Button title={i18n.t("player.previous")} onClick={this.handlePrevious}>
 							<FontAwesome name={"fast-backward"} />
 						</Button>
-						<Button title="Stop" onClick={this.handleStop}>
+						<Button title={i18n.t("common.stop")} onClick={this.handleStop}>
 							<FontAwesome name={"stop"} />
 						</Button>
 						{playButton}
-						<Button title="Next song" onClick={this.handleNext}>
+						<Button title={i18n.t("player.next")} onClick={this.handleNext}>
 							<FontAwesome name={"fast-forward"} />
 						</Button>
 					</ButtonGroup>
 					&nbsp;
 					<ButtonGroup>
-						<Button title="Repeat list" onClick={this.handleRepeat} disabled={this.state.stream.webradio} className={(this.state.jukeboxRepeat&&!this.state.stream.webradio)?"btn-primary":""}>
+						<Button title={i18n.t("common.repeat")} onClick={this.handleRepeat} disabled={this.state.stream.webradio} className={(this.state.jukeboxRepeat&&!this.state.stream.webradio)?"btn-primary":""}>
 							<FontAwesome name={"repeat"} />
 						</Button>
-						<Button title="Random" onClick={this.handleRandom} disabled={this.state.stream.webradio} className={(this.state.jukeboxRandom&&!this.state.stream.webradio)?"btn-primary":""}>
+						<Button title={i18n.t("common.random")} onClick={this.handleRandom} disabled={this.state.stream.webradio} className={(this.state.jukeboxRandom&&!this.state.stream.webradio)?"btn-primary":""}>
 							<FontAwesome name={"random"} />
 						</Button>
 						<DropdownButton title={volume} id="dropdown-volume">
-              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(5)}}>+5%</MenuItem>
-              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(1)}}>+1%</MenuItem>
-              <MenuItem className="text-center">Current: {this.state.volume} %</MenuItem>
-              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-1)}}>-1%</MenuItem>
-              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-5)}}>-5%</MenuItem>
+              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(5)}}>{i18n.t("common.volume_plus_5")}</MenuItem>
+              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(1)}}>{i18n.t("common.volume_plus_1")}</MenuItem>
+              <MenuItem className="text-center">{i18n.t("common.volume_current")} {this.state.volume} %</MenuItem>
+              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-1)}}>{i18n.t("common.volume_minus_1")}</MenuItem>
+              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-5)}}>{i18n.t("common.volume_minus_5")}</MenuItem>
 						</DropdownButton>
 						{switchButton}
 					</ButtonGroup>
 				</div>
 				<div>
 					<label className="hidden-xs">
-						Current stream:&nbsp;
+						{i18n.t("player.current_stream")}&nbsp;
 					</label>
 					<span>
 						{streamName}

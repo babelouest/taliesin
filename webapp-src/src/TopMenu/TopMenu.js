@@ -5,6 +5,7 @@ import FontAwesome from 'react-fontawesome';
 import DataSourceList from './DataSourceList';
 import StateStore from '../lib/StateStore';
 import ModalMedia from '../Modal/ModalMedia';
+import i18n from '../lib/i18n';
 
 class TopMenu extends Component {
   constructor(props) {
@@ -42,6 +43,7 @@ class TopMenu extends Component {
 		this.openMedia = this.openMedia.bind(this);
 		this.closeMedia = this.closeMedia.bind(this);
 		this.closeSearch = this.closeSearch.bind(this);
+		this.handlechangeLanguage = this.handlechangeLanguage.bind(this);
 		
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
@@ -195,12 +197,16 @@ class TopMenu extends Component {
 	closeMedia() {
 		this.setState({modalShow: false});
 	}
+  
+  handlechangeLanguage(lang) {
+    i18n.changeLanguage(lang);
+  }
 	
 	render() {
 		if (StateStore.getState().status === "connected") {
 			var searchOverlay = 
 				<Popover id="searchResult">
-						Searching... <FontAwesome name="spinner" spin />
+						{i18n.t("topmenu.searching")} <FontAwesome name="spinner" spin />
 				</Popover>;
 			if (!this.state.searching) {
 				var playlistResult, streamResult, folderResult, mediaResult;
@@ -227,7 +233,7 @@ class TopMenu extends Component {
 						}
 					});
 					playlistResult = 
-					<Panel collapsible defaultExpanded header="Playlists">
+					<Panel collapsible defaultExpanded header={i18n.t("topmenu.search_result_playlist")}>
 						<ListGroup fill>
 							{playlistList}
 						</ListGroup>
@@ -249,7 +255,7 @@ class TopMenu extends Component {
 						}
 					});
 					streamResult = 
-					<Panel collapsible defaultExpanded header="Streams">
+					<Panel collapsible defaultExpanded header={i18n.t("topmenu.search_result_stream")}>
 						<ListGroup fill>
 							{streamList}
 						</ListGroup>
@@ -278,7 +284,7 @@ class TopMenu extends Component {
 						}
 					});
 					folderResult = 
-					<Panel collapsible defaultExpanded header="Folders">
+					<Panel collapsible defaultExpanded header={i18n.t("topmenu.search_result_folder")}>
 						<ListGroup fill>
 							{folderList}
 						</ListGroup>
@@ -322,7 +328,7 @@ class TopMenu extends Component {
 						}
 					});
 					mediaResult = 
-					<Panel collapsible defaultExpanded header="Media">
+					<Panel collapsible defaultExpanded header={i18n.t("topmenu.search_result_media")}>
 						<ListGroup fill>
 							{mediaList}
 						</ListGroup>
@@ -330,8 +336,8 @@ class TopMenu extends Component {
 				}
 				searchOverlay =
 					<Popover id="searchResult">
-							Search results for <strong>{this.state.searchPattern}</strong>
-							&nbsp;<Button title="Close" onClick={this.closeSearch}>
+							{i18n.t("topmenu.search_result")} <strong>{this.state.searchPattern}</strong>
+							&nbsp;<Button title={i18n.t("topmenu.close")} onClick={this.closeSearch}>
 								<FontAwesome name={"close"} />
 							</Button>
 							{playlistResult}
@@ -340,6 +346,14 @@ class TopMenu extends Component {
 							{mediaResult}
 					</Popover>;
 			}
+      var languages = [];
+      ["en","fr"].forEach((lang, index) => {
+        if (lang === i18n.language) {
+          languages.push(<MenuItem key={index} className="bg-success">{lang}</MenuItem>);
+        } else {
+          languages.push(<MenuItem key={index} onClick={() => {this.handlechangeLanguage(lang)}}>{lang}</MenuItem>);
+        }
+      });
 			return (
 				<div>
 					<Navbar collapseOnSelect>
@@ -351,32 +365,35 @@ class TopMenu extends Component {
 						</Navbar.Header>
 						<Navbar.Collapse>
 							<Nav>
-								<NavDropdown title="Browse" id="nav-categories">
-									<MenuItem onClick={() => this.handleBrowseDashboard()} className={this.state.browse==="dashboard"?"bg-success":""}>Dashboard</MenuItem>
-									<MenuItem onClick={() => this.handleBrowsePath()} className={this.state.browse==="file"?"bg-success":""}>Files</MenuItem>
-									<MenuItem onClick={() => this.handleBrowsePlylist()} className={this.state.browse==="playlist"?"bg-success":""}>Playlists</MenuItem>
-									<MenuItem onClick={() => this.handleBrowseRecent()} className={this.state.browse==="recent"?"bg-success":""}>Recent media</MenuItem>
+								<NavDropdown title={i18n.t("topmenu.browse")} id="nav-categories">
+									<MenuItem onClick={() => this.handleBrowseDashboard()} className={this.state.browse==="dashboard"?"bg-success":""}>{i18n.t("topmenu.dashboard")}</MenuItem>
+									<MenuItem onClick={() => this.handleBrowsePath()} className={this.state.browse==="file"?"bg-success":""}>{i18n.t("topmenu.files")}</MenuItem>
+									<MenuItem onClick={() => this.handleBrowsePlylist()} className={this.state.browse==="playlist"?"bg-success":""}>{i18n.t("topmenu.playlists")}</MenuItem>
+									<MenuItem onClick={() => this.handleBrowseRecent()} className={this.state.browse==="recent"?"bg-success":""}>{i18n.t("topmenu.recent")}</MenuItem>
 									<MenuItem divider />
-									<MenuItem onClick={() => this.handleSelectCategory("artist")}>Artists</MenuItem>
-									<MenuItem onClick={() => this.handleSelectCategory("album")}>Albums</MenuItem>
-									<MenuItem onClick={() => this.handleSelectCategory("year")}>Years</MenuItem>
-									<MenuItem onClick={() => this.handleSelectCategory("genre")}>Genres</MenuItem>
+									<MenuItem onClick={() => this.handleSelectCategory("artist")}>{i18n.t("topmenu.artists")}</MenuItem>
+									<MenuItem onClick={() => this.handleSelectCategory("album")}>{i18n.t("topmenu.albums")}</MenuItem>
+									<MenuItem onClick={() => this.handleSelectCategory("year")}>{i18n.t("topmenu.years")}</MenuItem>
+									<MenuItem onClick={() => this.handleSelectCategory("genre")}>{i18n.t("topmenu.genres")}</MenuItem>
 								</NavDropdown>
 								<DataSourceList list={this.state.dataSourceList} dataSource={this.state.dataSource}/>
-								<NavDropdown title="View" id="nav-view">
-									<MenuItem onClick={() => {this.handleSelectView("list")}} className={this.state.view==="list"?"bg-success":""}>List</MenuItem>
-									<MenuItem onClick={() => {this.handleSelectView("icon")}} className={this.state.view==="icon"?"bg-success":""}>Icons</MenuItem>
+								<NavDropdown title={i18n.t("topmenu.view")} id="nav-view">
+									<MenuItem onClick={() => {this.handleSelectView("list")}} className={this.state.view==="list"?"bg-success":""}>{i18n.t("topmenu.list")}</MenuItem>
+									<MenuItem onClick={() => {this.handleSelectView("icon")}} className={this.state.view==="icon"?"bg-success":""}>{i18n.t("topmenu.icon")}</MenuItem>
 								</NavDropdown>
-								<NavItem onClick={() => this.handleAdvancedSearch()}>Advanced Search</NavItem>
+								<NavItem onClick={() => this.handleAdvancedSearch()}>{i18n.t("topmenu.advanced_search")}</NavItem>
 							</Nav>
 							<Nav pullRight>
+								<NavDropdown title={i18n.t("topmenu.lang")} id="nav-view">
+                  {languages}
+								</NavDropdown>
 								<LoginButton></LoginButton>
 							</Nav>
 							<Navbar.Form>
 								<FormGroup>
 									<OverlayTrigger ref='myPopover' container={document.body} trigger={null} placement="bottom" overlay={searchOverlay}>
 										<InputGroup>
-											<FormControl type="text" placeholder="Search" value={this.state.searchPattern} onChange={this.handleChangeSearchPattern} />
+											<FormControl type="text" placeholder={i18n.t("topmenu.search")} value={this.state.searchPattern} onChange={this.handleChangeSearchPattern} />
 											<InputGroup.Button>
 												<Button onClick={this.runSimpleSearch}>
 													<FontAwesome name={"search"} />

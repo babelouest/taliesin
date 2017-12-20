@@ -3,6 +3,7 @@ import ReactAudioPlayer from 'react-audio-player';
 import FontAwesome from 'react-fontawesome';
 import { ButtonGroup, Button, DropdownButton, MenuItem } from 'react-bootstrap';
 import StateStore from '../lib/StateStore';
+import i18n from '../lib/i18n';
 
 class AudioPlayer extends Component {
   constructor(props) {
@@ -155,7 +156,7 @@ class AudioPlayer extends Component {
 			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + this.state.stream.name + "/manage", {command: "replay"})
       .then((result) => {
 				StateStore.getState().NotificationManager.addNotification({
-					message: 'Replay song',
+					message: i18n.t("player.replay"),
 					level: 'success'
 				});
 			});
@@ -180,7 +181,7 @@ class AudioPlayer extends Component {
 			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + this.state.stream.name + "/manage", {command: "skip"})
       .then((result) => {
 				StateStore.getState().NotificationManager.addNotification({
-					message: 'Next song',
+					message: i18n.t("player.next"),
 					level: 'success'
 				});
 			});
@@ -334,30 +335,30 @@ class AudioPlayer extends Component {
 			if (this.state.stream.display_name.startsWith("{") && this.state.stream.display_name.indexOf("} - ") !== -1) {
 				streamName = this.state.stream.display_name.substring(this.state.stream.display_name.indexOf("} - ") + 3);
 			} else {
-				streamName = (this.state.stream.display_name||"no name");
+				streamName = (this.state.stream.display_name||i18n.t("common.no_name"));
 			}
 		}
 		metadata = 
 			<div>
-				<label className="hidden-xs">Current stream:&nbsp;</label>
+				<label className="hidden-xs">{i18n.t("player.current_stream")}&nbsp;</label>
 				<span>{streamName}</span>
 			</div>;
     if (this.state.play) {
 			if (this.rap.audioEl.paused) {
 				playButton = 
-					<Button title="Play" onClick={this.handlePlay}>
+					<Button title={i18n.t("common.play")} onClick={this.handlePlay}>
 						<FontAwesome name={"play"} />
 					</Button>;
 			} else {
 				playButton = 
-					<Button title="Pause" onClick={this.handlePause}>
+					<Button title={i18n.t("common.pause")} onClick={this.handlePause}>
 						<FontAwesome name={"pause"} />
 					</Button>;
 			}
 			duration = this.displayDuration(this.state.currentTime, this.state.duration);
     } else {
       playButton = 
-        <Button title="Play" onClick={this.handlePlay}>
+        <Button title={i18n.t("common.play")} onClick={this.handlePlay}>
 					<FontAwesome name={"play"} />
         </Button>;
     }
@@ -370,31 +371,31 @@ class AudioPlayer extends Component {
 			<div>
 				<div>
 					<ButtonGroup>
-						<Button title="Previous song" onClick={this.handlePrevious}>
+						<Button title={i18n.t("player.previous")} onClick={this.handlePrevious}>
 							<FontAwesome name={"fast-backward"} />
 						</Button>
-						<Button title="Stop" onClick={this.handleStop}>
+						<Button title={i18n.t("common.stop")} onClick={this.handleStop}>
 							<FontAwesome name={"stop"} />
 						</Button>
 						{playButton}
-						<Button title="Next song" onClick={this.handleNext}>
+						<Button title={i18n.t("player.next")} onClick={this.handleNext}>
 							<FontAwesome name={"fast-forward"} />
 						</Button>
 					</ButtonGroup>
 					&nbsp;
 					<ButtonGroup>
-						<Button title="Repeat list" onClick={this.handleRepeat} disabled={this.state.stream.webradio} className={(this.state.jukeboxRepeat&&!this.state.stream.webradio)?"btn-primary":""}>
+						<Button title={i18n.t("common.repeat")} onClick={this.handleRepeat} disabled={this.state.stream.webradio} className={(this.state.jukeboxRepeat&&!this.state.stream.webradio)?"btn-primary":""}>
 							<FontAwesome name={"repeat"} />
 						</Button>
-						<Button title="Random" onClick={this.handleRandom} disabled={this.state.stream.webradio} className={(this.state.jukeboxRandom&&!this.state.stream.webradio)?"btn-primary":""}>
+						<Button title={i18n.t("common.random")} onClick={this.handleRandom} disabled={this.state.stream.webradio} className={(this.state.jukeboxRandom&&!this.state.stream.webradio)?"btn-primary":""}>
 							<FontAwesome name={"random"} />
 						</Button>
 						<DropdownButton title={volume} id="dropdown-volume">
-              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(5)}}>+5%</MenuItem>
-              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(1)}}>+1%</MenuItem>
-              <MenuItem className="text-center">Current: {this.state.volume} %</MenuItem>
-              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-1)}}>-1%</MenuItem>
-              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-5)}}>-5%</MenuItem>
+              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(5)}}>{i18n.t("common.volume_plus_5")}</MenuItem>
+              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(1)}}>{i18n.t("common.volume_plus_1")}</MenuItem>
+              <MenuItem className="text-center">{i18n.t("common.volume_current")} {this.state.volume} %</MenuItem>
+              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-1)}}>{i18n.t("common.volume_minus_1")}</MenuItem>
+              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-5)}}>{i18n.t("common.volume_minus_5")}</MenuItem>
 						</DropdownButton>
 					</ButtonGroup>
 					<div>

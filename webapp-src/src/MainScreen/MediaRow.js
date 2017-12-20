@@ -4,6 +4,7 @@ import FontAwesome from 'react-fontawesome';
 import VisibilitySensor from 'react-visibility-sensor';
 import StateStore from '../lib/StateStore';
 import ModalMedia from '../Modal/ModalMedia';
+import i18n from '../lib/i18n';
 
 class MediaRow extends Component {	
   constructor(props) {
@@ -168,10 +169,10 @@ class MediaRow extends Component {
 			firstCol =
 				<Col md={2} sm={12} xs={12}>
 					<ButtonGroup>
-						<Button title="Play now" onClick={this.handlePlayNow}>
+						<Button title={i18n.t("common.play_now")} onClick={this.handlePlayNow}>
 							<FontAwesome name="play" />
 						</Button>
-						<Button title="Remove from list" onClick={this.handleRemove}>
+						<Button title={i18n.t("common.remove_from_list")} onClick={this.handleRemove}>
 							<FontAwesome name="trash" />
 						</Button>
 					</ButtonGroup>
@@ -189,16 +190,16 @@ class MediaRow extends Component {
 					{date}
 					{firstCol}
 					<Col md={2} sm={12} xs={12}>
-						<Label className="visible-xs visible-sm">Data Source</Label><span><a role="button" onClick={this.handleSelectDataSource}>{this.state.media.data_source}</a></span>
+						<Label className="visible-xs visible-sm">{i18n.t("common.data_source")}</Label><span><a role="button" onClick={this.handleSelectDataSource}>{this.state.media.data_source}</a></span>
 					</Col>
 					<Col md={2} sm={12} xs={12}>
-						<Label className="visible-xs visible-sm">Artist</Label><span><a role="button" onClick={this.handleSelectArtist}>{artist}</a></span>
+						<Label className="visible-xs visible-sm">{i18n.t("common.artist")}</Label><span><a role="button" onClick={this.handleSelectArtist}>{artist}</a></span>
 					</Col>
 					<Col md={2} sm={12} xs={12}>
-						<Label className="visible-xs visible-sm">Album</Label><span><a role="button" onClick={this.handleSelectAlbum}>{album}</a></span>
+						<Label className="visible-xs visible-sm">{i18n.t("common.album")}</Label><span><a role="button" onClick={this.handleSelectAlbum}>{album}</a></span>
 					</Col>
 					<Col md={2} sm={12} xs={12}>
-						<Label className="visible-xs visible-sm">Title</Label><a role="button" onClick={this.handleOpenModal}>{name}</a>
+						<Label className="visible-xs visible-sm">{i18n.t("common.title")}</Label><a role="button" onClick={this.handleOpenModal}>{name}</a>
 					</Col>
 					<Col md={2} sm={12} xs={12}>
 						<VisibilitySensor

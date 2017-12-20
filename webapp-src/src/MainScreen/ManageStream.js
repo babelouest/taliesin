@@ -5,6 +5,7 @@ import FontAwesome from 'react-fontawesome';
 import StateStore from '../lib/StateStore';
 import ModalConfirm from '../Modal/ModalConfirm';
 import ModalEdit from '../Modal/ModalEdit';
+import i18n from '../lib/i18n';
 
 class ManageStream extends Component {	
   constructor(props) {
@@ -98,15 +99,15 @@ class ManageStream extends Component {
 	}
 	
   deleteStream(stream) {
-		this.setState({modalConfirmShow: true, modalTitle: "Close and remove stream", modalMessage: ("Are you sure you want to close and remove the stream '" + (stream.display_name||"no name") + "'"), curStream: stream});
+		this.setState({modalConfirmShow: true, modalTitle: i18n.t("stream.remove_title"), modalMessage: i18n.t("stream.remove_message", {stream: (stream.display_name||i18n.t("common.no_name"))}), curStream: stream});
   }
 	
   renameStream(stream) {
-		this.setState({modalRenameShow: true, modalTitle: "Rename stream", modalMessage: ("Enter the new name for the stream '" + (stream.display_name||"no name") + "'"), modalValue: stream.display_name, curStream: stream});
+		this.setState({modalRenameShow: true, modalTitle: i18n.t("stream.rename_title"), modalMessage: i18n.t("stream.rename_message", {stream: (stream.display_name||i18n.t("common.no_name"))}), modalValue: stream.display_name, curStream: stream});
   }
   
   saveStream(stream) {
-		this.setState({modalSaveShow: true, modalTitle: "Save stream as playlist", modalMessage: ("Enter the name for the new playlist fromthe stream '" + (stream.display_name||"no name") + "'"), modalValue: stream.display_name, curStream: stream});
+		this.setState({modalSaveShow: true, modalTitle: i18n.t("stream.save_as_playlist_title"), modalMessage: i18n.t("stream.save_as_playlist_message", {stream: (stream.display_name||i18n.t("common.no_name"))}), modalValue: stream.display_name, curStream: stream});
   }
 	
 	detailsStream(stream) {
@@ -118,13 +119,13 @@ class ManageStream extends Component {
 		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(stream.name) + "/manage", {command: "reload"})
 		.then(() => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Stream reloaded',
+				message: i18n.t("stream.message_stream_reload_ok"),
 				level: 'info'
 			});
 		})
 		.fail(() => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Error reload stream',
+				message: i18n.t("stream.message_stream_reload_error"),
 				level: 'error'
 			});
 		});
@@ -143,13 +144,13 @@ class ManageStream extends Component {
 			StateStore.dispatch({type: "setStreamList", streamList: streamList});
 			this.setState({streamList: streamList});
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Stream URL reset',
+				message: i18n.t("stream.message_stream_reset_ok"),
 				level: 'info'
 			});
 		})
 		.fail(() => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Error reset stream URL',
+				message: i18n.t("stream.message_stream_reset_error"),
 				level: 'error'
 			});
 		});
@@ -172,13 +173,13 @@ class ManageStream extends Component {
 				}
 				this.setState({streamList: streamList, modalConfirmShow: false});
 				StateStore.getState().NotificationManager.addNotification({
-					message: 'Stream deleted',
+					message: i18n.t("stream.message_stream_delete_ok"),
 					level: 'info'
 				});
 			})
 			.fail(() => {
 				StateStore.getState().NotificationManager.addNotification({
-					message: 'Error delete stream',
+					message: i18n.t("stream.message_stream_delete_error"),
 					level: 'error'
 				});
 				this.setState({modalConfirmShow: false});
@@ -201,14 +202,14 @@ class ManageStream extends Component {
 				}
 				StateStore.dispatch({type: "setStreamList", streamList: streamList});
 				StateStore.getState().NotificationManager.addNotification({
-					message: 'Stream renamed',
+					message: i18n.t("stream.message_stream_rename_ok"),
 					level: 'info'
 				});
 				this.setState({streamList: streamList, modalRenameShow: false});
 			})
 			.fail(() => {
 				StateStore.getState().NotificationManager.addNotification({
-					message: 'Error rename stream',
+					message: i18n.t("stream.message_stream_rename_error"),
 					level: 'error'
 				});
 				this.setState({modalRenameShow: false});
@@ -223,14 +224,14 @@ class ManageStream extends Component {
 			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.curStream.name) + "/manage", {command: "save", parameters: {name: name}})
 			.then(() => {
 				StateStore.getState().NotificationManager.addNotification({
-					message: 'Stream saved',
+					message: i18n.t("stream.message_stream_save_ok"),
 					level: 'info'
 				});
 				this.setState({modalSaveShow: false});
 			})
 			.fail(() => {
 				StateStore.getState().NotificationManager.addNotification({
-					message: 'Error save stream',
+					message: i18n.t("stream.message_stream_save_error"),
 					level: 'error'
 				});
 				this.setState({modalSaveShow: false});
@@ -246,13 +247,13 @@ class ManageStream extends Component {
 			StateStore.dispatch({type: "setStreamList", streamList: result});
 			this.setState({streamList: result});
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Stream list reloaded',
+				message: i18n.t("stream.message_stream_list_reload_ok"),
 				level: 'info'
 			});
 		})
 		.fail((result) => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Error reload stream list',
+				message: i18n.t("stream.message_stream_list_reload_error"),
 				level: 'error'
 			});
 		});
@@ -267,18 +268,18 @@ class ManageStream extends Component {
     this.state.streamList.forEach((stream, index) => {
 			var type, random;
 			if (stream.webradio) {
-				type = "Webradio ";
+				type = i18n.t("common.webradio");
 				if (stream.random) {
 					random = <FontAwesome name={"random"} />;
 				}
 			} else {
-				type = "Jukebox";
+				type = i18n.t("common.jukebox");
 			}
       rows.push(
         <tr key={index}>
           <td>
 						<a role="button" onClick={() => this.detailsStream(stream)}>
-							{stream.display_name||"no name"}
+							{stream.display_name||i18n.t("common.no_name")}
 						</a>
           </td>
           <td>
@@ -293,7 +294,7 @@ class ManageStream extends Component {
           </td>
           <td className="hidden-xs">
 						<a role="button" onClick={() => this.detailsStream(stream)}>
-							{stream.format + " - " + (stream.stereo?"Stereo":"Mono") + " - " + stream.sample_rate + " kHz - " + (stream.bitrate/1000) + " bps"}
+							{stream.format + " - " + (stream.stereo?i18n.t("common.stereo"):i18n.t("common.mono")) + " - " + stream.sample_rate + " " + i18n.t("common.khz") + " - " + (stream.bitrate/1000) + " " + i18n.t("common.bps")}
 						</a>
           </td>
           <td className="hidden-xs">
@@ -302,27 +303,27 @@ class ManageStream extends Component {
 						</a>
           </td>
           <td className="text-center">
-						<a href={stream.external} style={{display: "none"}} id={"play-external-anchor-" + stream.name} download={(stream.display_name||"no name")+".m3u"}>External</a>
+						<a href={stream.external} style={{display: "none"}} id={"play-external-anchor-" + stream.name} download={(stream.display_name||i18n.t("common.no_name"))+".m3u"}>{i18n.t("common.external")}</a>
             <ButtonGroup className="hidden-xs hidden-sm">
-              <Button title="Play now" onClick={() => this.playStream(stream)}>
+              <Button title={i18n.t("common.play_now")} onClick={() => this.playStream(stream)}>
                 <FontAwesome name={"play"} />
               </Button>
-							<Button title="Open in external player" onClick={() => this.playStreamExternal(stream)}>
+							<Button title={i18n.t("common.external")} onClick={() => this.playStreamExternal(stream)}>
 								<FontAwesome name={"external-link"} />
 							</Button>
-              <Button title="Rename" onClick={() => this.renameStream(stream)}>
+              <Button title={i18n.t("common.rename")} onClick={() => this.renameStream(stream)}>
                 <FontAwesome name={"pencil"} />
               </Button>
-              <Button title="Save as playlist" onClick={() => this.saveStream(stream)}>
+              <Button title={i18n.t("stream.save_as_playlist")} onClick={() => this.saveStream(stream)}>
                 <FontAwesome name={"floppy-o"} />
               </Button>
-              <Button title="Reload" onClick={() => this.reloadStream(stream)}>
+              <Button title={i18n.t("stream.reload")} onClick={() => this.reloadStream(stream)}>
                 <FontAwesome name={"exchange"} />
               </Button>
-              <Button title="Reset URL" onClick={() => this.resetStream(stream)}>
+              <Button title={i18n.t("stream.reset_url")} onClick={() => this.resetStream(stream)}>
                 <FontAwesome name={"unlock-alt"} />
               </Button>
-              <Button title="Close and delete" onClick={() => this.deleteStream(stream)}>
+              <Button title={i18n.t("stream.delete")} onClick={() => this.deleteStream(stream)}>
                 <FontAwesome name={"trash"} />
               </Button>
             </ButtonGroup>
@@ -331,31 +332,31 @@ class ManageStream extends Component {
 						}>
 							<MenuItem onClick={() => this.playStream(stream)}>
 								<FontAwesome name={"play"} />&nbsp;
-								Play now
+								{i18n.t("common.play_now")}
 							</MenuItem>
 							<MenuItem onClick={() => this.playStreamExternal(stream)}>
 								<FontAwesome name={"external-link"} />&nbsp;
-								Open in external player
+								{i18n.t("common.external")}
 							</MenuItem>
 							<MenuItem onClick={() => this.renameStream(stream)}>
 								<FontAwesome name={"pencil"} />&nbsp;
-								Rename
+								{i18n.t("common.rename")}
 							</MenuItem>
 							<MenuItem onClick={() => this.saveStream(stream)}>
 								<FontAwesome name={"floppy-o"} />&nbsp;
-								Save as playlist
+								{i18n.t("stream.save_as_playlist")}
 							</MenuItem>
 							<MenuItem onClick={() => this.reloadStream(stream)}>
 								<FontAwesome name={"exchange"} />&nbsp;
-								Reload
+								{i18n.t("stream.reload")}
 							</MenuItem>
 							<MenuItem onClick={() => this.resetStream(stream)}>
 								<FontAwesome name={"unlock-alt"} />&nbsp;
-								Reset url
+								{i18n.t("stream.reset_url")}
 							</MenuItem>
 							<MenuItem onClick={() => this.deleteStream(stream)}>
 								<FontAwesome name={"trash"} />&nbsp;
-								Close and delete
+								{i18n.t("stream.delete")}
 							</MenuItem>
 						</DropdownButton>
           </td>
@@ -370,11 +371,11 @@ class ManageStream extends Component {
 				<Table striped bordered condensed hover>
 					<thead>
 						<tr>
-							<td>Name</td>
-							<td>Type</td>
-							<td className="hidden-xs">Elements</td>
-							<td className="hidden-xs">Format</td>
-							<td className="hidden-xs">Clients</td>
+							<td>{i18n.t("common.name")}</td>
+							<td>{i18n.t("common.type")}</td>
+							<td className="hidden-xs">{i18n.t("common.elements")}</td>
+							<td className="hidden-xs">{i18n.t("stream.format")}</td>
+							<td className="hidden-xs">{i18n.t("stream.clients")}</td>
 							<td></td>
 						</tr>
 					</thead>

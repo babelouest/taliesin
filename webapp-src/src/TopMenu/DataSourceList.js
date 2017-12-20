@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { NavDropdown, MenuItem } from 'react-bootstrap';
 import StateStore from '../lib/StateStore';
+import i18n from '../lib/i18n';
 
 class DataSourceList extends Component {
   constructor(props) {
@@ -35,10 +36,10 @@ class DataSourceList extends Component {
       );
     });
     return (
-      <NavDropdown title="Data Source" id="nav-data-source">
+      <NavDropdown title={i18n.t("topmenu.data_sources")} id="nav-data-source">
         {rows}
 				<MenuItem divider />
-				<MenuItem onClick={this.handleManageDataSource}>Manage Data Sources</MenuItem>
+				<MenuItem onClick={this.handleManageDataSource}>{i18n.t("topmenu.manage_data_sources")}</MenuItem>
       </NavDropdown>
     );
   }

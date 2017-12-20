@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { DropdownButton, MenuItem, Button, ButtonGroup } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
 import StateStore from '../lib/StateStore';
+import i18n from '../lib/i18n';
 
 class StreamSelector extends Component {
   constructor(props) {
@@ -42,15 +43,15 @@ class StreamSelector extends Component {
 		var currentList = [];
 		this.state.streamList.forEach((stream, index) => {
 			currentList.push(
-				<MenuItem key={index} eventKey={index} onClick={() => this.handleSelectStream(stream.name)} data-name={stream.name} className={stream.name===this.state.selectedStream.name?"bg-success":""}>{stream.display_name||"no name"}</MenuItem>
+				<MenuItem key={index} eventKey={index} onClick={() => this.handleSelectStream(stream.name)} data-name={stream.name} className={stream.name===this.state.selectedStream.name?"bg-success":""}>{stream.display_name||i18n.t("common.no_name")}</MenuItem>
 			)
 		});
-    var streamName = "Select stream";
+    var streamName = i18n.t("player.select_stream");
     if (this.state.selectedStream.name) {
 			if (this.state.selectedStream.display_name.startsWith("{") && this.state.selectedStream.display_name.indexOf("} - ") !== -1) {
 				streamName = this.state.selectedStream.display_name.substring(this.state.selectedStream.display_name.indexOf("}") + 3);
 			} else {
-				streamName = this.state.selectedStream.display_name||"no name";
+				streamName = this.state.selectedStream.display_name||i18n.t("common.no_name");
 			}
       if (streamName.length > 10) {
         streamName = streamName.substring(0, 10) + "...";
@@ -64,10 +65,10 @@ class StreamSelector extends Component {
 						<MenuItem divider />
 						<MenuItem onClick={this.handleManageStreams}>Manage Streams</MenuItem>
 					</DropdownButton>
-					<Button title="Play now" onClick={this.handleLoadStream}>
+					<Button title={i18n.t("common.play_now")} onClick={this.handleLoadStream}>
 						<FontAwesome name={"play"} />
 					</Button>
-					<Button title="Details" onClick={this.handleDetailsStream}>
+					<Button title={i18n.t("common.details")} onClick={this.handleDetailsStream}>
 						<FontAwesome name={"eye"} />
 					</Button>
 				</ButtonGroup>

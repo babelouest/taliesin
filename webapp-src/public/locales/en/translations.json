@@ -168,6 +168,13 @@
 		"played_at": "Played at",
 		"last_seen": "Last seen",
 		"last_updated": "Last updated",
+		"nb_play": "Number of times played",
+		"random": "Random",
+		"sort": "Sort",
+		"sort_by": "Sort by",
+		"sort_direction": "Direction",
+		"asc": "Ascendant",
+		"desc": "Descendant",
 		"no_result_found": "No result found",
 		"searching": "Searching...",
 		"search_query": "Search query",
@@ -226,7 +233,7 @@
 		"last_refresh": "Last refresh",
 		"refresh_status": "Refresh Status"
 	},
-	"player": {
+	"player_manager": {
 		"message_saved": "External player list saved",
 		"switch_attached": "Switch attached"
 	},
@@ -275,7 +282,7 @@
 		"play_next": "Play next",
 		"local": "Local",
 		"switch": "Player switch",
-		"select_stream": "Select stream"
+		"select_stream": "Stream"
 	},
 	"modal": {
 		"category_save_ok": "Category saved",

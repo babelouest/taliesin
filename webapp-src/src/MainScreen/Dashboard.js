@@ -76,7 +76,7 @@ class Dashboard extends Component {
 						})) {
 							var newElt = {data_source: element.data_source, type: "folder", path: path, name: name, pathParent: pathParent};
 							list.push(newElt);
-							listComponents.push(<ElementPathIcon key={index} dataSource={element.data_source} path={path} element={newElt} className="dashboard-list" />);
+							listComponents.push(<ElementPathIcon key={index} dataSource={element.data_source} path={path} element={newElt} className="dashboard-list" hideRefresh={true} />);
 						}
 					});
 					this.setState({recent: listComponents, recentLoaded: true});
@@ -103,7 +103,7 @@ class Dashboard extends Component {
 						})) {
 							var newElt = {data_source: element.data_source, type: "folder", path: path, name: name, pathParent: pathParent};
 							list.push(newElt);
-							listComponents.push(<ElementPathIcon key={index} dataSource={element.data_source} path={path} element={newElt} className="dashboard-list" />);
+							listComponents.push(<ElementPathIcon key={index} dataSource={element.data_source} path={path} element={newElt} className="dashboard-list" hideRefresh={true} />);
 						}
 					});
 					this.setState({random: listComponents, randomLoaded: true});

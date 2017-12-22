@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Row, Col, Button, FormGroup, ControlLabel, FormControl, Checkbox, DropdownButton, MenuItem, InputGroup, Image, Panel } from 'react-bootstrap';
+import { Row, Col, Button, ButtonGroup, FormGroup, ControlLabel, FormControl, Checkbox, DropdownButton, MenuItem, InputGroup, Image, Panel } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
 import Datetime from 'react-datetime';
 import 'react-datetime/css/react-datetime.css';
@@ -20,7 +20,7 @@ class AdvancedSearch extends Component {
 				metrics: {},
 				sort: "path",
 				sort_direction: "asc",
-				limit: 100,
+				limit: 25,
 				offset: 0
 			},
       addMetrics: false,
@@ -54,9 +54,12 @@ class AdvancedSearch extends Component {
 		this.handleChangeMetricsLastSeenMax = this.handleChangeMetricsLastSeenMax.bind(this);
 		this.handleChangeMetricsLastUpdated = this.handleChangeMetricsLastUpdated.bind(this);
 		this.handleChangeMetricsLastUpdatedMax = this.handleChangeMetricsLastUpdatedMax.bind(this);
+		this.handleChangeSort = this.handleChangeSort.bind(this);
+		this.handleChangeSortDirection = this.handleChangeSortDirection.bind(this);
 		this.runSearch = this.runSearch.bind(this);
 		this.openMedia = this.openMedia.bind(this);
 		this.closeMedia = this.closeMedia.bind(this);
+		this.navigate = this.navigate.bind(this);
 	}
 	
 	componentWillReceiveProps(nextProps) {
@@ -258,6 +261,18 @@ class AdvancedSearch extends Component {
     delete criteria.metrics[metrics];
     this.setState({criteria: criteria, addMetrics: false});
   }
+	
+	handleChangeSort(e) {
+    var criteria = this.state.criteria;
+    criteria.sort = e.target.value;
+    this.setState({criteria: criteria});
+	}
+  
+	handleChangeSortDirection(e) {
+    var criteria = this.state.criteria;
+    criteria.sort_direction = e.target.value;
+    this.setState({criteria: criteria});
+	}
   
   runSearch(e) {
 		if (e) {
@@ -284,6 +299,14 @@ class AdvancedSearch extends Component {
 			});
 		});
   }
+	
+	navigate(delta) {
+    var criteria = this.state.criteria;
+    criteria.offset += delta;
+		this.setState({criteria: criteria}, () => {
+			this.runSearch();
+		});
+	}
 	
 	openMedia(media) {
 		this.setState({modalShow: true, modalMedia: media, modalTitle: (media.tags.title||media.name)});
@@ -591,27 +614,65 @@ class AdvancedSearch extends Component {
 		if (!this.state.firstLoad) {
 			if (!this.state.searching) {
 				resultTable =
-					<table className="table table-striped table-hover">
-						<thead>
-							<tr>
-								<th>
-									{i18n.t("common.data_source")}
-								</th>
-								<th>
-									{i18n.t("common.name")}
-								</th>
-								<th>
-									{i18n.t("common.path")}
-								</th>
-								<th>
-									{i18n.t("common.cover")}
-								</th>
-							</tr>
-						</thead>
-						<tbody>
-							{resultList.length?resultList:resultEmpty}
-						</tbody>
-					</table>;
+					<div>
+						<Row style={{marginTop: "10px"}}>
+							<Col md={12} sm={12} xs={12} className="text-right">
+								<ButtonGroup>
+									<Button disabled={!this.state.criteria.offset} onClick={() => {this.navigate(-25)}}>
+										<span className="hidden-sm hidden-xs">{i18n.t("common.previous_page")}</span>
+										<span className="visible-sm visible-xs">
+											<FontAwesome name="chevron-left" />
+										</span>
+									</Button>
+									<Button disabled={(this.state.offset + this.state.criteria.limit) >= resultList.length} onClick={() => {this.navigate(25)}}>
+										<span className="hidden-sm hidden-xs">{i18n.t("common.next_page")}</span>
+										<span className="visible-sm visible-xs">
+											<FontAwesome name="chevron-right" />
+										</span>
+									</Button>
+								</ButtonGroup>
+							</Col>
+						</Row>
+						<table className="table table-striped table-hover">
+							<thead>
+								<tr>
+									<th>
+										{i18n.t("common.data_source")}
+									</th>
+									<th>
+										{i18n.t("common.name")}
+									</th>
+									<th>
+										{i18n.t("common.path")}
+									</th>
+									<th>
+										{i18n.t("common.cover")}
+									</th>
+								</tr>
+							</thead>
+							<tbody>
+								{resultList.length?resultList:resultEmpty}
+							</tbody>
+						</table>
+						<Row style={{marginTop: "10px"}}>
+							<Col md={12} sm={12} xs={12} className="text-right">
+								<ButtonGroup>
+									<Button disabled={!this.state.criteria.offset} onClick={() => {this.navigate(-25)}}>
+										<span className="hidden-sm hidden-xs">{i18n.t("common.previous_page")}</span>
+										<span className="visible-sm visible-xs">
+											<FontAwesome name="chevron-left" />
+										</span>
+									</Button>
+									<Button disabled={(this.state.offset + this.state.criteria.limit) >= resultList.length} onClick={() => {this.navigate(25)}}>
+										<span className="hidden-sm hidden-xs">{i18n.t("common.next_page")}</span>
+										<span className="visible-sm visible-xs">
+											<FontAwesome name="chevron-right" />
+										</span>
+									</Button>
+								</ButtonGroup>
+							</Col>
+						</Row>
+					</div>;
 			} else {
 				resultTable =
 					<div>
@@ -682,6 +743,26 @@ class AdvancedSearch extends Component {
 								<Button title={i18n.t("advanced_search.add_tag")} onClick={this.handleAddMetrics}>
 									<FontAwesome name="plus" />
 								</Button>
+							</Row>
+							<Row>
+								<hr/>
+							</Row>
+							<Row>
+								<h3>{i18n.t("advanced_search.sort")}</h3>
+							</Row>
+							<Row style={{paddingTop: "10px"}}>
+								<FormControl componentClass="select" placeholder={i18n.t("advanced_search.sort_by")} value={this.state.criteria.sort} onChange={this.handleChangeSort}>
+									<option value="path">{i18n.t("common.path")}</option>
+									<option value="name">{i18n.t("common.name")}</option>
+									<option value="last_updated">{i18n.t("advanced_search.last_updated")}</option>
+									<option value="last_played">{i18n.t("advanced_search.last_seen")}</option>
+									<option value="nb_play">{i18n.t("advanced_search.nb_play")}</option>
+									<option value="random">{i18n.t("advanced_search.random")}</option>
+								</FormControl>
+								<FormControl componentClass="select" placeholder={i18n.t("advanced_search.sort_direction")} value={this.state.criteria.sort_direction} onChange={this.handleChangeSortDirection}>
+									<option value="asc">{i18n.t("advanced_search.asc")}</option>
+									<option value="desc">{i18n.t("advanced_search.desc")}</option>
+								</FormControl>
 							</Row>
 							<Row>
 								<hr/>

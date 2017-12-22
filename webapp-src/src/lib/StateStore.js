@@ -93,6 +93,9 @@ function stateStoreManager(state = defaultState, action) {
           break;
         }
       }
+			if (state.profile.stream.name === action.stream.name) {
+				state.profile.stream = action.stream;
+			}
 			break;
 		case "loadStreamAndPlay":
 			if (action.index || action.index === 0) {

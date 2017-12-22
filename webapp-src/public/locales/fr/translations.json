@@ -5,7 +5,7 @@
 		"path": "Chemin",
 		"cover": "Pochette",
 		"tags": "Tags",
-		"title": "Titer",
+		"title": "Titre",
 		"artist": "Artiste",
 		"album": "Album",
 		"year": "Année",
@@ -168,6 +168,13 @@
 		"played_at": "Lu le",
 		"last_seen": "La la dernière fois le",
 		"last_updated": "Mis à jour la dernière fois le",
+		"nb_play": "Nombre de fois lu",
+		"random": "Aléatoire",
+		"sort": "Tri",
+		"sort_by": "Trier par",
+		"sort_direction": "Direction",
+		"asc": "Ascendant",
+		"desc": "Descendant",
 		"no_result_found": "Aucun résultat",
 		"searching": "Recherche...",
 		"search_query": "Critères de recherche",
@@ -226,7 +233,7 @@
 		"last_refresh": "Dernier rafraîchissement",
 		"refresh_status": "Statut du rafraîchissement"
 	},
-	"player": {
+	"player_manager": {
 		"message_saved": "Liste des lecteurs externes sauvegardée",
 		"switch_attached": "Interrupteur attaché au lecteur"
 	},
@@ -275,7 +282,7 @@
 		"play_next": "Lire le suivant",
 		"local": "Local",
 		"switch": "Interrupteur",
-		"select_stream": "Sélectioner un flux"
+		"select_stream": "Flux"
 	},
 	"modal": {
 		"category_save_ok": "Catégorie sauvegardée",

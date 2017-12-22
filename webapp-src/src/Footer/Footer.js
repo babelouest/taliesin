@@ -40,6 +40,10 @@ class Footer extends Component {
 				this.setState({currentPlayer: StateStore.getState().profile.currentPlayer, play: false});
 			} else if (reduxState.lastAction === "loadStream") {
 				this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, play: false});
+			} else if (reduxState.lastAction === "setStream") {
+				if (StateStore.getState().profile.stream.name === this.state.stream.name) {
+					this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, play: false});
+				}
 			} else if (reduxState.lastAction === "loadStreamAndPlay") {
 				this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, jukeboxIndex: StateStore.getState().profile.jukeboxIndex, play: true});
 			} else if (reduxState.lastAction === "setJukeboxIndex") {

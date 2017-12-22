@@ -15,6 +15,7 @@ class ManagePlayer extends Component {
 		this.getInitialList = this.getInitialList.bind(this);
 		this.handleSelectSwitch = this.handleSelectSwitch.bind(this);
 		this.handleSavePlayers = this.handleSavePlayers.bind(this);
+		this.handleChangeEnabled = this.handleChangeEnabled.bind(this);
 	}
 	
 	getInitialList() {
@@ -91,11 +92,17 @@ class ManagePlayer extends Component {
 		.then(() => {
 			StateStore.dispatch({ type: 'setExternalPlayerList', externalPlayerList: objectStored });
 			StateStore.getState().NotificationManager.addNotification({
-				message: i18n.t("player.message_saved"),
+				message: i18n.t("player_manager.message_saved"),
 				level: 'info'
 			});
 		});
 	}
+  
+  handleChangeEnabled(index) {
+    var playerList = this.state.playerList;
+    playerList[index].enabled = !playerList[index].enabled;
+    this.setState({playerList: playerList});
+  }
 	
   render() {
 		var lines = [];
@@ -106,12 +113,12 @@ class ManagePlayer extends Component {
 			if (player.enabled) {
 				enabledSwitch = 
 					<ToggleButtonGroup type="checkbox" defaultValue={["1"]}>
-						<ToggleButton value="1" onChange={() => {player.enabled = !player.enabled}}>{i18n.t("common.enabled")}</ToggleButton>
+						<ToggleButton value="1" onChange={() => {this.handleChangeEnabled(index)}}>{i18n.t("common.enabled")}</ToggleButton>
 					</ToggleButtonGroup>
 			} else {
 				enabledSwitch = 
 					<ToggleButtonGroup type="checkbox">
-					<ToggleButton value="1" onChange={() => {player.enabled = !player.enabled}}>{i18n.t("common.disabled")}</ToggleButton>
+					<ToggleButton value="1" onChange={() => {this.handleChangeEnabled(index)}}>{i18n.t("common.disabled")}</ToggleButton>
 					</ToggleButtonGroup>
 			}
 			
@@ -152,7 +159,7 @@ class ManagePlayer extends Component {
 				<thead>
 					<tr>
 						<td>{i18n.t("common.name")}</td>
-						<td>{i18n.t("player.switch_attached")}</td>
+						<td>{i18n.t("player_manager.switch_attached")}</td>
 						<td>{i18n.t("common.enabled")}</td>
 					</tr>
 				</thead>

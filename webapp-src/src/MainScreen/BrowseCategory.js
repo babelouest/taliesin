@@ -127,7 +127,7 @@ class BrowseCategory extends Component {
 										<FontAwesome name="chevron-left" />
 									</span>
 								</Button>
-								<Button disabled={(this.state.offset + this.state.limit) >= currentList.length} onClick={() => {this.navigate(100)}}>
+								<Button disabled={(this.state.offset + this.state.limit) >= currentElementList.length} onClick={() => {this.navigate(100)}}>
 									<span className="hidden-sm hidden-xs">{i18n.t("common.next_page")}</span>
 									<span className="visible-sm visible-xs">
 										<FontAwesome name="chevron-right" />
@@ -154,7 +154,7 @@ class BrowseCategory extends Component {
 										<FontAwesome name="chevron-left" />
 									</span>
 								</Button>
-								<Button disabled={(this.state.offset + this.state.limit) >= currentList.length} onClick={() => {this.navigate(100)}}>
+								<Button disabled={(this.state.offset + this.state.limit) >= currentElementList.length} onClick={() => {this.navigate(100)}}>
 									<span className="hidden-sm hidden-xs">{i18n.t("common.next_page")}</span>
 									<span className="visible-sm visible-xs">
 										<FontAwesome name="chevron-right" />

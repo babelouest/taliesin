@@ -66,15 +66,21 @@ class ManageDataSource extends Component {
 	}
 	
 	getRefreshStatus(dataSource) {
-		StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(dataSource.name) + "/refresh/")
-		.then((result) => {
-			var refreshStatus = this.state.refreshStatus;
-			refreshStatus[dataSource.name] = result;
-			this.setState({refreshStatus: refreshStatus});
-			if (this._ismounted && (result.status === "running" || result.status === "pending" || result.status === "preparing")) {
-				window.setTimeout(() => {this.getRefreshStatus(dataSource)}, 2000);
+		if (!this.state.modalShow && !this.state.modalDeleteShow) {
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(dataSource.name) + "/refresh/")
+			.then((result) => {
+				var refreshStatus = this.state.refreshStatus;
+				refreshStatus[dataSource.name] = result;
+				this.setState({refreshStatus: refreshStatus});
+				if (this._ismounted && (result.status === "running" || result.status === "pending" || result.status === "preparing")) {
+					window.setTimeout(() => {this.getRefreshStatus(dataSource)}, 5000);
+				}
+			});
+		} else {
+			if (this._ismounted && (this.state.refreshStatus[dataSource.name].status === "running" || this.state.refreshStatus[dataSource.name].status === "pending" || this.state.refreshStatus[dataSource.name].status === "preparing")) {
+				window.setTimeout(() => {this.getRefreshStatus(dataSource)}, 5000);
 			}
-		});
+		}
 	}
 	
 	canUpdate(dataSource) {

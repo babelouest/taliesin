@@ -22,7 +22,8 @@ class ElementButtons extends Component {
 			playlist: StateStore.getState().playlists,
 			addPlaylistShow: false,
 			editCategoryShow: false,
-			onEditCategory: props.onEditCategory
+			onEditCategory: props.onEditCategory,
+			hideRefresh: props.hideRefresh
 		};
 
 		this.playElement = this.playElement.bind(this);
@@ -60,7 +61,8 @@ class ElementButtons extends Component {
 			playlist: StateStore.getState().playlists,
 			addPlaylistShow: false,
 			editCategoryShow: false,
-			onEditCategory: nextProps.onEditCategory
+			onEditCategory: nextProps.onEditCategory,
+			hideRefresh: nextProps.hideRefresh
 		});
 	}
   
@@ -288,7 +290,7 @@ class ElementButtons extends Component {
 				</MenuItem>
 			);
 		});
-		if (this.state.element.type === "folder" && (StateStore.getState().profile.isAdmin || StateStore.getState().profile.dataSource.scope === "me")) {
+		if (!this.state.hideRefresh && this.state.element.type === "folder" && (StateStore.getState().profile.isAdmin || StateStore.getState().profile.dataSource.scope === "me")) {
 			refreshButton = 
 				<Button title={i18n.t("common.refresh_folder")} onClick={this.refreshFolder}>
 					<FontAwesome name={"refresh"} />
@@ -338,7 +340,7 @@ class ElementButtons extends Component {
 						{playlist}
 					</DropdownButton>
 				</ButtonGroup>
-				<DropdownButton className="visible-xs" id={"xs-manage"-this.state.element.name} pullRight title={
+				<DropdownButton className="visible-xs" id={"xs-manage"-this.state.element.name} title={
 					<span><i className="fa fa-cog"></i></span>
 				}>
 					<MenuItem onClick={this.playElement}>

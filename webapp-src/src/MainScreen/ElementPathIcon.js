@@ -9,7 +9,7 @@ import ModalMedia from '../Modal/ModalMedia';
 class ElementPathIcon extends Component {
   constructor(props) {
     super(props);
-		this.state = {element: props.element, dataSource: props.dataSource, path: props.path, thumb: false, thumbLoaded: false, visible: false};
+		this.state = {element: props.element, dataSource: props.dataSource, path: props.path, thumb: false, thumbLoaded: false, visible: false, hideRefresh: props.hideRefresh};
 		
 		this.handleChangePath = this.handleChangePath.bind(this);
 		this.handleOpenFile = this.handleOpenFile.bind(this);
@@ -18,7 +18,7 @@ class ElementPathIcon extends Component {
 	}
 	
 	componentWillReceiveProps(nextProps) {
-		this.setState({element: nextProps.element, dataSource: nextProps.dataSource, path: nextProps.path});
+		this.setState({element: nextProps.element, dataSource: nextProps.dataSource, path: nextProps.path, hideRefresh: nextProps.hideRefresh});
 	}
 	
 	componentDidMount() {
@@ -189,7 +189,7 @@ class ElementPathIcon extends Component {
 					{icon}
 				</VisibilitySensor>
 				<div className="text-center">
-					<ElementButtons dataSource={this.state.dataSource} path={this.state.path + "/" + this.state.element.name} element={this.state.element}/>
+					<ElementButtons dataSource={this.state.dataSource} path={this.state.path + "/" + this.state.element.name} element={this.state.element} hideRefresh={this.state.hideRefresh}/>
 				</div>
 				<ModalMedia show={this.state.show} media={this.state.modalMedia} title={this.state.modalTitle} />
 			</Col>

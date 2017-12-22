@@ -1,6 +1,6 @@
 # Taliesin
 
-Audio media server with a REST API interface and a React JS client application.
+Lightweight audio media server with a REST API interface and a React JS client application.
 
 Copyright 2017 - Nicolas Mora <mail@babelouest.org>
 

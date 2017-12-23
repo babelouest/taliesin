@@ -20,7 +20,9 @@ class ModalMedia extends Component {
 		
 		this.onCloseModal = this.onCloseModal.bind(this);
 		this.getMediaCover = this.getMediaCover.bind(this);
+		this.getMediaFolder = this.getMediaFolder.bind(this);
 		this.handleSelectDataSource = this.handleSelectDataSource.bind(this);
+		this.handleSelectFolder = this.handleSelectFolder.bind(this);
 		this.handleSelectArtist = this.handleSelectArtist.bind(this);
 		this.handleSelectAlbum = this.handleSelectAlbum.bind(this);
 		this.handleSelectYear = this.handleSelectYear.bind(this);
@@ -30,19 +32,21 @@ class ModalMedia extends Component {
 		this.addToNewPlaylist = this.addToNewPlaylist.bind(this);
 		this.onSavePlaylist = this.onSavePlaylist.bind(this);
 		
+		this.getMediaFolder();
 		this.getMediaCover();
 	}
 	
 	componentWillReceiveProps(nextProps) {
 		this.setState({
       show: nextProps.show, 
-      media: nextProps.media, 
+      media: (nextProps.media?nextProps.media:this.state.media), 
       title: nextProps.title, 
       close: nextProps.onClose, 
       imgBlob: false,
 			streamList: StateStore.getState().streamList,
 			playlist: StateStore.getState().playlists
     }, () => {
+			this.getMediaFolder();
 			this.getMediaCover();
 		});
 	}
@@ -56,7 +60,7 @@ class ModalMedia extends Component {
   }
 	
 	onPlayNow() {
-		var streamList = StateStore.getState().streamList, curStream = streamList.find((stream) => {return stream.display_name.startsWith("{" + (StateStore.getState().profile.currentPlayer||"local") + "}")});
+		var streamList = StateStore.getState().streamList, curStream = streamList.find((stream) => {return stream.display_name.startsWith("{" + (StateStore.getState().profile.currentPlayer.name) + "}")});
 		if (curStream) {
 			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(curStream.name) + "/manage", {command: "stop"})
 			.then(() => {
@@ -85,7 +89,7 @@ class ModalMedia extends Component {
 	}
 	
 	runPlayNow() {
-    StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.media.data_source) + "/browse/path/" + encodeURI(this.state.media.path).replace(/#/g, "%23") + "?jukebox&recursive&name={" + (StateStore.getState().profile.currentPlayer||"local") + "} - " + (this.state.media.tags.title||this.state.media.name))
+    StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.media.data_source) + "/browse/path/" + encodeURI(this.state.media.path).replace(/#/g, "%23") + "?jukebox&recursive&name={" + (StateStore.getState().profile.currentPlayer.name) + "} - " + (this.state.media.tags.title||this.state.media.name))
     .then((result) => {
 			var streamList = StateStore.getState().streamList;
       streamList.push(result);
@@ -105,6 +109,23 @@ class ModalMedia extends Component {
     });
 	}
 	
+	getMediaFolder() {
+		if (this.state.show) {
+			var media = this.state.media;
+			if (media.path) {
+				if (media.path.lastIndexOf("/") > -1) {
+					media.folder = media.path.substring(0, media.path.lastIndexOf("/"));
+				} else {
+					media.folder = "";
+				}
+				this.setState({media: media});
+			} else {
+				media.folder = "";
+				this.setState({media: media});
+			}
+		}
+	}
+	
 	getMediaCover() {
     if (this.state.show && this.state.media) {
       this.state.media && StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.media.data_source) + "/browse/path/" + encodeURI(this.state.media.path).replace(/#/g, "%23").replace(/\+/g, "%2B") + "?cover&base64")
@@ -122,6 +143,14 @@ class ModalMedia extends Component {
 			StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: StateStore.getState().dataSourceList.find((ds) => {return ds.name === this.state.media.data_source})});
 			StateStore.dispatch({type: "setCurrentBrowse", browse: "path"});
 			StateStore.dispatch({type: "setCurrentPath", path: ""});
+		});
+	}
+	
+	handleSelectFolder() {
+		this.setState({show: false}, () => {
+			StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: StateStore.getState().dataSourceList.find((ds) => {return ds.name === this.state.media.data_source})});
+			StateStore.dispatch({type: "setCurrentBrowse", browse: "path"});
+			StateStore.dispatch({type: "setCurrentPath", path: this.state.media.folder});
 		});
 	}
 	
@@ -360,6 +389,14 @@ class ModalMedia extends Component {
 								</Col>
 								<Col xs={6}>
 									<span>{this.state.media.path}</span>
+								</Col>
+							</Row>
+							<Row>
+								<Col xs={6}>
+									<label>{i18n.t("common.open_folder")}</label>
+								</Col>
+								<Col xs={6}>
+									<span><a role="button" onClick={this.handleSelectFolder}>{this.state.media.folder}</a></span>
 								</Col>
 							</Row>
 							<Row>

@@ -59,11 +59,13 @@ class StreamSelector extends Component {
     }
 		return (
 			<div>
-				<ButtonGroup>
+				<ButtonGroup className="hidden-xs">
 					<DropdownButton title={streamName} id="streamList">
 						{currentList}
 						<MenuItem divider />
-						<MenuItem onClick={this.handleManageStreams}>Manage Streams</MenuItem>
+						<MenuItem onClick={this.handleManageStreams}>
+							{i18n.t("common.manage_streams")}
+						</MenuItem>
 					</DropdownButton>
 					<Button title={i18n.t("common.play_now")} onClick={this.handleLoadStream}>
 						<FontAwesome name={"play"} />
@@ -71,6 +73,23 @@ class StreamSelector extends Component {
 					<Button title={i18n.t("common.details")} onClick={this.handleDetailsStream}>
 						<FontAwesome name={"eye"} />
 					</Button>
+				</ButtonGroup>
+				<ButtonGroup className="visible-xs">
+					<DropdownButton noCaret title={<span><i className="fa fa-list"></i></span>} id="streamListSmall">
+						{currentList}
+						<MenuItem divider />
+						<MenuItem onClick={this.handleManageStreams}>
+							{i18n.t("common.manage_streams")}
+						</MenuItem>
+					</DropdownButton>
+					<DropdownButton noCaret title={<span><i className="fa fa-music"></i></span>} id="streamPlayer">
+						<MenuItem onClick={this.handleLoadStream}>
+							<FontAwesome name={"play"} /> {i18n.t("common.play_now")}
+						</MenuItem>
+						<MenuItem onClick={this.handleDetailsStream}>
+							<FontAwesome name={"eye"} /> {i18n.t("common.details")}
+						</MenuItem>
+					</DropdownButton>
 				</ButtonGroup>
 			</div>
 		);

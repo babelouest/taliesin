@@ -18,7 +18,7 @@ class MPDController extends Component {
 			stream: props.stream, 
 			playNow: props.play,
 			playIndex: props.index,
-			player: StateStore.getState().externalPlayerList.find((externalPlayer) => {return props.player === externalPlayer.name}),
+			player: StateStore.getState().externalPlayerList.find((externalPlayer) => {return props.player.name === externalPlayer.name}),
 			now: false, 
 			next: false, 
 			timeout: false, 
@@ -90,7 +90,7 @@ class MPDController extends Component {
 	componentWillReceiveProps(nextProps) {
 		var newStream = (nextProps.stream && nextProps.stream.name !== this.state.stream.name);
 		var newState = {
-			player: StateStore.getState().externalPlayerList.find((externalPlayer) => {return nextProps.player === externalPlayer.name})
+			player: StateStore.getState().externalPlayerList.find((externalPlayer) => {return nextProps.player.name === externalPlayer.name})
 		};
 		if (nextProps.play) {
 			newState.playNow = nextProps.play;

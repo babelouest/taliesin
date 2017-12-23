@@ -227,7 +227,7 @@ class BrowsePlaylist extends Component {
 	}
 	
   playNow(playlist) {
-		var streamList = StateStore.getState().streamList, curStream = streamList.find((stream) => {return stream.display_name.startsWith("{" + (StateStore.getState().profile.currentPlayer||"local") + "}")});
+		var streamList = StateStore.getState().streamList, curStream = streamList.find((stream) => {return stream.display_name.startsWith("{" + (StateStore.getState().profile.currentPlayer.name) + "}")});
 		if (curStream) {
 			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(curStream.name) + "/manage", {command: "stop"})
 			.then(() => {
@@ -256,7 +256,7 @@ class BrowsePlaylist extends Component {
   }
 	
 	runPlayElement(playlist) {
-    StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(playlist.name) + "/load?jukebox&name={" + (StateStore.getState().profile.currentPlayer||"local") + "} - " + playlist.name)
+    StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(playlist.name) + "/load?jukebox&name={" + (StateStore.getState().profile.currentPlayer.name) + "} - " + playlist.name)
     .then((result) => {
 			var streamList = StateStore.getState().streamList;
       streamList.push(result);

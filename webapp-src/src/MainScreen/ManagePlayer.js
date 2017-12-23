@@ -92,7 +92,7 @@ class ManagePlayer extends Component {
 		.then(() => {
 			StateStore.dispatch({ type: 'setExternalPlayerList', externalPlayerList: objectStored });
 			StateStore.getState().NotificationManager.addNotification({
-				message: i18n.t("player_manager.message_saved"),
+				message: i18n.t("player.message_saved"),
 				level: 'info'
 			});
 		});
@@ -159,7 +159,7 @@ class ManagePlayer extends Component {
 				<thead>
 					<tr>
 						<td>{i18n.t("common.name")}</td>
-						<td>{i18n.t("player_manager.switch_attached")}</td>
+						<td>{i18n.t("player.switch_attached")}</td>
 						<td>{i18n.t("common.enabled")}</td>
 					</tr>
 				</thead>

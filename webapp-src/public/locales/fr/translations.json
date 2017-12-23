@@ -15,6 +15,7 @@
 		"previous_page": "Page Précédente",
 		"file": "Fichier",
 		"folder": "Répertoire",
+		"open_folder": "Ouvrir le répertoire",
 		"date": "Date",
 		"next_page": "Page Suivante",
 		"filter": "Filtre",
@@ -82,6 +83,7 @@
 		"bitrate_bps": "{{bps}} kbps",
 		"sample_rate_khz": "{{khz}} kHz",
 		"new_playlist": "Nouvelle playlist",
+		"manage_streams": "Gérer les flux",
 		"message_error_adding_stream": "Erreur lors de la création du flux",
 		"message_adding_stream_ok": "Flux créé",
 		"message_error_delete_media": "Erreur lors de la suppression du media",
@@ -233,10 +235,6 @@
 		"last_refresh": "Dernier rafraîchissement",
 		"refresh_status": "Statut du rafraîchissement"
 	},
-	"player_manager": {
-		"message_saved": "Liste des lecteurs externes sauvegardée",
-		"switch_attached": "Interrupteur attaché au lecteur"
-	},
 	"stream": {
 		"remove_title": "Fermer et supprimer le flux",
 		"remove_message": "Êtes-vous sûr de vouloir fermer et supprimer le flux '{{stream}}' ?",
@@ -278,11 +276,15 @@
 		"full_screen": "Plein écran",
 		"extend": "Étendre",
 		"list_media": "Liste de media",
-		"play_now": "Lire maintenant",
-		"play_next": "Lire le suivant",
-		"local": "Local",
+		"play_now": "En cours",
+		"play_next": "À suivre",
+		"internal": "Interne",
+		"external": "Externe",
 		"switch": "Interrupteur",
-		"select_stream": "Flux"
+		"select_stream": "Flux",
+		"message_saved": "Liste des lecteurs externes sauvegardée",
+		"switch_attached": "Interrupteur attaché au lecteur",
+		"manage": "Gérer les lecteurs"
 	},
 	"modal": {
 		"category_save_ok": "Catégorie sauvegardée",

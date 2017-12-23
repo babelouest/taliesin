@@ -6,7 +6,7 @@ import i18n from '../lib/i18n';
 class PlayerSelector extends Component {
   constructor(props) {
     super(props);
-		this.state = {player: false, loaded: false, currentList: props.currentList, isAdmin: props.isAdmin};
+		this.state = {player: props.player, loaded: false, currentList: props.currentList, isAdmin: props.isAdmin};
 		
 		this.handleManagePlayers = this.handleManagePlayers.bind(this);
 		this.handleSelectPlayer = this.handleSelectPlayer.bind(this);
@@ -14,7 +14,7 @@ class PlayerSelector extends Component {
 	}
 	
 	componentWillReceiveProps(nextProps) {
-		this.setState({currentList: nextProps.currentList, isAdmin: nextProps.isAdmin});
+		this.setState({player: nextProps.player, currentList: nextProps.currentList, isAdmin: nextProps.isAdmin});
 	}
 	
 	handleManagePlayers() {
@@ -24,28 +24,27 @@ class PlayerSelector extends Component {
 	handleSelectPlayer(player) {
     StateStore.dispatch({type: "loadStream", stream: {name: false, webradio: false}});
 		StateStore.dispatch({type: "setCurrentPlayer", currentPlayer: player});
-		this.setState({player: player});
 	}
 	
   render() {
-		var playerList = [<MenuItem key={0} eventKey={0} onClick={() => this.handleSelectPlayer(false)} className={!this.state.player?"bg-success":""}>{i18n.t("player.local")}</MenuItem>], separator, manager;
+		var playerList = [
+			<MenuItem key={0} eventKey={0} onClick={() => this.handleSelectPlayer({type: "internal", name: i18n.t("player.internal")})} className={this.state.player.type==="internal"?"bg-success":""}>{i18n.t("player.internal")}</MenuItem>,
+			<MenuItem key={1} eventKey={1} onClick={() => this.handleSelectPlayer({type: "external", name: i18n.t("player.external")})} className={this.state.player.type==="external"?"bg-success":""}>{i18n.t("player.external")}</MenuItem>
+		], separator, manager;
 		this.state.currentList.forEach((player, index) => {
 			if (player.enabled) {
 				playerList.push(
-					<MenuItem key={index+1} eventKey={index+1} onClick={() => this.handleSelectPlayer(player.name)} className={player.name===this.state.player?"bg-success":""}>{player.name}</MenuItem>
+					<MenuItem key={index+2} eventKey={index+2} onClick={() => this.handleSelectPlayer({type: "carleon", name: player.name})} className={this.state.player.type==="carleon"&&player.name===this.state.player.name?"bg-success":""}>{player.name}</MenuItem>
 				)
 			}
 		});
-    var playerName = i18n.t("player.local");
-    if (this.state.player) {
-      playerName = this.state.player;
-      if (playerName.length > 10) {
-        playerName = playerName.substring(0, 10) + "...";
-      }
-    }
+		var playerName = this.state.player.name;
+		if (playerName.length > 10) {
+			playerName = playerName.substring(0, 10) + "...";
+		}
 		if (this.state.isAdmin) {
 			separator = <MenuItem divider />;
-			manager = <MenuItem onClick={this.handleManagePlayers}>Manage Players</MenuItem>;
+			manager = <MenuItem onClick={this.handleManagePlayers}>{i18n.t("player.manage")}</MenuItem>;
 		}
 		return (
 			<div>

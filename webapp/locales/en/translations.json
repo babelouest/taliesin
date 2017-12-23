@@ -15,6 +15,7 @@
 		"previous_page": "Previous Page",
 		"file": "File",
 		"folder": "Folder",
+		"open_folder": "Open folder",
 		"date": "Date",
 		"next_page": "Next page",
 		"filter": "Filter",
@@ -82,6 +83,7 @@
 		"bitrate_bps": "{{bps}} kbps",
 		"sample_rate_khz": "{{khz}} kHz",
 		"new_playlist": "New playlist",
+		"manage_streams": "Manage streams",
 		"message_error_adding_stream": "Error adding to stream",
 		"message_adding_stream_ok": "Add to stream ok",
 		"message_error_delete_media": "Error deleting media",
@@ -233,10 +235,6 @@
 		"last_refresh": "Last refresh",
 		"refresh_status": "Refresh Status"
 	},
-	"player_manager": {
-		"message_saved": "External player list saved",
-		"switch_attached": "Switch attached"
-	},
 	"stream": {
 		"remove_title": "Close and remove stream",
 		"remove_message": "Are you sure you want to close and remove the stream '{{stream}}'?",
@@ -280,9 +278,13 @@
 		"list_media": "List media",
 		"play_now": "Play now",
 		"play_next": "Play next",
-		"local": "Local",
+		"internal": "Internal",
+		"external": "External",
 		"switch": "Player switch",
-		"select_stream": "Stream"
+		"select_stream": "Stream",
+		"message_saved": "External player list saved",
+		"switch_attached": "Switch attached",
+		"manage": "Manage players"
 	},
 	"modal": {
 		"category_save_ok": "Category saved",

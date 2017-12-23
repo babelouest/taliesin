@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Row, Col, Button, ButtonGroup, DropdownButton, MenuItem } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
+import $ from 'jquery';
 import StateStore from '../lib/StateStore';
 import StreamSelector from './StreamSelector';
 import PlayerSelector from './PlayerSelector';
@@ -25,7 +26,8 @@ class Footer extends Component {
 			folded: true, 
 			fullScreen: false,
 			currentPlayer: StateStore.getState().profile.currentPlayer,
-			play: false
+			play: false,
+      stream_external: false
 		};
 		
 		StateStore.subscribe(() => {
@@ -39,13 +41,13 @@ class Footer extends Component {
 			} else if (reduxState.lastAction === "setCurrentPlayer") {
 				this.setState({currentPlayer: StateStore.getState().profile.currentPlayer, play: false});
 			} else if (reduxState.lastAction === "loadStream") {
-				this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, play: false});
+				this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, play: false}, () => {this.buildExternal()});
 			} else if (reduxState.lastAction === "setStream") {
 				if (StateStore.getState().profile.stream.name === this.state.stream.name) {
-					this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, play: false});
+					this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, play: false}, () => {this.buildExternal()});
 				}
 			} else if (reduxState.lastAction === "loadStreamAndPlay") {
-				this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, jukeboxIndex: StateStore.getState().profile.jukeboxIndex, play: true});
+				this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, jukeboxIndex: StateStore.getState().profile.jukeboxIndex, play: true}, () => {this.buildExternal()});
 			} else if (reduxState.lastAction === "setJukeboxIndex") {
 				this.setState({jukeboxIndex: StateStore.getState().profile.jukeboxIndex, play: false});
 			} else if (reduxState.lastAction === "setMediaNow") {
@@ -57,6 +59,15 @@ class Footer extends Component {
 		
 		this.showFullScreen = this.showFullScreen.bind(this);
 		this.showMediaList = this.showMediaList.bind(this);
+		this.buildExternal = this.buildExternal.bind(this);
+    
+    if (!this.state.currentPlayer.name) {
+      var currentPlayer = this.state.currentPlayer;
+      currentPlayer.name = i18n.t("player." + currentPlayer.type);
+      this.setState({currentPlayer: currentPlayer}, () => {
+        StateStore.dispatch({type: "setCurrentPlayer", currentPlayer: currentPlayer});
+      });
+    }
 	}
 	
 	showFullScreen() {
@@ -70,6 +81,20 @@ class Footer extends Component {
 			StateStore.dispatch({type: "setCurrentBrowse", browse: "showStreamMediaList"});
 		});
 	}
+  
+  buildExternal() {
+    var stream_external;
+		if (this.state.stream.name) {
+			if (this.state.stream.webradio) {
+				stream_external = "data:application/mpegurl;base64," + btoa("#EXTM3U\n\n#EXTINF:0," + (this.state.stream.display_name||"no name") + "\n" + StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name + "\n");
+			} else {
+				stream_external = StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name;
+			}
+      this.setState({stream_external: stream_external}, () => {
+        $("#play-external-anchor-footer")[0].click();
+      });
+		}
+  }
 	
   render() {
 		if (StateStore.getState().status === "connected") {
@@ -87,7 +112,7 @@ class Footer extends Component {
 				} else {
 					jukeboxNow =
 						<Col md={4} sm={12} xs={12}>
-							<JukeboxNow media={this.state.mediaNow} index={this.state.jukeboxIndex} folded={this.state.folded} />
+							<JukeboxNow media={this.state.mediaNow} index={this.state.jukeboxIndex} folded={this.state.folded} total={this.state.stream.elements} />
 						</Col>;
 				}
 			}
@@ -95,20 +120,25 @@ class Footer extends Component {
 				<Col md={2} sm={4} xs={4}>
 					<ButtonGroup>
 						<StreamSelector streamList={this.state.streamList} stream={this.state.stream} />
-						<PlayerSelector currentList={this.state.playerList} isAdmin={this.state.isAdmin} />
+						<PlayerSelector player={this.state.currentPlayer} currentList={this.state.playerList} isAdmin={this.state.isAdmin} />
 					</ButtonGroup>
 				</Col>;
-			if (this.state.currentPlayer) {
+			if (this.state.currentPlayer.type==="carleon") {
 				audioPlayer =
 					<Col md={3} sm={6} xs={6} className="player-box">
 						<MPDController player={this.state.currentPlayer} stream={this.state.stream} play={this.state.play} index={this.state.jukeboxIndex} />
 					</Col>;
-			} else {
+			} else if (this.state.currentPlayer.type==="internal") {
 				audioPlayer =
 					<Col md={3} sm={6} xs={6} className="player-box">
 						<AudioPlayer stream={this.state.stream} play={this.state.play} index={this.state.jukeboxIndex} />
 					</Col>;
-			}
+			} else { // External
+				audioPlayer =
+					<Col md={3} sm={6} xs={6} className="player-box">
+						<a href={this.state.stream_external} style={{display: "none"}} id={"play-external-anchor-footer"} download={(this.state.stream.display_name||i18n.t("common.no_name"))+".m3u"}>{i18n.t("common.external")}</a>
+					</Col>;
+      }
 			if (this.state.stream.name) {
 				middleButtons =
 					<Col md={2} sm={2} xs={2} className="text-center">

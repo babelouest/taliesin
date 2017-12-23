@@ -67,7 +67,7 @@ class ElementButtons extends Component {
 	}
   
   playElement() {
-		var streamList = StateStore.getState().streamList, curStream = streamList.find((stream) => {return stream.display_name.startsWith("{" + (StateStore.getState().profile.currentPlayer||"local") + "}")});
+		var streamList = StateStore.getState().streamList, curStream = streamList.find((stream) => {return stream.display_name.startsWith("{" + (StateStore.getState().profile.currentPlayer.name) + "}")});
 		if (curStream) {
 			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(curStream.name) + "/manage", {command: "stop"})
 			.then(() => {
@@ -108,7 +108,7 @@ class ElementButtons extends Component {
 				streamName += " - " + this.state.subCategoryValue;
 			}
 		}
-    StateStore.getState().APIManager.taliesinApiRequest("GET", url + "?jukebox&recursive&name=" + encodeURI("{") + (StateStore.getState().profile.currentPlayer||"local") + encodeURI("} - ") + encodeURI(streamName))
+    StateStore.getState().APIManager.taliesinApiRequest("GET", url + "?jukebox&recursive&name=" + encodeURI("{") + (StateStore.getState().profile.currentPlayer.name) + encodeURI("} - ") + encodeURI(streamName))
     .then((result) => {
 			var streamList = StateStore.getState().streamList;
       streamList.push(result);

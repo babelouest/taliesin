@@ -31,7 +31,18 @@ class FullScreen extends Component {
 				} else if (StateStore.getState().lastAction === "setMediaNow") {
 					this.setState({media: StateStore.getState().profile.mediaNow}, () => {this.loadMedia();});
 				} else if (StateStore.getState().lastAction === "showFullScreen") {
-					this.setState({show: StateStore.getState().showFullScreen}, () => {this.loadMedia();});
+					this.setState({
+						stream: StateStore.getState().profile.stream,
+						media: StateStore.getState().profile.mediaNow,
+						jukeboxIndex: StateStore.getState().profile.jukeboxIndex,
+						show: StateStore.getState().showFullScreen,
+						title: "",
+						imgBlob: false,
+						status: StateStore.getState().profile.currentPlayerStatus,
+						repeat: StateStore.getState().profile.currentPlayerRepeat,
+						random: StateStore.getState().profile.currentPlayerRandom,
+						volume: StateStore.getState().profile.currentPlayerVolume
+					}, () => {this.loadMedia();});
 				} else if (StateStore.getState().lastAction === "loadStream" || StateStore.getState().lastAction === "loadStreamAndPlay") {
 					this.setState({stream: StateStore.getState().profile.stream}, () => {this.loadMedia();});
 				} else if (StateStore.getState().lastAction === "setCurrentPlayerStatus") {

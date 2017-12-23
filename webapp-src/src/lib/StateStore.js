@@ -28,14 +28,13 @@ var defaultState = {
 		subCategoryValue: false,
 		stream: false, 
 		streamDetails: false,
-		localStream: false,
 		playlist: false,
 		mediaNow: false,
 		mediaNext: false,
 		browse: "dashboard",
 		view: "list",
 		jukeboxIndex: 0,
-		currentPlayer: false,
+		currentPlayer: {type: "internal", name: false},
 		currentPlayerStatus: "stop",
 		currentPlayerRepeat: false,
 		currentPlayerRandom: false,
@@ -107,9 +106,6 @@ function stateStoreManager(state = defaultState, action) {
 			break;
 		case "loadStream":
 			state.profile.stream = action.stream;
-			break;
-		case "setLocalStream":
-			state.profile.localStream = action.stream;
 			break;
 		case "setCurrentBrowse":
 			state.profile.browse = action.browse;

@@ -1032,6 +1032,28 @@ char * build_icy_title(json_t * media) {
   return title;
 }
 
+char * build_m3u_title(json_t * media) {
+  char * title = NULL, year[5] = {0};
+  const char * artist = NULL, * album = NULL, * song = NULL;
+  
+  if (media != NULL) {
+    song = json_string_value(json_object_get(json_object_get(media, "tags"), "title"));
+    artist = json_string_value(json_object_get(json_object_get(media, "tags"), "artist"));
+    album = json_string_value(json_object_get(json_object_get(media, "tags"), "album"));
+    o_strncpy(year, json_string_value(json_object_get(json_object_get(media, "tags"), "date")), 4);
+    title = msprintf("%s%s%s%s%s%s%s%s", 
+                      song!=NULL?song:json_string_value(json_object_get(media, "name")),
+                      artist!=NULL?" - ":"",
+                      artist!=NULL?artist:"",
+                      album!=NULL?" - ":"",
+                      album!=NULL?album:"",
+                      year[0]!='\0'?" - (":"",
+                      year[0]!='\0'?year:"",
+                      year[0]!='\0'?")":"");
+  }
+  return title;
+}
+
 int scan_path_to_webradio(struct config_elements * config, json_t * j_data_source, const char * path, int recursive, struct _t_webradio * webradio) {
   json_t * j_media = media_get_full(config, j_data_source, path), * j_element;
   int res;

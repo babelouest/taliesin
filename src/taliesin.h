@@ -519,6 +519,7 @@ int      audio_stream_add_data(struct _audio_stream * stream, uint8_t *buf, int 
 // Common stream functions
 json_t * stream_list(struct config_elements * config, const char * username);
 char * build_icy_title(json_t * media);
+char * build_m3u_title(json_t * media);
 
 // Webradio functions
 int              webradio_init(struct _t_webradio * webradio, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate);

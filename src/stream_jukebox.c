@@ -621,7 +621,7 @@ int jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukeb
     while ((*m3u_data != NULL) && (file = file_list_get_file(jukebox->file_list, i)) != NULL) {
       j_media = media_get_by_id(config, file->tm_id);
       if (check_result_value(j_media, T_OK)) {
-        icy_title = build_icy_title(json_object_get(j_media, "media"));
+        icy_title = build_m3u_title(json_object_get(j_media, "media"));
         if (icy_title != NULL) {
           m3u_song = msprintf("#EXTINF:%"JSON_INTEGER_FORMAT",%s\n%s/%s/stream/%s?index=%d\n",
                               (json_integer_value(json_object_get(json_object_get(j_media, "media"), "duration"))/1000),

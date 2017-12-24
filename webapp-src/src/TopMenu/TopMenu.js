@@ -410,16 +410,20 @@ class TopMenu extends Component {
 			);
 		} else {
 			return (
-				<Navbar collapseOnSelect>
-					<Navbar.Header>
-						<Navbar.Brand>
-							Taliesin
-						</Navbar.Brand>
-					</Navbar.Header>
+        <Navbar collapseOnSelect>
+          <Navbar.Header>
+            <Navbar.Brand>
+              Taliesin
+            </Navbar.Brand>
+            <Navbar.Toggle />
+          </Navbar.Header>
 					<Navbar.Collapse>
-						<Nav pullRight>
-							<LoginButton></LoginButton>
-						</Nav>
+            <Nav pullRight>
+              <NavDropdown title={i18n.t("topmenu.lang")} id="nav-view">
+                {languages}
+              </NavDropdown>
+              <LoginButton></LoginButton>
+            </Nav>
 					</Navbar.Collapse>
 				</Navbar>
 			);

@@ -5,8 +5,8 @@ import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
 
 class ModalEditCategory extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		this._ismounted = false;
 		
 		this.state = {
@@ -81,16 +81,16 @@ class ModalEditCategory extends Component {
 		}
 	}
 
-  close(e) {
+	close(e) {
 		if (e) {
 			e.preventDefault();
 		}
 		if (this.state.onCloseCb) {
 			this.setState({ show: false }, () => {
-        this.state.onCloseCb();
+				this.state.onCloseCb();
 			});
 		}
-  }
+	}
 	
 	save() {
 		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/data_source/" + encodeURIComponent(this.state.dataSource) + "/info/category/" + encodeURI(this.state.category) + "/" + encodeURI(this.state.categoryValue), this.state.categoryContentEdit)
@@ -110,11 +110,11 @@ class ModalEditCategory extends Component {
 		});
 	}
 	
-  handleChangeContent(e) {
+	handleChangeContent(e) {
 		var categoryContent = this.state.categoryContent;
 		categoryContent.content = e.target.value;
 		this.setState({ categoryContent: categoryContent });
-  }
+	}
 	
 	handleEdit() {
 		if (this.state.edit) {
@@ -151,26 +151,26 @@ class ModalEditCategory extends Component {
 		}
 	}
 
-  render() {
-    var cover, coverButton, content;
-    if (this.state.categoryContent.cover) {
-      cover = 
-        <div>
-          <Row>
-            <Col md={12}>
-              <hr/>
-            </Col>
-          </Row>
-          <Row>
-            <Col md={4}>
-              <Label>{i18n.t("common.image")}</Label>
-            </Col>
-            <Col md={8}>
-              <Image src={"data:image/jpeg;base64," + (this.state.edit?this.state.categoryContentEdit.cover:this.state.categoryContent.cover)} responsive/>
-            </Col>
-          </Row>
-        </div>;
-    }
+	render() {
+		var cover, coverButton, content;
+		if (this.state.categoryContent.cover) {
+			cover = 
+				<div>
+					<Row>
+						<Col md={12}>
+							<hr/>
+						</Col>
+					</Row>
+					<Row>
+						<Col md={4}>
+							<Label>{i18n.t("common.image")}</Label>
+						</Col>
+						<Col md={8}>
+							<Image src={"data:image/jpeg;base64," + (this.state.edit?this.state.categoryContentEdit.cover:this.state.categoryContent.cover)} responsive/>
+						</Col>
+					</Row>
+				</div>;
+		}
 		if (this.state.edit) {
 			coverButton = 
 				<div>
@@ -222,7 +222,7 @@ class ModalEditCategory extends Component {
 							</Col>
 						</Row>
 						{coverButton}
-            {cover}
+						{cover}
 					</form>
 				</Modal.Body>
 

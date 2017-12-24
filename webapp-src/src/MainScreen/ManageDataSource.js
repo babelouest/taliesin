@@ -7,8 +7,8 @@ import ModalConfirm from '../Modal/ModalConfirm';
 import i18n from '../lib/i18n';
 
 class ManageDataSource extends Component {	
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		
 		this.state = {
 			dataSourceList: StateStore.getState().dataSourceList,
@@ -240,7 +240,7 @@ class ManageDataSource extends Component {
 		});
 	}
 	
-  render() {
+	render() {
 		var dataSourceList = [];
 		this.state.dataSourceList.forEach((dataSource, index) => {
 			var refresh = "";
@@ -289,23 +289,23 @@ class ManageDataSource extends Component {
 						{refresh}
 					</td>
 					<td className="text-center">
-            <ButtonGroup className="hidden-xs">
-              <Button title={i18n.t("common.edit")} onClick={() => this.editDataSource(dataSource)} disabled={!this.canUpdate(dataSource)}>
-                <FontAwesome name={"pencil"} />
-              </Button>
-              <Button title={i18n.t("data_source.refresh")} onClick={() => this.refreshDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) !== "not running"}>
-                <FontAwesome name={"refresh"} />
-              </Button>
-              <Button title={i18n.t("data_source.stop_refresh")} onClick={() => this.stopRefreshDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) === "not running"}>
-                <FontAwesome name={"stop"} />
-              </Button>
-              <Button title={i18n.t("data_source.clean")} onClick={() => this.cleanDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) !== "not running"}>
-                <FontAwesome name={"eraser"} />
-              </Button>
-              <Button title={i18n.t("common.delete")} onClick={() => this.deleteDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) !== "not running"}>
-                <FontAwesome name={"trash"} />
-              </Button>
-            </ButtonGroup>
+						<ButtonGroup className="hidden-xs">
+							<Button title={i18n.t("common.edit")} onClick={() => this.editDataSource(dataSource)} disabled={!this.canUpdate(dataSource)}>
+								<FontAwesome name={"pencil"} />
+							</Button>
+							<Button title={i18n.t("data_source.refresh")} onClick={() => this.refreshDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) !== "not running"}>
+								<FontAwesome name={"refresh"} />
+							</Button>
+							<Button title={i18n.t("data_source.stop_refresh")} onClick={() => this.stopRefreshDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) === "not running"}>
+								<FontAwesome name={"stop"} />
+							</Button>
+							<Button title={i18n.t("data_source.clean")} onClick={() => this.cleanDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) !== "not running"}>
+								<FontAwesome name={"eraser"} />
+							</Button>
+							<Button title={i18n.t("common.delete")} onClick={() => this.deleteDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) !== "not running"}>
+								<FontAwesome name={"trash"} />
+							</Button>
+						</ButtonGroup>
 						<DropdownButton className="visible-xs" id={"xs-manage"-dataSource.name} pullRight title={
 							<span><i className="fa fa-cog"></i></span>
 						}>

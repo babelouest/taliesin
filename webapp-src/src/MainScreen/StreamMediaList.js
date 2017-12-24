@@ -6,8 +6,8 @@ import MediaRow from './MediaRow';
 import i18n from '../lib/i18n';
 
 class StreamMediaList extends Component {	
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		
 		this.state = {
 			stream: props.stream,
@@ -61,7 +61,7 @@ class StreamMediaList extends Component {
 		});
 	}
 	
-  render() {
+	render() {
 		return (
 			<div>
 				<Row>

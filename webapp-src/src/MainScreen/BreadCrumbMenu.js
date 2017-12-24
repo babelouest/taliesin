@@ -4,8 +4,8 @@ import StateStore from '../lib/StateStore';
 import BreadCrumbMenuElement from './BreadCrumbMenuElement';
 
 class BreadCrumbMenu extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		this.state = {dataSource: props.dataSource, path: props.path};
 	}
 	

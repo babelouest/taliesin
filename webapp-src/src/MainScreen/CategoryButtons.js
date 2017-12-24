@@ -3,8 +3,8 @@ import { ButtonGroup, Button } from 'react-bootstrap';
 import StateStore from '../lib/StateStore';
 
 class CategoryButtons extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		
 		this.state = {
 			category: props.category, 
@@ -23,7 +23,7 @@ class CategoryButtons extends Component {
 			subCategoryValue: nextProps.subCategoryValue
 		});
 	}
-  
+	
 	handleChangeCategory(category) {
 		if (!this.state.categoryValue) {
 			StateStore.dispatch({type: "setCurrentCategory", category: category});
@@ -31,7 +31,7 @@ class CategoryButtons extends Component {
 			StateStore.dispatch({type: "setCurrentCategory", category: this.state.category, categoryValue: this.state.categoryValue, subCategory: category});
 		}
 	}
-  
+	
 	render() {
 		var mediaButton, artistButton, albumButton, yearButton, genreButton;
 		if (this.state.categoryValue && !this.state.subCategory) {

@@ -4,12 +4,12 @@ import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
 
 class ModalAddPlaylist extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		
 		this.state = {
 			show: props.show, 
-      add: props.add,
+			add: props.add,
 			playlist: props.add?{name: "", description: "", cover: undefined, scope: "me"}:props.playlist, 
 			iconPath: "",
 			onCloseCb: props.onCloseCb
@@ -26,7 +26,7 @@ class ModalAddPlaylist extends Component {
 	componentWillReceiveProps(nextProps) {
 		this.setState({
 			show: nextProps.show, 
-      add: nextProps.add,
+			add: nextProps.add,
 			playlist: nextProps.add?{name: "", description: "", cover: undefined, scope: "me"}:nextProps.playlist, 
 			iconPath: "",
 			onCloseCb: nextProps.onCloseCb,
@@ -34,56 +34,56 @@ class ModalAddPlaylist extends Component {
 		});
 	}
 
-  close(result, e) {
+	close(result, e) {
 		if (e) {
 			e.preventDefault();
 		}
 		if (result && this.state.onCloseCb) {
 			this.setState({ show: false }, () => {
-        this.state.onCloseCb(true, this.state.playlist, this.state.add);
+				this.state.onCloseCb(true, this.state.playlist, this.state.add);
 			});
 		} else {
 			this.setState({ show: false }, () => {
 				this.state.onCloseCb(false, false, false);
 			});
 		}
-  }
-	
-	getNameValidationState() {
-    if (this.state.add) {
-      if (this.state.playlist.name) {
-        var found = StateStore.getState().playlists.find((playlist) => {
-          return playlist.name === this.state.playlist.name;
-        })
-        if (found) {
-          return "error";
-        } else {
-          return "success";
-        }
-      } else {
-        return "error";
-      }
-    } else {
-      return "success";
-    }
 	}
 	
-  handleChangeName(e) {
+	getNameValidationState() {
+		if (this.state.add) {
+			if (this.state.playlist.name) {
+				var found = StateStore.getState().playlists.find((playlist) => {
+					return playlist.name === this.state.playlist.name;
+				})
+				if (found) {
+					return "error";
+				} else {
+					return "success";
+				}
+			} else {
+				return "error";
+			}
+		} else {
+			return "success";
+		}
+	}
+	
+	handleChangeName(e) {
 		var playlist = this.state.playlist;
 		playlist.name = e.target.value;
-    this.setState({ playlist: playlist });
-  }
+		this.setState({ playlist: playlist });
+	}
 
-  handleChangeDescription(e) {
+	handleChangeDescription(e) {
 		var playlist = this.state.playlist;
 		playlist.description = e.target.value;
-    this.setState({ playlist: playlist });
-  }
+		this.setState({ playlist: playlist });
+	}
 	
 	handleChangeScope(e) {
 		var playlist = this.state.playlist;
 		playlist.scope = e.target.value;
-    this.setState({ playlist: playlist });
+		this.setState({ playlist: playlist });
 	}
 	
 	handleUploadIcon(e) {
@@ -113,9 +113,9 @@ class ModalAddPlaylist extends Component {
 		}
 	}
 
-  render() {
+	render() {
 		var title = this.state.add?i18n.t("modal.title_add_playlist"):i18n.t("modal.title_edit_playlist", {playlist: this.state.playlist.name||""});
-    var scopeInput, cover;
+		var scopeInput, cover;
 		if (StateStore.getState().profile.isAdmin && this.state.add) {
 			scopeInput =
 				<FormControl
@@ -129,30 +129,30 @@ class ModalAddPlaylist extends Component {
 					<option value={"all"}>{i18n.t("common.scope_all")}</option>
 				</FormControl>;
 		} else {
-      if (!this.state.add) {
-        scopeInput = <span>{this.state.playlist.scope==="me"?i18n.t("common.scope_me"):i18n.t("common.scope_all")}</span>;
-      } else {
-        scopeInput = <span>i18n.t("common.scope_me")</span>;
-      }
-    }
-    if (this.state.playlist.cover) {
-      cover = 
-        <div>
-          <Row>
-            <Col md={12}>
-              <hr/>
-            </Col>
-          </Row>
-          <Row>
-            <Col md={4}>
-              <Label>{i18n.t("common.cover")}</Label>
-            </Col>
-            <Col md={8}>
-              <Image src={"data:image/jpeg;base64," + this.state.playlist.cover} responsive/>
-            </Col>
-          </Row>
-        </div>;
-    }
+			if (!this.state.add) {
+				scopeInput = <span>{this.state.playlist.scope==="me"?i18n.t("common.scope_me"):i18n.t("common.scope_all")}</span>;
+			} else {
+				scopeInput = <span>i18n.t("common.scope_me")</span>;
+			}
+		}
+		if (this.state.playlist.cover) {
+			cover = 
+				<div>
+					<Row>
+						<Col md={12}>
+							<hr/>
+						</Col>
+					</Row>
+					<Row>
+						<Col md={4}>
+							<Label>{i18n.t("common.cover")}</Label>
+						</Col>
+						<Col md={8}>
+							<Image src={"data:image/jpeg;base64," + this.state.playlist.cover} responsive/>
+						</Col>
+					</Row>
+				</div>;
+		}
 		return (
 			<Modal show={this.state.show}>
 				<Modal.Header>
@@ -173,7 +173,7 @@ class ModalAddPlaylist extends Component {
 									<FormControl
 										type="text"
 										value={this.state.playlist.name}
-                    disabled={!this.state.add}
+										disabled={!this.state.add}
 										placeholder={i18n.t("common.name")}
 										onChange={this.handleChangeName}
 									/>
@@ -228,7 +228,7 @@ class ModalAddPlaylist extends Component {
 								/>
 							</Col>
 						</Row>
-            {cover}
+						{cover}
 					</form>
 				</Modal.Body>
 

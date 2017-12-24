@@ -3,16 +3,16 @@ import StateStore from '../lib/StateStore';
 import MediaInfo from './MediaInfo';
 
 class JukeboxNow extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
+	constructor(props) {
+		super(props);
+		this.state = {
 			folded: props.folded,
 			imgThumbBlob: false, 
 			media: props.media,
 			index: props.index,
 			total: props.total
 		};
-    this.loadCover();
+		this.loadCover();
 		this.setPageTitle();
 		
 		this.loadCover = this.loadCover.bind(this);
@@ -79,12 +79,12 @@ class JukeboxNow extends Component {
 		}
 		return title;
 	}
-  
-  render() {
+	
+	render() {
 		return (
-      <MediaInfo media={this.state.media} imgThumbBlob={this.state.imgThumbBlob} meta="Jukebox" folded={this.state.folded} index={this.state.index} total={this.state.total}/>
+			<MediaInfo media={this.state.media} imgThumbBlob={this.state.imgThumbBlob} meta="Jukebox" folded={this.state.folded} index={this.state.index} total={this.state.total}/>
 		);
-  }
+	}
 }
 
 export default JukeboxNow;

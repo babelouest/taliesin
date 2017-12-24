@@ -8,8 +8,8 @@ import CategoryButtons from './CategoryButtons';
 import i18n from '../lib/i18n';
 
 class BrowseCategory extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		
 		this.state = {
 			dataSource: props.dataSource, 
@@ -27,8 +27,8 @@ class BrowseCategory extends Component {
 			filter: "", 
 			loaded: false
 		};
-    
-    this.getElementList();
+		
+		this.getElementList();
 		
 		this.filterList = this.filterList.bind(this);
 		this.navigate = this.navigate.bind(this);
@@ -54,19 +54,19 @@ class BrowseCategory extends Component {
 			this.getElementList();
 		});
 	}
-  
-  getElementList() {
+	
+	getElementList() {
 		if (!this.state.loaded && this.state.dataSource) {
-      var url = "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/category/" + encodeURI(this.state.category);
-      if (this.state.categoryValue) {
-        url += "/" + encodeURIComponent(this.state.categoryValue);
-        if (this.state.subCategory) {
-          url += "/" + this.state.subCategory;
-          if (this.state.subCategoryValue) {
-            url += "/" + encodeURIComponent(this.state.subCategoryValue);
-          }
-        }
-      }
+			var url = "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/category/" + encodeURI(this.state.category);
+			if (this.state.categoryValue) {
+				url += "/" + encodeURIComponent(this.state.categoryValue);
+				if (this.state.subCategory) {
+					url += "/" + this.state.subCategory;
+					if (this.state.subCategoryValue) {
+						url += "/" + encodeURIComponent(this.state.subCategoryValue);
+					}
+				}
+			}
 			StateStore.getState().APIManager.taliesinApiRequest("GET", url)
 			.then((result) => {
 				this.setState({loaded: true, elementListInitial: result, elementList: result});
@@ -75,7 +75,7 @@ class BrowseCategory extends Component {
 				this.setState({loaded: true, elementListInitial: [], elementList: []});
 			});
 		}
-  }
+	}
 
 	filterList(event) {
 		var newList = this.state.elementListInitial;
@@ -89,7 +89,7 @@ class BrowseCategory extends Component {
 		this.setState({offset: this.state.offset+o});
 	}
 	
-  render() {
+	render() {
 		var currentList = [];
 		var currentElementList = this.state.elementList;
 		var index;

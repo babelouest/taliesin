@@ -7,8 +7,8 @@ import ElementPathList from './ElementPathList';
 import i18n from '../lib/i18n';
 
 class BrowseRecent extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		this.state = {view: props.view, elementList: [], elementListInitial: [], filter: "", loaded: false, groupBy: 1, offset: 0};
 		
 		this.getElementList();
@@ -38,14 +38,14 @@ class BrowseRecent extends Component {
 			this.getElementList();
 		});
 	}
-  
+	
 	handleNavigationPrevious() {
 		this.setState({offset: this.state.offset - 100, loaded: false}, () => {
 			this.getElementList();
 		});
 	}
-  
-  getElementList() {
+	
+	getElementList() {
 		if (!this.state.loaded) {
 			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/search/", {sort: "last_updated", sort_direction: "desc", offset: this.state.offset})
 			.then((result) => {
@@ -77,7 +77,7 @@ class BrowseRecent extends Component {
 				this.setState({loaded: true, elementListInitial: [], elementList: []});
 			});
 		}
-  }
+	}
 	
 	handleChangeGroupBy(e) {
 		this.setState({groupBy: e, loaded: false}, () => {

@@ -5,9 +5,9 @@ import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
 
 class StreamSelector extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {streamList: props.streamList, selectedStream: props.stream};
+	constructor(props) {
+		super(props);
+		this.state = {streamList: props.streamList, selectedStream: props.stream};
 		this.handleSelectStream = this.handleSelectStream.bind(this);
 		this.handleManageStreams = this.handleManageStreams.bind(this);
 		this.handleLoadStream = this.handleLoadStream.bind(this);
@@ -15,21 +15,21 @@ class StreamSelector extends Component {
 	}
 	
 	componentWillReceiveProps(nextProps) {
-    this.setState({streamList: nextProps.streamList, selectedStream: nextProps.stream});
+		this.setState({streamList: nextProps.streamList, selectedStream: nextProps.stream});
 	}
 	
 	handleDetailsStream() {
-    StateStore.dispatch({type: "setStreamDetails", stream: this.state.selectedStream});
-    StateStore.dispatch({type: "loadStream", stream: this.state.selectedStream});
-    StateStore.dispatch({type: "setCurrentBrowse", browse: "streamDetails"});
+		StateStore.dispatch({type: "setStreamDetails", stream: this.state.selectedStream});
+		StateStore.dispatch({type: "loadStream", stream: this.state.selectedStream});
+		StateStore.dispatch({type: "setCurrentBrowse", browse: "streamDetails"});
 	}
-  
-  handleLoadStream() {
-    StateStore.dispatch({type: "loadStreamAndPlay", stream: this.state.selectedStream, index: 0});
-  }
+	
+	handleLoadStream() {
+		StateStore.dispatch({type: "loadStreamAndPlay", stream: this.state.selectedStream, index: 0});
+	}
 	
 	handleManageStreams() {
-    StateStore.dispatch({type: "setCurrentBrowse", browse: "manageStream"});
+		StateStore.dispatch({type: "setCurrentBrowse", browse: "manageStream"});
 	}
 	
 	handleSelectStream(name) {
@@ -39,24 +39,24 @@ class StreamSelector extends Component {
 		}
 	}
 	
-  render() {
+	render() {
 		var currentList = [];
 		this.state.streamList.forEach((stream, index) => {
 			currentList.push(
 				<MenuItem key={index} eventKey={index} onClick={() => this.handleSelectStream(stream.name)} data-name={stream.name} className={stream.name===this.state.selectedStream.name?"bg-success":""}>{stream.display_name||i18n.t("common.no_name")}</MenuItem>
 			)
 		});
-    var streamName = i18n.t("player.select_stream");
-    if (this.state.selectedStream.name) {
+		var streamName = i18n.t("player.select_stream");
+		if (this.state.selectedStream.name) {
 			if (this.state.selectedStream.display_name.startsWith("{") && this.state.selectedStream.display_name.indexOf("} - ") !== -1) {
 				streamName = this.state.selectedStream.display_name.substring(this.state.selectedStream.display_name.indexOf("}") + 3);
 			} else {
 				streamName = this.state.selectedStream.display_name||i18n.t("common.no_name");
 			}
-      if (streamName.length > 10) {
-        streamName = streamName.substring(0, 10) + "...";
-      }
-    }
+			if (streamName.length > 10) {
+				streamName = streamName.substring(0, 10) + "...";
+			}
+		}
 		return (
 			<div>
 				<ButtonGroup className="hidden-xs">
@@ -93,7 +93,7 @@ class StreamSelector extends Component {
 				</ButtonGroup>
 			</div>
 		);
-  }
+	}
 }
 
 export default StreamSelector;

@@ -8,17 +8,17 @@ import ModalMedia from '../Modal/ModalMedia';
 import i18n from '../lib/i18n';
 
 class TopMenu extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		
 		this.uniquePopoverStore = {};
 		this.uniqueKey = 1;
 		
-    this.state = {
-      view: StateStore.getState().profile.view,
+		this.state = {
+			view: StateStore.getState().profile.view,
 			browse: StateStore.getState().profile.browse,
-      dataSourceList: StateStore.getState().dataSourceList,
-      dataSource: StateStore.getState().profile.dataSource,
+			dataSourceList: StateStore.getState().dataSourceList,
+			dataSource: StateStore.getState().profile.dataSource,
 			searchPattern: "",
 			searchTimeout: false,
 			searching: true,
@@ -26,7 +26,7 @@ class TopMenu extends Component {
 			modalShow: false,
 			modalMedia: false,
 			modalTitle: ""
-    };
+		};
 		
 		this.handleSelectCategory = this.handleSelectCategory.bind(this);
 		this.handleBrowsePath = this.handleBrowsePath.bind(this);
@@ -57,7 +57,7 @@ class TopMenu extends Component {
 				this.setState({browse: reduxState.profile.browse});
 			}
 		});
-  }
+	}
 	
 	componentDidMount() {
 		this.uniqueKey++;
@@ -72,7 +72,7 @@ class TopMenu extends Component {
 		StateStore.dispatch({type: "setCurrentBrowse", browse: "category"});
 		StateStore.dispatch({type: "setCurrentCategory", category: event});
 	}
-  
+	
 	handleBrowsePath() {
 		StateStore.dispatch({type: "setCurrentBrowse", browse: "path"});
 		StateStore.dispatch({type: "setCurrentPath", path: ""});
@@ -197,10 +197,10 @@ class TopMenu extends Component {
 	closeMedia() {
 		this.setState({modalShow: false});
 	}
-  
-  handlechangeLanguage(lang) {
-    i18n.changeLanguage(lang);
-  }
+	
+	handlechangeLanguage(lang) {
+		i18n.changeLanguage(lang);
+	}
 	
 	render() {
 		if (StateStore.getState().status === "connected") {
@@ -346,14 +346,14 @@ class TopMenu extends Component {
 							{mediaResult}
 					</Popover>;
 			}
-      var languages = [];
-      ["en","fr"].forEach((lang, index) => {
-        if (lang === i18n.language) {
-          languages.push(<MenuItem key={index} className="bg-success">{lang}</MenuItem>);
-        } else {
-          languages.push(<MenuItem key={index} onClick={() => {this.handlechangeLanguage(lang)}}>{lang}</MenuItem>);
-        }
-      });
+			var languages = [];
+			["en","fr"].forEach((lang, index) => {
+				if (lang === i18n.language) {
+					languages.push(<MenuItem key={index} className="bg-success">{lang}</MenuItem>);
+				} else {
+					languages.push(<MenuItem key={index} onClick={() => {this.handlechangeLanguage(lang)}}>{lang}</MenuItem>);
+				}
+			});
 			return (
 				<div>
 					<Navbar collapseOnSelect>
@@ -385,7 +385,7 @@ class TopMenu extends Component {
 							</Nav>
 							<Nav pullRight>
 								<NavDropdown title={i18n.t("topmenu.lang")} id="nav-view">
-                  {languages}
+									{languages}
 								</NavDropdown>
 								<LoginButton></LoginButton>
 							</Nav>
@@ -410,20 +410,20 @@ class TopMenu extends Component {
 			);
 		} else {
 			return (
-        <Navbar collapseOnSelect>
-          <Navbar.Header>
-            <Navbar.Brand>
-              Taliesin
-            </Navbar.Brand>
-            <Navbar.Toggle />
-          </Navbar.Header>
+				<Navbar collapseOnSelect>
+					<Navbar.Header>
+						<Navbar.Brand>
+							Taliesin
+						</Navbar.Brand>
+						<Navbar.Toggle />
+					</Navbar.Header>
 					<Navbar.Collapse>
-            <Nav pullRight>
-              <NavDropdown title={i18n.t("topmenu.lang")} id="nav-view">
-                {languages}
-              </NavDropdown>
-              <LoginButton></LoginButton>
-            </Nav>
+						<Nav pullRight>
+							<NavDropdown title={i18n.t("topmenu.lang")} id="nav-view">
+								{languages}
+							</NavDropdown>
+							<LoginButton></LoginButton>
+						</Nav>
 					</Navbar.Collapse>
 				</Navbar>
 			);

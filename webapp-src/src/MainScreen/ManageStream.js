@@ -8,8 +8,8 @@ import ModalEdit from '../Modal/ModalEdit';
 import i18n from '../lib/i18n';
 
 class ManageStream extends Component {	
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		
 		this.state = {
 			streamList: StateStore.getState().streamList, 
@@ -48,7 +48,7 @@ class ManageStream extends Component {
 		this.buildStreamExternalList = this.buildStreamExternalList.bind(this);
 		this.buildStreamExternal = this.buildStreamExternal.bind(this);
 	}
-  
+	
 	componentWillReceiveProps(nextProps) {
 		this.setState({
 			streamList: StateStore.getState().streamList, 
@@ -98,17 +98,17 @@ class ManageStream extends Component {
 		StateStore.dispatch({type: "loadStreamAndPlay", stream: stream, index: 0});
 	}
 	
-  deleteStream(stream) {
+	deleteStream(stream) {
 		this.setState({modalConfirmShow: true, modalTitle: i18n.t("stream.remove_title"), modalMessage: i18n.t("stream.remove_message", {stream: (stream.display_name||i18n.t("common.no_name"))}), curStream: stream});
-  }
+	}
 	
-  renameStream(stream) {
+	renameStream(stream) {
 		this.setState({modalRenameShow: true, modalTitle: i18n.t("stream.rename_title"), modalMessage: i18n.t("stream.rename_message", {stream: (stream.display_name||i18n.t("common.no_name"))}), modalValue: stream.display_name, curStream: stream});
-  }
-  
-  saveStream(stream) {
+	}
+	
+	saveStream(stream) {
 		this.setState({modalSaveShow: true, modalTitle: i18n.t("stream.save_as_playlist_title"), modalMessage: i18n.t("stream.save_as_playlist_message", {stream: (stream.display_name||i18n.t("common.no_name"))}), modalValue: stream.display_name, curStream: stream});
-  }
+	}
 	
 	detailsStream(stream) {
 		StateStore.dispatch({type: "setStreamDetails", stream: stream});
@@ -218,7 +218,7 @@ class ManageStream extends Component {
 			this.setState({modalRenameShow: false});
 		}
 	}
-  
+	
 	confirmSave(name) {
 		if (name) {
 			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.curStream.name) + "/manage", {command: "save", parameters: {name: name}})
@@ -258,14 +258,14 @@ class ManageStream extends Component {
 			});
 		});
 	}
-  
+	
 	playStreamExternal(stream) {
 		$("#play-external-anchor-"+stream.name)[0].click();
 	}
 	
-  render() {
-    var rows = [];
-    this.state.streamList.forEach((stream, index) => {
+	render() {
+		var rows = [];
+		this.state.streamList.forEach((stream, index) => {
 			var type, random;
 			if (stream.webradio) {
 				type = i18n.t("common.webradio");
@@ -275,58 +275,58 @@ class ManageStream extends Component {
 			} else {
 				type = i18n.t("common.jukebox");
 			}
-      rows.push(
-        <tr key={index}>
-          <td>
+			rows.push(
+				<tr key={index}>
+					<td>
 						<a role="button" onClick={() => this.detailsStream(stream)}>
 							{stream.display_name||i18n.t("common.no_name")}
 						</a>
-          </td>
-          <td>
+					</td>
+					<td>
 						<a role="button" onClick={() => this.detailsStream(stream)}>
 							{type} {random}
 						</a>
-          </td>
-          <td className="hidden-xs">
+					</td>
+					<td className="hidden-xs">
 						<a role="button" onClick={() => this.detailsStream(stream)}>
 							{stream.elements}
 						</a>
-          </td>
-          <td className="hidden-xs">
+					</td>
+					<td className="hidden-xs">
 						<a role="button" onClick={() => this.detailsStream(stream)}>
 							{stream.format + " - " + (stream.stereo?i18n.t("common.stereo"):i18n.t("common.mono")) + " - " + stream.sample_rate + " " + i18n.t("common.khz") + " - " + (stream.bitrate/1000) + " " + i18n.t("common.bps")}
 						</a>
-          </td>
-          <td className="hidden-xs">
+					</td>
+					<td className="hidden-xs">
 						<a role="button" onClick={() => this.detailsStream(stream)}>
 							{(stream.clients&&stream.clients.length)||0}
 						</a>
-          </td>
-          <td className="text-center">
+					</td>
+					<td className="text-center">
 						<a href={stream.external} style={{display: "none"}} id={"play-external-anchor-" + stream.name} download={(stream.display_name||i18n.t("common.no_name"))+".m3u"}>{i18n.t("common.external")}</a>
-            <ButtonGroup className="hidden-xs hidden-sm">
-              <Button title={i18n.t("common.play_now")} onClick={() => this.playStream(stream)}>
-                <FontAwesome name={"play"} />
-              </Button>
+						<ButtonGroup className="hidden-xs hidden-sm">
+							<Button title={i18n.t("common.play_now")} onClick={() => this.playStream(stream)}>
+								<FontAwesome name={"play"} />
+							</Button>
 							<Button title={i18n.t("common.external")} onClick={() => this.playStreamExternal(stream)}>
 								<FontAwesome name={"external-link"} />
 							</Button>
-              <Button title={i18n.t("common.rename")} onClick={() => this.renameStream(stream)}>
-                <FontAwesome name={"pencil"} />
-              </Button>
-              <Button title={i18n.t("stream.save_as_playlist")} onClick={() => this.saveStream(stream)}>
-                <FontAwesome name={"floppy-o"} />
-              </Button>
-              <Button title={i18n.t("stream.reload")} onClick={() => this.reloadStream(stream)}>
-                <FontAwesome name={"exchange"} />
-              </Button>
-              <Button title={i18n.t("stream.reset_url")} onClick={() => this.resetStream(stream)}>
-                <FontAwesome name={"unlock-alt"} />
-              </Button>
-              <Button title={i18n.t("stream.delete")} onClick={() => this.deleteStream(stream)}>
-                <FontAwesome name={"trash"} />
-              </Button>
-            </ButtonGroup>
+							<Button title={i18n.t("common.rename")} onClick={() => this.renameStream(stream)}>
+								<FontAwesome name={"pencil"} />
+							</Button>
+							<Button title={i18n.t("stream.save_as_playlist")} onClick={() => this.saveStream(stream)}>
+								<FontAwesome name={"floppy-o"} />
+							</Button>
+							<Button title={i18n.t("stream.reload")} onClick={() => this.reloadStream(stream)}>
+								<FontAwesome name={"exchange"} />
+							</Button>
+							<Button title={i18n.t("stream.reset_url")} onClick={() => this.resetStream(stream)}>
+								<FontAwesome name={"unlock-alt"} />
+							</Button>
+							<Button title={i18n.t("stream.delete")} onClick={() => this.deleteStream(stream)}>
+								<FontAwesome name={"trash"} />
+							</Button>
+						</ButtonGroup>
 						<DropdownButton className="visible-xs visible-sm" id={"xs-manage"-stream.name} pullRight title={
 							<span><i className="fa fa-cog"></i></span>
 						}>
@@ -359,10 +359,10 @@ class ManageStream extends Component {
 								{i18n.t("stream.delete")}
 							</MenuItem>
 						</DropdownButton>
-          </td>
-        </tr>
-      );
-    });
+					</td>
+				</tr>
+			);
+		});
 		return (
 			<div>
 				<Button title="Reload" onClick={this.reloadStreamList}>

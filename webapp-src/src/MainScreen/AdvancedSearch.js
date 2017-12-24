@@ -8,8 +8,8 @@ import ModalMedia from '../Modal/ModalMedia';
 import i18n from '../lib/i18n';
 
 class AdvancedSearch extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		
 		this.state = {
 			criteria: {
@@ -23,7 +23,7 @@ class AdvancedSearch extends Component {
 				limit: 25,
 				offset: 0
 			},
-      addMetrics: false,
+			addMetrics: false,
 			searchResult: [],
 			searching: false,
 			searchPanel: true,
@@ -63,7 +63,7 @@ class AdvancedSearch extends Component {
 	}
 	
 	componentWillReceiveProps(nextProps) {
-    this.setState({
+		this.setState({
 			criteria: {
 				query: "",
 				type: "",
@@ -75,7 +75,7 @@ class AdvancedSearch extends Component {
 				limit: 100,
 				offset: 0
 			},
-      addMetrics: false,
+			addMetrics: false,
 			searchResult: [],
 			searching: false,
 			searchPanel: true,
@@ -86,9 +86,9 @@ class AdvancedSearch extends Component {
 		});
 	}
 	
-  getValidationState() {
+	getValidationState() {
 		return "success";
-  }
+	}
 	
 	handleSelectPanel() {
 		this.setState({searchPanel: !this.state.searchPanel})
@@ -111,16 +111,16 @@ class AdvancedSearch extends Component {
 		}
 		this.setState({criteria: criteria});
 	}
-  
-  handleChangeQuery(e) {
+	
+	handleChangeQuery(e) {
 		var criteria = this.state.criteria;
-    if (e.target.value !== "") {
-      criteria.query = e.target.value;
-    } else {
-      delete criteria.query;
-    }
-    this.setState({criteria: criteria});
-  }
+		if (e.target.value !== "") {
+			criteria.query = e.target.value;
+		} else {
+			delete criteria.query;
+		}
+		this.setState({criteria: criteria});
+	}
 	
 	handleAddTag() {
 		var criteria = this.state.criteria;
@@ -151,130 +151,130 @@ class AdvancedSearch extends Component {
 		criteria.tags[index].value = e.target.value;
 		this.setState({criteria: criteria});
 	}
-  
-  handleAddMetrics() {
-    var metricsList = [<option key="0" value="">Select new metrics</option>], addMetrics;
-    if (!this.state.criteria.metrics.nb_play) {
-      metricsList.push(
-        <option key="1" value="nb_play">{i18n.t("advanced_search.number_times_played")}</option>
-      );
-    }
-    if (!this.state.criteria.metrics.played_at) {
-      metricsList.push(
-        <option key="2" value="played_at">{i18n.t("advanced_search.date_played")}</option>
-      );
-    }
-    if (!this.state.criteria.metrics.last_seen) {
-      metricsList.push(
-        <option key="3" value="last_seen">{i18n.t("advanced_search.date_last_seen")}</option>
-      );
-    }
-    if (!this.state.criteria.metrics.last_updated) {
-      metricsList.push(
-        <option key="4" value="last_updated">{i18n.t("advanced_search.date_last_updated")}</option>
-      );
-    }
-    addMetrics = 
-    <FormControl componentClass="select" placeholder={i18n.t("advanced_search.select")} onChange={(e) => this.handleSetMetrics(e)}>
-    {metricsList}
-    </FormControl>;
-    this.setState({addMetrics: addMetrics});
-  }
-  
-  handleSetMetrics(e) {
-    var criteria = this.state.criteria;
-    switch (e.target.value) {
-      case "nb_play":
-        criteria.metrics.nb_play = {operator: "equals", value: 0, value_max: 0};
-        break;
-      case "played_at":
-        criteria.metrics.played_at = {operator: "equals", value: 0, value_max: 0};
-        break;
-      case "last_seen":
-        criteria.metrics.last_seen = {operator: "equals", value: 0, value_max: 0};
-        break;
-      case "last_updated":
-        criteria.metrics.last_updated = {operator: "equals", value: 0, value_max: 0};
-        break;
-      default:
-        break;
-    }
-    this.setState({criteria: criteria, addMetrics: false});
-  }
-  
-  handleSetMetricsOperator(metrics, e) {
-    var criteria = this.state.criteria;
-    criteria.metrics[metrics].operator = e.target.value;
-    this.setState({criteria: criteria, addMetrics: false});
-  }
-  
-  handleChangeMetricsValue(metrics, e) {
-    var criteria = this.state.criteria;
-    criteria.metrics[metrics].value = parseInt(e.target.value, 10);
-    this.setState({criteria: criteria, addMetrics: false});
-  }
-  
-  handleChangeMetricsValueMax(metrics, e) {
-    var criteria = this.state.criteria;
-    criteria.metrics[metrics].value_max = parseInt(e.target.value, 10);
-    this.setState({criteria: criteria, addMetrics: false});
-  }
-  
-  handleChangeMetricsPlayedAt(moment) {
-    var criteria = this.state.criteria;
-    criteria.metrics.played_at.value = Math.round(moment.valueOf() / 1000);
-    this.setState({criteria: criteria, addMetrics: false});
-  }
-  
-  handleChangeMetricsPlayedAtMax(moment) {
-    var criteria = this.state.criteria;
-    criteria.metrics.played_at.value_max = Math.round(moment.valueOf() / 1000);
-    this.setState({criteria: criteria, addMetrics: false});
-  }
-  
-  handleChangeMetricsLastSeen(moment) {
-    var criteria = this.state.criteria;
-    criteria.metrics.last_seen.value = Math.round(moment.valueOf() / 1000);
-    this.setState({criteria: criteria, addMetrics: false});
-  }
-  
-  handleChangeMetricsLastSeenMax(moment) {
-    var criteria = this.state.criteria;
-    criteria.metrics.last_seen.value_max = Math.round(moment.valueOf() / 1000);
-    this.setState({criteria: criteria, addMetrics: false});
-  }
-  
-  handleChangeMetricsLastUpdated(moment) {
-    var criteria = this.state.criteria;
-    criteria.metrics.last_updated.value = Math.round(moment.valueOf() / 1000);
-    this.setState({criteria: criteria, addMetrics: false});
-  }
-  
-  handleChangeMetricsLastUpdatedMax(moment) {
-    var criteria = this.state.criteria;
-    criteria.metrics.last_updated.value_max = Math.round(moment.valueOf() / 1000);
-    this.setState({criteria: criteria, addMetrics: false});
-  }
-  
-  handleRemoveMetrics(metrics) {
-    var criteria = this.state.criteria;
-    delete criteria.metrics[metrics];
-    this.setState({criteria: criteria, addMetrics: false});
-  }
+	
+	handleAddMetrics() {
+		var metricsList = [<option key="0" value="">Select new metrics</option>], addMetrics;
+		if (!this.state.criteria.metrics.nb_play) {
+			metricsList.push(
+				<option key="1" value="nb_play">{i18n.t("advanced_search.number_times_played")}</option>
+			);
+		}
+		if (!this.state.criteria.metrics.played_at) {
+			metricsList.push(
+				<option key="2" value="played_at">{i18n.t("advanced_search.date_played")}</option>
+			);
+		}
+		if (!this.state.criteria.metrics.last_seen) {
+			metricsList.push(
+				<option key="3" value="last_seen">{i18n.t("advanced_search.date_last_seen")}</option>
+			);
+		}
+		if (!this.state.criteria.metrics.last_updated) {
+			metricsList.push(
+				<option key="4" value="last_updated">{i18n.t("advanced_search.date_last_updated")}</option>
+			);
+		}
+		addMetrics = 
+		<FormControl componentClass="select" placeholder={i18n.t("advanced_search.select")} onChange={(e) => this.handleSetMetrics(e)}>
+		{metricsList}
+		</FormControl>;
+		this.setState({addMetrics: addMetrics});
+	}
+	
+	handleSetMetrics(e) {
+		var criteria = this.state.criteria;
+		switch (e.target.value) {
+			case "nb_play":
+				criteria.metrics.nb_play = {operator: "equals", value: 0, value_max: 0};
+				break;
+			case "played_at":
+				criteria.metrics.played_at = {operator: "equals", value: 0, value_max: 0};
+				break;
+			case "last_seen":
+				criteria.metrics.last_seen = {operator: "equals", value: 0, value_max: 0};
+				break;
+			case "last_updated":
+				criteria.metrics.last_updated = {operator: "equals", value: 0, value_max: 0};
+				break;
+			default:
+				break;
+		}
+		this.setState({criteria: criteria, addMetrics: false});
+	}
+	
+	handleSetMetricsOperator(metrics, e) {
+		var criteria = this.state.criteria;
+		criteria.metrics[metrics].operator = e.target.value;
+		this.setState({criteria: criteria, addMetrics: false});
+	}
+	
+	handleChangeMetricsValue(metrics, e) {
+		var criteria = this.state.criteria;
+		criteria.metrics[metrics].value = parseInt(e.target.value, 10);
+		this.setState({criteria: criteria, addMetrics: false});
+	}
+	
+	handleChangeMetricsValueMax(metrics, e) {
+		var criteria = this.state.criteria;
+		criteria.metrics[metrics].value_max = parseInt(e.target.value, 10);
+		this.setState({criteria: criteria, addMetrics: false});
+	}
+	
+	handleChangeMetricsPlayedAt(moment) {
+		var criteria = this.state.criteria;
+		criteria.metrics.played_at.value = Math.round(moment.valueOf() / 1000);
+		this.setState({criteria: criteria, addMetrics: false});
+	}
+	
+	handleChangeMetricsPlayedAtMax(moment) {
+		var criteria = this.state.criteria;
+		criteria.metrics.played_at.value_max = Math.round(moment.valueOf() / 1000);
+		this.setState({criteria: criteria, addMetrics: false});
+	}
+	
+	handleChangeMetricsLastSeen(moment) {
+		var criteria = this.state.criteria;
+		criteria.metrics.last_seen.value = Math.round(moment.valueOf() / 1000);
+		this.setState({criteria: criteria, addMetrics: false});
+	}
+	
+	handleChangeMetricsLastSeenMax(moment) {
+		var criteria = this.state.criteria;
+		criteria.metrics.last_seen.value_max = Math.round(moment.valueOf() / 1000);
+		this.setState({criteria: criteria, addMetrics: false});
+	}
+	
+	handleChangeMetricsLastUpdated(moment) {
+		var criteria = this.state.criteria;
+		criteria.metrics.last_updated.value = Math.round(moment.valueOf() / 1000);
+		this.setState({criteria: criteria, addMetrics: false});
+	}
+	
+	handleChangeMetricsLastUpdatedMax(moment) {
+		var criteria = this.state.criteria;
+		criteria.metrics.last_updated.value_max = Math.round(moment.valueOf() / 1000);
+		this.setState({criteria: criteria, addMetrics: false});
+	}
+	
+	handleRemoveMetrics(metrics) {
+		var criteria = this.state.criteria;
+		delete criteria.metrics[metrics];
+		this.setState({criteria: criteria, addMetrics: false});
+	}
 	
 	handleChangeSort(e) {
-    var criteria = this.state.criteria;
-    criteria.sort = e.target.value;
-    this.setState({criteria: criteria});
+		var criteria = this.state.criteria;
+		criteria.sort = e.target.value;
+		this.setState({criteria: criteria});
 	}
-  
+	
 	handleChangeSortDirection(e) {
-    var criteria = this.state.criteria;
-    criteria.sort_direction = e.target.value;
-    this.setState({criteria: criteria});
+		var criteria = this.state.criteria;
+		criteria.sort_direction = e.target.value;
+		this.setState({criteria: criteria});
 	}
-  
-  runSearch(e) {
+	
+	runSearch(e) {
 		if (e) {
 			e.preventDefault();
 		}
@@ -298,11 +298,11 @@ class AdvancedSearch extends Component {
 				this.setState({searchResult: [], searching: false});
 			});
 		});
-  }
+	}
 	
 	navigate(delta) {
-    var criteria = this.state.criteria;
-    criteria.offset += delta;
+		var criteria = this.state.criteria;
+		criteria.offset += delta;
 		this.setState({criteria: criteria}, () => {
 			this.runSearch();
 		});
@@ -356,14 +356,14 @@ class AdvancedSearch extends Component {
 					</Col>
 					<Col xs={4}>
 						<ControlLabel>{i18n.t("advanced_search.operator")}</ControlLabel>
-            <FormControl componentClass="select" placeholder={i18n.t("advanced_search.select")} value={tag.operator} onChange={(e) => this.handleSetTagOperator(index, e)}>
-              <option value="contains">{i18n.t("advanced_search.operator_contains")}</option>
-              <option value="equals">{i18n.t("advanced_search.operator_equals")}</option>
-              <option value="different">{i18n.t("advanced_search.operator_different")}</option>
-              <option value="lower">{i18n.t("advanced_search.operator_lower")}</option>
-              <option value="higher">{i18n.t("advanced_search.operator_higher")}</option>
-              <option value="empty">{i18n.t("advanced_search.operator_empty")}</option>
-            </FormControl>
+						<FormControl componentClass="select" placeholder={i18n.t("advanced_search.select")} value={tag.operator} onChange={(e) => this.handleSetTagOperator(index, e)}>
+							<option value="contains">{i18n.t("advanced_search.operator_contains")}</option>
+							<option value="equals">{i18n.t("advanced_search.operator_equals")}</option>
+							<option value="different">{i18n.t("advanced_search.operator_different")}</option>
+							<option value="lower">{i18n.t("advanced_search.operator_lower")}</option>
+							<option value="higher">{i18n.t("advanced_search.operator_higher")}</option>
+							<option value="empty">{i18n.t("advanced_search.operator_empty")}</option>
+						</FormControl>
 					</Col>
 					<Col xs={4}>
 						<ControlLabel>{i18n.t("advanced_search.value")}</ControlLabel>
@@ -386,49 +386,49 @@ class AdvancedSearch extends Component {
 				</Row>
 			);
 		});
-    if (this.state.addMetrics) {
-      addMetrics = 
-      <Row>
-        <Col>
-          <ControlLabel>{i18n.t("advanced_search.new_metric_value")}</ControlLabel>
-          {this.state.addMetrics}
-        </Col>
-      </Row>;
-    }
-    var valueMax;
-    if (this.state.criteria.metrics.nb_play) {
-      valueMax = "";
-      if (this.state.criteria.metrics.nb_play.operator === "between") {
-        valueMax =
-        <div>
-          <ControlLabel>{i18n.t("advanced_search.value_max")}</ControlLabel>
-          <FormControl
-            type="text"
-            value={this.state.criteria.metrics.nb_play.value_max}
-            placeholder={i18n.t("advanced_search.value")}
-            onChange={(e) => {this.handleChangeMetricsValueMax("nb_play", e)}}
-          />
-        </div>
-      }
-      metricsList.push(
-        <Row key={0}>
-          <Col xs={2}>
-            <span className="label label-info">
-              {i18n.t("advanced_search.number_times_played")}
-            </span>
-          </Col>
-          <Col xs={4}>
+		if (this.state.addMetrics) {
+			addMetrics = 
+			<Row>
+				<Col>
+					<ControlLabel>{i18n.t("advanced_search.new_metric_value")}</ControlLabel>
+					{this.state.addMetrics}
+				</Col>
+			</Row>;
+		}
+		var valueMax;
+		if (this.state.criteria.metrics.nb_play) {
+			valueMax = "";
+			if (this.state.criteria.metrics.nb_play.operator === "between") {
+				valueMax =
+				<div>
+					<ControlLabel>{i18n.t("advanced_search.value_max")}</ControlLabel>
+					<FormControl
+						type="text"
+						value={this.state.criteria.metrics.nb_play.value_max}
+						placeholder={i18n.t("advanced_search.value")}
+						onChange={(e) => {this.handleChangeMetricsValueMax("nb_play", e)}}
+					/>
+				</div>
+			}
+			metricsList.push(
+				<Row key={0}>
+					<Col xs={2}>
+						<span className="label label-info">
+							{i18n.t("advanced_search.number_times_played")}
+						</span>
+					</Col>
+					<Col xs={4}>
 						<ControlLabel>{i18n.t("advanced_search.operator")}</ControlLabel>
-            <FormControl componentClass="select" placeholder={i18n.t("advanced_search.select")} value={this.state.criteria.metrics.nb_play.operator} onChange={(e) => this.handleSetMetricsOperator("nb_play", e)}>
-              <option value="contains">{i18n.t("advanced_search.operator_contains")}</option>
-              <option value="equals">{i18n.t("advanced_search.operator_equals")}</option>
-              <option value="different">{i18n.t("advanced_search.operator_different")}</option>
-              <option value="lower">{i18n.t("advanced_search.operator_lower")}</option>
-              <option value="higher">{i18n.t("advanced_search.operator_higher")}</option>
-              <option value="empty">{i18n.t("advanced_search.operator_empty")}</option>
-            </FormControl>
-          </Col>
-          <Col xs={4}>
+						<FormControl componentClass="select" placeholder={i18n.t("advanced_search.select")} value={this.state.criteria.metrics.nb_play.operator} onChange={(e) => this.handleSetMetricsOperator("nb_play", e)}>
+							<option value="contains">{i18n.t("advanced_search.operator_contains")}</option>
+							<option value="equals">{i18n.t("advanced_search.operator_equals")}</option>
+							<option value="different">{i18n.t("advanced_search.operator_different")}</option>
+							<option value="lower">{i18n.t("advanced_search.operator_lower")}</option>
+							<option value="higher">{i18n.t("advanced_search.operator_higher")}</option>
+							<option value="empty">{i18n.t("advanced_search.operator_empty")}</option>
+						</FormControl>
+					</Col>
+					<Col xs={4}>
 						<ControlLabel>{i18n.t("advanced_search.value")}</ControlLabel>
 						<FormControl
 							type="text"
@@ -436,145 +436,145 @@ class AdvancedSearch extends Component {
 							placeholder={i18n.t("advanced_search.value")}
 							onChange={(e) => {this.handleChangeMetricsValue("nb_play", e)}}
 						/>
-            {valueMax}
-          </Col>
-          <Col xs={2}>
+						{valueMax}
+					</Col>
+					<Col xs={2}>
 						<ControlLabel>{i18n.t("advanced_search.remove")}</ControlLabel>
 						<InputGroup>
 							<Button title={i18n.t("advanced_search.remove")} onClick={() => this.handleRemoveMetrics("nb_play")}>
 								<FontAwesome name="times"/>
 							</Button>
 						</InputGroup>
-          </Col>
-        </Row>
-      );
-    }
-    if (this.state.criteria.metrics.played_at) {
-      valueMax = "";
-      if (this.state.criteria.metrics.played_at.operator === "between") {
-        valueMax =
-        <div>
-          <ControlLabel>Value max</ControlLabel>
-          <Datetime value={this.state.criteria.metrics.played_at.value_max*1000} onChange={this.handleChangeMetricsPlayedAtMax}/>
-        </div>
-      }
-      metricsList.push(
-        <Row key={1}>
-          <Col xs={2}>
-            <span className="label label-info">
-              {i18n.t("advanced_search.played_at")}
-            </span>
-          </Col>
-          <Col xs={4}>
+					</Col>
+				</Row>
+			);
+		}
+		if (this.state.criteria.metrics.played_at) {
+			valueMax = "";
+			if (this.state.criteria.metrics.played_at.operator === "between") {
+				valueMax =
+				<div>
+					<ControlLabel>Value max</ControlLabel>
+					<Datetime value={this.state.criteria.metrics.played_at.value_max*1000} onChange={this.handleChangeMetricsPlayedAtMax}/>
+				</div>
+			}
+			metricsList.push(
+				<Row key={1}>
+					<Col xs={2}>
+						<span className="label label-info">
+							{i18n.t("advanced_search.played_at")}
+						</span>
+					</Col>
+					<Col xs={4}>
 						<ControlLabel>{i18n.t("advanced_search.operator")}</ControlLabel>
-            <FormControl componentClass="select" placeholder={i18n.t("advanced_search.select")} value={this.state.criteria.metrics.played_at.operator} onChange={(e) => this.handleSetMetricsOperator("played_at", e)}>
-              <option value="equals">{i18n.t("advanced_search.operator_on")}</option>
-              <option value="different">{i18n.t("advanced_search.operator_not_on")}</option>
-              <option value="lower">{i18n.t("advanced_search.operator_before")}</option>
-              <option value="higher">{i18n.t("advanced_search.operator_after")}</option>
-              <option value="between">{i18n.t("advanced_search.operator_between")}</option>
-            </FormControl>
-          </Col>
-          <Col xs={4}>
+						<FormControl componentClass="select" placeholder={i18n.t("advanced_search.select")} value={this.state.criteria.metrics.played_at.operator} onChange={(e) => this.handleSetMetricsOperator("played_at", e)}>
+							<option value="equals">{i18n.t("advanced_search.operator_on")}</option>
+							<option value="different">{i18n.t("advanced_search.operator_not_on")}</option>
+							<option value="lower">{i18n.t("advanced_search.operator_before")}</option>
+							<option value="higher">{i18n.t("advanced_search.operator_after")}</option>
+							<option value="between">{i18n.t("advanced_search.operator_between")}</option>
+						</FormControl>
+					</Col>
+					<Col xs={4}>
 						<ControlLabel>{i18n.t("advanced_search.value")}</ControlLabel>
-            <Datetime value={this.state.criteria.metrics.played_at.value*1000} onChange={this.handleChangeMetricsPlayedAt}/>
-            {valueMax}
-          </Col>
-          <Col xs={2}>
+						<Datetime value={this.state.criteria.metrics.played_at.value*1000} onChange={this.handleChangeMetricsPlayedAt}/>
+						{valueMax}
+					</Col>
+					<Col xs={2}>
 						<ControlLabel>{i18n.t("advanced_search.remove")}</ControlLabel>
 						<InputGroup>
 							<Button title={i18n.t("advanced_search.remove")} onClick={() => this.handleRemoveMetrics("played_at")}>
 								<FontAwesome name="times"/>
 							</Button>
 						</InputGroup>
-          </Col>
-        </Row>
-      );
-    }
-    if (this.state.criteria.metrics.last_seen) {
-      valueMax = "";
-      if (this.state.criteria.metrics.last_seen.operator === "between") {
-        valueMax =
-        <div>
-          <ControlLabel>{i18n.t("advanced_search.value_max")}</ControlLabel>
-          <Datetime value={this.state.criteria.metrics.last_seen.value_max*1000} onChange={this.handleChangeMetricsLastSeenMax}/>
-        </div>
-      }
-      metricsList.push(
-        <Row key={2}>
-          <Col xs={2}>
-            <span className="label label-info">
-              {i18n.t("advanced_search.last_seen")}
-            </span>
-          </Col>
-          <Col xs={4}>
+					</Col>
+				</Row>
+			);
+		}
+		if (this.state.criteria.metrics.last_seen) {
+			valueMax = "";
+			if (this.state.criteria.metrics.last_seen.operator === "between") {
+				valueMax =
+				<div>
+					<ControlLabel>{i18n.t("advanced_search.value_max")}</ControlLabel>
+					<Datetime value={this.state.criteria.metrics.last_seen.value_max*1000} onChange={this.handleChangeMetricsLastSeenMax}/>
+				</div>
+			}
+			metricsList.push(
+				<Row key={2}>
+					<Col xs={2}>
+						<span className="label label-info">
+							{i18n.t("advanced_search.last_seen")}
+						</span>
+					</Col>
+					<Col xs={4}>
 						<ControlLabel>{i18n.t("advanced_search.operator")}</ControlLabel>
-            <FormControl componentClass="select" placeholder={i18n.t("advanced_search.select")} value={this.state.criteria.metrics.last_seen.operator} onChange={(e) => this.handleSetMetricsOperator("last_seen", e)}>
-              <option value="equals">{i18n.t("advanced_search.operator_on")}</option>
-              <option value="different">{i18n.t("advanced_search.operator_not_on")}</option>
-              <option value="lower">{i18n.t("advanced_search.operator_before")}</option>
-              <option value="higher">{i18n.t("advanced_search.operator_after")}</option>
-              <option value="between">{i18n.t("advanced_search.operator_between")}</option>
-            </FormControl>
-          </Col>
-          <Col xs={4}>
+						<FormControl componentClass="select" placeholder={i18n.t("advanced_search.select")} value={this.state.criteria.metrics.last_seen.operator} onChange={(e) => this.handleSetMetricsOperator("last_seen", e)}>
+							<option value="equals">{i18n.t("advanced_search.operator_on")}</option>
+							<option value="different">{i18n.t("advanced_search.operator_not_on")}</option>
+							<option value="lower">{i18n.t("advanced_search.operator_before")}</option>
+							<option value="higher">{i18n.t("advanced_search.operator_after")}</option>
+							<option value="between">{i18n.t("advanced_search.operator_between")}</option>
+						</FormControl>
+					</Col>
+					<Col xs={4}>
 						<ControlLabel>Value</ControlLabel>
 						<Datetime value={this.state.criteria.metrics.last_seen.value*1000} onChange={this.handleChangeMetricsLastSeen}/>
-            {valueMax}
-          </Col>
-          <Col xs={2}>
+						{valueMax}
+					</Col>
+					<Col xs={2}>
 						<ControlLabel>{i18n.t("advanced_search.remove")}</ControlLabel>
 						<InputGroup>
 							<Button title={i18n.t("advanced_search.remove")} onClick={() => this.handleRemoveMetrics("last_seen")}>
 								<FontAwesome name="times"/>
 							</Button>
 						</InputGroup>
-          </Col>
-        </Row>
-      );
-    }
-    if (this.state.criteria.metrics.last_updated) {
-      valueMax = "";
-      if (this.state.criteria.metrics.last_updated.operator === "between") {
-        valueMax =
-        <div>
-          <ControlLabel>{i18n.t("advanced_search.value_max")}</ControlLabel>
-          <Datetime value={this.state.criteria.metrics.last_updated.value_max*1000} onChange={this.handleChangeMetricsLastUpdatedMax}/>
-        </div>
-      }
-      metricsList.push(
-        <Row key={3}>
-          <Col xs={2}>
-            <span className="label label-info">
-              {i18n.t("advanced_search.last_updated")}
-            </span>
-          </Col>
-          <Col xs={4}>
+					</Col>
+				</Row>
+			);
+		}
+		if (this.state.criteria.metrics.last_updated) {
+			valueMax = "";
+			if (this.state.criteria.metrics.last_updated.operator === "between") {
+				valueMax =
+				<div>
+					<ControlLabel>{i18n.t("advanced_search.value_max")}</ControlLabel>
+					<Datetime value={this.state.criteria.metrics.last_updated.value_max*1000} onChange={this.handleChangeMetricsLastUpdatedMax}/>
+				</div>
+			}
+			metricsList.push(
+				<Row key={3}>
+					<Col xs={2}>
+						<span className="label label-info">
+							{i18n.t("advanced_search.last_updated")}
+						</span>
+					</Col>
+					<Col xs={4}>
 						<ControlLabel>{i18n.t("advanced_search.operator")}</ControlLabel>
-            <FormControl componentClass="select" placeholder={i18n.t("advanced_search.select")} value={this.state.criteria.metrics.last_updated.operator} onChange={(e) => this.handleSetMetricsOperator("last_updated", e)}>
-              <option value="equals">{i18n.t("advanced_search.operator_on")}</option>
-              <option value="different">{i18n.t("advanced_search.operator_not_on")}</option>
-              <option value="lower">{i18n.t("advanced_search.operator_before")}</option>
-              <option value="higher">{i18n.t("advanced_search.operator_after")}</option>
-              <option value="between">{i18n.t("advanced_search.operator_between")}</option>
-            </FormControl>
-          </Col>
-          <Col xs={4}>
+						<FormControl componentClass="select" placeholder={i18n.t("advanced_search.select")} value={this.state.criteria.metrics.last_updated.operator} onChange={(e) => this.handleSetMetricsOperator("last_updated", e)}>
+							<option value="equals">{i18n.t("advanced_search.operator_on")}</option>
+							<option value="different">{i18n.t("advanced_search.operator_not_on")}</option>
+							<option value="lower">{i18n.t("advanced_search.operator_before")}</option>
+							<option value="higher">{i18n.t("advanced_search.operator_after")}</option>
+							<option value="between">{i18n.t("advanced_search.operator_between")}</option>
+						</FormControl>
+					</Col>
+					<Col xs={4}>
 						<ControlLabel>{i18n.t("advanced_search.value")}</ControlLabel>
 						<Datetime value={this.state.criteria.metrics.last_updated.value*1000} onChange={this.handleChangeMetricsLastUpdated}/>
-            {valueMax}
-          </Col>
-          <Col xs={2}>
+						{valueMax}
+					</Col>
+					<Col xs={2}>
 						<ControlLabel>{i18n.t("advanced_search.remove")}</ControlLabel>
 						<InputGroup>
 							<Button title={i18n.t("advanced_search.remove")} onClick={() => this.handleRemoveMetrics("last_updated")}>
 								<FontAwesome name="times"/>
 							</Button>
 						</InputGroup>
-          </Col>
-        </Row>
-      );
-    }
+					</Col>
+				</Row>
+			);
+		}
 		this.state.searchResult.forEach((result, index) => {
 			var cover;
 			if (result.cover) {

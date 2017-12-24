@@ -5,8 +5,8 @@ import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
 
 class FullScreen extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		
 		this.state = {
 			stream: StateStore.getState().profile.stream,
@@ -116,7 +116,7 @@ class FullScreen extends Component {
 		}
 		return title;
 	}
-  
+	
 	handleClose() {
 		StateStore.dispatch({type: "showFullScreen", show: false});
 	}
@@ -156,7 +156,7 @@ class FullScreen extends Component {
 	handleChangeVolume(volume) {
 		if (this._ismounted) {
 			this.setState({volume: (this.state.volume+volume)}, () => {
-				StateStore.dispatch({type: "setPlayerAction", action: "volume", parameter: (this.state.volume)});
+				StateStore.dispatch({type: "setPlayerAction", action: "volume", parameter: (volume)});
 			});
 		}
 	}
@@ -180,26 +180,26 @@ class FullScreen extends Component {
 		} else {
 			mediaImage = <Image src="images/generic-album.png" className="cover-image-full center-block" responsive />;
 		}
-    if (this.state.status === "stop") {
-      playButton = 
-        <Button title={i18n.t("common.play")} onClick={() => {this.handlePlayerAction("play")}}>
+		if (this.state.status === "stop") {
+			playButton = 
+				<Button title={i18n.t("common.play")} onClick={() => {this.handlePlayerAction("play")}}>
 					<FontAwesome name={"play"} />
-        </Button>;
-    } else if (this.state.status === "pause") {
-      playButton = 
-        <Button title={i18n.t("common.play")} onClick={() => {this.handlePlayerAction("pause")}}>
+				</Button>;
+		} else if (this.state.status === "pause") {
+			playButton = 
+				<Button title={i18n.t("common.play")} onClick={() => {this.handlePlayerAction("pause")}}>
 					<FontAwesome name={"play"} />
-        </Button>;
-    } else if (!this.state.stream.webradio) {
-      playButton = 
-        <Button title={i18n.t("common.pause")} onClick={() => {this.handlePlayerAction("pause")}}>
+				</Button>;
+		} else if (!this.state.stream.webradio) {
+			playButton = 
+				<Button title={i18n.t("common.pause")} onClick={() => {this.handlePlayerAction("pause")}}>
 					<FontAwesome name={"pause"} />
-        </Button>;
-    } else {
-      playButton = 
-        <Button title={i18n.t("common.play")} disabled={true}>
+				</Button>;
+		} else {
+			playButton = 
+				<Button title={i18n.t("common.play")} disabled={true}>
 					<FontAwesome name={"play"} />
-        </Button>;
+				</Button>;
 		}
 		if (this.state.media) {
 			if (this.state.media.tags.title) {
@@ -260,8 +260,8 @@ class FullScreen extends Component {
 		}
 		return (
 			<div className={"fullscreen" + (!this.state.show?" hidden":"")} >
-        <div className="media-background-fullscreen" style={{backgroundImage:this.state.imgBlob?"url(data:image/png;base64,"+this.state.imgBlob+")":"" }}>
-        </div>
+				<div className="media-background-fullscreen" style={{backgroundImage:this.state.imgBlob?"url(data:image/png;base64,"+this.state.imgBlob+")":"" }}>
+				</div>
 				<Row style={{marginTop: "10px"}}>
 					<Col md={12} className="text-center">
 						<div className="text-fullscreen">{this.state.title}</div>
@@ -269,31 +269,31 @@ class FullScreen extends Component {
 				</Row>
 				<Row style={{marginTop: "10px"}}>
 					<Col md={12} className="text-center">
-            <ButtonGroup>
-              <Button title={i18n.t("common.previous")} onClick={() => {this.handlePlayerAction("previous")}}>
-                <FontAwesome name={"fast-backward"} />
-              </Button>
-              <Button title={i18n.t("common.stop")} onClick={() => {this.handlePlayerAction("stop")}}>
-                <FontAwesome name={"stop"} />
-              </Button>
-              {playButton}
-              <Button title={i18n.t("common.next")} onClick={() => {this.handlePlayerAction("next")}}>
-                <FontAwesome name={"fast-forward"} />
-              </Button>
+						<ButtonGroup>
+							<Button title={i18n.t("common.previous")} onClick={() => {this.handlePlayerAction("previous")}}>
+								<FontAwesome name={"fast-backward"} />
+							</Button>
+							<Button title={i18n.t("common.stop")} onClick={() => {this.handlePlayerAction("stop")}}>
+								<FontAwesome name={"stop"} />
+							</Button>
+							{playButton}
+							<Button title={i18n.t("common.next")} onClick={() => {this.handlePlayerAction("next")}}>
+								<FontAwesome name={"fast-forward"} />
+							</Button>
 							<Button title={i18n.t("common.repeat")} onClick={() => {this.handlePlayerAction("repeat")}} className={(this.state.repeat&&!this.state.stream.webradio)?"btn-primary":""} disabled={this.state.stream.webradio}>
 								<FontAwesome name={"repeat"} />
 							</Button>
 							<Button title={i18n.t("common.random")} onClick={() => {this.handlePlayerAction("random")}} className={(this.state.random&&!this.state.stream.webradio)?"btn-primary":""} disabled={this.state.stream.webradio}>
 								<FontAwesome name={"random"} />
 							</Button>
-              <DropdownButton title={<FontAwesome name={"volume-up"} />} id="dropdown-volume">
-                <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(5)}}>{i18n.t("common.volume_plus_5")}</MenuItem>
-                <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(1)}}>{i18n.t("common.volume_plus_1")}</MenuItem>
-                <MenuItem className="text-center">{i18n.t("common.volume_current")} {this.state.volume} %</MenuItem>
-                <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-1)}}>{i18n.t("common.volume_minus_1")}</MenuItem>
-                <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-5)}}>{i18n.t("common.volume_minus_5")}</MenuItem>
-              </DropdownButton>
-            </ButtonGroup>
+							<DropdownButton title={<FontAwesome name={"volume-up"} />} pullRight id="dropdown-volume">
+								<MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(5)}}>{i18n.t("common.volume_plus_5")}</MenuItem>
+								<MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(1)}}>{i18n.t("common.volume_plus_1")}</MenuItem>
+								<MenuItem className="text-center">{i18n.t("common.volume_current")} {this.state.volume} %</MenuItem>
+								<MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-1)}}>{i18n.t("common.volume_minus_1")}</MenuItem>
+								<MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-5)}}>{i18n.t("common.volume_minus_5")}</MenuItem>
+							</DropdownButton>
+						</ButtonGroup>
 					</Col>
 				</Row>
 				<Row style={{marginTop: "10px"}}>
@@ -306,8 +306,8 @@ class FullScreen extends Component {
 				<Row style={{marginTop: "10px"}}>
 					<Col md={12} className="text-center">
 						<Button onClick={this.handleClose} className="btn btn-success">
-              {i18n.t("common.close")}
-            </Button>
+							{i18n.t("common.close")}
+						</Button>
 					</Col>
 				</Row>
 			</div>

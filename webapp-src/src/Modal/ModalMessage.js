@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 import { Button, Modal } from 'react-bootstrap';
 
 class ModalMessage extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		
 		this.state = {show: props.show, title: props.title, message: props.message};
 		
@@ -14,11 +14,11 @@ class ModalMessage extends Component {
 		this.setState({show: nextProps.show, title: nextProps.title, message: nextProps.message});
 	}
 
-  close() {
-    this.setState({ show: false });
-  }
+	close() {
+		this.setState({ show: false });
+	}
 
-  render() {
+	render() {
 		return (
 			<Modal show={this.state.show}>
 				<Modal.Header>

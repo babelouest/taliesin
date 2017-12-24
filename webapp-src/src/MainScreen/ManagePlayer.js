@@ -4,8 +4,8 @@ import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
 
 class ManagePlayer extends Component {	
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		
 		this.state = {playerList: [], switchList: []};
 		this.internalPlayerList = [];
@@ -97,14 +97,14 @@ class ManagePlayer extends Component {
 			});
 		});
 	}
-  
-  handleChangeEnabled(index) {
-    var playerList = this.state.playerList;
-    playerList[index].enabled = !playerList[index].enabled;
-    this.setState({playerList: playerList});
-  }
 	
-  render() {
+	handleChangeEnabled(index) {
+		var playerList = this.state.playerList;
+		playerList[index].enabled = !playerList[index].enabled;
+		this.setState({playerList: playerList});
+	}
+	
+	render() {
 		var lines = [];
 		this.internalPlayerList = [];
 		

@@ -3,8 +3,8 @@ import { Breadcrumb } from 'react-bootstrap';
 import StateStore from '../lib/StateStore';
 
 class BreadCrumbMenuElement extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		this.state = {subPath: props.subPath, path: props.path};
 	}
 	

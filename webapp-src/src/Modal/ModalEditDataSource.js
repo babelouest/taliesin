@@ -4,8 +4,8 @@ import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
 
 class ModalEditDataSource extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		
 		this.state = {
 			show: props.show, 
@@ -34,7 +34,7 @@ class ModalEditDataSource extends Component {
 		});
 	}
 
-  close(result, e) {
+	close(result, e) {
 		if (e) {
 			e.preventDefault();
 		}
@@ -45,7 +45,7 @@ class ModalEditDataSource extends Component {
 				this.state.onCloseCb(false, this.state.add);
 			});
 		}
-  }
+	}
 	
 	getNameValidationState() {
 		if (this.state.add) {
@@ -66,31 +66,31 @@ class ModalEditDataSource extends Component {
 		}
 	}
 	
-  handleChangeName(e) {
+	handleChangeName(e) {
 		var dataSource = this.state.dataSource;
 		dataSource.name = e.target.value;
-    this.setState({ dataSource: dataSource });
-  }
+		this.setState({ dataSource: dataSource });
+	}
 
-  handleChangeDescription(e) {
+	handleChangeDescription(e) {
 		var dataSource = this.state.dataSource;
 		dataSource.description = e.target.value;
-    this.setState({ dataSource: dataSource });
-  }
+		this.setState({ dataSource: dataSource });
+	}
 	
 	handleChangeScope(e) {
 		var dataSource = this.state.dataSource;
 		dataSource.scope = e.target.value;
-    this.setState({ dataSource: dataSource });
+		this.setState({ dataSource: dataSource });
 	}
 	
 	handleChangePath(e) {
 		var dataSource = this.state.dataSource;
 		dataSource.path = e.target.value;
-    this.setState({ dataSource: dataSource });
+		this.setState({ dataSource: dataSource });
 	}
 	
-  render() {
+	render() {
 		var title = this.state.add?i18n.t("modal.title_add_data_source"):i18n.t("modal.title_edit_data_source", {data_source: this.state.dataSource.name}), path = "";
 		var scopeInput = <span>{this.state.dataSource.scope==="me"?"Me":"All"}</span>;
 		if (StateStore.getState().profile.isAdmin && this.state.add) {

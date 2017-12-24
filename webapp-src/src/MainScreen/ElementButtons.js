@@ -8,8 +8,8 @@ import ModalEditCategory from '../Modal/ModalEditCategory';
 import i18n from '../lib/i18n';
 
 class ElementButtons extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		this.state = {
 			dataSource: props.dataSource, 
 			path: props.path, 
@@ -41,7 +41,7 @@ class ElementButtons extends Component {
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
 			if (reduxState.lastAction === "setPlaylists") {
-        this.setState({playlist: reduxState.playlists});
+				this.setState({playlist: reduxState.playlists});
 			} else if (reduxState.lastAction === "setStreamList") {
 				this.setState({streamList: reduxState.streamList});
 			}
@@ -49,7 +49,7 @@ class ElementButtons extends Component {
 	}
 	
 	componentWillReceiveProps(nextProps) {
-    this.setState({
+		this.setState({
 			dataSource: nextProps.dataSource, 
 			path: nextProps.path, 
 			category: nextProps.category, 
@@ -65,8 +65,8 @@ class ElementButtons extends Component {
 			hideRefresh: nextProps.hideRefresh
 		});
 	}
-  
-  playElement() {
+	
+	playElement() {
 		var streamList = StateStore.getState().streamList, curStream = streamList.find((stream) => {return stream.display_name.startsWith("{" + (StateStore.getState().profile.currentPlayer.name) + "}")});
 		if (curStream) {
 			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(curStream.name) + "/manage", {command: "stop"})
@@ -93,7 +93,7 @@ class ElementButtons extends Component {
 		} else {
 			this.runPlayElement();
 		}
-  }
+	}
 	
 	runPlayElement() {
 		var url, streamName;
@@ -108,30 +108,30 @@ class ElementButtons extends Component {
 				streamName += " - " + this.state.subCategoryValue;
 			}
 		}
-    StateStore.getState().APIManager.taliesinApiRequest("GET", url + "?jukebox&recursive&name=" + encodeURI("{") + (StateStore.getState().profile.currentPlayer.name) + encodeURI("} - ") + encodeURI(streamName))
-    .then((result) => {
+		StateStore.getState().APIManager.taliesinApiRequest("GET", url + "?jukebox&recursive&name=" + encodeURI("{") + (StateStore.getState().profile.currentPlayer.name) + encodeURI("} - ") + encodeURI(streamName))
+		.then((result) => {
 			var streamList = StateStore.getState().streamList;
-      streamList.push(result);
-      StateStore.dispatch({type: "setStreamList", streamList: streamList});
-      StateStore.dispatch({type: "loadStreamAndPlay", stream: result, index: 0});
+			streamList.push(result);
+			StateStore.dispatch({type: "setStreamList", streamList: streamList});
+			StateStore.dispatch({type: "loadStreamAndPlay", stream: result, index: 0});
 			StateStore.getState().NotificationManager.addNotification({
 				message: i18n.t("common.message_play_stream_ok"),
 				level: 'info'
 			});
-    })
-    .fail(() => {
+		})
+		.fail(() => {
 			StateStore.getState().NotificationManager.addNotification({
 				message: i18n.t("common.message_error_play"),
 				level: 'error'
 			});
-    });
+		});
 	}
-  
-  playElementAdvanced() {
-    this.setState({show: true});
-  }
-  
-  runPlayElementAdvanced(player) {
+	
+	playElementAdvanced() {
+		this.setState({show: true});
+	}
+	
+	runPlayElementAdvanced(player) {
 		if (player) {
 			var url;
 			if (this.state.path) {
@@ -156,59 +156,59 @@ class ElementButtons extends Component {
 				});
 			});
 		}
-    this.setState({show: false});
-  }
+		this.setState({show: false});
+	}
 	
 	addToStream(stream) {
-    var parameters;
-    if (this.state.path) {
-      parameters = {data_source: this.state.dataSource, path: this.state.path, recursive: true};
-    } else {
-      parameters = {data_source: this.state.dataSource, category: this.state.category, category_value: this.state.categoryValue, sub_category: (this.state.subCategory?this.state.subCategory:undefined), sub_category_value: (this.state.subCategoryValue?this.state.subCategoryValue:undefined) };
-    }
+		var parameters;
+		if (this.state.path) {
+			parameters = {data_source: this.state.dataSource, path: this.state.path, recursive: true};
+		} else {
+			parameters = {data_source: this.state.dataSource, category: this.state.category, category_value: this.state.categoryValue, sub_category: (this.state.subCategory?this.state.subCategory:undefined), sub_category_value: (this.state.subCategoryValue?this.state.subCategoryValue:undefined) };
+		}
 		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(stream) + "/manage", {command: "append_list", parameters: [parameters]})
-    .then((result) => {
-      StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(stream) + "/manage", {command: "info"})
-      .then((streamInfo) => {
-        StateStore.dispatch({type: "setStream", stream: streamInfo});
-        StateStore.getState().NotificationManager.addNotification({
-          message: i18n.t("common.message_adding_stream_ok"),
-          level: 'info'
-        });
-      });
-    })
-    .fail(() => {
+		.then((result) => {
+			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(stream) + "/manage", {command: "info"})
+			.then((streamInfo) => {
+				StateStore.dispatch({type: "setStream", stream: streamInfo});
+				StateStore.getState().NotificationManager.addNotification({
+					message: i18n.t("common.message_adding_stream_ok"),
+					level: 'info'
+				});
+			});
+		})
+		.fail(() => {
 			StateStore.getState().NotificationManager.addNotification({
 				message: i18n.t("common.message_error_adding_stream"),
 				level: 'error'
 			});
-    });
+		});
 	}
 	
 	addToPlaylist(playlist) {
-    var parameters;
-    if (this.state.path) {
-      parameters = {data_source: this.state.dataSource, path: this.state.path, recursive: true};
-    } else {
-      parameters = {data_source: this.state.dataSource, category: this.state.category, category_value: this.state.categoryValue, sub_category: (this.state.subCategory?this.state.subCategory:undefined), sub_category_value: (this.state.subCategoryValue?this.state.subCategoryValue:undefined) };
-    }
+		var parameters;
+		if (this.state.path) {
+			parameters = {data_source: this.state.dataSource, path: this.state.path, recursive: true};
+		} else {
+			parameters = {data_source: this.state.dataSource, category: this.state.category, category_value: this.state.categoryValue, sub_category: (this.state.subCategory?this.state.subCategory:undefined), sub_category_value: (this.state.subCategoryValue?this.state.subCategoryValue:undefined) };
+		}
 		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/playlist/" + encodeURIComponent(playlist) + "/add_media", [parameters])
-    .then((result) => {
-      StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(playlist))
-      .then((newPlaylist) => {
-        StateStore.dispatch({type: "setPlaylist", playlist: newPlaylist});
-        StateStore.getState().NotificationManager.addNotification({
-          message: i18n.t("common.message_adding_stream_ok"),
-          level: 'info'
-        });
-      });
-    })
-    .fail(() => {
+		.then((result) => {
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(playlist))
+			.then((newPlaylist) => {
+				StateStore.dispatch({type: "setPlaylist", playlist: newPlaylist});
+				StateStore.getState().NotificationManager.addNotification({
+					message: i18n.t("common.message_adding_stream_ok"),
+					level: 'info'
+				});
+			});
+		})
+		.fail(() => {
 			StateStore.getState().NotificationManager.addNotification({
 				message: i18n.t("common.message_error_adding_stream"),
 				level: 'error'
 			});
-    });
+		});
 	}
 	
 	addToNewPlaylist() {
@@ -314,7 +314,7 @@ class ElementButtons extends Component {
 					{i18n.t("common.view_category")}
 				</MenuItem>
 		}
-    return (
+		return (
 			<div>
 				<ButtonGroup className="hidden-xs">
 					<Button title={i18n.t("common.play_now")} onClick={this.playElement}>
@@ -368,21 +368,21 @@ class ElementButtons extends Component {
 					</MenuItem>
 					{playlist}
 				</DropdownButton>
-        <ModalEditStream 
-          show={this.state.show} 
-          dataSource={this.state.dataSource} 
-          element={this.state.element} 
-          path={this.state.path} 
-          category={this.state.category} 
-          categoryValue={this.state.categoryValue} 
-          subCategory={this.state.subCategory} 
-          subCategoryValue={this.state.subCategoryValue} 
-          onCloseCb={this.runPlayElementAdvanced} 
-        />
+				<ModalEditStream 
+					show={this.state.show} 
+					dataSource={this.state.dataSource} 
+					element={this.state.element} 
+					path={this.state.path} 
+					category={this.state.category} 
+					categoryValue={this.state.categoryValue} 
+					subCategory={this.state.subCategory} 
+					subCategoryValue={this.state.subCategoryValue} 
+					onCloseCb={this.runPlayElementAdvanced} 
+				/>
 				<ModalEditPlaylist show={this.state.addPlaylistShow} onCloseCb={this.onSavePlaylist} add={true} playlist={false} />
 				{modalCategory}
 			</div>
-    );
+		);
 	}
 }
 

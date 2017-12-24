@@ -8,8 +8,8 @@ import ElementPathIcon from './ElementPathIcon';
 import i18n from '../lib/i18n';
 
 class Dashboard extends Component {	
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		
 		this.state = {
 			recentExpanded: false,
@@ -114,8 +114,8 @@ class Dashboard extends Component {
 			});
 		}
 	}
-  
-  render() {
+	
+	render() {
 		if (StateStore.getState().status === "connected") {
 			var recentLoading, randomLoading;
 			if (!this.state.recentLoaded) {

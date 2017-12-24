@@ -6,8 +6,8 @@ import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
 
 class AudioPlayer extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		
 		var interval = setInterval(() => {
 			this.loadMedia();
@@ -16,8 +16,8 @@ class AudioPlayer extends Component {
 		this.state = {
 			play: false, 
 			stream: props.stream,
-      playNow: props.play,
-      playIndex: props.index,
+			playNow: props.play,
+			playIndex: props.index,
 			streamUrl: "#", 
 			media: {data_source: false, path: false},
 			interval: interval,
@@ -48,7 +48,7 @@ class AudioPlayer extends Component {
 		this.handleChangeVolume = this.handleChangeVolume.bind(this);
 		this.loadMedia = this.loadMedia.bind(this);
 		this.dispatchPlayerStatus = this.dispatchPlayerStatus.bind(this);
-    
+		
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
 			if (this._ismounted) {
@@ -76,10 +76,10 @@ class AudioPlayer extends Component {
 							this.handleRandom();
 							break;
 						case "volume":
-							this.handleChangeVolume({target: {value: reduxState.profile.playerActionParameter}});
+							this.handleChangeVolume(reduxState.profile.playerActionParameter);
 							break;
-            default:
-              break;
+						default:
+							break;
 					}
 				}
 			}
@@ -121,12 +121,12 @@ class AudioPlayer extends Component {
 	}
 	
 	loadMedia() {
-    if (this.state.stream.name) {
-      if (this.state.playNow) {
-        this.setState({playNow: false, jukeboxIndex: this.state.playIndex}, () => {
-          this.handlePlay();
-        });
-      }
+		if (this.state.stream.name) {
+			if (this.state.playNow) {
+				this.setState({playNow: false, jukeboxIndex: this.state.playIndex}, () => {
+					this.handlePlay();
+				});
+			}
 			if (this.state.stream.webradio) {
 				StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "now"})
 				.then((result) => {
@@ -148,13 +148,13 @@ class AudioPlayer extends Component {
 					}
 				});
 			}
-    }
+		}
 	}
 	
-  handlePrevious() {
+	handlePrevious() {
 		if (this.state.stream.webradio) {
 			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + this.state.stream.name + "/manage", {command: "replay"})
-      .then((result) => {
+			.then((result) => {
 				StateStore.getState().NotificationManager.addNotification({
 					message: i18n.t("player.replay"),
 					level: 'success'
@@ -174,12 +174,12 @@ class AudioPlayer extends Component {
 				});
 			}
 		}
-  }
+	}
 	
-  handleNext() {
+	handleNext() {
 		if (this.state.stream.webradio) {
 			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + this.state.stream.name + "/manage", {command: "skip"})
-      .then((result) => {
+			.then((result) => {
 				StateStore.getState().NotificationManager.addNotification({
 					message: i18n.t("player.next"),
 					level: 'success'
@@ -188,35 +188,37 @@ class AudioPlayer extends Component {
 		} else {
 			this.nextSong();
 		}
-  }
+	}
 	
-  handleStop() {
-    this.rap.audioEl.pause();
-    this.rap.audioEl.currentTime = 0;
-    this.rap.audioEl.src = URL.createObjectURL(new Blob([], {type:"audio/mp3"}));
-		this.setState({play: false}, () => {
-			this.dispatchPlayerStatus({status: "stop"});
-			document.title = "Taliesin";
-		});
-  }
+	handleStop() {
+		if (this.rap && this.rap.audioEl) {
+			this.rap.audioEl.pause();
+			this.rap.audioEl.currentTime = 0;
+			this.rap.audioEl.src = URL.createObjectURL(new Blob([], {type:"audio/mp3"}));
+			this.setState({play: false}, () => {
+				this.dispatchPlayerStatus({status: "stop"});
+				document.title = "Taliesin";
+			});
+		}
+	}
 	
-  handlePause() {
-    if (this.state.stream.webradio) {
-      this.handleStop();
-    } else {
+	handlePause() {
+		if (this.state.stream.webradio) {
+			this.handleStop();
+		} else {
 			if (this.rap.audioEl.paused) {
 				this.rap.audioEl.play();
 			} else {
 				this.rap.audioEl.pause();
 			}
-    }
-  }
+		}
+	}
 	
-  handlePlay() {
-    if (this.state.stream.name && this.state.taliesinApiUrl) {
-      this.handleStop();
-      var randStr = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);
-      var indexStr = this.state.stream.webradio?"":("&index="+this.state.jukeboxIndex);
+	handlePlay() {
+		if (this.state.stream.name && this.state.taliesinApiUrl) {
+			this.handleStop();
+			var randStr = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);
+			var indexStr = this.state.stream.webradio?"":("&index="+this.state.jukeboxIndex);
 			var newState = {streamUrl: this.state.taliesinApiUrl + "/stream/" + this.state.stream.name + "?rand=" + randStr + indexStr};
 			if (this.state.stream.webradio) {
 				var newPlayedIndex = this.state.jukeboxPlayedIndex;
@@ -226,24 +228,24 @@ class AudioPlayer extends Component {
 				this.loadMedia();
 				StateStore.dispatch({type: "setJukeboxIndex", index: this.state.jukeboxIndex});
 			}
-      this.setState(newState, () => {
+			this.setState(newState, () => {
 				this.dispatchPlayerStatus({status: "play"});
 			});
-      this.rap.audioEl.play();
+			this.rap.audioEl.play();
 		}
-  }
+	}
 	
-  handleListen() {
+	handleListen() {
 		this.setState({currentTime: this.rap.audioEl.currentTime, volume: (this.rap.audioEl.volume * 100)});
-  }
+	}
 	
-  handleRepeat() {
+	handleRepeat() {
 		this.setState({jukeboxRepeat: !this.state.jukeboxRepeat}, () => {
 			this.dispatchPlayerStatus({repeat: true});
 		});
-  }
+	}
 	
-  handleRandom() {
+	handleRandom() {
 		var newState = {jukeboxRandom: !this.state.jukeboxRandom};
 		if (!this.state.jukeboxRandom) {
 			newState.jukeboxPlayedIndex = [];
@@ -251,15 +253,15 @@ class AudioPlayer extends Component {
 		this.setState(newState, () => {
 			this.dispatchPlayerStatus({random: true});
 		});
-  }
-  
-  handleOnPlay() {
+	}
+	
+	handleOnPlay() {
 		this.setState({play: true}, () => {
 			this.dispatchPlayerStatus({status: "play"});
 		});
-  }
+	}
 	
-  handleOnEnded() {
+	handleOnEnded() {
 		if (this.state.stream.webradio) {
 			this.setState({play: false}, () =>{
 				this.dispatchPlayerStatus({status: "stop"});
@@ -267,15 +269,15 @@ class AudioPlayer extends Component {
 		} else {
 			this.nextSong();
 		}
-  }
+	}
 	
-  handleOnPause() {
+	handleOnPause() {
 		if (this.state.stream.webradio) {
 			this.handleStop();
 		} else {
 			this.dispatchPlayerStatus({status: "pause"});
 		}
-  }
+	}
 	
 	handleChangeVolume(volume) {
 		this.rap.audioEl.volume = ((this.state.volume+volume) / 100);
@@ -329,8 +331,8 @@ class AudioPlayer extends Component {
 		}
 	}
 	
-  render() {
-    var playButton, duration, volume, metadata, streamName = "None";
+	render() {
+		var playButton, duration, volume, metadata, streamName = "None";
 		if (this.state.stream && this.state.stream.display_name) {
 			if (this.state.stream.display_name.startsWith("{") && this.state.stream.display_name.indexOf("} - ") !== -1) {
 				streamName = this.state.stream.display_name.substring(this.state.stream.display_name.indexOf("} - ") + 3);
@@ -343,7 +345,7 @@ class AudioPlayer extends Component {
 				<label className="hidden-xs">{i18n.t("player.current_stream")}&nbsp;</label>
 				<span>{streamName}</span>
 			</div>;
-    if (this.state.play) {
+		if (this.state.play) {
 			if (this.rap.audioEl.paused) {
 				playButton = 
 					<Button title={i18n.t("common.play")} onClick={this.handlePlay}>
@@ -356,12 +358,12 @@ class AudioPlayer extends Component {
 					</Button>;
 			}
 			duration = this.displayDuration(this.state.currentTime, this.state.duration);
-    } else {
-      playButton = 
-        <Button title={i18n.t("common.play")} onClick={this.handlePlay}>
+		} else {
+			playButton = 
+				<Button title={i18n.t("common.play")} onClick={this.handlePlay}>
 					<FontAwesome name={"play"} />
-        </Button>;
-    }
+				</Button>;
+		}
 		if (this.state.volume) {
 			volume = <FontAwesome name={"volume-up"} />;
 		} else {
@@ -391,11 +393,11 @@ class AudioPlayer extends Component {
 							<FontAwesome name={"random"} />
 						</Button>
 						<DropdownButton title={volume} id="dropdown-volume">
-              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(5)}}>{i18n.t("common.volume_plus_5")}</MenuItem>
-              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(1)}}>{i18n.t("common.volume_plus_1")}</MenuItem>
-              <MenuItem className="text-center">{i18n.t("common.volume_current")} {this.state.volume} %</MenuItem>
-              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-1)}}>{i18n.t("common.volume_minus_1")}</MenuItem>
-              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-5)}}>{i18n.t("common.volume_minus_5")}</MenuItem>
+							<MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(5)}}>{i18n.t("common.volume_plus_5")}</MenuItem>
+							<MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(1)}}>{i18n.t("common.volume_plus_1")}</MenuItem>
+							<MenuItem className="text-center">{i18n.t("common.volume_current")} {this.state.volume} %</MenuItem>
+							<MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-1)}}>{i18n.t("common.volume_minus_1")}</MenuItem>
+							<MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-5)}}>{i18n.t("common.volume_minus_5")}</MenuItem>
 						</DropdownButton>
 					</ButtonGroup>
 					<div>
@@ -417,7 +419,7 @@ class AudioPlayer extends Component {
 				</div>
 			</div>
 		);
-  }
+	}
 }
 
 export default AudioPlayer;

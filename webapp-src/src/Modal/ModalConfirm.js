@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 import { Button, Modal } from 'react-bootstrap';
 
 class ModalConfirm extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		
 		this.state = {show: props.show, title: props.title, message: props.message, cb: props.onCloseCb};
 		
@@ -14,13 +14,13 @@ class ModalConfirm extends Component {
 		this.setState({show: nextProps.show, title: nextProps.title, message: nextProps.message, cb: nextProps.onCloseCb});
 	}
 
-  close(result) {
-    this.setState({ show: false }, () => {
+	close(result) {
+		this.setState({ show: false }, () => {
 			this.state.cb && this.state.cb(result);
 		});
-  }
+	}
 
-  render() {
+	render() {
 		return (
 			<Modal show={this.state.show}>
 				<Modal.Header>

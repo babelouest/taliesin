@@ -4,8 +4,8 @@ import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
 
 class ModalEditStream extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		
 		this.state = {
 			show: props.show, 
@@ -70,7 +70,7 @@ class ModalEditStream extends Component {
 		});
 	}
 
-  close(result, e) {
+	close(result, e) {
 		if (e) {
 			e.preventDefault();
 		}
@@ -86,12 +86,12 @@ class ModalEditStream extends Component {
 				channels: this.state.channels,
 				bitrate: this.state.bitrate,
 				sampleRate: this.state.sampleRate,
-        playNow: this.state.playNow
+				playNow: this.state.playNow
 			});
 		} else {
 			this.state.onCloseCb(false);
 		}
-  }
+	}
 	
 	handleChangeRecursive() {
 		this.setState({recursive: !this.state.recursive});
@@ -138,7 +138,7 @@ class ModalEditStream extends Component {
 		this.setState({playNow: !this.state.playNow});
 	}
 	
-  render() {
+	render() {
 		var recursive, random, path;
 		if (this.state.element && this.state.element.type === "folder") {
 			recursive = 

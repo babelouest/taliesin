@@ -9,8 +9,8 @@ import MediaRow from './MediaRow';
 import i18n from '../lib/i18n';
 
 class StreamDetails extends Component {	
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		
 		this.state = {
 			stream: props.stream,
@@ -73,17 +73,17 @@ class StreamDetails extends Component {
 		});
 	}
 
-  deleteStream() {
+	deleteStream() {
 		this.setState({modalConfirmShow: true, modalTitle: i18n.t("stream.remove_title"), modalMessage: i18n.t("stream.remove_message", {stream: (this.state.stream.display_name||i18n.t("common.no_name"))})});
-  }
+	}
 	
-  renameStream() {
+	renameStream() {
 		this.setState({modalRenameShow: true, modalTitle: i18n.t("stream.rename_title"), modalMessage: i18n.t("stream.rename_message", {stream: (this.state.stream.display_name||i18n.t("common.no_name"))}), modalValue: this.state.stream.display_name});
-  }
-  
-  saveStream() {
+	}
+	
+	saveStream() {
 		this.setState({modalSaveShow: true, modalTitle: i18n.t("stream.save_as_playlist_title"), modalMessage: i18n.t("stream.save_as_playlist_message", {stream: (this.state.stream.display_name||i18n.t("common.no_name"))}), modalValue: this.state.stream.display_name});
-  }
+	}
 	
 	reloadStream() {
 		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "reload"})
@@ -185,7 +185,7 @@ class StreamDetails extends Component {
 			});
 		}
 	}
-  
+	
 	confirmSave(name) {
 		if (name) {
 			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "save", parameters: {name: name}})
@@ -312,7 +312,7 @@ class StreamDetails extends Component {
 		});
 	}
 	
-  render() {
+	render() {
 		var streamRandom, playlistAttached, history, clientList = [], playNowTitle;
 		if (this.state.stream.webradio) {
 			if (this.state.stream.random) {
@@ -535,7 +535,7 @@ class StreamDetails extends Component {
 								</Label>
 							</Col>
 							<Col md={6} sm={6} xs={6}>
-                <a target="_blank" href={StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name}>direct link</a>
+								<a target="_blank" href={StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name}>direct link</a>
 							</Col>
 						</Row>
 						{playlistAttached}

@@ -7,8 +7,8 @@ import ElementPathList from './ElementPathList';
 import i18n from '../lib/i18n';
 
 class BrowsePath extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		this.state = {
 			dataSource: props.dataSource, 
 			path: props.path, 
@@ -50,8 +50,8 @@ class BrowsePath extends Component {
 		});
 		this.setState({elementList: newList, offset: 0});
 	}
-  
-  getElementList() {
+	
+	getElementList() {
 		if (!this.state.loaded && this.state.dataSource) {
 			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/path/" + encodeURI(this.state.path).replace(/#/g, "%23").replace(/\+/g, "%2B"))
 			.then((result) => {
@@ -61,7 +61,7 @@ class BrowsePath extends Component {
 				this.setState({loaded: true, elementListInitial: [], elementList: []});
 			});
 		}
-  }
+	}
 	
 	navigate(o) {
 		this.setState({offset: this.state.offset+o});

@@ -17,27 +17,27 @@ import BrowseHeaderCategory from './BrowseHeaderCategory';
 import i18n from '../lib/i18n';
 
 class MainScreen extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		this.state = {
-      dataSource: StateStore.getState().profile.dataSource, 
-      browse: StateStore.getState().profile.browse, 
-      path: StateStore.getState().profile.path, 
-      view: StateStore.getState().profile.view, 
+			dataSource: StateStore.getState().profile.dataSource, 
+			browse: StateStore.getState().profile.browse, 
+			path: StateStore.getState().profile.path, 
+			view: StateStore.getState().profile.view, 
 			category: false,
 			categoryValue: false,
 			subCategory: false,
 			subCategoryValue: false,
-      imgThumbBlob: false,
+			imgThumbBlob: false,
 			showMainScreen: true
-    };
+		};
 		
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
 			if (reduxState.lastAction === "setCurrentDataSource" || reduxState.lastAction === "setDataSource") {
 				this.setState({dataSource: reduxState.profile.dataSource, path: reduxState.profile.path});
 			} else if (reduxState.lastAction === "setCurrentPath") {
-        this.setState({path: reduxState.profile.path});
+				this.setState({path: reduxState.profile.path});
 			} else if (reduxState.lastAction === "setCurrentBrowse") {
 				this.setState({browse: reduxState.profile.browse});
 			} else if (reduxState.lastAction === "setCurrentCategory") {
@@ -132,7 +132,7 @@ class MainScreen extends Component {
 				);
 			}
 		} else {
-			return  (
+			return	(
 				<div></div>
 			);
 		}

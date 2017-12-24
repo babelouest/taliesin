@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 import { Button, Modal, FormControl, FormGroup, ControlLabel } from 'react-bootstrap';
 
 class ModalEdit extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		
 		this.state = {show: props.show, title: props.title, message: props.message, value: props.value, cb: props.onCloseCb};
 		
@@ -16,28 +16,28 @@ class ModalEdit extends Component {
 		this.setState({show: nextProps.show, title: nextProps.title, message: nextProps.message, value: nextProps.value, cb: nextProps.onCloseCb});
 	}
 
-  close(result, e) {
+	close(result, e) {
 		if (e) {
 			e.preventDefault();
 		}
-    this.setState({ show: false }, () => {
+		this.setState({ show: false }, () => {
 			this.state.cb && this.state.cb(result?this.state.value:false);
 		});
-  }
+	}
 	
-  getValidationState() {
+	getValidationState() {
 		if (!this.state.value || !this.state.value.length) {
 			return "error";
 		} else {
 			return "success";
 		}
-  }
+	}
 
-  handleChange(e) {
-    this.setState({ value: e.target.value });
-  }
+	handleChange(e) {
+		this.setState({ value: e.target.value });
+	}
 
-  render() {
+	render() {
 		return (
 			<Modal show={this.state.show}>
 				<Modal.Header>

@@ -7,13 +7,13 @@ import ModalMedia from '../Modal/ModalMedia';
 import i18n from '../lib/i18n';
 
 class MediaRow extends Component {	
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		
 		this.state = {
-      stream: props.stream,
+			stream: props.stream,
 			media: props.media, 
-      index: props.index,
+			index: props.index,
 			elements: props.elements,
 			date: props.date,
 			imgThumbBlob: false,
@@ -35,9 +35,9 @@ class MediaRow extends Component {
 	
 	componentWillReceiveProps(nextProps) {
 		this.setState({
-      stream: nextProps.stream,
+			stream: nextProps.stream,
 			media: nextProps.media,
-      index: nextProps.index,
+			index: nextProps.index,
 			elements: nextProps.elements,
 			date: nextProps.date,
 			imgThumbBlob: false,
@@ -75,7 +75,7 @@ class MediaRow extends Component {
 		}
 		return title;
 	}
-  
+	
 	loadCover() {
 		if (this.state.media.data_source && this.state.media.path && this._ismounted) {
 			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.media.data_source) + "/browse/path/" + encodeURI(this.state.media.path).replace(/#/g, "%23").replace(/\+/g, "%2B") + "?cover&thumbnail&base64")
@@ -88,11 +88,11 @@ class MediaRow extends Component {
 		}
 	}
 	
-  handleOpenModal() {
+	handleOpenModal() {
 		if (this._ismounted) {
 			this.setState({modalShow: true});
 		}
-  }
+	}
 	
 	handlePlayNow() {
 		StateStore.dispatch({
@@ -136,7 +136,7 @@ class MediaRow extends Component {
 		StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: StateStore.getState().dataSourceList.find((ds) => {return ds.name === this.state.media.data_source})});
 		StateStore.dispatch({type: "setCurrentCategory", category: "album", categoryValue: this.state.media.tags.album});
 	}
-  
+	
 	onChangeVisibility(isVisible) {
 		this.setState({visible: isVisible}, () => {
 			if (isVisible && !this.state.coverLoaded) {

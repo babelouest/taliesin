@@ -100,26 +100,26 @@ class OAuth2Connector {
 		}
 	}
 	
-  getQueryParams(qs) {
-    qs = qs.split('+').join(' ');
+	getQueryParams(qs) {
+		qs = qs.split('+').join(' ');
 
-    var params = {},
-      tokens,
-      re = /[#&]?([^=]+)=([^&]*)/g;
+		var params = {},
+			tokens,
+			re = /[#&]?([^=]+)=([^&]*)/g;
 
 		tokens = re.exec(qs);
-    while (tokens) {
-      params[decodeURIComponent(tokens[1])] = decodeURIComponent(tokens[2]);
+		while (tokens) {
+			params[decodeURIComponent(tokens[1])] = decodeURIComponent(tokens[2]);
 			tokens = re.exec(qs);
-    }
+		}
 
-    return params;
-  }
+		return params;
+	}
 	
 	getTokenFromFragment() {
 		var params = this.getQueryParams(document.location.hash);
 		var curDate = new Date();
-		if (params.access_token && params.expires_in)  {
+		if (params.access_token && params.expires_in)	{
 			return {access_token: params.access_token, expires_in: params.expires_in, iat: Math.floor(curDate.getTime()/1000)};
 		} else {
 			return false;
@@ -202,21 +202,21 @@ class OAuth2Connector {
 	}
 	
 	getStoredData() {
-    var storage;
+		var storage;
 		if (this.parameters.storageType === "local") {
 			storage = JSON.parse(localStorage.getItem(this.localStorageKey));
-      if (storage) {
-        return storage;
-      } else {
-        return {};
-      }
+			if (storage) {
+				return storage;
+			} else {
+				return {};
+			}
 		} else if (this.parameters.storageType === "cookie") {
 			storage = JSON.parse(Cookies.get(this.localStorageKey));
-      if (storage) {
-        return storage;
-      } else {
-        return {};
-      }
+			if (storage) {
+				return storage;
+			} else {
+				return {};
+			}
 		} else {
 			return {};
 		}
@@ -318,18 +318,18 @@ class OAuth2Connector {
 			}
 		}
 	}
-  
-  disconnect() {
-    clearTimeout(this.refreshTimeout);
-    this.refreshToken = false;
-    this.accessToken = false;
-    this.broadcastMessage("disconnected");
+	
+	disconnect() {
+		clearTimeout(this.refreshTimeout);
+		this.refreshToken = false;
+		this.accessToken = false;
+		this.broadcastMessage("disconnected");
 		if (this.parameters.storageType === "local") {
 			localStorage.removeItem(this.localStorageKey);
 		} else if (this.parameters.storageType === "cookie") {
 			Cookies.remove(this.localStorageKey);
 		}
-  }
+	}
 }
 
 export default OAuth2Connector;

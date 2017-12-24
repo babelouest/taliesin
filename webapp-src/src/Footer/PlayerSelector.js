@@ -4,8 +4,8 @@ import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
 
 class PlayerSelector extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		this.state = {player: props.player, loaded: false, currentList: props.currentList, isAdmin: props.isAdmin};
 		
 		this.handleManagePlayers = this.handleManagePlayers.bind(this);
@@ -22,11 +22,11 @@ class PlayerSelector extends Component {
 	}
 	
 	handleSelectPlayer(player) {
-    StateStore.dispatch({type: "loadStream", stream: {name: false, webradio: false}});
+		StateStore.dispatch({type: "loadStream", stream: {name: false, webradio: false}});
 		StateStore.dispatch({type: "setCurrentPlayer", currentPlayer: player});
 	}
 	
-  render() {
+	render() {
 		var playerList = [
 			<MenuItem key={0} eventKey={0} onClick={() => this.handleSelectPlayer({type: "internal", name: i18n.t("player.internal")})} className={this.state.player.type==="internal"?"bg-success":""}>{i18n.t("player.internal")}</MenuItem>,
 			<MenuItem key={1} eventKey={1} onClick={() => this.handleSelectPlayer({type: "external", name: i18n.t("player.external")})} className={this.state.player.type==="external"?"bg-success":""}>{i18n.t("player.external")}</MenuItem>
@@ -55,7 +55,7 @@ class PlayerSelector extends Component {
 				</DropdownButton>
 			</div>
 		);
-  }
+	}
 }
 
 export default PlayerSelector;

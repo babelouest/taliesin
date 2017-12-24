@@ -5,18 +5,18 @@ import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
 
 class ModalMedia extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		
 		this.state = {
-      show: props.show, 
-      media: props.media, 
-      title: props.title, 
-      close: props.onClose, 
-      imgBlob: false,
+			show: props.show, 
+			media: props.media, 
+			title: props.title, 
+			close: props.onClose, 
+			imgBlob: false,
 			streamList: StateStore.getState().streamList,
 			playlist: StateStore.getState().playlists
-    };
+		};
 		
 		this.onCloseModal = this.onCloseModal.bind(this);
 		this.getMediaCover = this.getMediaCover.bind(this);
@@ -38,26 +38,26 @@ class ModalMedia extends Component {
 	
 	componentWillReceiveProps(nextProps) {
 		this.setState({
-      show: nextProps.show, 
-      media: (nextProps.media?nextProps.media:this.state.media), 
-      title: nextProps.title, 
-      close: nextProps.onClose, 
-      imgBlob: false,
+			show: nextProps.show, 
+			media: (nextProps.media?nextProps.media:this.state.media), 
+			title: nextProps.title, 
+			close: nextProps.onClose, 
+			imgBlob: false,
 			streamList: StateStore.getState().streamList,
 			playlist: StateStore.getState().playlists
-    }, () => {
+		}, () => {
 			this.getMediaFolder();
 			this.getMediaCover();
 		});
 	}
 
-  onCloseModal() {
+	onCloseModal() {
 		this.setState({show: false}, () => {
 			if (this.state.close) {
 				this.state.close();
 			}
 		});
-  }
+	}
 	
 	onPlayNow() {
 		var streamList = StateStore.getState().streamList, curStream = streamList.find((stream) => {return stream.display_name.startsWith("{" + (StateStore.getState().profile.currentPlayer.name) + "}")});
@@ -89,24 +89,24 @@ class ModalMedia extends Component {
 	}
 	
 	runPlayNow() {
-    StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.media.data_source) + "/browse/path/" + encodeURI(this.state.media.path).replace(/#/g, "%23") + "?jukebox&recursive&name={" + (StateStore.getState().profile.currentPlayer.name) + "} - " + (this.state.media.tags.title||this.state.media.name))
-    .then((result) => {
+		StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.media.data_source) + "/browse/path/" + encodeURI(this.state.media.path).replace(/#/g, "%23") + "?jukebox&recursive&name={" + (StateStore.getState().profile.currentPlayer.name) + "} - " + (this.state.media.tags.title||this.state.media.name))
+		.then((result) => {
 			var streamList = StateStore.getState().streamList;
-      streamList.push(result);
-      StateStore.dispatch({type: "setStreamList", streamList: streamList});
-      StateStore.dispatch({type: "loadStreamAndPlay", stream: result, index: 0});
+			streamList.push(result);
+			StateStore.dispatch({type: "setStreamList", streamList: streamList});
+			StateStore.dispatch({type: "loadStreamAndPlay", stream: result, index: 0});
 			StateStore.getState().NotificationManager.addNotification({
 				message: i18n.t("common.message_play_stream_ok"),
 				level: 'info'
 			});
 			this.setState({show: false});
-    })
-    .fail(() => {
+		})
+		.fail(() => {
 			StateStore.getState().NotificationManager.addNotification({
 				message: i18n.t("common.message_error_play"),
 				level: 'error'
 			});
-    });
+		});
 	}
 	
 	getMediaFolder() {
@@ -127,15 +127,15 @@ class ModalMedia extends Component {
 	}
 	
 	getMediaCover() {
-    if (this.state.show && this.state.media) {
-      this.state.media && StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.media.data_source) + "/browse/path/" + encodeURI(this.state.media.path).replace(/#/g, "%23").replace(/\+/g, "%2B") + "?cover&base64")
-      .then((result) => {
-        this.setState({imgBlob: result});
-      })
-      .fail(() => {
-        this.setState({imgBlob: false});
-      });
-    }
+		if (this.state.show && this.state.media) {
+			this.state.media && StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.media.data_source) + "/browse/path/" + encodeURI(this.state.media.path).replace(/#/g, "%23").replace(/\+/g, "%2B") + "?cover&base64")
+			.then((result) => {
+				this.setState({imgBlob: result});
+			})
+			.fail(() => {
+				this.setState({imgBlob: false});
+			});
+		}
 	}
 	
 	handleSelectDataSource() {
@@ -188,42 +188,42 @@ class ModalMedia extends Component {
 	
 	addToStream(stream) {
 		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(stream) + "/manage", {command: "append_list", parameters: [{data_source: this.state.media.data_source, path: this.state.media.path}]})
-    .then((result) => {
-      StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(stream) + "/manage", {command: "info"})
-      .then((streamInfo) => {
-        StateStore.dispatch({type: "setStream", stream: streamInfo});
-        StateStore.getState().NotificationManager.addNotification({
-          message: i18n.t("common.message_adding_stream_ok"),
-          level: 'info'
-        });
-      });
-    })
-    .fail(() => {
+		.then((result) => {
+			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(stream) + "/manage", {command: "info"})
+			.then((streamInfo) => {
+				StateStore.dispatch({type: "setStream", stream: streamInfo});
+				StateStore.getState().NotificationManager.addNotification({
+					message: i18n.t("common.message_adding_stream_ok"),
+					level: 'info'
+				});
+			});
+		})
+		.fail(() => {
 			StateStore.getState().NotificationManager.addNotification({
 				message: i18n.t("common.message_error_adding_stream"),
 				level: 'error'
 			});
-    });
+		});
 	}
 	
 	addToPlaylist(playlist) {
 		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/playlist/" + encodeURIComponent(playlist) + "/add_media", [{data_source: this.state.media.data_source, path: this.state.media.path}])
-    .then((result) => {
-      StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(playlist))
-      .then((newPlaylist) => {
-        StateStore.dispatch({type: "setPlaylist", playlist: newPlaylist});
-        StateStore.getState().NotificationManager.addNotification({
-          message: i18n.t("common.message_adding_stream_ok"),
-          level: 'info'
-        });
-      });
-    })
-    .fail(() => {
+		.then((result) => {
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(playlist))
+			.then((newPlaylist) => {
+				StateStore.dispatch({type: "setPlaylist", playlist: newPlaylist});
+				StateStore.getState().NotificationManager.addNotification({
+					message: i18n.t("common.message_adding_stream_ok"),
+					level: 'info'
+				});
+			});
+		})
+		.fail(() => {
 			StateStore.getState().NotificationManager.addNotification({
 				message: i18n.t("common.message_error_adding_stream"),
 				level: 'error'
 			});
-    });
+		});
 	}
 	
 	addToNewPlaylist() {
@@ -261,7 +261,7 @@ class ModalMedia extends Component {
 		});
 	}
 	
-  render() {
+	render() {
 		var metadata = [], mediaImage = "", separator = "", streamList = [], playlist = [<MenuItem key={0} onClick={() => this.addToNewPlaylist()}>{i18n.t("common.new_playlist")}</MenuItem>];
 		if (this.state.media) {
 			if (this.state.media.tags && this.state.media.tags.title) {
@@ -325,42 +325,42 @@ class ModalMedia extends Component {
 			if (this.state.imgBlob) {
 				mediaImage = <Image src={"data:image/jpeg;base64," + this.state.imgBlob} className="cover-image-full center-block" responsive />;
 			}
-      this.state.streamList.forEach((stream, index) => {
-        streamList.push(
-          <MenuItem key={index} onClick={() => this.addToStream(stream.name)}>
-            - {stream.display_name||i18n.t("common.no_name")}
-          </MenuItem>
-        );
-      });
-      this.state.playlist.forEach((pl, index) => {
-        playlist.push(
-          <MenuItem key={index+1} onClick={() => this.addToPlaylist(pl.name)}>
-            - {pl.name}
-          </MenuItem>
-        );
-      });
+			this.state.streamList.forEach((stream, index) => {
+				streamList.push(
+					<MenuItem key={index} onClick={() => this.addToStream(stream.name)}>
+						- {stream.display_name||i18n.t("common.no_name")}
+					</MenuItem>
+				);
+			});
+			this.state.playlist.forEach((pl, index) => {
+				playlist.push(
+					<MenuItem key={index+1} onClick={() => this.addToPlaylist(pl.name)}>
+						- {pl.name}
+					</MenuItem>
+				);
+			});
 			return (
 					<Modal show={this.state.show} onHide={this.onCloseModal}>
 						<Modal.Header closeButton>
 							<Modal.Title>
-                <ButtonGroup>
-                  <Button onClick={this.onPlayNow} className="btn" title={i18n.t("common.play_now")}>
-                    <FontAwesome name={"play"} />
-                  </Button>
-                  <DropdownButton id={"add"} title={
-                    <span><i className="fa fa-plus"></i></span>
-                  }>
-                    <MenuItem>
-                      {i18n.t("common.add_to_stream")}
-                    </MenuItem>
-                    {streamList}
-                    <MenuItem divider />
-                    <MenuItem>
-                      {i18n.t("common.add_to_playlist")}
-                    </MenuItem>
-                    {playlist}
-                  </DropdownButton>
-                </ButtonGroup>&nbsp;
+								<ButtonGroup>
+									<Button onClick={this.onPlayNow} className="btn" title={i18n.t("common.play_now")}>
+										<FontAwesome name={"play"} />
+									</Button>
+									<DropdownButton id={"add"} title={
+										<span><i className="fa fa-plus"></i></span>
+									}>
+										<MenuItem>
+											{i18n.t("common.add_to_stream")}
+										</MenuItem>
+										{streamList}
+										<MenuItem divider />
+										<MenuItem>
+											{i18n.t("common.add_to_playlist")}
+										</MenuItem>
+										{playlist}
+									</DropdownButton>
+								</ButtonGroup>&nbsp;
 								{this.state.title}
 							</Modal.Title>
 						</Modal.Header>

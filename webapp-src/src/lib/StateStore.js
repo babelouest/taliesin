@@ -2,7 +2,7 @@ import { createStore } from 'redux'
 import APIManager from './APIManager'
 
 var defaultState = {
-  lastAction: false,
+	lastAction: false,
 	ready: false,
 	showFullScreen: false,
 	status: "",
@@ -15,7 +15,7 @@ var defaultState = {
 	userList: [],
 	dataSourceList: [],
 	externalPlayerList: [],
-  streamList: [],
+	streamList: [],
 	playlists:[],
 	serverConfig: {},
 	profile: {
@@ -45,7 +45,7 @@ var defaultState = {
 }
 
 function stateStoreManager(state = defaultState, action) {
-  var i;
+	var i;
 	switch (action.type) {
 		case "connection":
 			state.APIManager = new APIManager({
@@ -86,12 +86,12 @@ function stateStoreManager(state = defaultState, action) {
 			state.streamList = action.streamList;
 			break;
 		case "setStream":
-      for (i in state.streamList) {
-        if (state.streamList[i].name === action.stream.name) {
-          state.streamList[i] = action.stream;
-          break;
-        }
-      }
+			for (i in state.streamList) {
+				if (state.streamList[i].name === action.stream.name) {
+					state.streamList[i] = action.stream;
+					break;
+				}
+			}
 			if (state.profile.stream.name === action.stream.name) {
 				state.profile.stream = action.stream;
 			}
@@ -100,8 +100,8 @@ function stateStoreManager(state = defaultState, action) {
 			if (action.index || action.index === 0) {
 				state.profile.jukeboxIndex = action.index;
 			} else {
-        state.profile.jukeboxIndex = -1;
-      }
+				state.profile.jukeboxIndex = -1;
+			}
 			state.profile.stream = action.stream;
 			break;
 		case "loadStream":
@@ -185,12 +185,12 @@ function stateStoreManager(state = defaultState, action) {
 			state.playlists = action.playlists;
 			break;
 		case "setPlaylist":
-      for (i in state.playlists) {
-        if (state.playlists[i].name === action.playlist.name) {
-          state.playlists[i] = action.playlist;
-          break;
-        }
-      }
+			for (i in state.playlists) {
+				if (state.playlists[i].name === action.playlist.name) {
+					state.playlists[i] = action.playlist;
+					break;
+				}
+			}
 			break;
 		case "setCurrentPlaylist":
 			state.profile.playlist = action.playlist;
@@ -198,7 +198,7 @@ function stateStoreManager(state = defaultState, action) {
 		default:
 			break;
 	}
-  state.lastAction = action.type;
+	state.lastAction = action.type;
 	return state;
 }
 

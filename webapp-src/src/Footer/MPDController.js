@@ -5,8 +5,8 @@ import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
 
 class MPDController extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		
 		var interval = setInterval(() => {
 			this.MPDStatus();
@@ -42,12 +42,12 @@ class MPDController extends Component {
 		this.handlePlayerSwitch = this.handlePlayerSwitch.bind(this);
 		this.handleChangeVolume = this.handleChangeVolume.bind(this);
 		this._notificationSystem = null;
-    
-    if (this.state.stream.name) {
-      this.loadStream();
-    } else {
-      this.MPDConnect();
-    }
+		
+		if (this.state.stream.name) {
+			this.loadStream();
+		} else {
+			this.MPDConnect();
+		}
 		
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
@@ -76,10 +76,10 @@ class MPDController extends Component {
 							this.handleRandom();
 							break;
 						case "volume":
-							this.handleChangeVolume({target: {value: reduxState.profile.playerActionParameter}});
+							this.handleChangeVolume(reduxState.profile.playerActionParameter);
 							break;
-            default:
-              break;
+						default:
+							break;
 					}
 				}
 			}
@@ -102,18 +102,16 @@ class MPDController extends Component {
 			newState.playIndex = nextProps.index;
 		}
 		this.setState(newState, () => {
-			if (newStream) {
-				if (nextProps.stream) {
-					this.loadStream();
-				} else {
-					this.MPDConnect();
-				}
+			if (!nextProps.stream.name) {
+				this.MPDConnect();
+			} else if (newStream) {
+				this.loadStream();
 			} else if (this.state.playNow) {
-        this.setState({playNow: false, jukeboxIndex: this.state.playIndex}, () => {
-          this.handlePlay();
-        });
+				this.setState({playNow: false, jukeboxIndex: this.state.playIndex}, () => {
+					this.handlePlay();
+				});
 			}
-    });
+		});
 	}
 	
 	componentDidMount() { 
@@ -139,12 +137,12 @@ class MPDController extends Component {
 		StateStore.getState().APIManager.angharadApiRequest("POST", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/playlist", playlist)
 		.then((status) => {
 			this.loadMedia();
-      if (this.state.playNow) {
-        this.setState({playNow: false, jukeboxIndex: this.state.playIndex}, () => {
-          this.handlePlay();
-        });
-      } else {
-        this.setState({playNow: false, jukeboxIndex: -1});
+			if (this.state.playNow) {
+				this.setState({playNow: false, jukeboxIndex: this.state.playIndex}, () => {
+					this.handlePlay();
+				});
+			} else {
+				this.setState({playNow: false, jukeboxIndex: -1});
 			}
 		});
 	}
@@ -155,6 +153,7 @@ class MPDController extends Component {
 			this.setState({jukeboxRepeat: status.repeat, jukeboxRandom: status.random, volume: status.volume, jukeboxIndex: status.song_pos, play: (status.state==="play")}, () => {
 				if (status.song_pos !== StateStore.getState().profile.jukeboxIndex) {
 					StateStore.dispatch({ type: "setJukeboxIndex", index: status.song_pos });
+					StateStore.dispatch({ type: "setCurrentPlayerStatus", volume: status.volume });
 					this.loadMedia();
 				} else if (this.state.stream.webradio) {
 					this.loadMedia();
@@ -194,6 +193,7 @@ class MPDController extends Component {
 							});
 						}
 					}
+					StateStore.dispatch({ type: "setCurrentPlayerStatus", volume: status.volume });
 					if (status.song_pos !== StateStore.getState().profile.jukeboxIndex) {
 						StateStore.dispatch({ type: "setJukeboxIndex", index: status.song_pos });
 					}
@@ -209,7 +209,7 @@ class MPDController extends Component {
 	}
 	
 	loadMedia() {
-    if (this.state.stream.name) {
+		if (this.state.stream.name) {
 			if (this.state.stream.webradio) {
 				if (StateStore.getState().profile.jukeboxIndex !== -1) {
 					StateStore.dispatch({ type: "setJukeboxIndex", index: -1 });
@@ -234,26 +234,26 @@ class MPDController extends Component {
 					}
 				});
 			}
-    }
+		}
 	}
 	
-  handlePrevious() {
+	handlePrevious() {
 		if (!this.state.stream.webradio) {
-      StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/previous/")
-      .then(() => {
+			StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/previous/")
+			.then(() => {
 				StateStore.getState().NotificationManager.addNotification({
 					message: i18n.t("player.previous"),
 					level: 'success'
 				});
 				this.MPDStatus();
-      });
+			});
 		}
-  }
+	}
 	
-  handleNext() {
+	handleNext() {
 		if (this.state.stream.webradio) {
 			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "skip"})
-      .then((result) => {
+			.then((result) => {
 				StateStore.getState().NotificationManager.addNotification({
 					message: i18n.t("player.next"),
 					level: 'success'
@@ -261,18 +261,18 @@ class MPDController extends Component {
 				this.MPDStatus();
 			});
 		} else {
-      StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/next/")
-      .then(() => {
+			StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/next/")
+			.then(() => {
 				StateStore.getState().NotificationManager.addNotification({
 					message: i18n.t("player.next"),
 					level: 'success'
 				});
 				this.MPDStatus();
-      });
+			});
 		}
-  }
+	}
 	
-  handleStop() {
+	handleStop() {
 		if (this.state.player.switch && this.state.switchOn) {
 			StateStore.getState().APIManager.angharadApiRequest("GET", "/benoic/device/" + encodeURIComponent(this.state.player.switch.device) + "/switch/" + encodeURIComponent(this.state.player.switch.name) + "/0")
 			.then(() => {
@@ -280,28 +280,28 @@ class MPDController extends Component {
 			});
 		}
 		this.setState({play: false});
-    StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/stop/")
-    .then(() => {
-      StateStore.getState().NotificationManager.addNotification({
-        message: 'Stop',
-        level: 'success'
-      });
+		StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/stop/")
+		.then(() => {
+			StateStore.getState().NotificationManager.addNotification({
+				message: 'Stop',
+				level: 'success'
+			});
 			this.MPDStatus();
-    });
-  }
+		});
+	}
 	
-  handlePause() {
+	handlePause() {
 		this.setState({play: false});
-    StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/pause/")
-    .then(() => {
-      StateStore.getState().NotificationManager.addNotification({
-        message: 'Pause',
-        level: 'success'
-      });
-    });
-  }
+		StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/pause/")
+		.then(() => {
+			StateStore.getState().NotificationManager.addNotification({
+				message: 'Pause',
+				level: 'success'
+			});
+		});
+	}
 	
-  handlePlay() {
+	handlePlay() {
 		if (this.state.player.switch && !this.state.switchOn) {
 			StateStore.getState().APIManager.angharadApiRequest("GET", "/benoic/device/" + encodeURIComponent(this.state.player.switch.device) + "/switch/" + encodeURIComponent(this.state.player.switch.name) + "/1")
 			.then(() => {
@@ -322,22 +322,22 @@ class MPDController extends Component {
 			});
 			this.MPDStatus();
 		});
-  }
+	}
 	
-  handleRepeat() {
+	handleRepeat() {
 		StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/repeat/" + (this.state.jukeboxRepeat?"0":"1"))
 		.then(() => {
 			this.setState({jukeboxRepeat: !this.state.jukeboxRepeat});
 		});
-  }
+	}
 	
-  handleRandom() {
+	handleRandom() {
 		StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/random/" + (this.state.jukeboxRandom?"0":"1"))
 		.then(() => {
 			this.setState({jukeboxRandom: !this.state.jukeboxRandom});
 		});
-  }
-  
+	}
+	
 	handlePlayerSwitch() {
 		if (this.state.player.switch) {
 			StateStore.getState().APIManager.angharadApiRequest("GET", "/benoic/device/" + encodeURIComponent(this.state.player.switch.device) + "/switch/" + encodeURIComponent(this.state.player.switch.name) + "/" + (this.state.switchOn?"0":"1"))
@@ -354,19 +354,19 @@ class MPDController extends Component {
 		});
 	}
 	
-  render() {
-    var playButton, volume, switchButton, streamName;
-    if (this.state.play) {
-      playButton = 
-        <Button title={i18n.t("common.play")} onClick={this.handlePause}>
+	render() {
+		var playButton, volume, switchButton, streamName;
+		if (this.state.play) {
+			playButton = 
+				<Button title={i18n.t("common.play")} onClick={this.handlePause}>
 					<FontAwesome name={"pause"} />
-        </Button>;
-    } else {
-      playButton = 
-        <Button title={i18n.t("common.play")} onClick={this.handlePlay}>
+				</Button>;
+		} else {
+			playButton = 
+				<Button title={i18n.t("common.play")} onClick={this.handlePlay}>
 					<FontAwesome name={"play"} />
-        </Button>;
-    }
+				</Button>;
+		}
 		if (this.state.volume) {
 			volume = <FontAwesome name={"volume-up"} />;
 		} else {
@@ -386,7 +386,7 @@ class MPDController extends Component {
 			}
 		}
 		return (
-      <div>
+			<div>
 				<div>
 					<ButtonGroup>
 						<Button title={i18n.t("player.previous")} onClick={this.handlePrevious}>
@@ -409,11 +409,11 @@ class MPDController extends Component {
 							<FontAwesome name={"random"} />
 						</Button>
 						<DropdownButton title={volume} id="dropdown-volume">
-              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(5)}}>{i18n.t("common.volume_plus_5")}</MenuItem>
-              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(1)}}>{i18n.t("common.volume_plus_1")}</MenuItem>
-              <MenuItem className="text-center">{i18n.t("common.volume_current")} {this.state.volume} %</MenuItem>
-              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-1)}}>{i18n.t("common.volume_minus_1")}</MenuItem>
-              <MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-5)}}>{i18n.t("common.volume_minus_5")}</MenuItem>
+							<MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(5)}}>{i18n.t("common.volume_plus_5")}</MenuItem>
+							<MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(1)}}>{i18n.t("common.volume_plus_1")}</MenuItem>
+							<MenuItem className="text-center">{i18n.t("common.volume_current")} {this.state.volume} %</MenuItem>
+							<MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-1)}}>{i18n.t("common.volume_minus_1")}</MenuItem>
+							<MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-5)}}>{i18n.t("common.volume_minus_5")}</MenuItem>
 						</DropdownButton>
 						{switchButton}
 					</ButtonGroup>
@@ -426,9 +426,9 @@ class MPDController extends Component {
 						{streamName}
 					</span>
 				</div>
-      </div>
+			</div>
 		);
-  }
+	}
 }
 
 export default MPDController;

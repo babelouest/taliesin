@@ -5,13 +5,13 @@ class ConfigManager {
 		this.config = false;
 	}
 	
-  fetchConfig() {
-    return $.ajax({
-      method: "GET",
-      url: "config.json"
-    })
+	fetchConfig() {
+		return $.ajax({
+			method: "GET",
+			url: "config.json"
+		})
 		.then((result) => {this.config = result});
-  }
+	}
 	
 	getConfigValue(key) {
 		if (this.config) {

@@ -3,9 +3,9 @@ import { Image, Panel } from 'react-bootstrap';
 import ModalMedia from '../Modal/ModalMedia';
 
 class MediaInfo extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
+	constructor(props) {
+		super(props);
+		this.state = {
 			media: props.media, 
 			imgThumbBlob: props.imgThumbBlob, 
 			imgBlob: false, 
@@ -15,7 +15,7 @@ class MediaInfo extends Component {
 			folded: props.folded, 
 			showModal: false
 		};
-    this.handleOpenModal = this.handleOpenModal.bind(this);
+		this.handleOpenModal = this.handleOpenModal.bind(this);
 	}
 	
 	componentWillReceiveProps(nextProps) {
@@ -23,8 +23,7 @@ class MediaInfo extends Component {
 			media: nextProps.media, 
 			title: this.buildTitle(nextProps.media, nextProps.index, nextProps.total), 
 			imgThumbBlob: nextProps.imgThumbBlob,
-			folded: nextProps.folded,
-			showModal: false
+			folded: nextProps.folded
 		});
 	}
 	
@@ -47,22 +46,22 @@ class MediaInfo extends Component {
 		}
 		return title;
 	}
-  
-  handleOpenModal() {
-    this.setState({showModal: true});
-  }
-  
-  render() {
-    var image = "";
-    if (!this.state.folded) {
+	
+	handleOpenModal() {
+		this.setState({showModal: true});
+	}
+	
+	render() {
+		var image = "";
+		if (!this.state.folded) {
 			if (this.state.imgThumbBlob) {
 				image = <Image src={"data:image/jpeg;base64," + this.state.imgThumbBlob} thumbnail responsive className="cover-image-thumb"/>;
 			} else {
 				image = <Image src="images/generic-album.png" thumbnail responsive className="cover-image-thumb"/>;
 			}
-    }
+		}
 		return (
-      <div className="media-container">
+			<div className="media-container">
 				<div className="media-background" style={{backgroundImage:this.state.imgThumbBlob?"url(data:image/png;base64,"+this.state.imgThumbBlob+")":"" }}>
 				</div>
 				<div className="media-content">
@@ -79,9 +78,9 @@ class MediaInfo extends Component {
 					</a>
 				</div>
 				<ModalMedia show={this.state.showModal} media={this.state.media} title={this.state.title} />
-      </div>
+			</div>
 		);
-  }
+	}
 }
 
 export default MediaInfo;

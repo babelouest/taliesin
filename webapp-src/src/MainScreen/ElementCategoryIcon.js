@@ -7,8 +7,8 @@ import StateStore from '../lib/StateStore';
 import ElementButtons from './ElementButtons';
 
 class ElementCategoryIcon extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		this.state = {
 			dataSource: props.dataSource, 
 			category: props.category, 
@@ -49,7 +49,7 @@ class ElementCategoryIcon extends Component {
 	}
 	
 	onChangeVisibility(isVisible) {
-    this.setState({visible: isVisible}, () => {
+		this.setState({visible: isVisible}, () => {
 			if (isVisible && !this.state.thumbLoaded) {
 				this.getThumbnail();	
 			}
@@ -87,14 +87,14 @@ class ElementCategoryIcon extends Component {
 		if (!this.state.thumbLoaded) {
 			icon = 
 				<div>
-          <a role="button" onClick={() => this.handleChangePath(this.state.element.name)} title={this.state.element.name}>
-            <Image src="/images/unknown-128.png" alt={this.state.element.name} className="elementImage" responsive>
-            </Image>
-            <FontAwesome name="spinner" spin />
-            <div className="hideOverflow">
-              <span>{this.state.element.name}</span>
-            </div>
-          </a>
+					<a role="button" onClick={() => this.handleChangePath(this.state.element.name)} title={this.state.element.name}>
+						<Image src="/images/unknown-128.png" alt={this.state.element.name} className="elementImage" responsive>
+						</Image>
+						<FontAwesome name="spinner" spin />
+						<div className="hideOverflow">
+							<span>{this.state.element.name}</span>
+						</div>
+					</a>
 				</div>
 		} else {
 			if (!this.state.thumb) {
@@ -119,13 +119,13 @@ class ElementCategoryIcon extends Component {
 		}
 		return (
 			<Col md={3} sm={3} xs={6} className="panel panel-default">
-        <VisibilitySensor
-          scrollCheck
-          scrollThrottle={100}
-          intervalDelay={8000}
-          onChange={this.onChangeVisibility}
-          minTopValue={10}
-          partialVisibility={true}>
+				<VisibilitySensor
+					scrollCheck
+					scrollThrottle={100}
+					intervalDelay={8000}
+					onChange={this.onChangeVisibility}
+					minTopValue={10}
+					partialVisibility={true}>
 					{icon}
 				</VisibilitySensor>
 				<div className="text-center">

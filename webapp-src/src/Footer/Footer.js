@@ -13,9 +13,9 @@ import JukeboxNow from './JukeboxNow'
 import i18n from '../lib/i18n';
 
 class Footer extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
+	constructor(props) {
+		super(props);
+		this.state = {
 			streamList: StateStore.getState().streamList,
 			playerList: StateStore.getState().externalPlayerList,
 			isAdmin: StateStore.getState().profile.isAdmin,
@@ -27,7 +27,7 @@ class Footer extends Component {
 			fullScreen: false,
 			currentPlayer: StateStore.getState().profile.currentPlayer,
 			play: false,
-      stream_external: false
+			stream_external: false
 		};
 		
 		StateStore.subscribe(() => {
@@ -39,7 +39,7 @@ class Footer extends Component {
 			} else if (reduxState.lastAction === "setUserList") {
 				this.setState({isAdmin: StateStore.getState().profile.isAdmin, play: false});
 			} else if (reduxState.lastAction === "setCurrentPlayer") {
-				this.setState({currentPlayer: StateStore.getState().profile.currentPlayer, play: false});
+				this.setState({currentPlayer: StateStore.getState().profile.currentPlayer, stream: {name: false}, play: false});
 			} else if (reduxState.lastAction === "loadStream") {
 				this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, play: false}, () => {this.buildExternal()});
 			} else if (reduxState.lastAction === "setStream") {
@@ -60,14 +60,22 @@ class Footer extends Component {
 		this.showFullScreen = this.showFullScreen.bind(this);
 		this.showMediaList = this.showMediaList.bind(this);
 		this.buildExternal = this.buildExternal.bind(this);
-    
-    if (!this.state.currentPlayer.name) {
-      var currentPlayer = this.state.currentPlayer;
-      currentPlayer.name = i18n.t("player." + currentPlayer.type);
-      this.setState({currentPlayer: currentPlayer}, () => {
-        StateStore.dispatch({type: "setCurrentPlayer", currentPlayer: currentPlayer});
-      });
-    }
+	}
+	
+	componentDidMount() {
+		this._ismounted = true;
+		
+		if (!this.state.currentPlayer.name) {
+			var currentPlayer = this.state.currentPlayer;
+			currentPlayer.name = i18n.t("player." + currentPlayer.type);
+			this.setState({currentPlayer: currentPlayer}, () => {
+				StateStore.dispatch({type: "setCurrentPlayer", currentPlayer: currentPlayer});
+			});
+		}
+	}
+
+	componentWillUnmount() {
+		this._ismounted = false;
 	}
 	
 	showFullScreen() {
@@ -81,22 +89,22 @@ class Footer extends Component {
 			StateStore.dispatch({type: "setCurrentBrowse", browse: "showStreamMediaList"});
 		});
 	}
-  
-  buildExternal() {
-    var stream_external;
-		if (this.state.stream.name) {
+	
+	buildExternal() {
+		var stream_external;
+		if (this.state.stream.name && this.state.currentPlayer.type==="external") {
 			if (this.state.stream.webradio) {
 				stream_external = "data:application/mpegurl;base64," + btoa("#EXTM3U\n\n#EXTINF:0," + (this.state.stream.display_name||"no name") + "\n" + StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name + "\n");
 			} else {
 				stream_external = StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name;
 			}
-      this.setState({stream_external: stream_external}, () => {
-        $("#play-external-anchor-footer")[0].click();
-      });
+			this.setState({stream_external: stream_external}, () => {
+				$("#play-external-anchor-footer")[0].click();
+			});
 		}
-  }
+	}
 	
-  render() {
+	render() {
 		if (StateStore.getState().status === "connected") {
 			var webradioNow, webradioNext, jukeboxNow, middleButtons, streamSelector, audioPlayer;
 			if (this.state.stream.name) {
@@ -136,9 +144,8 @@ class Footer extends Component {
 			} else { // External
 				audioPlayer =
 					<Col md={3} sm={6} xs={6} className="player-box">
-						<a href={this.state.stream_external} style={{display: "none"}} id={"play-external-anchor-footer"} download={(this.state.stream.display_name||i18n.t("common.no_name"))+".m3u"}>{i18n.t("common.external")}</a>
 					</Col>;
-      }
+			}
 			if (this.state.stream.name) {
 				middleButtons =
 					<Col md={2} sm={2} xs={2} className="text-center">
@@ -171,6 +178,7 @@ class Footer extends Component {
 			}
 			return (
 				<div className="navbar-fixed-bottom footer">
+					<a href={this.state.stream_external} style={{display: "none"}} id={"play-external-anchor-footer"} download={(this.state.stream.display_name||i18n.t("common.no_name"))+".m3u"}>{i18n.t("common.external")}</a>
 					<Row>
 						{streamSelector}
 						{audioPlayer}
@@ -184,7 +192,7 @@ class Footer extends Component {
 		} else {
 			return (<div></div>);
 		}
-  }
+	}
 }
 
 export default Footer;

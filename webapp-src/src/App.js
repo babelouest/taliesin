@@ -9,9 +9,9 @@ import Footer from './Footer/Footer';
 import StateStore from './lib/StateStore';
 
 class App extends Component {
-  componentDidMount() {
+	componentDidMount() {
 		StateStore.dispatch({ type: 'newNotificationManager', notificationManager: this.refs.notificationSystem });
-  }
+	}
 	
 	render() {
 		return (

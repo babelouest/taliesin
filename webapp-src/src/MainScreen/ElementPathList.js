@@ -5,8 +5,8 @@ import ElementButtons from './ElementButtons';
 import ModalMedia from '../Modal/ModalMedia';
 
 class ElementPathList extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 		this.state = {
 			dataSource: props.dataSource, 
 			path: props.path, 
@@ -55,9 +55,9 @@ class ElementPathList extends Component {
 				<Col md={8} sm={8} xs={6}>
 					{element}
 				</Col>
-        <Col md={4} sm={4} xs={6} className="text-right">
-          <ElementButtons dataSource={this.state.dataSource} path={this.state.path + "/" + this.state.element.name} element={this.state.element}/>
-        </Col>
+				<Col md={4} sm={4} xs={6} className="text-right">
+					<ElementButtons dataSource={this.state.dataSource} path={this.state.path + "/" + this.state.element.name} element={this.state.element}/>
+				</Col>
 				<ModalMedia show={this.state.show} media={this.state.modalMedia} title={this.state.modalTitle} />
 			</Row>
 		);

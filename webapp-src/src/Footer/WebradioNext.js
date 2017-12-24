@@ -4,14 +4,14 @@ import MediaInfo from './MediaInfo';
 import i18n from '../lib/i18n';
 
 class WebradioNext extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
+	constructor(props) {
+		super(props);
+		this.state = {
 			folded: props.folded,
 			imgThumbBlob: false, 
 			media: props.media,
 		};
-    this.loadCover();
+		this.loadCover();
 		
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
@@ -37,7 +37,7 @@ class WebradioNext extends Component {
 	}
 	
 	loadCover() {
-    if (this.state.media && !StateStore.getState().showFullScreen) {
+		if (this.state.media && !StateStore.getState().showFullScreen) {
 			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.media.data_source) + "/browse/path/" + encodeURI(this.state.media.path).replace(/#/g, "%23").replace(/\+/g, "%2B") + "?cover&thumbnail&base64")
 			.then((result) => {
 				this.setState({imgThumbBlob: result});
@@ -45,14 +45,14 @@ class WebradioNext extends Component {
 			.fail(() => {
 				this.setState({imgThumbBlob: false});
 			});
-    }
+		}
 	}
 	
-  render() {
+	render() {
 		return (
-      <MediaInfo media={this.state.media} imgThumbBlob={this.state.imgThumbBlob} meta={i18n.t("player.play_next")} folded={this.state.folded} index={-1}/>
+			<MediaInfo media={this.state.media} imgThumbBlob={this.state.imgThumbBlob} meta={i18n.t("player.play_next")} folded={this.state.folded} index={-1}/>
 		);
-  }
+	}
 }
 
 export default WebradioNext;

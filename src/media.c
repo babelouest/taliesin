@@ -1033,23 +1033,16 @@ char * build_icy_title(json_t * media) {
 }
 
 char * build_m3u_title(json_t * media) {
-  char * title = NULL, year[5] = {0};
-  const char * artist = NULL, * album = NULL, * song = NULL;
+  char * title = NULL;
+  const char * artist = NULL, * song = NULL;
   
   if (media != NULL) {
     song = json_string_value(json_object_get(json_object_get(media, "tags"), "title"));
     artist = json_string_value(json_object_get(json_object_get(media, "tags"), "artist"));
-    album = json_string_value(json_object_get(json_object_get(media, "tags"), "album"));
-    o_strncpy(year, json_string_value(json_object_get(json_object_get(media, "tags"), "date")), 4);
-    title = msprintf("%s%s%s%s%s%s%s%s", 
-                      song!=NULL?song:json_string_value(json_object_get(media, "name")),
-                      artist!=NULL?" - ":"",
+    title = msprintf("%s%s%s", 
                       artist!=NULL?artist:"",
-                      album!=NULL?" - ":"",
-                      album!=NULL?album:"",
-                      year[0]!='\0'?" - (":"",
-                      year[0]!='\0'?year:"",
-                      year[0]!='\0'?")":"");
+                      artist!=NULL?" - ":"",
+                      song!=NULL?song:json_string_value(json_object_get(media, "name")));
   }
   return title;
 }

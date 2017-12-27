@@ -894,7 +894,7 @@ int build_config_from_file(struct config_elements * config) {
     }
   }
   
-  if (config_lookup_bool(&cfg, "stream_bitrate", &cur_stream_bit_rate) == CONFIG_TRUE) {
+  if (config_lookup_int(&cfg, "stream_bitrate", &cur_stream_bit_rate) == CONFIG_TRUE) {
     if (0 != o_strcasecmp("flac", config->stream_format) && cur_stream_bit_rate != 32000 && cur_stream_bit_rate != 96000 && cur_stream_bit_rate != 128000 && cur_stream_bit_rate != 192000 && cur_stream_bit_rate != 256000 && cur_stream_bit_rate != 320000) {
       fprintf(stderr, "Error stream_bitrate, use values 32000, 96000, 128000, 192000, 256000 or 320000\n");
       config_destroy(&cfg);

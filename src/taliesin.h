@@ -398,6 +398,7 @@ struct _ws_stream {
   char                   * username;
   int                      is_admin;
   int                      is_authenticated;
+	time_t                   expiration;
   struct _t_webradio     * webradio;
   struct _t_jukebox      * jukebox;
   int                      status;

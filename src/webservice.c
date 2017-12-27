@@ -1398,6 +1398,7 @@ int callback_taliesin_stream_manage_ws (const struct _u_request * request, struc
         ws_stream->username = NULL;
       }
       ws_stream->is_authenticated = 0;
+			ws_stream->expiration = 0;
       ws_stream->webradio = current_webradio;
       ws_stream->jukebox = current_playlist;
       ws_stream->status = TALIESIN_WEBSOCKET_PLAYLIST_STATUS_OPEN;
@@ -1425,6 +1426,7 @@ void callback_websocket_stream_manager (const struct _u_request * request, struc
   struct _ws_stream * ws_stream = (struct _ws_stream *)websocket_user_data;
   char * message;
   json_t * j_result, * j_message;
+	time_t now;
   
   if (ws_stream->webradio != NULL) {
     ws_stream->webradio->nb_websocket++;
@@ -1434,7 +1436,8 @@ void callback_websocket_stream_manager (const struct _u_request * request, struc
       pthread_cond_wait(&ws_stream->webradio->message_cond, &ws_stream->webradio->message_lock);
       pthread_mutex_unlock(&ws_stream->webradio->message_lock);
       
-      if (ws_stream->is_authenticated) {
+			time(&now);
+      if ((ws_stream->is_authenticated && ws_stream->expiration && ws_stream->expiration < now) || !ws_stream->config->use_oauth2_authentication) {
         if (ws_stream->webradio->message_type == TALIESIN_PLAYLIST_MESSAGE_TYPE_NEW_MEDIA) {
           j_result = media_get_by_id(ws_stream->config, ws_stream->webradio->audio_stream->first_buffer->file->tm_id);
           if (check_result_value(j_result, T_OK)) {
@@ -1554,7 +1557,9 @@ void callback_websocket_stream_incoming_message (const struct _u_request * reque
   char * message;
   const char * token_value;
   int res_validity;
+	time_t now;
   
+	time(&now);
   if (json_is_object(j_message) && json_is_string(json_object_get(j_message, "command")) && 0 == o_strcasecmp("authorization", json_string_value(json_object_get(j_message, "command")))) {
     token_value = json_string_value(json_object_get(j_message, "token"));
     if (token_value != NULL) {
@@ -1590,6 +1595,7 @@ void callback_websocket_stream_incoming_message (const struct _u_request * reque
             o_free(message);
             json_decref(j_out_message);
             ws_stream->is_authenticated = 1;
+						ws_stream->expiration = json_integer_value(json_object_get(json_object_get(j_access_token, "grants"), "iat")) + json_integer_value(json_object_get(json_object_get(j_access_token, "grants"), "expires_in"));
             if (ws_stream->username == NULL) {
               ws_stream->username = o_strdup(json_string_value(json_object_get(json_object_get(j_access_token, "grants"), "username")));
             }
@@ -1627,55 +1633,65 @@ void callback_websocket_stream_incoming_message (const struct _u_request * reque
       ws_stream->is_authenticated = 0;
     }
   } else if (ws_stream->is_authenticated) {
-    if (ws_stream->webradio != NULL) {
-      j_is_valid = is_webradio_command_valid(ws_stream->config, ws_stream->webradio, j_message, ws_stream->username, ws_stream->is_admin);
-    } else if (ws_stream->jukebox != NULL) {
-      j_is_valid = is_jukebox_command_valid(ws_stream->config, ws_stream->jukebox, j_message, ws_stream->username, ws_stream->is_admin);
-    }
-    if (j_is_valid != NULL) {
-      if (json_array_size(j_is_valid) == 0) {
-        if (ws_stream->webradio != NULL) {
-          j_result_command = webradio_command(ws_stream->config, ws_stream->webradio, ws_stream->username, j_message);
-          if (!check_result_value(j_result_command, T_OK) && !check_result_value(j_result_command, T_ERROR_NOT_FOUND) && !check_result_value(j_result_command, T_ERROR_PARAM)) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error webradio_command");
-          }
-        } else if (ws_stream->jukebox != NULL) {
-          j_result_command = jukebox_command(ws_stream->config, ws_stream->jukebox, ws_stream->username, j_message);
-          if (!check_result_value(j_result_command, T_OK) && !check_result_value(j_result_command, T_ERROR_NOT_FOUND) && !check_result_value(j_result_command, T_ERROR_PARAM)) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error jukebox_command");
-          }
-        }
-        if (check_result_value(j_result_command, T_OK)) {
-          j_out_message = json_pack("{sssO}", "command", json_string_value(json_object_get(j_message, "command")), "result", (json_object_get(j_result_command, "command") != NULL)?json_object_get(j_result_command, "command"):json_true());
-          message = json_dumps(j_out_message, JSON_COMPACT);
-          if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
-          }
-          o_free(message);
-          json_decref(j_out_message);
-        } else if (check_result_value(j_result_command, T_ERROR_NOT_FOUND)) {
-          j_out_message = json_pack("{ssss}", "command", json_string_value(json_object_get(j_message, "command")), "result", "not_found");
-          message = json_dumps(j_out_message, JSON_COMPACT);
-          if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
-          }
-          o_free(message);
-          json_decref(j_out_message);
-        }
-        json_decref(j_result_command);
-      } else {
-        j_out_message = json_pack("{sssssO}", "command", json_string_value(json_object_get(j_message, "command")), "result", "invalid_param", "error", j_is_valid);
-        message = json_dumps(j_out_message, JSON_COMPACT);
-        if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
-        }
-        o_free(message);
-        json_decref(j_out_message);
-      }
-      json_decref(j_is_valid);
-    } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error is_webradio_command_valid");
-    }
+		if (ws_stream->expiration && ws_stream->expiration < now && ws_stream->config->use_oauth2_authentication) {
+			if (ws_stream->webradio != NULL) {
+				j_is_valid = is_webradio_command_valid(ws_stream->config, ws_stream->webradio, j_message, ws_stream->username, ws_stream->is_admin);
+			} else if (ws_stream->jukebox != NULL) {
+				j_is_valid = is_jukebox_command_valid(ws_stream->config, ws_stream->jukebox, j_message, ws_stream->username, ws_stream->is_admin);
+			}
+			if (j_is_valid != NULL) {
+				if (json_array_size(j_is_valid) == 0) {
+					if (ws_stream->webradio != NULL) {
+						j_result_command = webradio_command(ws_stream->config, ws_stream->webradio, ws_stream->username, j_message);
+						if (!check_result_value(j_result_command, T_OK) && !check_result_value(j_result_command, T_ERROR_NOT_FOUND) && !check_result_value(j_result_command, T_ERROR_PARAM)) {
+							y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error webradio_command");
+						}
+					} else if (ws_stream->jukebox != NULL) {
+						j_result_command = jukebox_command(ws_stream->config, ws_stream->jukebox, ws_stream->username, j_message);
+						if (!check_result_value(j_result_command, T_OK) && !check_result_value(j_result_command, T_ERROR_NOT_FOUND) && !check_result_value(j_result_command, T_ERROR_PARAM)) {
+							y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error jukebox_command");
+						}
+					}
+					if (check_result_value(j_result_command, T_OK)) {
+						j_out_message = json_pack("{sssO}", "command", json_string_value(json_object_get(j_message, "command")), "result", (json_object_get(j_result_command, "command") != NULL)?json_object_get(j_result_command, "command"):json_true());
+						message = json_dumps(j_out_message, JSON_COMPACT);
+						if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
+							y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
+						}
+						o_free(message);
+						json_decref(j_out_message);
+					} else if (check_result_value(j_result_command, T_ERROR_NOT_FOUND)) {
+						j_out_message = json_pack("{ssss}", "command", json_string_value(json_object_get(j_message, "command")), "result", "not_found");
+						message = json_dumps(j_out_message, JSON_COMPACT);
+						if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
+							y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
+						}
+						o_free(message);
+						json_decref(j_out_message);
+					}
+					json_decref(j_result_command);
+				} else {
+					j_out_message = json_pack("{sssssO}", "command", json_string_value(json_object_get(j_message, "command")), "result", "invalid_param", "error", j_is_valid);
+					message = json_dumps(j_out_message, JSON_COMPACT);
+					if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
+						y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
+					}
+					o_free(message);
+					json_decref(j_out_message);
+				}
+				json_decref(j_is_valid);
+			} else {
+				y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error is_webradio_command_valid");
+			}
+		} else {
+			j_out_message = json_pack("{ssss}", "command", json_string_value(json_object_get(j_message, "command")), "result", "token_expired");
+			message = json_dumps(j_out_message, JSON_COMPACT);
+			if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
+				y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
+			}
+			o_free(message);
+			json_decref(j_out_message);
+		}
   } else {
     j_out_message = json_pack("{ssss}", "command", json_string_value(json_object_get(j_message, "command")), "result", "not_authenticated");
     message = json_dumps(j_out_message, JSON_COMPACT);

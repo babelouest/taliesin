@@ -558,47 +558,90 @@ int playlist_add_media(struct config_elements * config, json_int_t tpl_id, json_
 }
 
 int playlist_delete_media(struct config_elements * config, json_int_t tpl_id, json_t * media_list) {
-  json_t * j_query, * j_element;
-  char * tmp, * clause_tm_id = NULL, * clause_where;
+  json_t * j_query, * j_element, * j_tm_id_array = json_array();
   int res, ret;
   size_t index;
   
-  json_array_foreach(media_list, index, j_element) {
-    if (clause_tm_id == NULL) {
-      clause_tm_id = msprintf("%" JSON_INTEGER_FORMAT, json_integer_value(json_object_get(j_element, "tm_id")));
-    } else {
-      tmp = msprintf("%s,%" JSON_INTEGER_FORMAT, clause_tm_id, json_integer_value(json_object_get(j_element, "tm_id")));
-      o_free(clause_tm_id);
-      clause_tm_id = tmp;
+  if (j_tm_id_array != NULL) {
+    json_array_foreach(media_list, index, j_element) {
+      json_array_append(j_tm_id_array, json_object_get(j_element, "tm_id"));
     }
-  }
-  
-  if (clause_tm_id != NULL) {
-    clause_where = msprintf("tpl_id=%" JSON_INTEGER_FORMAT " AND tm_id in (%s)", tpl_id, clause_tm_id);
-    o_free(clause_tm_id);
-    j_query = json_pack("{sss{s{ssss}}}",
+    j_query = json_pack("{sss{sIs{ssso}}}",
                         "table",
                         TALIESIN_TABLE_PLAYLIST_ELEMENT,
                         "where",
-                          " ",
+                          "tpl_id",
+                          tpl_id,
+                          "tm_id",
                             "operator",
-                            "raw",
+                            "IN",
                             "value",
-                            clause_where);
-    o_free(clause_where);
+                            j_tm_id_array);
     res = h_delete(config->conn, j_query, NULL);
     json_decref(j_query);
     if (res == H_OK) {
       ret = T_OK;
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add_media - Error executing j_query");
+      y_log_message(Y_LOG_LEVEL_ERROR, "playlist_delete_media - Error executing j_query");
       ret = T_ERROR_DB;
     }
   } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add_media - Error allocating resources for clause_tm_id");
+    y_log_message(Y_LOG_LEVEL_ERROR, "playlist_delete_media - Error allocating resources for j_tm_id_array");
     ret = T_ERROR_MEMORY;
   }
   return ret;
+}
+
+json_t * playlist_has_media(struct config_elements * config, json_int_t tpl_id, json_t * media_list) {
+  json_t * j_query, * j_element, * j_result, * j_tm_id_array = json_array(), * j_return, * j_media;
+  int res;
+  size_t index;
+  
+  if (j_tm_id_array != NULL) {
+    json_array_foreach(media_list, index, j_element) {
+      json_array_append(j_tm_id_array, json_object_get(j_element, "tm_id"));
+    }
+    j_query = json_pack("{sss[s]s{sIs{ssso}}}",
+                        "table",
+                        TALIESIN_TABLE_PLAYLIST_ELEMENT,
+                        "columns",
+                          "tm_id",
+                        "where",
+                          "tpl_id",
+                          tpl_id,
+                          "tm_id",
+                            "operator",
+                            "IN",
+                            "value",
+                            j_tm_id_array);
+    res = h_select(config->conn, j_query, &j_result, NULL);
+    json_decref(j_query);
+    if (res == H_OK) {
+      j_return = json_pack("{sis[]}", "result", T_OK, "media");
+      if (j_return != NULL) {
+        json_array_foreach(j_result, index, j_element) {
+          j_media = media_get_by_id(config, json_integer_value(j_element));
+          if (check_result_value(j_media, T_OK)) {
+            json_array_append(json_object_get(j_return, "media"), json_object_get(j_media, "media"));
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "playlist_delete_media - Error media_get_by_id");
+          }
+          json_decref(j_media);
+        }
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "playlist_delete_media - Error allocating resources for j_return");
+        j_return = json_pack("{si}", "result", T_ERROR_MEMORY);
+      }
+      json_decref(j_result);
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "playlist_delete_media - Error executing j_query");
+      j_return = json_pack("{si}", "result", T_ERROR_DB);
+    }
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "playlist_delete_media - Error allocating resources for j_tm_id_array");
+    j_return = json_pack("{si}", "result", T_ERROR_MEMORY);
+  }
+  return j_return;
 }
 
 json_t * playlist_media_cover_get(struct config_elements * config, const char * username, const char * name, int thumbnail) {

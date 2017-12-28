@@ -229,3 +229,48 @@ int file_list_add_media_list(struct config_elements * config, struct _t_file_lis
   }
   return ret;
 }
+
+json_t * file_list_has_media_list(struct config_elements * config, struct _t_file_list * file_list, json_t * j_media_list) {
+  json_t * j_media, * j_return, * j_element, * j_tm_id_list;
+  size_t index;
+  struct _t_file * file = file_list->start;
+  
+  j_tm_id_list = json_array();
+  if (j_tm_id_list != NULL) {
+    if (pthread_mutex_lock(&file_list->file_lock)) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "Error lock mutex file_list");
+      j_return = json_pack("{si}", "result", T_ERROR);
+    } else {
+      while (file != NULL) {
+        json_array_foreach(j_media_list, index, j_element) {
+          if (json_integer_value(json_object_get(j_element, "tm_id")) == file->tm_id) {
+            json_array_append_new(j_tm_id_list, json_integer(file->tm_id));
+          }
+        }
+        file = file->next;
+      }
+      pthread_mutex_unlock(&file_list->file_lock);
+      
+      j_return = json_pack("{sis[]}", "result", T_OK, "media");
+      if (j_return != NULL) {
+        json_array_foreach(j_tm_id_list, index, j_element) {
+          j_media = media_get_by_id(config, json_integer_value(j_element));
+          if (check_result_value(j_media, T_OK)) {
+            json_array_append(json_object_get(j_return, "media"), json_object_get(j_media, "media"));
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "file_list_has_media_list - Error media_get_by_id for tm_id %"JSON_INTEGER_FORMAT, json_integer_value(j_element));
+          }
+          json_decref(j_media);
+        }
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "file_list_has_media_list - Error allocating resourcs for j_return");
+        j_return = json_pack("{si}", "result", T_ERROR_MEMORY);
+      }
+    }
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "file_list_has_media_list - Error allocating resourcs for j_tm_id_list");
+    j_return = json_pack("{si}", "result", T_ERROR_MEMORY);
+  }
+  json_decref(j_tm_id_list);
+  return j_return;
+}

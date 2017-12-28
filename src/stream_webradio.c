@@ -1092,6 +1092,7 @@ json_t * is_webradio_command_valid(struct config_elements * config, struct _t_we
                  0 != o_strcmp(str_command, "list") &&
                  0 != o_strcmp(str_command, "append_list") &&
                  0 != o_strcmp(str_command, "remove_list") &&
+                 0 != o_strcmp(str_command, "has_list") &&
                  0 != o_strcmp(str_command, "move") &&
                  0 != o_strcmp(str_command, "attach_playlist") &&
                  0 != o_strcmp(str_command, "reload") &&
@@ -1103,6 +1104,7 @@ json_t * is_webradio_command_valid(struct config_elements * config, struct _t_we
                               (0 == o_strcmp(str_command, "stop") || 
                                0 == o_strcmp(str_command, "append_list") || 
                                0 == o_strcmp(str_command, "remove_list") || 
+                               0 == o_strcmp(str_command, "has_list") || 
                                0 == o_strcmp(str_command, "move") || 
                                0 == o_strcmp(str_command, "attach_playlist") || 
                                0 == o_strcmp(str_command, "reload") || 
@@ -1112,8 +1114,8 @@ json_t * is_webradio_command_valid(struct config_elements * config, struct _t_we
         json_array_append_new(j_result, json_pack("{ss}", "parameters", "User is not allowed to run this command"));
       } else if (o_strcmp(str_command, "history") == 0 ||
           o_strcmp(str_command, "append_list") == 0 ||
+          o_strcmp(str_command, "has_list") == 0 ||
           o_strcmp(str_command, "remove_list") == 0 ||
-          //o_strcmp(str_command, "play_after") == 0 ||
           o_strcmp(str_command, "attach_playlist") == 0) {
         if (o_strcmp(str_command, "history") == 0 || o_strcmp(str_command, "list") == 0) {
           if (json_object_get(j_command, "parameters") != NULL) {
@@ -1132,10 +1134,10 @@ json_t * is_webradio_command_valid(struct config_elements * config, struct _t_we
               }
             }
           }
-        } else if (o_strcmp(str_command, "append_list") == 0) {
+        } else if (o_strcmp(str_command, "append_list") == 0 || o_strcmp(str_command, "has_list") == 0) {
           if (!json_is_array(json_object_get(j_command, "parameters"))) {
             json_array_append_new(j_result, json_pack("{ss}", "parameters", "parameters must be a json object"));
-          } else if (!json_is_array(json_object_get(j_command, "parameters")) || !json_array_size(json_object_get(j_command, "parameters"))) {
+          } else if (!json_array_size(json_object_get(j_command, "parameters"))) {
             json_array_append_new(j_result, json_pack("{ss}", "parameters", "parameters must be a json array of at least one element"));
           } else {
             json_array_foreach(json_object_get(j_command, "parameters"), index, j_element) {
@@ -1148,9 +1150,17 @@ json_t * is_webradio_command_valid(struct config_elements * config, struct _t_we
           if (!json_is_object(json_object_get(j_command, "parameters"))) {
             json_array_append_new(j_result, json_pack("{ss}", "parameters", "parameters must be a json object"));
           } else if (json_object_get(json_object_get(j_command, "parameters"), "index") == NULL || 
-                              !json_is_integer(json_object_get(json_object_get(j_command, "parameters"), "index")) ||
-                              json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "index")) < 0) {
-            json_array_append_new(j_result, json_pack("{ss}", "parameters", "index must ba a positive integer"));
+                     !json_is_integer(json_object_get(json_object_get(j_command, "parameters"), "index")) ||
+                     json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "index")) < 0 ||
+                     !json_is_array(json_object_get(j_command, "parameters")) ||
+                     !json_array_size(json_object_get(j_command, "parameters"))) {
+            json_array_append_new(j_result, json_pack("{ss}", "parameters", "index must ba a positive integer or a JSON array with at least one element"));
+          } else if (json_is_array(json_object_get(j_command, "parameters"))) {
+            json_array_foreach(json_object_get(j_command, "parameters"), index, j_element) {
+              if (!is_valid_path_element_parameter(config, j_element, username, is_admin) && !is_valid_category_element_parameter(config, j_element, username, is_admin) && !is_valid_playlist_element_parameter(config, j_element, username)) {
+                json_array_append_new(j_result, json_pack("{ss}", "parameter", "parameter is not a valid playlist element"));
+              }
+            }
           }
         } else if (o_strcmp(str_command, "attach_playlist") == 0) {
           if (!json_is_object(json_object_get(j_command, "parameters"))) {
@@ -1195,7 +1205,7 @@ json_t * is_webradio_command_valid(struct config_elements * config, struct _t_we
 json_t * webradio_command(struct config_elements * config, struct _t_webradio * webradio, const char * username, json_t * j_command) {
   const char * str_command = json_string_value(json_object_get(j_command, "command"));
   int i, ret;
-  json_t * j_return = NULL, * j_result, * j_element, * j_playlist;
+  json_t * j_return = NULL, * j_result, * j_element, * j_playlist, * j_media_list;
   json_int_t offset, limit, move_index, move_target, tm_id, tpl_id;
   size_t index;
   struct _audio_buffer * audio_buffer;
@@ -1358,6 +1368,32 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
       j_return = json_pack("{si}", "result", T_ERROR);
       y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error webradio_remove_media_by_index");
     }
+  } else if (0 == o_strcmp(str_command, "has_list")) {
+    ret = T_OK;
+    j_result = media_append_list_to_media_list(config, json_object_get(j_command, "parameters"), username);
+    if (check_result_value(j_result, T_OK)) {
+      if (json_array_size(json_object_get(j_result, "media")) > 0) {
+        j_media_list = file_list_has_media_list(config, webradio->file_list, json_object_get(j_result, "media"));
+        if (check_result_value(j_media_list, T_OK)) {
+          if (json_array_size(json_object_get(j_media_list, "media")) > 0) {
+            j_return = json_pack("{sisO}", "result", T_OK, "command", json_object_get(j_media_list, "media"));
+          } else {
+            j_return = json_pack("{si}", "result", T_ERROR_NOT_FOUND);
+          }
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error appending to webradio");
+          ret = T_ERROR;
+        }
+        json_decref(j_media_list);
+      } else {
+        ret = T_ERROR_NOT_FOUND;
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error media_append_list_to_media_list");
+      ret = T_ERROR;
+    }
+    json_decref(j_result);
+    j_return = json_pack("{si}", "result", ret);
   } else if (0 == o_strcmp(str_command, "reload")) {
     if (webradio->tpl_id) {
       j_playlist = playlist_get_by_id(config, webradio->tpl_id);

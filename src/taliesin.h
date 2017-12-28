@@ -346,7 +346,7 @@ struct _jukebox_audio_buffer {
   pthread_cond_t       buffer_cond;
   
   pthread_mutex_t      write_lock;
-	
+  
   struct _t_jukebox * jukebox;
 };
 
@@ -398,7 +398,7 @@ struct _ws_stream {
   char                   * username;
   int                      is_admin;
   int                      is_authenticated;
-	time_t                   expiration;
+  time_t                   expiration;
   struct _t_webradio     * webradio;
   struct _t_jukebox      * jukebox;
   int                      status;
@@ -509,6 +509,7 @@ int              file_list_init(struct _t_file_list * file_list);
 void             file_list_clean(struct _t_file_list * file_list);
 void             file_list_clean_file(struct _t_file * file);
 int              file_list_add_media_list(struct config_elements * config, struct _t_file_list * file_list, json_t * media_list);
+json_t *         file_list_has_media_list(struct config_elements * config, struct _t_file_list * file_list, json_t * media_list);
 
 // Jukebox audio buffer
 json_t * is_stream_parameters_valid(int webradio, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate);
@@ -630,6 +631,7 @@ int        playlist_delete(struct config_elements * config, json_int_t tpl_id);
 int        playlist_can_update(json_t * j_playlist, int is_admin);
 int        playlist_add_media(struct config_elements * config, json_int_t tpl_id, json_t * media_list);
 int        playlist_delete_media(struct config_elements * config, json_int_t tpl_id, json_t * media_list);
+json_t *   playlist_has_media(struct config_elements * config, json_int_t tpl_id, json_t * media_list);
 json_t   * playlist_media_cover_get(struct config_elements * config, const char * username, const char * name, int thumbnail);
 
 // Libav functions
@@ -689,6 +691,7 @@ int callback_taliesin_playlist_set (const struct _u_request * request, struct _u
 int callback_taliesin_playlist_delete (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_playlist_add_media (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_playlist_delete_media (const struct _u_request * request, struct _u_response * response, void * user_data);
+int callback_taliesin_playlist_has_media (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_playlist_load (const struct _u_request * request, struct _u_response * response, void * user_data);
 
 int callback_taliesin_stream_media (const struct _u_request * request, struct _u_response * response, void * user_data);

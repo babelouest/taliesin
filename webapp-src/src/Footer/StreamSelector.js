@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
 import { DropdownButton, MenuItem, Button, ButtonGroup } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
+
 import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
+import config from '../lib/ConfigManager';
 
 class StreamSelector extends Component {
 	constructor(props) {
@@ -35,7 +37,9 @@ class StreamSelector extends Component {
 	handleSelectStream(name) {
 		var newStream = this.state.streamList.find((stream) => {return stream.name === name});
 		if (newStream) {
-			this.setState({selectedStream: newStream});
+			this.setState({selectedStream: newStream}, () => {
+				config.setLocalConfigValue("stream", newStream);
+			});
 		}
 	}
 	

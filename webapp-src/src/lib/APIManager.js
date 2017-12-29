@@ -10,6 +10,22 @@ class APIManager {
 	}
 	
 	APIRequest (method, url, data) {
+		var curDate = new Date();
+		if (StateStore.getState().token_expiration*1000 > curDate.getTime()) {
+			return this.APIRequestExecute(method, url, data);
+		} else {
+			if (StateStore.getState().oauth2Connector) {
+				return StateStore.getState().oauth2Connector.runRefreshToken()
+				.then(() => {
+					return this.APIRequestExecute(method, url, data);
+				});
+			} else {
+				return Promise.reject(new Error("error oauth2Connector"));
+			}
+		}
+	}
+	
+	APIRequestExecute(method, url, data) {
 		return $.ajax({
 			method: method,
 			url: url,

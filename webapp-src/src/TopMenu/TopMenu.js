@@ -1,11 +1,13 @@
 import React, { Component } from 'react';
 import { Navbar, Nav, NavItem, FormGroup, FormControl, NavDropdown, MenuItem, InputGroup, Button, Popover, OverlayTrigger, Panel, ListGroup, ListGroupItem, Image, Row, Col } from 'react-bootstrap';
-import LoginButton from './LoginButton';
 import FontAwesome from 'react-fontawesome';
+
+import LoginButton from './LoginButton';
 import DataSourceList from './DataSourceList';
 import StateStore from '../lib/StateStore';
 import ModalMedia from '../Modal/ModalMedia';
 import i18n from '../lib/i18n';
+import config from '../lib/ConfigManager';
 
 class TopMenu extends Component {
 	constructor(props) {
@@ -19,6 +21,8 @@ class TopMenu extends Component {
 			browse: StateStore.getState().profile.browse,
 			dataSourceList: StateStore.getState().dataSourceList,
 			dataSource: StateStore.getState().profile.dataSource,
+			userList: StateStore.getState().userList,
+			currentUser: StateStore.getState().profile.currentUser,
 			searchPattern: "",
 			searchTimeout: false,
 			searching: true,
@@ -44,6 +48,7 @@ class TopMenu extends Component {
 		this.closeMedia = this.closeMedia.bind(this);
 		this.closeSearch = this.closeSearch.bind(this);
 		this.handlechangeLanguage = this.handlechangeLanguage.bind(this);
+		this.handlechangeUser = this.handlechangeUser.bind(this);
 		
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
@@ -55,6 +60,12 @@ class TopMenu extends Component {
 				this.setState({view: reduxState.profile.view});
 			} else if (reduxState.lastAction === "setCurrentBrowse") {
 				this.setState({browse: reduxState.profile.browse});
+			} else if (reduxState.lastAction === "setUserList") {
+				this.setState({userList: reduxState.userList});
+			} else if (reduxState.lastAction === "setCurrentUser") {
+				this.setState({currentUser: reduxState.profile.currentUser});
+			} else if (reduxState.lastAction === "setStoredValues") {
+				this.setState({view: StateStore.getState().profile.view});
 			}
 		});
 	}
@@ -97,6 +108,7 @@ class TopMenu extends Component {
 	
 	handleSelectView(event) {
 		StateStore.dispatch({type: "setCurrentView", view: event});
+		config.setLocalConfigValue("view", event);
 	}
 	
 	handleChangeSearchPattern(event) {
@@ -200,6 +212,28 @@ class TopMenu extends Component {
 	
 	handlechangeLanguage(lang) {
 		i18n.changeLanguage(lang);
+	}
+	
+	handlechangeUser(user) {
+		StateStore.dispatch({type: "setCurrentUser", currentUser: user});
+		
+		// Get current stream list
+		StateStore.getState().APIManager.taliesinApiRequest("GET", "/stream?username="+user)
+		.then((result) => {
+			StateStore.dispatch({type: "setStreamList", streamList: result});
+		})
+		.fail((result) => {
+			StateStore.dispatch({type: "setStreamList", streamList: []});
+		});
+		
+		// Get playlist list
+		StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist?username="+user)
+		.then((result) => {
+			StateStore.dispatch({type: "setPlaylists", playlists: result});
+		})
+		.fail((result) => {
+			StateStore.dispatch({type: "setPlaylists", playlists: []});
+		});
 	}
 	
 	render() {
@@ -354,6 +388,21 @@ class TopMenu extends Component {
 					languages.push(<MenuItem key={index} onClick={() => {this.handlechangeLanguage(lang)}}>{lang}</MenuItem>);
 				}
 			});
+			var userDropdown;
+			if (StateStore.getState().profile.isAdmin) {
+				var userList = [];
+				this.state.userList.forEach((user, index) => {
+					if (this.state.currentUser === user.username) {
+						userList.push(<MenuItem key={index} className="bg-success">{user.username}{StateStore.getState().profile.oauth2Profile.login===user.username?" ("+i18n.t("topmenu.me")+")":""}</MenuItem>);
+					} else {
+						userList.push(<MenuItem key={index} onClick={() => {this.handlechangeUser(user.username)}}>{user.username}{StateStore.getState().profile.oauth2Profile.login===user.username?" ("+i18n.t("topmenu.me")+")":""}</MenuItem>);
+					}
+				});
+				userDropdown = 
+					<NavDropdown title={i18n.t("topmenu.user")} id="nav-view">
+						{userList}
+					</NavDropdown>;
+			}
 			return (
 				<div>
 					<Navbar collapseOnSelect>
@@ -384,6 +433,7 @@ class TopMenu extends Component {
 								<NavItem onClick={() => this.handleAdvancedSearch()}>{i18n.t("topmenu.advanced_search")}</NavItem>
 							</Nav>
 							<Nav pullRight>
+								{userDropdown}
 								<NavDropdown title={i18n.t("topmenu.lang")} id="nav-view">
 									{languages}
 								</NavDropdown>

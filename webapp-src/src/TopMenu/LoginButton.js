@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { NavItem } from 'react-bootstrap';
-import { Glyphicon } from 'react-bootstrap';
+import FontAwesome from 'react-fontawesome';
 import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
 
@@ -27,10 +27,12 @@ class LoginButton extends Component {
 	}
 	
 	render () {
-		if (this.state.status === "connected") {
-			return <NavItem href="" onClick={() => this.handleDisconnect()}><Glyphicon glyph="log-out"/> {i18n.t("topmenu.log_out")}</NavItem>;
+		if (this.state.status === "connect") {
+			return <NavItem><FontAwesome name={"plug"} /> {i18n.t("topmenu.connect")}</NavItem>;
+		} else if (this.state.status === "connected") {
+			return <NavItem href="" onClick={() => this.handleDisconnect()}><FontAwesome name={"sign-out"} /> {i18n.t("topmenu.log_out")}</NavItem>;
 		} else {
-			return <NavItem href="" onClick={() => this.handleConnect()}><Glyphicon glyph="log-in"/> {i18n.t("topmenu.log_in")}</NavItem>;
+			return <NavItem href="" onClick={() => this.handleConnect()}><FontAwesome name={"sign-in"} /> {i18n.t("topmenu.log_in")}</NavItem>;
 		}
 	}
 }

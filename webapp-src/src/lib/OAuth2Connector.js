@@ -24,6 +24,7 @@ class OAuth2Connector {
 			this.parameters.clientId = parameters.clientId || "";
 			this.parameters.clientPassword = parameters.clientPassword || "";
 			this.parameters.redirectUri = parameters.redirectUri || "";
+			this.parameters.profileUrl = parameters.profileUrl || "";
 			if (parameters.changeStatusCb) {
 				this.changeStatusCb.push(parameters.changeStatusCb);
 			}
@@ -36,13 +37,25 @@ class OAuth2Connector {
 			if (token) {
 				this.accessToken = token;
 				document.location = "#";
-				this.broadcastMessage("connected", token.access_token);
+				this.getConnectedProfile((res, profile) => {
+					if (res) {
+						this.broadcastMessage("connected", token.access_token, (token.iat + token.expires_in), profile);
+					} else {
+						this.broadcastMessage("connected", token.access_token, (token.iat + token.expires_in), false);
+					}
+				});
 				this.storeAccessToken(token);
 			} else {
 				storedData = this.getStoredData();
 				if (storedData && storedData.accessToken && this.isTokenValid(storedData.accessToken)) {
 					this.accessToken = storedData.accessToken;
-					this.broadcastMessage("connected", this.accessToken.access_token);
+					this.getConnectedProfile((res, profile) => {
+						if (res) {
+							this.broadcastMessage("connected", this.accessToken.access_token, (this.accessToken.iat + this.accessToken.expires_in), profile);
+						} else {
+							this.broadcastMessage("connected", this.accessToken.access_token, (this.accessToken.iat + this.accessToken.expires_in), false);
+						}
+					});
 				} else {
 					this.broadcastMessage("disconnected");
 					this.accessToken = false;
@@ -58,7 +71,13 @@ class OAuth2Connector {
 						if (refreshToken.access_token) {
 							self.accessToken = {access_token: refreshToken.access_token, iat: refreshToken.iat, expires_in: refreshToken.expires_in};
 							self.storeAccessToken(self.accessToken);
-							self.broadcastMessage("connected", self.accessToken.access_token);
+							self.getConnectedProfile((res, profile) => {
+								if (res) {
+									self.broadcastMessage("connected", self.accessToken.access_token, (self.accessToken.iat + self.accessToken.expires_in), profile);
+								} else {
+									self.broadcastMessage("connected", self.accessToken.access_token, (self.accessToken.iat + self.accessToken.expires_in), false);
+								}
+							});
 							self.refreshTokenLoop(refreshToken.refresh_token, self.accessToken.expires_in);
 						} else {
 							self.broadcastMessage("disconnected");
@@ -72,7 +91,13 @@ class OAuth2Connector {
 				storedData = this.getStoredData();
 				if (storedData && storedData.accessToken && this.isTokenValid(storedData.accessToken)) {
 					this.accessToken = storedData.accessToken;
-					this.broadcastMessage("connected", this.accessToken.access_token);
+					this.getConnectedProfile((res, profile) => {
+						if (res) {
+							this.broadcastMessage("connected", this.accessToken.access_token, (this.accessToken.iat + this.accessToken.expires_in), profile);
+						} else {
+							this.broadcastMessage("connected", this.accessToken.access_token, (this.accessToken.iat + this.accessToken.expires_in), false);
+						}
+					});
 					if (storedData.refreshToken) {
 						var curDate = new Date();
 						var timeout = Math.floor(((self.accessToken.iat + self.accessToken.expires_in)*1000 - curDate.getTime())/1000);
@@ -81,14 +106,18 @@ class OAuth2Connector {
 				} else if (storedData && storedData.refreshToken) {
 					this.accessToken = false;
 					this.refreshToken = storedData.refreshToken;
-					this.getAccessTokenFromRefresh(storedData.refreshToken, function (accessToken) {
-						if (accessToken) {
+					this.executeRefreshToken(storedData.refreshToken, function (result, accessToken) {
+						if (result) {
 							self.accessToken = accessToken;
 							self.storeAccessToken(accessToken);
 							self.refreshTokenLoop(storedData.refreshToken, self.accessToken.expires_in);
-							self.broadcastMessage("connected", accessToken.access_token);
-						} else {
-							self.broadcastMessage("disconnected");
+							self.getConnectedProfile((res, profile) => {
+								if (res) {
+									self.broadcastMessage("connected", accessToken.access_token, (accessToken.iat + accessToken.expires_in), profile);
+								} else {
+									self.broadcastMessage("connected", accessToken.access_token, (accessToken.iat + accessToken.expires_in), false);
+								}
+							});
 						}
 					});
 				} else {
@@ -134,15 +163,13 @@ class OAuth2Connector {
 	refresh(cb) {
 		var self = this;
 		if (this.parameters.responseType === "code" && this.refreshToken) {
-			this.getAccessTokenFromRefresh(this.refreshToken, function (accessToken) {
-				if (accessToken) {
+			this.executeRefreshToken(this.refreshToken, function (result, accessToken) {
+				if (result) {
 					self.accessToken = accessToken;
 					self.storeAccessToken(accessToken);
 					self.refreshTokenLoop(self.refreshToken, self.accessToken.expires_in);
-					self.broadcastMessage("refresh", accessToken.access_token);
+					self.broadcastMessage("refresh", accessToken.access_token, (accessToken.iat + accessToken.expires_in));
 					cb(accessToken.access_token);
-				} else {
-					self.broadcastMessage("disconnected");
 					cb(false);
 				}
 			});
@@ -254,60 +281,94 @@ class OAuth2Connector {
 		});
 	}
 	
-	getAccessTokenFromRefresh(refreshToken, cb) {
+	refreshTokenLoop(refreshToken, timeout) {
 		var self = this;
-		$.ajax({
+		clearTimeout(this.refreshTimeout);
+		this.refreshTimeout = setTimeout(function () {
+			self.executeRefreshToken(refreshToken, function (res, token) {
+				if (res) {
+					var curDate = new Date();
+					var timeout = Math.floor(((self.accessToken.iat + self.accessToken.expires_in)*1000 - curDate.getTime())/1000);
+					self.refreshTokenLoop(refreshToken, timeout);
+				}
+			});
+		}, (timeout - 60)*1000);
+	}
+	
+	runRefreshToken(cb) {
+		if (this.getStoredData().refreshToken) {
+			return this.executeRefreshToken(this.getStoredData().refreshToken, cb);
+		} else {
+			return Promise.reject("disconnected");
+		}
+	}
+	
+	executeRefreshToken(refreshToken, cb) {
+		var self = this;
+		return $.ajax({
 			type: "POST",
-			url: this.parameters.serverUrl + "/" + this.parameters.tokenUrl,
+			url: self.parameters.serverUrl + "/" + self.parameters.tokenUrl,
 			data: {grant_type: "refresh_token", refresh_token: refreshToken},
 			success: function (result, status, request) {
-				cb(result);
+				self.accessToken = result;
+				self.storeAccessToken(result);
+				self.broadcastMessage("refresh", result.access_token, (result.access_token.iat + result.access_token.expires_in));
+				if (cb) {
+					cb(true, result);
+				}
 			},
 			error: function (error) {
 				if (error.status === 403) {
 					self.refreshToken = false;
 				}
 				self.accessToken = false;
-				cb(false);
+				if (error.readyState === 0) {
+					self.broadcastMessage("network error");
+				} else {
+					self.broadcastMessage("disconnected");
+				}
+				if (cb) {
+					cb(false);
+				}
 			}
 		});
 	}
 	
-	refreshTokenLoop(refreshToken, timeout) {
-		var self = this;
-		clearTimeout(this.refreshTimeout);
-		this.refreshTimeout = setTimeout(function () {
-			$.ajax({
-				type: "POST",
-				url: self.parameters.serverUrl + "/" + self.parameters.tokenUrl,
-				data: {grant_type: "refresh_token", refresh_token: refreshToken},
-				success: function (result, status, request) {
-					self.accessToken = result;
-					self.storeAccessToken(result);
-					self.broadcastMessage("refresh", result.access_token);
-					self.refreshTokenLoop(refreshToken, self.accessToken.expires_in);
-				},
-				error: function (error) {
-					if (error.status === 403) {
-						self.refreshToken = false;
-					}
-					self.accessToken = false;
-					self.broadcastMessage("disconnected");
-				}
-			});
-		}, (timeout - 60)*1000);
+	broadcastMessage(status, token, expiration, profile) {
+		for (var i in this.changeStatusCb) {
+			this.changeStatusCb[i](status, token, expiration, profile);
+		}
 	}
 	
-	broadcastMessage(status, token) {
-		for (var i in this.changeStatusCb) {
-			this.changeStatusCb[i](status, token);
-		}
+	getConnectedProfile(cb) {
+		var self = this;
+		$.ajax({
+			type: "GET",
+			url: self.parameters.serverUrl + "/" + self.parameters.profileUrl,
+			headers: {"Authorization": "Bearer " + self.accessToken.access_token},
+			success: function (result) {
+				if (cb) {
+					cb(true, result)
+				}
+			},
+			error: function (error) {
+				if (cb) {
+					cb(false)
+				}
+			}
+		});
 	}
 	
 	connect() {
 		var token = this.getStoredData();
 		if (token && this.isTokenValid(token.accessToken)) {
-			this.broadcastMessage("connected", token.accessToken.access_token);
+			this.getConnectedProfile((res, profile) => {
+				if (res) {
+					this.broadcastMessage("connected", token.accessToken.access_token, (token.accessToken.iat + token.accessToken.expires_in), profile);
+				} else {
+					this.broadcastMessage("connected", token.accessToken.access_token, (token.accessToken.iat + token.accessToken.expires_in), false);
+				}
+			});
 		} else {
 			token.accessToken = false;
 			this.storeAccessToken(false);

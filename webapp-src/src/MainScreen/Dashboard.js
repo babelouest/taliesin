@@ -163,6 +163,13 @@ class Dashboard extends Component {
 					</PanelGroup>
 				</div>
 			);
+		} else if (StateStore.getState().status === "connect") {
+			return (
+				<div>
+					<h2>{i18n.t("dashboard.title")}</h2>
+					<h3>{i18n.t("dashboard.connecting_message")}</h3>
+				</div>
+			);
 		} else {
 			return (
 				<div>

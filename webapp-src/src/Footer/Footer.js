@@ -15,6 +15,7 @@ import i18n from '../lib/i18n';
 class Footer extends Component {
 	constructor(props) {
 		super(props);
+		
 		this.state = {
 			streamList: StateStore.getState().streamList,
 			playerList: StateStore.getState().externalPlayerList,
@@ -54,6 +55,8 @@ class Footer extends Component {
 				this.setState({mediaNow: StateStore.getState().profile.mediaNow, play: false});
 			} else if (reduxState.lastAction === "setMediaNext") {
 				this.setState({mediaNext: StateStore.getState().profile.mediaNext, play: false});
+			} else if (reduxState.lastAction === "setStoredValues") {
+				this.setState({currentPlayer: StateStore.getState().profile.currentPlayer, stream: StateStore.getState().profile.stream, mediaNow: false, play: false}, () => {this.buildExternal()});
 			}
 		});
 		

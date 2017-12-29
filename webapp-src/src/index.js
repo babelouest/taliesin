@@ -9,6 +9,7 @@ import App from './App';
 import config from './lib/ConfigManager';
 import OAuth2Connector from './lib/OAuth2Connector';
 import StateStore from './lib/StateStore';
+import i18n from './lib/i18n';
 
 config.fetchConfig()
 .then(function () {
@@ -22,19 +23,28 @@ config.fetchConfig()
 		clientId: curOauth2Config.clientId, 
 		redirectUri: curOauth2Config.redirectUri, 
 		scope: curOauth2Config.scope,
-		changeStatusCb: function (newStatus, token) {
+		profileUrl: curOauth2Config.profileUrl,
+		changeStatusCb: function (newStatus, token, expiration, profile) {
+			StateStore.dispatch({ type: 'setStoredValues', config: config.getLocalConfig() });
 			if (newStatus === "connected") {
-				StateStore.dispatch({ type: 'connection', status: newStatus, token: token, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), angharadApiUrl: config.getConfigValue("angharadApiUrl") });
+				StateStore.dispatch({ type: 'connection', status: newStatus, token: token, expiration: expiration, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), angharadApiUrl: config.getConfigValue("angharadApiUrl"), profile: profile});
 				ReactDOM.render(<App/>, document.getElementById('root'));
 			} else if (newStatus === "disconnected") {
-				StateStore.dispatch({ type: 'connection', status: newStatus, token: false, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), angharadApiUrl: config.getConfigValue("angharadApiUrl") });
+				StateStore.dispatch({ type: 'connection', status: newStatus, token: false, expiration: 0, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), angharadApiUrl: config.getConfigValue("angharadApiUrl") });
+				ReactDOM.render(<App/>, document.getElementById('root'));
+			} else if (newStatus === "network error") {
+				StateStore.getState().NotificationManager.addNotification({
+					message: i18n.t("common.message_network_error"),
+					level: 'error'
+				});
 				ReactDOM.render(<App/>, document.getElementById('root'));
 			} else if (newStatus === "refresh") {
-				StateStore.dispatch({ type: "newApiToken", token: token});
+				StateStore.dispatch({ type: "newApiToken", token: token, expiration: expiration});
 			}
 		}
 	});
 	StateStore.dispatch({ type: "setOauth2Connector", oauth2Connector: oauth2Connector});
+	ReactDOM.render(<App/>, document.getElementById('root'));
 });
 
 StateStore.subscribe(() => {
@@ -66,7 +76,7 @@ StateStore.subscribe(() => {
 			// Get data source list
 			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source")
 			.then((result) => {
-				StateStore.dispatch({type: "setDataSource", dataSourceList: result, currentDataSource: (result.length?result[0]:false)});
+				StateStore.dispatch({type: "setDataSource", dataSourceList: result});
 			})
 			.fail((result) => {
 				StateStore.dispatch({type: "setDataSource", dataSourceList: [], currentDataSource: false});
@@ -80,15 +90,15 @@ StateStore.subscribe(() => {
 			.fail((result) => {
 				StateStore.dispatch({type: "setPlaylists", playlists: []});
 			});
+			
+			// Get server default config
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/../config")
+			.then((result) => {
+				StateStore.dispatch({type: "setServerConfig", config: result});
+			})
+			.fail((result) => {
+				StateStore.dispatch({type: "setServerConfig", config: {}});
+			});
 		}
-		
-		// Get server default config
-		StateStore.getState().APIManager.taliesinApiRequest("GET", "/../config")
-		.then((result) => {
-			StateStore.dispatch({type: "setServerConfig", config: result});
-		})
-		.fail((result) => {
-			StateStore.dispatch({type: "setServerConfig", config: {}});
-		});
 	}
 });

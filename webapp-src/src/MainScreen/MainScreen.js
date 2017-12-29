@@ -44,8 +44,10 @@ class MainScreen extends Component {
 				this.setState({category: reduxState.profile.category, categoryValue: reduxState.profile.categoryValue, subCategory: reduxState.profile.subCategory, subCategoryValue: reduxState.profile.subCategoryValue});
 			} else if (reduxState.lastAction === "setCurrentView") {
 				this.setState({view: reduxState.profile.view});
-			} else if (StateStore.getState().lastAction === "showFullScreen") {
-				this.setState({showMainScreen: !StateStore.getState().showFullScreen});
+			} else if (reduxState.lastAction === "showFullScreen") {
+				this.setState({showMainScreen: !reduxState.showFullScreen});
+			} else if (reduxState.lastAction === "setStoredValues") {
+				this.setState({view: reduxState.profile.view});
 			}
 		});
 	}

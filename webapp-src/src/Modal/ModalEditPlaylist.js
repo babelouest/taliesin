@@ -132,7 +132,7 @@ class ModalAddPlaylist extends Component {
 			if (!this.state.add) {
 				scopeInput = <span>{this.state.playlist.scope==="me"?i18n.t("common.scope_me"):i18n.t("common.scope_all")}</span>;
 			} else {
-				scopeInput = <span>i18n.t("common.scope_me")</span>;
+				scopeInput = <span>{i18n.t("common.scope_me")}</span>;
 			}
 		}
 		if (this.state.playlist.cover) {

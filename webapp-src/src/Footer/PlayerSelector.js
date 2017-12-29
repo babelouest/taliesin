@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
 import { DropdownButton, MenuItem } from 'react-bootstrap';
+
 import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
+import config from '../lib/ConfigManager';
 
 class PlayerSelector extends Component {
 	constructor(props) {
@@ -24,6 +26,7 @@ class PlayerSelector extends Component {
 	handleSelectPlayer(player) {
 		StateStore.dispatch({type: "loadStream", stream: {name: false, webradio: false}});
 		StateStore.dispatch({type: "setCurrentPlayer", currentPlayer: player});
+		config.setLocalConfigValue("currentPlayer", player);
 	}
 	
 	render() {

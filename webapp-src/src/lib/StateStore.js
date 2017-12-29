@@ -5,10 +5,11 @@ var defaultState = {
 	lastAction: false,
 	ready: false,
 	showFullScreen: false,
-	status: "",
+	status: "connect",
 	taliesinApiUrl: false,
 	angharadApiUrl: false,
 	token: false,
+	token_expiration: 0,
 	oauth2Connector: false,
 	APIManager: false,
 	NotificationManager: false,
@@ -20,6 +21,8 @@ var defaultState = {
 	serverConfig: {},
 	profile: {
 		isAdmin: false,
+		oauth2Profile: false,
+		currentUser: false,
 		dataSource: false, 
 		path: "",
 		category: false,
@@ -56,10 +59,16 @@ function stateStoreManager(state = defaultState, action) {
 			state.angharadApiUrl = action.angharadApiUrl;
 			state.status = action.status;
 			state.token = action.token;
+			state.token_expiration = action.expiration;
+			state.profile.oauth2Profile = action.profile;
+			if (action.profile) {
+				state.profile.currentUser = action.profile.login;
+			}
 			state.ready = (!!state.APIManager && !!state.token && (state.status==="connected") && !!state.oauth2Connector);
 			break;
 		case "newApiToken":
 			state.token = action.token;
+			state.token_expiration = action.expiration;
 			state.ready = (!!state.APIManager && !!state.token && (state.status==="connected") && !!state.oauth2Connector);
 			break;
 		case "setOauth2Connector":
@@ -194,6 +203,17 @@ function stateStoreManager(state = defaultState, action) {
 			break;
 		case "setCurrentPlaylist":
 			state.profile.playlist = action.playlist;
+			break;
+		case "setCurrentUser":
+			state.profile.currentUser = action.currentUser;
+			break;
+		case "setStoredValues":
+			if (action.config) {
+				state.profile.dataSource = action.config.dataSource || state.profile.dataSource;
+				state.profile.stream = action.config.stream || state.profile.stream;
+				state.profile.view = action.config.view || state.profile.view;
+				state.profile.currentPlayer = action.config.currentPlayer || state.profile.currentPlayer;
+			}
 			break;
 		default:
 			break;

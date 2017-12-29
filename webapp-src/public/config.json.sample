@@ -1,7 +1,7 @@
 {
   "taliesinApiUrl": "https://taliesin.url/api",
   "angharadApiUrl": "https://angharad.url/api/",
-	"storageType": "local", 
+  "storageType": "local", 
   "oauth2Config": {
     "storageType": "local", 
     "responseType": "code", 
@@ -11,6 +11,6 @@
     "clientId": "taliesin", 
     "redirectUri": "https://client.url/", 
     "scope": "taliesin taliesin_admin angharad g_profile",
-		"profileUrl": "profile"
+    "profileUrl": "profile"
   }
 }

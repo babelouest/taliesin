@@ -353,7 +353,7 @@ START_TEST(test_jukebox_command_has_list_not_found)
 {
   if (get_stream_name()) {
     char * url;
-    json_t * j_command = json_pack("{sss[{ssss}]}", "command", "has_list", "parameters", "data_source", DATA_SOURCE_VALID, "path", "not_exist");
+    json_t * j_command = json_pack("{sss[{ssss}]}", "command", "has_list", "parameters", "data_source", DATA_SOURCE_VALID, "path", "short/short1.mp3");
     int res;
     
     url = msprintf(TALIESIN_SERVER_URI "/stream/%s/manage", valid_stream_name);

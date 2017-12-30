@@ -421,7 +421,7 @@ START_TEST(test_webradio_command_has_list_ok)
 {
   if (get_stream_name()) {
     char * url;
-    json_t * j_command = json_pack("{sss[{ssss}]}", "command", "has_list", "parameters", "data_source", DATA_SOURCE_VALID, "path", "Kimiko Ishizaka/J.S. Bach: \"Open\" Goldberg Variations, BWV 988 (Piano)/Kimiko Ishizaka - J.S. Bach- -Open- Goldberg Variations, BWV 988 (Piano) - 01 Aria.mp3");
+    json_t * j_command = json_pack("{sss[{ssss}]}", "command", "has_list", "parameters", "data_source", DATA_SOURCE_VALID, "path", "short/short1.mp3");
     int res;
     
     url = msprintf(TALIESIN_SERVER_URI "/stream/%s/manage", valid_stream_name);
@@ -438,7 +438,7 @@ START_TEST(test_webradio_command_has_list_not_found)
 {
   if (get_stream_name()) {
     char * url;
-    json_t * j_command = json_pack("{sss[{ssss}]}", "command", "has_list", "parameters", "data_source", DATA_SOURCE_VALID, "path", "not_exist");
+    json_t * j_command = json_pack("{sss[{ssss}]}", "command", "has_list", "parameters", "data_source", DATA_SOURCE_VALID, "path", "Kimiko Ishizaka/J.S. Bach: \"Open\" Goldberg Variations, BWV 988 (Piano)/Kimiko Ishizaka - J.S. Bach- -Open- Goldberg Variations, BWV 988 (Piano) - 01 Aria.mp3");
     int res;
     
     url = msprintf(TALIESIN_SERVER_URI "/stream/%s/manage", valid_stream_name);

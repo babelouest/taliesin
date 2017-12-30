@@ -392,30 +392,34 @@ START_TEST(test_playlist_has_media_ok)
   url = msprintf("%s/playlist/%s/has_media", TALIESIN_SERVER_URI, PLAYLIST_USER_VALID);
   j_playlist = json_pack("[{ssss}]",
                          "data_source", DATA_SOURCE_VALID,
-                         "path", "/fss");
-  j_result = json_pack("{ss}", "test", "test");
+                         "path", "/fss/free-software-song.ogg");
+  j_result = json_pack("{ss}", "path", "fss/free-software-song.ogg");
   res = run_simple_authenticated_test(&user_req, "POST", url, j_playlist, NULL, 200, j_result, NULL, NULL);
+  ck_assert_int_eq(res, 1);
+  free(url);
+  json_decref(j_playlist);
 }
 END_TEST
 
 START_TEST(test_playlist_has_media_not_found)
 {
-  char * url = msprintf("%s/playlist/%s/add_media", TALIESIN_SERVER_URI, PLAYLIST_USER_VALID);
+  char * url = msprintf("%s/playlist/%s/has_media", TALIESIN_SERVER_URI, PLAYLIST_USER_VALID);
   json_t * j_playlist = json_pack("[{ssss}]",
-                                  "data_source", DATA_SOURCE_VALID,
-                                  "path", "/not_exist"), * j_result;
-  
-  int res = run_simple_authenticated_test(&user_req, "PUT", url, j_playlist, NULL, 200, NULL, NULL, NULL);
+                         "data_source", DATA_SOURCE_VALID,
+                         "path", "short/short1.mp3");
+  int res = run_simple_authenticated_test(&user_req, "POST", url, j_playlist, NULL, 404, NULL, NULL, NULL);
   ck_assert_int_eq(res, 1);
   free(url);
   json_decref(j_playlist);
   
-  url = msprintf("%s/playlist/%s/has_media", TALIESIN_SERVER_URI, PLAYLIST_USER_VALID);
+  url = msprintf("%s/playlist/%s/remove_media", TALIESIN_SERVER_URI, PLAYLIST_USER_VALID);
   j_playlist = json_pack("[{ssss}]",
                          "data_source", DATA_SOURCE_VALID,
                          "path", "/fss");
-  j_result = json_pack("{ss}", "test", "test");
-  res = run_simple_authenticated_test(&user_req, "POST", url, j_playlist, NULL, 200, j_result, NULL, NULL);
+  res = run_simple_authenticated_test(&user_req, "PUT", url, j_playlist, NULL, 200, NULL, NULL, NULL);
+  ck_assert_int_eq(res, 1);
+  free(url);
+  json_decref(j_playlist);
 }
 END_TEST
 

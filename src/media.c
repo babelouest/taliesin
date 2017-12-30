@@ -539,7 +539,7 @@ json_t * media_get_file(struct config_elements * config, json_t * j_data_source,
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "media_get_file - Error allocating resources for j_query (tag)");
         }
-        j_return = json_pack("{siso}", "result", T_OK, "media", json_deep_copy(j_element));
+        j_return = json_pack("{sisO}", "result", T_OK, "media", j_element);
       } else {
         j_return = json_pack("{si}", "result", T_ERROR_NOT_FOUND);
       }
@@ -696,7 +696,7 @@ json_t * media_get(struct config_elements * config, json_t * j_data_source, cons
     } else {
       j_result_files = media_get_file(config, j_data_source, tf_id, file, 0);
       if (check_result_value(j_result_files, T_OK)) {
-        j_result = json_pack("{siso}", "result", T_OK, "media", json_deep_copy(json_object_get(j_result_files, "media")));
+        j_result = json_pack("{sisO}", "result", T_OK, "media", json_object_get(j_result_files, "media"));
       } else if (check_result_value(j_result_files, T_ERROR_NOT_FOUND)) {
         j_result = json_pack("{si}", "result", T_ERROR_NOT_FOUND);
       } else {

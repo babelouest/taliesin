@@ -862,7 +862,7 @@ int callback_taliesin_category_list (const struct _u_request * request, struct _
                 json_decref(j_fake_jukebox);
               }
             } else if (j_valid != NULL && json_array_size(j_valid) > 0) {
-              ulfius_set_json_body_response(response, 400, json_deep_copy(j_valid));
+              ulfius_set_json_body_response(response, 400, j_valid);
             } else {
               y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get_path - Error is_stream_parameters_valid");
               response->status = 500;
@@ -1023,7 +1023,7 @@ int callback_taliesin_subcategory_list (const struct _u_request * request, struc
                   json_decref(j_fake_jukebox);
                 }
               } else if (j_valid != NULL && json_array_size(j_valid) > 0) {
-                ulfius_set_json_body_response(response, 400, json_deep_copy(j_valid));
+                ulfius_set_json_body_response(response, 400, j_valid);
               } else {
                 y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get_path - Error is_stream_parameters_valid");
                 response->status = 500;

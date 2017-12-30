@@ -953,9 +953,15 @@ json_t * is_jukebox_command_valid(struct config_elements * config, struct _t_juk
           if (!json_is_object(json_object_get(j_command, "parameters"))) {
             json_array_append_new(j_result, json_pack("{ss}", "parameters", "parameters must be a json object"));
           } else if (json_object_get(json_object_get(j_command, "parameters"), "index") == NULL || 
-                              !json_is_integer(json_object_get(json_object_get(j_command, "parameters"), "index")) ||
-                              json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "index")) < 0) {
-            json_array_append_new(j_result, json_pack("{ss}", "parameters", "index must ba a positive integer"));
+                     json_is_array(json_object_get(j_command, "parameters")) ||
+                     (json_object_get(json_object_get(j_command, "parameters"), "index") != NULL && 
+                      (!json_is_integer(json_object_get(json_object_get(j_command, "parameters"), "index")) ||
+                      json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "index")) < 0)
+                     ) || 
+                     (json_is_array(json_object_get(j_command, "parameters")) && 
+                     !json_array_size(json_object_get(j_command, "parameters")))
+                    ) {
+            json_array_append_new(j_result, json_pack("{ss}", "parameters", "index must ba a positive integer or a JSON array with at least one element"));
           }
         } else if (o_strcmp(str_command, "attach_playlist") == 0) {
           if (!json_is_object(json_object_get(j_command, "parameters"))) {
@@ -1128,18 +1134,17 @@ json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * ju
           }
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error appending to jukebox");
-          ret = T_ERROR;
+          j_return = json_pack("{si}", "result", T_ERROR);
         }
         json_decref(j_media_list);
       } else {
-        ret = T_ERROR_NOT_FOUND;
+        j_return = json_pack("{si}", "result", T_ERROR_NOT_FOUND);
       }
     } else {
       y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error media_append_list_to_media_list");
-      ret = T_ERROR;
+      j_return = json_pack("{si}", "result", T_ERROR);
     }
     json_decref(j_result);
-    j_return = json_pack("{si}", "result", ret);
   } else if (0 == o_strcmp(str_command, "reload")) {
     if (jukebox->tpl_id) {
       j_playlist = playlist_get_by_id(config, jukebox->tpl_id);

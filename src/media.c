@@ -466,7 +466,7 @@ json_t * media_get_by_id(struct config_elements * config, json_int_t tm_id) {
           y_log_message(Y_LOG_LEVEL_ERROR, "media_get_by_id - Error executing j_query for data_source");
         }
         json_object_del(j_element, "tds_id");
-        j_return = json_pack("{siso}", "result", T_OK, "media", json_deep_copy(j_element));
+        j_return = json_pack("{sisO}", "result", T_OK, "media", j_element);
       } else {
         j_return = json_pack("{si}", "result", T_ERROR_NOT_FOUND);
       }

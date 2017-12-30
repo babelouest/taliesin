@@ -620,8 +620,9 @@ json_t * playlist_has_media(struct config_elements * config, json_int_t tpl_id, 
       j_return = json_pack("{sis[]}", "result", T_OK, "media");
       if (j_return != NULL) {
         json_array_foreach(j_result, index, j_element) {
-          j_media = media_get_by_id(config, json_integer_value(j_element));
+          j_media = media_get_by_id(config, json_integer_value(json_object_get(j_element, "tm_id")));
           if (check_result_value(j_media, T_OK)) {
+            json_object_del(json_object_get(j_media, "media"), "tm_id");
             json_array_append(json_object_get(j_return, "media"), json_object_get(j_media, "media"));
           } else {
             y_log_message(Y_LOG_LEVEL_ERROR, "playlist_delete_media - Error media_get_by_id");

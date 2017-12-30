@@ -24,7 +24,6 @@ class AudioPlayer extends Component {
 			now: false, 
 			next: false, 
 			taliesinApiUrl: StateStore.getState().taliesinApiUrl, 
-			timeout: false, 
 			currentTime: 0, 
 			duration: 0,
 			volume: 0,

@@ -13,7 +13,7 @@ class MPDController extends Component {
 		}, 10000);
 		
 		this.state = {
-			interval,
+			interval: interval,
 			play: false,
 			stream: props.stream, 
 			playNow: props.play,
@@ -21,7 +21,6 @@ class MPDController extends Component {
 			player: StateStore.getState().externalPlayerList.find((externalPlayer) => {return props.player.name === externalPlayer.name})||{type: false, name: false},
 			now: false, 
 			next: false, 
-			timeout: false, 
 			currentTime: 0, 
 			duration: 0,
 			volume: 0,

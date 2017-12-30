@@ -62,7 +62,7 @@ class TopMenu extends Component {
 				this.setState({browse: reduxState.profile.browse});
 			} else if (reduxState.lastAction === "setUserList") {
 				this.setState({userList: reduxState.userList});
-			} else if (reduxState.lastAction === "setCurrentUser") {
+			} else if (reduxState.lastAction === "setCurrentUser" || reduxState.lastAction === "setProfile") {
 				this.setState({currentUser: reduxState.profile.currentUser});
 			} else if (reduxState.lastAction === "setStoredValues") {
 				this.setState({view: StateStore.getState().profile.view});
@@ -399,7 +399,7 @@ class TopMenu extends Component {
 					}
 				});
 				userDropdown = 
-					<NavDropdown title={i18n.t("topmenu.user")} id="nav-view">
+					<NavDropdown title={<span><i className="fa fa-users"></i></span>} id="nav-view">
 						{userList}
 					</NavDropdown>;
 			}
@@ -472,6 +472,7 @@ class TopMenu extends Component {
 							<NavDropdown title={i18n.t("topmenu.lang")} id="nav-view">
 								{languages}
 							</NavDropdown>
+							<NavItem><FontAwesome name={"plug"} /> {i18n.t("topmenu.connect")}</NavItem>
 							<LoginButton></LoginButton>
 						</Nav>
 					</Navbar.Collapse>

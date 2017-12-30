@@ -24,22 +24,18 @@ config.fetchConfig()
 		redirectUri: curOauth2Config.redirectUri, 
 		scope: curOauth2Config.scope,
 		profileUrl: curOauth2Config.profileUrl,
-		changeStatusCb: function (newStatus, token, expiration, profile) {
+		changeStatusCb: function (newStatus, token, expiration) {
 			StateStore.dispatch({ type: 'setStoredValues', config: config.getLocalConfig() });
 			if (newStatus === "connected") {
-				StateStore.dispatch({ type: 'connection', status: newStatus, token: token, expiration: expiration, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), angharadApiUrl: config.getConfigValue("angharadApiUrl"), profile: profile});
+				StateStore.dispatch({ type: 'connection', status: newStatus, token: token, expiration: expiration, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), angharadApiUrl: config.getConfigValue("angharadApiUrl")});
 				ReactDOM.render(<App/>, document.getElementById('root'));
 			} else if (newStatus === "disconnected") {
 				StateStore.dispatch({ type: 'connection', status: newStatus, token: false, expiration: 0, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), angharadApiUrl: config.getConfigValue("angharadApiUrl") });
 				ReactDOM.render(<App/>, document.getElementById('root'));
-			} else if (newStatus === "network error") {
-				StateStore.getState().NotificationManager.addNotification({
-					message: i18n.t("common.message_network_error"),
-					level: 'error'
-				});
-				ReactDOM.render(<App/>, document.getElementById('root'));
 			} else if (newStatus === "refresh") {
 				StateStore.dispatch({ type: "newApiToken", token: token, expiration: expiration});
+			} else if (newStatus === "profile") {
+				StateStore.dispatch({ type: "setProfile", profile: token});
 			}
 		}
 	});

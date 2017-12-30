@@ -232,9 +232,7 @@ START_TEST(test_create_data_source_user_ok)
 																		 "path", data_source_path,
 																		 "icon", "testIcon");
 	
-  y_log_message(Y_LOG_LEVEL_DEBUG, "grut 0");
   int res = run_simple_authenticated_test(&admin_req, "POST", url, j_data_source, NULL, 200, NULL, NULL, NULL);
-  y_log_message(Y_LOG_LEVEL_DEBUG, "grut 1");
   free(url);
 	json_decref(j_data_source);
 	ck_assert_int_eq(res, 1);

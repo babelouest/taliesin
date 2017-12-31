@@ -18,6 +18,7 @@
     "react-notification-system": "^0.2.16",
     "react-redux": "^5.0.6",
     "react-scripts": "1.0.13",
+    "react-tag-input": "^4.7.2",
     "react-visibility-sensor": "^3.11.0",
     "redux": "^3.7.2"
   },

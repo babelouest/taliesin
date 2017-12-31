@@ -9,6 +9,7 @@ import AdvancedSearch from './AdvancedSearch';
 import ManagePlayer from './ManagePlayer';
 import ManageStream from './ManageStream';
 import ManageDataSource from './ManageDataSource';
+import ManageConfig from './ManageConfig';
 import StreamDetails from './StreamDetails';
 import StreamMediaList from './StreamMediaList';
 import StateStore from '../lib/StateStore';
@@ -103,6 +104,13 @@ class MainScreen extends Component {
 					<Grid className="main-screen">
 						<h2>{i18n.t("mainScreen.data_source")}</h2>
 						<ManageDataSource />
+					</Grid>
+				);
+			} else if (this.state.browse === "manageConfig") {
+				return (
+					<Grid className="main-screen">
+						<h2>{i18n.t("mainScreen.config")}</h2>
+						<ManageConfig />
 					</Grid>
 				);
 			} else if (this.state.browse === "streamDetails") {

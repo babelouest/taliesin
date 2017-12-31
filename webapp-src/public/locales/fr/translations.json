@@ -69,6 +69,10 @@
 		"yes": "Oui",
 		"no": "Non",
 		"none": "Aucun",
+    "save": "Sauvegarder",
+    "ok": "OK",
+    "cancel": "Annuler",
+    "close": "Fermer",
 		"jukebox": "Jukebox",
 		"webradio": "Webradio",
 		"stereo": "Stéréo",
@@ -122,6 +126,8 @@
 		"log_out": "Déconnecter",
 		"log_in": "Connecter",
 		"connect": "Connection",
+    "change_user": "Changer d'utilisateur:",
+    "config": "Configuration générale",
 		"me": "Moi"
 	},
 	"mainScreen": {
@@ -134,7 +140,8 @@
 		"data_source": "Sources de Données",
 		"stream": "Flux",
 		"stream_media_list": "Liste des media du flux",
-		"advanced_search": "Recherche Avancée"
+		"advanced_search": "Recherche Avancée",
+    "config": "Configuration"
 	},
 	"dashboard": {
 		"title": "Serveur de streaming Taliesin",
@@ -308,5 +315,14 @@
 		"create_stream": "Créer un flux",
 		"play_as": "Lire comme",
 		"play_now_current_player": "Lire maintenant"
+	},
+  "config": {
+    "audioExtensions": "Extensions pour fichiers audio",
+    "videoExtensions": "Extensions pour fichiers video",
+    "subtitleExtensions": "Extensions pour fichiers de sous-titre",
+    "imageExtensions": "Extensions pour fichiers d'image",
+    "coverFilePattern": "Fichiers de couverture dans l'ordre de recherche",
+    "message_save_success": "Configuration sauvegardée",
+    "message_save_error": "Erreur lors de la sauvegarde de la configuration"
 	}
 }

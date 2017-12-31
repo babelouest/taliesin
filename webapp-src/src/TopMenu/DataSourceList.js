@@ -3,7 +3,6 @@ import { NavDropdown, MenuItem } from 'react-bootstrap';
 
 import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
-import config from '../lib/ConfigManager';
 
 class DataSourceList extends Component {
 	constructor(props) {
@@ -26,7 +25,6 @@ class DataSourceList extends Component {
 	handleSelectDataSource(event) {
 		if (event.name !== this.state.currentDataSource.name) {
 			StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: event});
-			config.setLocalConfigValue("dataSource", event);
 		}
 	}
 	

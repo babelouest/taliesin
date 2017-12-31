@@ -92,8 +92,7 @@
 		"message_play_stream_ok": "Play new stream",
 		"message_error_delete_stream": "Error delete stream",
 		"message_folder_refreshing": "Folder refreshing",
-		"message_error_refreshing_folder": "Error refreshing folder",
-		"message_network_error": "Network error"
+		"message_error_refreshing_folder": "Error refreshing folder"
 	},
 	"topmenu": {
 		"searching": "Searching...",
@@ -123,7 +122,6 @@
 		"log_out": "Log out",
 		"log_in": "Log in",
 		"connect": "Connect",
-		"user": "User",
 		"me": "Me"
 	},
 	"mainScreen": {

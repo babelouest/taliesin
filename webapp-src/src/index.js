@@ -9,7 +9,6 @@ import App from './App';
 import config from './lib/ConfigManager';
 import OAuth2Connector from './lib/OAuth2Connector';
 import StateStore from './lib/StateStore';
-import i18n from './lib/i18n';
 
 config.fetchConfig()
 .then(function () {
@@ -72,7 +71,11 @@ StateStore.subscribe(() => {
 			// Get data source list
 			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source")
 			.then((result) => {
-				StateStore.dispatch({type: "setDataSource", dataSourceList: result});
+        var currentDataSource = false;
+        if (result.length > 0 && !result.find((ds) => {return ds.name === StateStore.getState().profile.dataSource.name})) {
+          currentDataSource = result[0];
+        }
+				StateStore.dispatch({type: "setDataSource", dataSourceList: result, currentDataSource: currentDataSource});
 			})
 			.fail((result) => {
 				StateStore.dispatch({type: "setDataSource", dataSourceList: [], currentDataSource: false});

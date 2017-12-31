@@ -92,8 +92,7 @@
 		"message_play_stream_ok": "Lire un nouveaux flux",
 		"message_error_delete_stream": "Erreur lors de la suppression du flux",
 		"message_folder_refreshing": "Rafraîchissement du répertoire",
-		"message_error_refreshing_folder": "Erreur lors du rafraîchissement du répertoire",
-		"message_network_error": "Erreur de réseau"
+		"message_error_refreshing_folder": "Erreur lors du rafraîchissement du répertoire"
 	},
 	"topmenu": {
 		"searching": "Recherche...",
@@ -123,7 +122,6 @@
 		"log_out": "Déconnecter",
 		"log_in": "Connecter",
 		"connect": "Connection",
-		"user": "Utilisateur",
 		"me": "Moi"
 	},
 	"mainScreen": {

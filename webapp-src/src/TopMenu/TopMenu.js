@@ -7,7 +7,6 @@ import DataSourceList from './DataSourceList';
 import StateStore from '../lib/StateStore';
 import ModalMedia from '../Modal/ModalMedia';
 import i18n from '../lib/i18n';
-import config from '../lib/ConfigManager';
 
 class TopMenu extends Component {
 	constructor(props) {
@@ -108,7 +107,6 @@ class TopMenu extends Component {
 	
 	handleSelectView(event) {
 		StateStore.dispatch({type: "setCurrentView", view: event});
-		config.setLocalConfigValue("view", event);
 	}
 	
 	handleChangeSearchPattern(event) {

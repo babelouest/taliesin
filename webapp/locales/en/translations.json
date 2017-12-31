@@ -69,6 +69,10 @@
 		"yes": "Yes",
 		"no": "No",
 		"none": "None",
+    "save": "Save",
+    "ok": "OK",
+    "cancel": "Cancel",
+    "close": "Close",
 		"jukebox": "Jukebox",
 		"webradio": "Webradio",
 		"stereo": "Stereo",
@@ -92,8 +96,7 @@
 		"message_play_stream_ok": "Play new stream",
 		"message_error_delete_stream": "Error delete stream",
 		"message_folder_refreshing": "Folder refreshing",
-		"message_error_refreshing_folder": "Error refreshing folder",
-		"message_network_error": "Network error"
+		"message_error_refreshing_folder": "Error refreshing folder"
 	},
 	"topmenu": {
 		"searching": "Searching...",
@@ -123,7 +126,8 @@
 		"log_out": "Log out",
 		"log_in": "Log in",
 		"connect": "Connect",
-		"user": "User",
+    "change_user": "Change user:",
+    "config": "General configuration",
 		"me": "Me"
 	},
 	"mainScreen": {
@@ -136,7 +140,8 @@
 		"data_source": "Data Source",
 		"stream": "Stream",
 		"stream_media_list": "Stream Media List",
-		"advanced_search": "Advanced Search"
+		"advanced_search": "Advanced Search",
+    "config": "Configuration"
 	},
 	"dashboard": {
 		"title": "Taliesin Streaming server",
@@ -310,5 +315,14 @@
 		"create_stream": "Create stream",
 		"play_as": "Play as",
 		"play_now_current_player": "Play now"
-	}
+	},
+  "config": {
+    "audioExtensions": "Audio files extensions",
+    "videoExtensions": "Video files extensions",
+    "subtitleExtensions": "Subtitle files extensions",
+    "imageExtensions": "Image files extensions",
+    "coverFilePattern": "Cover file pattern in search order",
+    "message_save_success": "Configuration saved",
+    "message_save_error": "Error while saving configuration"
+  }
 }

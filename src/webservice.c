@@ -1833,7 +1833,7 @@ int callback_taliesin_playlist_get (const struct _u_request * request, struct _u
   size_t cover_decoded_len, cover_b64_len;
   const char * cover_b64;
   long offset = u_map_get(request->map_url, "offset")!=NULL?strtol(u_map_get(request->map_url, "offset"), NULL, 10):0,
-       limit = u_map_get(request->map_url, "limit")!=NULL?strtol(u_map_get(request->map_url, "limit"), NULL, 10):TALIESIN_MEDIA_LIMIT_DEFAULT;
+       limit = (u_map_get(request->map_url, "limit")!=NULL&&strtol(u_map_get(request->map_url, "limit"), NULL, 10)>0)?strtol(u_map_get(request->map_url, "limit"), NULL, 10):TALIESIN_MEDIA_LIMIT_DEFAULT;
   
   if (offset < 0) {
     offset = 0;
@@ -2108,6 +2108,8 @@ int callback_taliesin_playlist_has_media (const struct _u_request * request, str
   struct config_elements * config = (struct config_elements *)user_data;
   json_t * j_playlist, * j_is_valid, * j_body = ulfius_get_json_body_request(request, NULL), * j_result, * j_media_list;
   int res = U_CALLBACK_CONTINUE, is_admin = has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin);
+  size_t offset = u_map_get(request->map_url, "offset")!=NULL?strtol(u_map_get(request->map_url, "offset"), NULL, 10):0,
+         limit = (u_map_get(request->map_url, "limit")!=NULL&&strtol(u_map_get(request->map_url, "limit"), NULL, 10)>0)?strtol(u_map_get(request->map_url, "limit"), NULL, 10):TALIESIN_MEDIA_LIMIT_DEFAULT;
   
   j_playlist = playlist_get(config, get_username(request, response, config), u_map_get(request->map_url, "playlist"), 1, 0, 1);
   if (check_result_value(j_playlist, T_OK)) {
@@ -2117,7 +2119,7 @@ int callback_taliesin_playlist_has_media (const struct _u_request * request, str
         if (json_array_size(j_is_valid) == 0) {
           j_result = media_append_list_to_media_list(config, j_body, get_username(request, response, config));
           if (check_result_value(j_result, T_OK) && json_array_size(json_object_get(j_result, "media")) > 0) {
-            j_media_list = playlist_has_media(config, json_integer_value(json_object_get(json_object_get(j_playlist, "playlist"), "tpl_id")), json_object_get(j_result, "media"));
+            j_media_list = playlist_has_media(config, json_integer_value(json_object_get(json_object_get(j_playlist, "playlist"), "tpl_id")), json_object_get(j_result, "media"), offset, limit);
             if (check_result_value(j_media_list, T_OK)) {
               if (json_array_size(json_object_get(j_media_list, "media")) > 0) {
                 if (ulfius_set_json_body_response(response, 200, json_object_get(j_media_list, "media")) != U_OK) {

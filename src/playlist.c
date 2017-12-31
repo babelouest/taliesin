@@ -592,7 +592,7 @@ int playlist_delete_media(struct config_elements * config, json_int_t tpl_id, js
   return ret;
 }
 
-json_t * playlist_has_media(struct config_elements * config, json_int_t tpl_id, json_t * media_list) {
+json_t * playlist_has_media(struct config_elements * config, json_int_t tpl_id, json_t * media_list, size_t offset, size_t limit) {
   json_t * j_query, * j_element, * j_result, * j_tm_id_array = json_array(), * j_return, * j_media;
   int res;
   size_t index;
@@ -601,7 +601,7 @@ json_t * playlist_has_media(struct config_elements * config, json_int_t tpl_id, 
     json_array_foreach(media_list, index, j_element) {
       json_array_append(j_tm_id_array, json_object_get(j_element, "tm_id"));
     }
-    j_query = json_pack("{sss[s]s{sIs{ssso}}}",
+    j_query = json_pack("{sss[s]s{sIs{ssso}}sisi}",
                         "table",
                         TALIESIN_TABLE_PLAYLIST_ELEMENT,
                         "columns",
@@ -613,7 +613,11 @@ json_t * playlist_has_media(struct config_elements * config, json_int_t tpl_id, 
                             "operator",
                             "IN",
                             "value",
-                            j_tm_id_array);
+                            j_tm_id_array,
+                        "limit",
+                        limit,
+                        "offset",
+                        offset);
     res = h_select(config->conn, j_query, &j_result, NULL);
     json_decref(j_query);
     if (res == H_OK) {

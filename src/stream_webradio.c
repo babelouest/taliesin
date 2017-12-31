@@ -1134,7 +1134,7 @@ json_t * is_webradio_command_valid(struct config_elements * config, struct _t_we
               }
             }
           }
-        } else if (o_strcmp(str_command, "append_list") == 0 || o_strcmp(str_command, "has_list") == 0) {
+        } else if (o_strcmp(str_command, "append_list") == 0) {
           if (!json_is_array(json_object_get(j_command, "parameters"))) {
             json_array_append_new(j_result, json_pack("{ss}", "parameters", "parameters must be a json object"));
           } else if (!json_array_size(json_object_get(j_command, "parameters"))) {
@@ -1143,6 +1143,34 @@ json_t * is_webradio_command_valid(struct config_elements * config, struct _t_we
             json_array_foreach(json_object_get(j_command, "parameters"), index, j_element) {
               if (!is_valid_path_element_parameter(config, j_element, username, is_admin) && !is_valid_category_element_parameter(config, j_element, username, is_admin) && !is_valid_playlist_element_parameter(config, j_element, username)) {
                 json_array_append_new(j_result, json_pack("{ss}", "parameter", "parameter is not a valid playlist element"));
+              }
+            }
+          }
+        } else if (o_strcmp(str_command, "has_list") == 0) {
+          if (json_object_get(j_command, "parameters") != NULL) {
+            if (!json_is_object(json_object_get(j_command, "parameters"))) {
+              json_array_append_new(j_result, json_pack("{ss}", "parameters", "parameters must be a json object"));
+            } else {
+              if (json_object_get(json_object_get(j_command, "parameters"), "offset") && 
+                        (!json_is_integer(json_object_get(json_object_get(j_command, "parameters"), "offset")) ||
+                        json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "offset")) <= 0)) {
+                json_array_append_new(j_result, json_pack("{ss}", "parameters", "offset must ba a positive non zero integer"));
+              }
+              if (json_object_get(json_object_get(j_command, "parameters"), "limit") && 
+                        (!json_is_integer(json_object_get(json_object_get(j_command, "parameters"), "limit")) ||
+                        json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "limit")) <= 0)) {
+                json_array_append_new(j_result, json_pack("{ss}", "parameters", "limit must ba a positive non zero integer"));
+              }
+            }
+            if (!json_is_array(json_object_get(json_object_get(j_command, "parameters"), "media"))) {
+              json_array_append_new(j_result, json_pack("{ss}", "parameters", "parameters must be a json object"));
+            } else if (!json_array_size(json_object_get(json_object_get(j_command, "parameters"), "media"))) {
+              json_array_append_new(j_result, json_pack("{ss}", "parameters", "parameters must be a json array of at least one element"));
+            } else {
+              json_array_foreach(json_object_get(json_object_get(j_command, "parameters"), "media"), index, j_element) {
+                if (!is_valid_path_element_parameter(config, j_element, username, is_admin) && !is_valid_category_element_parameter(config, j_element, username, is_admin) && !is_valid_playlist_element_parameter(config, j_element, username)) {
+                  json_array_append_new(j_result, json_pack("{ss}", "parameter", "parameter is not a valid playlist element"));
+                }
               }
             }
           }
@@ -1373,10 +1401,20 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
       y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error webradio_remove_media_by_index");
     }
   } else if (0 == o_strcmp(str_command, "has_list")) {
-    j_result = media_append_list_to_media_list(config, json_object_get(j_command, "parameters"), username);
+    if (json_object_get(json_object_get(j_command, "parameters"), "offset") != NULL) {
+      offset = json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "offset"));
+    } else {
+      offset = 0;
+    }
+    if (json_object_get(json_object_get(j_command, "parameters"), "limit") != NULL) {
+      limit = json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "limit"));
+    } else {
+      limit = TALIESIN_MEDIA_LIMIT_DEFAULT;
+    }
+    j_result = media_append_list_to_media_list(config, json_object_get(json_object_get(j_command, "parameters"), "media"), username);
     if (check_result_value(j_result, T_OK)) {
       if (json_array_size(json_object_get(j_result, "media")) > 0) {
-        j_media_list = file_list_has_media_list(config, webradio->file_list, json_object_get(j_result, "media"));
+        j_media_list = file_list_has_media_list(config, webradio->file_list, json_object_get(j_result, "media"), offset, limit);
         if (check_result_value(j_media_list, T_OK)) {
           if (json_array_size(json_object_get(j_media_list, "media")) > 0) {
             j_return = json_pack("{sisO}", "result", T_OK, "command", json_object_get(j_media_list, "media"));

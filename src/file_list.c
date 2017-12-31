@@ -230,10 +230,11 @@ int file_list_add_media_list(struct config_elements * config, struct _t_file_lis
   return ret;
 }
 
-json_t * file_list_has_media_list(struct config_elements * config, struct _t_file_list * file_list, json_t * j_media_list) {
+json_t * file_list_has_media_list(struct config_elements * config, struct _t_file_list * file_list, json_t * j_media_list, json_int_t offset, json_int_t limit) {
   json_t * j_media, * j_return, * j_element, * j_tm_id_list;
   size_t index;
   struct _t_file * file = file_list->start;
+  json_int_t cur_offset = 0;
   
   j_tm_id_list = json_array();
   if (j_tm_id_list != NULL) {
@@ -244,7 +245,13 @@ json_t * file_list_has_media_list(struct config_elements * config, struct _t_fil
       while (file != NULL) {
         json_array_foreach(j_media_list, index, j_element) {
           if (json_integer_value(json_object_get(j_element, "tm_id")) == file->tm_id) {
-            json_array_append_new(j_tm_id_list, json_integer(file->tm_id));
+            if (cur_offset >= offset && cur_offset < (offset + limit)) {
+              json_array_append_new(j_tm_id_list, json_integer(file->tm_id));
+            }
+            if (cur_offset >= (offset + limit)) {
+              break;
+            }
+            cur_offset++;
           }
         }
         file = file->next;

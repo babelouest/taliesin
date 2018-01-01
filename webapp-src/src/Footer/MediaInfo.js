@@ -16,6 +16,7 @@ class MediaInfo extends Component {
 			showModal: false
 		};
 		this.handleOpenModal = this.handleOpenModal.bind(this);
+		this.handleCloseModal = this.handleCloseModal.bind(this);
 	}
 	
 	componentWillReceiveProps(nextProps) {
@@ -50,6 +51,10 @@ class MediaInfo extends Component {
 	handleOpenModal() {
 		this.setState({showModal: true});
 	}
+  
+  handleCloseModal() {
+		this.setState({showModal: false});
+  }
 	
 	render() {
 		var image = "";
@@ -77,7 +82,7 @@ class MediaInfo extends Component {
 						</Panel>
 					</a>
 				</div>
-				<ModalMedia show={this.state.showModal} media={this.state.media} title={this.state.title} />
+				<ModalMedia show={this.state.showModal} media={this.state.media} title={this.state.title} onClose={this.handleCloseModal} />
 			</div>
 		);
 	}

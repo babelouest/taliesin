@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Row, Col, FormControl, Button } from 'react-bootstrap';
+import { Row, Col, Button } from 'react-bootstrap';
 import { WithContext as ReactTags } from 'react-tag-input';
 
 import StateStore from '../lib/StateStore';

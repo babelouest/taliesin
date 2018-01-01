@@ -12,29 +12,54 @@ class StreamMediaList extends Component {
 		this.state = {
 			stream: props.stream,
 			list: [],
-			offset: 0,
+			offset: this.getInitialoffset(props.stream),
 			limit: 100,
 			listLoaded: false
 		};
 		
 		this.getMediaList();
 		
+		StateStore.subscribe(() => {
+			var reduxState = StateStore.getState();
+			if (reduxState.lastAction === "loadStreamAndPlay" || reduxState.lastAction === "setJukeboxIndex") {
+				this.getMediaList();
+			}
+		});
+
 		this.getMediaList = this.getMediaList.bind(this);
 		this.handleMediaListPrevious = this.handleMediaListPrevious.bind(this);
 		this.handleMediaListNext = this.handleMediaListNext.bind(this);
+		this.getInitialoffset = this.getInitialoffset.bind(this);
 	}
 	
 	componentWillReceiveProps(nextProps) {
 		this.setState({
 			stream: nextProps.stream,
 			list: [],
-			offset: 0,
+			offset: this.getInitialoffset(nextProps.stream),
 			limit: 100,
 			listLoaded: false
 		}, () => {
 			this.getMediaList();
 		});
 	}
+  
+  getInitialoffset(stream) {
+    var curIndex = 0;
+    if (stream.name && stream.name === StateStore.getState().profile.stream.name) {
+      if (stream.webradio) {
+        curIndex = StateStore.getState().profile.mediaNow && StateStore.getState().profile.mediaNow.index;
+      } else {
+        curIndex = StateStore.getState().profile.jukeboxIndex;
+      }
+    }
+    if (curIndex > 5) {
+      curIndex -= 5;
+    } else {
+      curIndex = 0;
+    }
+    return curIndex;
+  }
 	
 	getMediaList() {
 		if (this.state.stream.name) {
@@ -42,7 +67,11 @@ class StreamMediaList extends Component {
 			.then((result) => {
 				var list = [];
 				result.forEach((media, index) => {
-					list.push(<MediaRow stream={this.state.stream.webradio?false:this.state.stream.name} elements={this.state.stream.elements} media={media} index={index} key={index} />);
+          if (StateStore.getState().profile.mediaNow && media.data_source === StateStore.getState().profile.mediaNow.data_source && media.path === StateStore.getState().profile.mediaNow.path) {
+            list.push(<MediaRow stream={this.state.stream.webradio?false:this.state.stream.name} elements={this.state.stream.elements} media={media} index={index} key={index} highlight={true} />);
+          } else {
+            list.push(<MediaRow stream={this.state.stream.webradio?false:this.state.stream.name} elements={this.state.stream.elements} media={media} index={index} key={index} />);
+          }
 				});
 				this.setState({list: list, listLoaded: true});
 			});
@@ -50,7 +79,11 @@ class StreamMediaList extends Component {
 	}
 	
 	handleMediaListPrevious() {
-		this.setState({offset: this.state.offset - this.state.limit, listLoaded: false}, () => {
+    var newOffset = (this.state.offset - this.state.limit);
+    if (newOffset < 0) {
+      newOffset = 0;
+    }
+		this.setState({offset: newOffset, listLoaded: false}, () => {
 			this.getMediaList();
 		});
 	}

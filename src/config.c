@@ -341,27 +341,27 @@ int config_get_type_from_path(struct config_elements * config, const char * path
   int ret = TALIESIN_FILE_TYPE_UNKNOWN;
   
   // Check for audio extension
-  if (string_array_has_value((const char **)config->audio_file_extension, ext)) {
+  if (string_array_has_value_case((const char **)config->audio_file_extension, ext)) {
     ret = TALIESIN_FILE_TYPE_AUDIO;
   }
   
   if (ret == TALIESIN_FILE_TYPE_UNKNOWN) {
     // Check for video extension
-    if (string_array_has_value((const char **)config->video_file_extension, ext)) {
+    if (string_array_has_value_case((const char **)config->video_file_extension, ext)) {
       ret = TALIESIN_FILE_TYPE_VIDEO;
     }
   }
   
   if (ret == TALIESIN_FILE_TYPE_UNKNOWN) {
     // Check for subtitle extension
-    if (string_array_has_value((const char **)config->subtitle_file_extension, ext)) {
+    if (string_array_has_value_case((const char **)config->subtitle_file_extension, ext)) {
       ret = TALIESIN_FILE_TYPE_SUBTITLE;
     }
   }
   
   if (ret == TALIESIN_FILE_TYPE_UNKNOWN) {
     // Check for image extension
-    if (string_array_has_value((const char **)config->image_file_extension, ext)) {
+    if (string_array_has_value_case((const char **)config->image_file_extension, ext)) {
       ret = TALIESIN_FILE_TYPE_IMAGE;
     }
   }

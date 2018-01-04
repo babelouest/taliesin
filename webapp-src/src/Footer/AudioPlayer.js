@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import ReactAudioPlayer from 'react-audio-player';
 import FontAwesome from 'react-fontawesome';
 import { ButtonGroup, Button, DropdownButton, MenuItem } from 'react-bootstrap';
+
 import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
 
@@ -9,9 +10,36 @@ class AudioPlayer extends Component {
 	constructor(props) {
 		super(props);
 		
-		var interval = setInterval(() => {
-			this.loadMedia();
-		}, 10000);
+		var websocket = false, interval = false;
+		// I assume that taliesinApiUrl starts with 'http://' or 'https://'
+		var websocketUrl = "ws" + StateStore.getState().taliesinApiUrl.substring(4) + "/stream/" + props.stream.name + "/ws";
+		var websocketProtocol: ["taliesin"];
+		
+		if (props.stream.name) {
+			// Connect to websocket
+			try {
+				websocket = new WebSocket(websocketUrl, websocketProtocol);
+        websocket.onopen = () => {
+					this.handleOpenWebsocket();
+				}
+        websocket.onmessage = (event) => {
+          this.handleCommandResponse(JSON.parse(event.data));
+        };
+        websocket.onclose = () => {
+					if (!this.state.websocketReconnect) {
+						this.setState({websocket: false});
+					} else {
+						this.websocketReconnect();
+					}
+        };
+			} catch (e) {
+				websocket = false;
+				interval = setInterval(() => {
+					this.loadMedia();
+				}, 10000);
+				this.loadMedia();
+			}
+		}
 		
 		this.state = {
 			play: false, 
@@ -19,8 +47,13 @@ class AudioPlayer extends Component {
 			playNow: props.play,
 			playIndex: props.index,
 			streamUrl: "#", 
-			media: {data_source: false, path: false},
 			interval: interval,
+			websocket: websocket,
+			websocketUrl: websocketUrl,
+			websocketProtocol: websocketProtocol,
+			websocketReconnect: true,
+			media: {data_source: false, path: false},
+			//interval: interval,
 			now: false, 
 			next: false, 
 			taliesinApiUrl: StateStore.getState().taliesinApiUrl, 
@@ -47,6 +80,11 @@ class AudioPlayer extends Component {
 		this.handleChangeVolume = this.handleChangeVolume.bind(this);
 		this.loadMedia = this.loadMedia.bind(this);
 		this.dispatchPlayerStatus = this.dispatchPlayerStatus.bind(this);
+		this.sendStreamComand = this.sendStreamComand.bind(this);
+    
+		this.handleOpenWebsocket = this.handleOpenWebsocket.bind(this);
+		this.handleCommandResponse = this.handleCommandResponse.bind(this);
+		this.websocketReconnect = this.websocketReconnect.bind(this);
 		
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
@@ -80,15 +118,62 @@ class AudioPlayer extends Component {
 						default:
 							break;
 					}
+				} else if (reduxState.lastAction === "newApiToken") {
+					if (this.state.websocket) {
+						this.state.websocket.send(JSON.stringify({command: "authorization", token: StateStore.getState().token}));
+					}
 				}
 			}
 		});
-		
 		this.loadMedia();
 	}
 	
 	componentWillReceiveProps(nextProps) {
-		this.setState({stream: nextProps.stream, playNow: nextProps.play, playIndex: nextProps.index}, () => {
+		var oldName = this.state.stream.name;
+		var websocket = this.state.websocket, interval = false;
+		if (this.state.interval) {
+			clearInterval(this.state.interval);
+		}
+		var websocketUrl = "ws" + StateStore.getState().taliesinApiUrl.substring(4) + "/stream/" + nextProps.stream.name + "/ws";
+		if (nextProps.stream.name && (!websocket || oldName !== nextProps.stream.name)) {
+			if (this.state.websocket) {
+				websocket.onclose = null;
+				websocket.close();
+			}
+			// Connect to websocket
+			try {
+				websocket = new WebSocket(websocketUrl, this.state.websocketProtocol);
+        websocket.onopen = () => {
+					this.handleOpenWebsocket();
+				}
+        websocket.onmessage = (event) => {
+          this.handleCommandResponse(JSON.parse(event.data));
+        };
+        websocket.onclose = () => {
+					if (!this.state.websocketReconnect) {
+						this.setState({websocket: false});
+					} else {
+						this.websocketReconnect();
+					}
+        };
+			} catch (e) {
+				websocket = false;
+				interval = setInterval(() => {
+					this.loadMedia();
+				}, 10000);
+				this.loadMedia();
+			}
+		}
+
+		this.setState({
+			stream: nextProps.stream, 
+			websocketUrl: websocketUrl,
+			websocketReconnect: true,
+			websocket: websocket,
+			interval: interval,
+			playNow: nextProps.play, 
+			playIndex: nextProps.index
+		}, () => {
 			this.loadMedia();
 		});
 	}
@@ -107,8 +192,102 @@ class AudioPlayer extends Component {
 		if (this.state.interval) {
 			clearInterval(this.state.interval);
 		}
+		this.setState({websocketReconnect: false}, () => {
+			this.state.websocket.close();
+		});
 	}
 	
+	websocketReconnect() {
+		if (this.state.websocket) {
+			var websocket = this.state.websocket;
+			websocket.onclose = null;
+			try {
+				websocket = new WebSocket(this.state.websocketUrl, this.state.websocketProtocol);
+        websocket.onopen = this.handleOpenWebsocket();
+        websocket.onmessage = (event) => {
+          this.handleCommandResponse(JSON.parse(event.data));
+        };
+        websocket.onclose = () => {
+					if (!this.state.websocketReconnect) {
+						this.setState({websocket: false});
+					} else {
+						this.websocketReconnect();
+					}
+        };
+			} catch (e) {
+				websocket = false;
+			}
+			this.setState({websocket: websocket});
+		}
+	}
+	
+	handleOpenWebsocket() {
+		this.state.websocket.send(JSON.stringify({command: "authorization", token: StateStore.getState().token}));
+	}
+  
+	handleCommandResponse(response) {
+		switch (response.command) {
+			case "authorization":
+				if (response.result !== "connected") {
+					var websocket = this.state.websocket;
+					websocket.onclose = null;
+					this.setState({websocket: false}, () => {
+						websocket.close();
+					});
+				} else {
+					this.sendStreamComand("now");
+				}
+				break;
+			case "now":
+				if (StateStore.getState().profile.mediaNow.data_source !== response.result.data_source || StateStore.getState().profile.mediaNow.path !== response.result.path) {
+					this.setState({media: response.result}, () => {
+						if (response.result !== "not_found") {
+							this.sendStreamComand("next");
+							StateStore.dispatch({type: "setMediaNow", media: response.result});
+						}
+					});
+				}
+				break;
+			case "next":
+				if (response.result !== "not_found") {
+					StateStore.dispatch({type: "setMediaNext", media: response.result});
+				}
+				break;
+			case "stop":
+				break;
+			case "replay":
+				StateStore.getState().NotificationManager.addNotification({
+					message: i18n.t("player.replay"),
+					level: 'success'
+				});
+				break;
+			case "skip":
+				StateStore.getState().NotificationManager.addNotification({
+					message: i18n.t("player.next"),
+					level: 'success'
+				});
+				break;
+			case "list":
+				if (response.result[0].data_source !== StateStore.getState().profile.mediaNow.data_source || response.result[0].path !== StateStore.getState().profile.mediaNow.path) {
+					StateStore.dispatch({type: "setMediaNow", result: response.result[0]});
+				}
+				break;
+			default:
+				break;
+		}
+	}
+	
+	sendStreamComand(command, parameters) {
+		if (this.state.websocket && this.state.websocket.send) {
+			this.state.websocket.send(JSON.stringify({command: command, parameters: parameters}));
+		} else {
+			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: command, parameters: parameters})
+			.then((result) => {
+				this.handleCommandResponse({command: command, result: result});
+			});
+		}
+	}
+				
 	dispatchPlayerStatus(newStatus) {
 		StateStore.dispatch({
 			type: "setCurrentPlayerStatus",
@@ -126,39 +305,19 @@ class AudioPlayer extends Component {
 					this.handlePlay();
 				});
 			}
-			if (this.state.stream.webradio) {
-				StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "now"})
-				.then((result) => {
-					if (StateStore.getState().profile.mediaNow.data_source !== result.data_source || StateStore.getState().profile.mediaNow.path !== result.path) {
-						this.setState({media: result}, () => {
-							StateStore.dispatch({type: "setMediaNow", media: result});
-						});
-						StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "next"})
-						.then((resultNext) => {
-							StateStore.dispatch({type: "setMediaNext", media: resultNext});
-						});
-					}
-				});
-			} else {
-				StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "list", parameters: {offset: this.state.jukeboxIndex, limit: 1}})
-				.then((result) => {
-					if (result[0].data_source !== StateStore.getState().profile.mediaNow.data_source || result[0].path !== StateStore.getState().profile.mediaNow.path) {
-						StateStore.dispatch({type: "setMediaNow", media: result[0]});
-					}
-				});
+			if (!this.state.websocket) {
+				if (!this.state.stream.webradio) {
+					this.sendStreamComand("list", {offset: this.state.jukeboxIndex, limit: 1});
+				} else {
+					this.sendStreamComand("now");
+				}
 			}
 		}
 	}
 	
 	handlePrevious() {
 		if (this.state.stream.webradio) {
-			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + this.state.stream.name + "/manage", {command: "replay"})
-			.then((result) => {
-				StateStore.getState().NotificationManager.addNotification({
-					message: i18n.t("player.replay"),
-					level: 'success'
-				});
-			});
+			this.sendStreamComand("replay");
 		} else {
 			if (this.currentTime < 10) {
 				this.rap.audioEl.currentTime = 0;
@@ -177,13 +336,7 @@ class AudioPlayer extends Component {
 	
 	handleNext() {
 		if (this.state.stream.webradio) {
-			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + this.state.stream.name + "/manage", {command: "skip"})
-			.then((result) => {
-				StateStore.getState().NotificationManager.addNotification({
-					message: i18n.t("player.next"),
-					level: 'success'
-				});
-			});
+			this.sendStreamComand("skip");
 		} else {
 			this.nextSong();
 		}
@@ -229,6 +382,7 @@ class AudioPlayer extends Component {
 			}
 			this.setState(newState, () => {
 				this.dispatchPlayerStatus({status: "play"});
+				this.sendStreamComand("now");
 			});
 			this.rap.audioEl.play();
 		}

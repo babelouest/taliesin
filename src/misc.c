@@ -92,11 +92,11 @@ char * url_decode(const char * str) {
 
 long random_at_most(long max) {
   unsigned long
-    // max <= RAND_MAX < ULONG_MAX, so this is okay.
-    num_bins = (unsigned long) max + 1,
-    num_rand = (unsigned long) RAND_MAX + 1,
-    bin_size = num_rand / num_bins,
-    defect   = num_rand % num_bins;
+  // max <= RAND_MAX < ULONG_MAX, so this is okay.
+  num_bins = (unsigned long) max + 1,
+  num_rand = (unsigned long) RAND_MAX + 1,
+  bin_size = num_rand / num_bins,
+  defect   = num_rand % num_bins;
 
   long x;
   do {
@@ -113,19 +113,19 @@ long random_at_most(long max) {
  * Generates a random string and store it in str
  */
 char * rand_string(char * str, size_t str_size) {
-    const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    size_t n;
-    
-    if (str_size > 0 && str != NULL) {
-      for (n = 0; n < str_size; n++) {
-        long key = random_at_most((sizeof(charset)) - 2);
-        str[n] = charset[key];
-      }
-      str[str_size] = '\0';
-      return str;
-    } else {
-      return NULL;
+  const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  size_t n;
+  
+  if (str_size > 0 && str != NULL) {
+    for (n = 0; n < str_size; n++) {
+      long key = random_at_most((sizeof(charset)) - 2);
+      str[n] = charset[key];
     }
+    str[str_size] = '\0';
+    return str;
+  } else {
+    return NULL;
+  }
 }
 
 /**

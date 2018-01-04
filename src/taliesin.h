@@ -282,10 +282,6 @@ struct _t_webradio {
   
   short int                 random;
   
-  // TODO play_after another time
-  //unsigned int              nb_play_after;
-  //unsigned int            * play_after_index;
-  
   struct config_elements  * config;
 };
 
@@ -502,6 +498,8 @@ json_t *   media_scan_path(struct config_elements * config, json_t * j_data_sour
 // struct _t_file_list functions
 int              file_list_enqueue_new_file(struct _t_file_list * file_list, const char * path, json_int_t tm_id);
 int              file_list_enqueue_file(struct _t_file_list * file_list, struct _t_file * file);
+int              file_list_enqueue_new_file_nolock(struct _t_file_list * file_list, const char * path, json_int_t tm_id);
+int              file_list_enqueue_file_nolock(struct _t_file_list * file_list, struct _t_file * file);
 int              file_list_insert_file_at(struct _t_file_list * file_list, struct _t_file * file, unsigned long index);
 struct _t_file * file_list_dequeue_file(struct _t_file_list * file_list, unsigned long index);
 struct _t_file * file_list_get_file(struct _t_file_list * file_list, unsigned long index);
@@ -510,6 +508,7 @@ void             file_list_clean(struct _t_file_list * file_list);
 void             file_list_clean_file(struct _t_file * file);
 int              file_list_add_media_list(struct config_elements * config, struct _t_file_list * file_list, json_t * media_list);
 json_t *         file_list_has_media_list(struct config_elements * config, struct _t_file_list * file_list, json_t * media_list, json_int_t offset, json_int_t limit);
+int              file_list_empty_nolock(struct _t_file_list * file_list);
 
 // Jukebox audio buffer
 json_t * is_stream_parameters_valid(int webradio, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate);
@@ -601,6 +600,7 @@ json_t *   media_append_list_to_media_list(struct config_elements * config, json
 
 // db stream functions
 json_t * db_stream_list(struct config_elements * config);
+int      db_stream_reload_file_lists(struct config_elements * config);
 
 // Search functions
 json_t * media_simple_search(struct config_elements * config, const char * username, const char * search_pattern, unsigned short int search_category);

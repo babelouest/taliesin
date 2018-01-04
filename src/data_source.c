@@ -697,6 +697,7 @@ void run_data_source_clean(struct config_elements * config, json_int_t tds_id) {
   if (h_delete(config->conn, j_query, NULL) != H_OK) {
     y_log_message(Y_LOG_LEVEL_ERROR, "data_source_clean - error cleaning table %s", TALIESIN_TABLE_MEDIA);
   }
+  
   json_decref(j_query);
 }
 
@@ -756,6 +757,9 @@ void * thread_run_refresh_data_source(void * data) {
         if (data_source_set_refresh_status(config, tds_id, DATA_SOURCE_REFRESH_STATUS_NOT_RUNNING) != T_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error setting data source refresh status");
         }
+      }
+      if (db_stream_reload_file_lists(config) != T_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error db_stream_reload_file_lists");
       }
     } else {
       y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error setting data source refresh status");

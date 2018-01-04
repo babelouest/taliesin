@@ -155,3 +155,66 @@ json_t * db_stream_list(struct config_elements * config) {
   }
   return j_return;
 }
+
+int db_stream_reload_file_lists(struct config_elements * config) {
+  int i, ret;
+  size_t index, index2;
+  char * full_path;
+  json_t * j_stream, * j_element, * j_stream_list = db_stream_list(config);
+  
+  if (check_result_value(j_stream_list, T_OK)) {
+    json_array_foreach(json_object_get(j_stream_list, "stream"), index, j_stream) {
+      if (json_integer_value(json_object_get(j_stream, "webradio"))) {
+        for (i=0; i<config->nb_webradio; i++) {
+          if (0 == o_strcmp(config->webradio_set[i]->name, json_string_value(json_object_get(j_stream, "name")))) {
+            if (pthread_mutex_lock(&config->webradio_set[i]->file_list->file_lock)) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "db_stream_reload_file_lists - Error lock stream %s", config->webradio_set[i]->display_name);
+            } else {
+              if (file_list_empty_nolock(config->webradio_set[i]->file_list) == T_OK) {
+                json_array_foreach(json_object_get(j_stream, "media"), index2, j_element) {
+                  full_path = msprintf("%s/%s", json_string_value(json_object_get(j_element, "tds_path")), json_string_value(json_object_get(j_element, "path")));
+                  if (file_list_enqueue_new_file_nolock(config->webradio_set[i]->file_list, full_path, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "add_webradio_from_playlist - Error adding file %s", json_string_value(json_object_get(j_element, "full_path")));
+                  }
+                  o_free(full_path);
+                }
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "db_stream_reload_file_lists - Error file_list_empty_nolock stream %s", config->webradio_set[i]->display_name);
+              }
+              pthread_mutex_unlock(&config->webradio_set[i]->file_list->file_lock);
+            }
+            break;
+          }
+        }
+      } else {
+        for (i=0; i<config->nb_jukebox; i++) {
+          if (0 == o_strcmp(config->jukebox_set[i]->name, json_string_value(json_object_get(j_stream, "name")))) {
+            if (pthread_mutex_lock(&config->jukebox_set[i]->file_list->file_lock)) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "db_stream_reload_file_lists - Error lock stream %s", config->jukebox_set[i]->display_name);
+            } else {
+              if (file_list_empty_nolock(config->jukebox_set[i]->file_list) == T_OK) {
+                json_array_foreach(json_object_get(j_stream, "media"), index2, j_element) {
+                  full_path = msprintf("%s/%s", json_string_value(json_object_get(j_element, "tds_path")), json_string_value(json_object_get(j_element, "path")));
+                  if (file_list_enqueue_new_file_nolock(config->jukebox_set[i]->file_list, full_path, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "add_webradio_from_playlist - Error adding file %s", json_string_value(json_object_get(j_element, "full_path")));
+                  }
+                  o_free(full_path);
+                }
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "db_stream_reload_file_lists - Error file_list_empty_nolock stream %s", config->jukebox_set[i]->display_name);
+              }
+              pthread_mutex_unlock(&config->jukebox_set[i]->file_list->file_lock);
+            }
+            break;
+          }
+        }
+      }
+    }
+    ret = T_OK;
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "db_stream_reload_file_lists - Error db_stream_list");
+    ret = T_ERROR_DB;
+  }
+  json_decref(j_stream_list);
+  return ret;
+}

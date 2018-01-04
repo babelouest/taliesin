@@ -212,6 +212,56 @@ void file_list_clean(struct _t_file_list * file_list) {
   }
 }
 
+int file_list_enqueue_file_nolock(struct _t_file_list * file_list, struct _t_file * file) {
+  if (file_list != NULL && file != NULL) {
+    if (file_list->start == NULL) {
+      file_list->start = file;
+      file_list->end = file;
+    } else {
+      file_list->end->next = file;
+      file_list->end = file;
+    }
+    file_list->nb_files++;
+    return T_OK;
+  } else {
+    return T_ERROR_PARAM;
+  }
+}
+
+int file_list_enqueue_new_file_nolock(struct _t_file_list * file_list, const char * path, json_int_t tm_id) {
+  struct _t_file * file;
+  if (path != NULL) {
+    file = o_malloc(sizeof(struct _t_file));
+    if (file != NULL) {
+      file->path = o_strdup(path);
+      file->next = NULL;
+      file->tm_id = tm_id;
+      if (file_list_enqueue_file_nolock(file_list, file) == T_OK) {
+        return T_OK;
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "file_list_enqueue_new_file - Error file_list_enqueue_file");
+        return T_ERROR;
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "file_list_enqueue_new_file - Error allocating resources for file");
+      return T_ERROR_MEMORY;
+    }
+  } else {
+    return T_ERROR_PARAM;
+  }
+}
+
+int file_list_empty_nolock(struct _t_file_list * file_list) {
+  if (file_list != NULL) {
+    while (file_list->nb_files > 0) {
+      file_list_clean_file(file_list_dequeue_file(file_list, 0));
+    }
+    return T_OK;
+  } else {
+    return T_ERROR_PARAM;
+  }
+}
+
 int file_list_add_media_list(struct config_elements * config, struct _t_file_list * file_list, json_t * media_list) {
   json_t * j_media;
   size_t index;

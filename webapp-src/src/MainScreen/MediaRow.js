@@ -21,7 +21,7 @@ class MediaRow extends Component {
 			modalShow: false,
 			modalTitle: this.buildTitle(props.media),
 			visible: false,
-      highlight: props.highlight
+			highlight: props.highlight
 		};
 
 		this.loadCover = this.loadCover.bind(this);
@@ -46,7 +46,7 @@ class MediaRow extends Component {
 			modalShow: false,
 			modalTitle: this.buildTitle(nextProps.media),
 			visible: false,
-      highlight: nextProps.highlight
+			highlight: nextProps.highlight
 		});
 	}
 	
@@ -179,14 +179,14 @@ class MediaRow extends Component {
 						</Button>
 					</ButtonGroup>
 					&nbsp;&nbsp;{(this.state.elements>=10&&this.state.index<9?"0":"") + (this.state.index + 1) + "/" + this.state.elements}
-          &nbsp;{this.state.highlight?<FontAwesome name="music" />:""}
+					&nbsp;{this.state.highlight?<FontAwesome name="music" />:""}
 				</Col>;
 		} else {
 			firstCol =
 				<Col md={2} sm={12} xs={12}>
-          {this.state.highlight?<FontAwesome name="music" />:""}
+					{this.state.highlight?<FontAwesome name="music" />:""}
 				</Col>;
-    }
+		}
 		return (
 			<div>
 				<Row>

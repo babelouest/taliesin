@@ -66,8 +66,8 @@ function stateStoreManager(state = defaultState, action) {
 			break;
 		case "setProfile":
 			state.profile.oauth2Profile = action.profile;
-      state.profile.currentUser = action.profile.login;
-      break;
+		state.profile.currentUser = action.profile.login;
+		break;
 		case "newApiToken":
 			state.token = action.token;
 			state.token_expiration = action.expiration;
@@ -87,12 +87,12 @@ function stateStoreManager(state = defaultState, action) {
 			if (action.currentDataSource) {
 				state.profile.dataSource = action.currentDataSource;
 				state.profile.path = "";
-        config.setLocalConfigValue("dataSource", action.currentDataSource);
+		config.setLocalConfigValue("dataSource", action.currentDataSource);
 			}
 			break;
 		case "setCurrentDataSource":
 			state.profile.dataSource = action.currentDataSource;
-      config.setLocalConfigValue("dataSource", action.currentDataSource);
+		config.setLocalConfigValue("dataSource", action.currentDataSource);
 			state.profile.path = "";
 			break;
 		case "setStreamList":
@@ -107,7 +107,7 @@ function stateStoreManager(state = defaultState, action) {
 			}
 			if (state.profile.stream.name === action.stream.name) {
 				state.profile.stream = action.stream;
-        config.setLocalConfigValue("stream", action.stream);
+		config.setLocalConfigValue("stream", action.stream);
 			}
 			break;
 		case "loadStreamAndPlay":
@@ -117,11 +117,11 @@ function stateStoreManager(state = defaultState, action) {
 				state.profile.jukeboxIndex = -1;
 			}
 			state.profile.stream = action.stream;
-      config.setLocalConfigValue("stream", action.stream);
+		config.setLocalConfigValue("stream", action.stream);
 			break;
 		case "loadStream":
 			state.profile.stream = action.stream;
-      config.setLocalConfigValue("stream", action.stream);
+		config.setLocalConfigValue("stream", action.stream);
 			break;
 		case "setCurrentBrowse":
 			state.profile.browse = action.browse;
@@ -159,7 +159,7 @@ function stateStoreManager(state = defaultState, action) {
 			break;
 		case "setCurrentPlayer":
 			state.profile.currentPlayer = action.currentPlayer;
-      config.setLocalConfigValue("currentPlayer", action.currentPlayer);
+		config.setLocalConfigValue("currentPlayer", action.currentPlayer);
 			break;
 		case "setMediaNow":
 			state.profile.mediaNow = action.media;
@@ -169,7 +169,7 @@ function stateStoreManager(state = defaultState, action) {
 			break;
 		case "setCurrentView":
 			state.profile.view = action.view;
-      config.setLocalConfigValue("view", action.view);
+		config.setLocalConfigValue("view", action.view);
 			break;
 		case "setStreamDetails":
 			state.profile.streamDetails = action.stream;

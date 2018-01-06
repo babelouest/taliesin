@@ -51,10 +51,10 @@ class MediaInfo extends Component {
 	handleOpenModal() {
 		this.setState({showModal: true});
 	}
-  
-  handleCloseModal() {
+	
+	handleCloseModal() {
 		this.setState({showModal: false});
-  }
+	}
 	
 	render() {
 		var image = "";

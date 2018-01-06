@@ -3,8 +3,8 @@ import StateStore from './StateStore';
 
 class APIManager {
 	constructor(parameters) {
-    this.counter = 0;
-    
+		this.counter = 0;
+		
 		if (parameters) {
 			this.taliesinApiUrl = parameters.taliesinApiUrl || "";
 			this.angharadApiUrl = parameters.angharadApiUrl || "";
@@ -12,31 +12,31 @@ class APIManager {
 	}
 	
 	APIRequest (method, url, data) {
-    if (this.counter <= 310) {
-      this.counter++;
-      var curDate = new Date();
-      if (StateStore.getState().token_expiration*1000 > curDate.getTime()) {
-        return this.APIRequestExecute(method, url, data)
-        .always(() => {
-          this.counter--;
-        });
-      } else {
-        if (StateStore.getState().oauth2Connector) {
-          return StateStore.getState().oauth2Connector.runRefreshToken()
-          .then(() => {
-            return this.APIRequestExecute(method, url, data);
-          })
-          .always(() => {
-            this.counter--;
-          });
-        } else {
-          this.counter--;
-          return Promise.reject(new Error("error oauth2Connector"));
-        }
-      }
-    } else {
-      return Promise.reject(new Error("error too busy"));
-    }
+		if (this.counter <= 310) {
+			this.counter++;
+			var curDate = new Date();
+			if (StateStore.getState().token_expiration*1000 > curDate.getTime()) {
+				return this.APIRequestExecute(method, url, data)
+				.always(() => {
+					this.counter--;
+				});
+			} else {
+				if (StateStore.getState().oauth2Connector) {
+					return StateStore.getState().oauth2Connector.runRefreshToken()
+					.then(() => {
+						return this.APIRequestExecute(method, url, data);
+					})
+					.always(() => {
+						this.counter--;
+					});
+				} else {
+					this.counter--;
+					return Promise.reject(new Error("error oauth2Connector"));
+				}
+			}
+		} else {
+			return Promise.reject(new Error("error too busy"));
+		}
 	}
 	
 	APIRequestExecute(method, url, data) {

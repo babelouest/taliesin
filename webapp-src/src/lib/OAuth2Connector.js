@@ -49,7 +49,7 @@ class OAuth2Connector {
 				storedData = this.getStoredData();
 				if (storedData && storedData.accessToken && this.isTokenValid(storedData.accessToken)) {
 					this.accessToken = storedData.accessToken;
-          this.broadcastMessage("connected", this.accessToken.access_token, (this.accessToken.iat + this.accessToken.expires_in));
+					this.broadcastMessage("connected", this.accessToken.access_token, (this.accessToken.iat + this.accessToken.expires_in));
 					this.getConnectedProfile((res, profile) => {
 						if (res) {
 							this.broadcastMessage("profile", profile);
@@ -70,7 +70,7 @@ class OAuth2Connector {
 						if (refreshToken.access_token) {
 							self.accessToken = {access_token: refreshToken.access_token, iat: refreshToken.iat, expires_in: refreshToken.expires_in};
 							self.storeAccessToken(self.accessToken);
-              self.broadcastMessage("connected", self.accessToken.access_token, (self.accessToken.iat + self.accessToken.expires_in));
+							self.broadcastMessage("connected", self.accessToken.access_token, (self.accessToken.iat + self.accessToken.expires_in));
 							self.getConnectedProfile((res, profile) => {
 								if (res) {
 									self.broadcastMessage("profile", profile);
@@ -89,7 +89,7 @@ class OAuth2Connector {
 				storedData = this.getStoredData();
 				if (storedData && storedData.accessToken && this.isTokenValid(storedData.accessToken)) {
 					this.accessToken = storedData.accessToken;
-          this.broadcastMessage("connected", this.accessToken.access_token, (this.accessToken.iat + this.accessToken.expires_in));
+					this.broadcastMessage("connected", this.accessToken.access_token, (this.accessToken.iat + this.accessToken.expires_in));
 					this.getConnectedProfile((res, profile) => {
 						if (res) {
 							this.broadcastMessage("profile", profile);
@@ -108,7 +108,7 @@ class OAuth2Connector {
 							self.accessToken = accessToken;
 							self.storeAccessToken(accessToken);
 							self.refreshTokenLoop(storedData.refreshToken, self.accessToken.expires_in);
-              self.broadcastMessage("connected", accessToken.access_token, (accessToken.iat + accessToken.expires_in));
+							self.broadcastMessage("connected", accessToken.access_token, (accessToken.iat + accessToken.expires_in));
 							self.getConnectedProfile((res, profile) => {
 								if (res) {
 									self.broadcastMessage("profile", profile);
@@ -336,32 +336,32 @@ class OAuth2Connector {
 	}
 	
 	getConnectedProfile(cb) {
-    if (this.parameters.profileUrl) {
-      var self = this;
-      $.ajax({
-        type: "GET",
-        url: self.parameters.serverUrl + "/" + self.parameters.profileUrl,
-        headers: {"Authorization": "Bearer " + self.accessToken.access_token},
-        success: function (result) {
-          if (cb) {
-            cb(true, result)
-          }
-        },
-        error: function (error) {
-          if (cb) {
-            cb(false)
-          }
-        }
-      });
-    } else {
-      cb(false);
-    }
+		if (this.parameters.profileUrl) {
+			var self = this;
+			$.ajax({
+				type: "GET",
+				url: self.parameters.serverUrl + "/" + self.parameters.profileUrl,
+				headers: {"Authorization": "Bearer " + self.accessToken.access_token},
+				success: function (result) {
+					if (cb) {
+						cb(true, result)
+					}
+				},
+				error: function (error) {
+					if (cb) {
+						cb(false)
+					}
+				}
+			});
+		} else {
+			cb(false);
+		}
 	}
 	
 	connect() {
 		var token = this.getStoredData();
 		if (token && this.isTokenValid(token.accessToken)) {
-      this.broadcastMessage("connected", token.accessToken.access_token, (token.accessToken.iat + token.accessToken.expires_in));
+			this.broadcastMessage("connected", token.accessToken.access_token, (token.accessToken.iat + token.accessToken.expires_in));
 			this.getConnectedProfile((res, profile) => {
 				if (res) {
 					this.broadcastMessage("profile", profile);

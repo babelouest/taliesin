@@ -71,10 +71,10 @@ StateStore.subscribe(() => {
 			// Get data source list
 			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source")
 			.then((result) => {
-        var currentDataSource = false;
-        if (result.length > 0 && !result.find((ds) => {return ds.name === StateStore.getState().profile.dataSource.name})) {
-          currentDataSource = result[0];
-        }
+				var currentDataSource = false;
+				if (result.length > 0 && !result.find((ds) => {return ds.name === StateStore.getState().profile.dataSource.name})) {
+					currentDataSource = result[0];
+				}
 				StateStore.dispatch({type: "setDataSource", dataSourceList: result, currentDataSource: currentDataSource});
 			})
 			.fail((result) => {

@@ -21,12 +21,10 @@ class AudioPlayer extends Component {
 			if (props.stream.name) {
 				// Connect to websocket
 				if (this.websocket) {
-					console.log("close websocket before connecting");
 					this.websocket.onclose = null;
 					this.websocket.close();
 				}
 				try {
-					console.log("connect websocket");
 					this.websocket = new WebSocket(websocketUrl, websocketProtocol);
 					this.websocket.onopen = () => {
 						this.websocket.send(JSON.stringify({command: "authorization", token: StateStore.getState().token}));
@@ -139,7 +137,6 @@ class AudioPlayer extends Component {
 	}
 	
 	componentWillReceiveProps(nextProps) {
-		console.log("componentWillReceiveProps");
 		var websocketUrl = "ws" + StateStore.getState().taliesinApiUrl.substring(4) + "/stream/" + nextProps.stream.name + "/ws";
 		var newWebsocket = (this.state.websocketUrl !== websocketUrl);
 		
@@ -152,7 +149,6 @@ class AudioPlayer extends Component {
 		}, () => {
 			this.loadMedia();
 			if (newWebsocket) {
-				console.log("websocketReconnect", websocketUrl);
 				this.websocketReconnect();
 			}
 		});
@@ -202,7 +198,6 @@ class AudioPlayer extends Component {
 	}
 	
 	handleCommandResponse(response) {
-		console.log("websocket message", response);
 		switch (response.command) {
 			case "authorization":
 				if (response.result !== "connected") {

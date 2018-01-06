@@ -10,34 +10,46 @@ class AudioPlayer extends Component {
 	constructor(props) {
 		super(props);
 		
-		var websocket = false, interval = false;
-		// I assume that taliesinApiUrl starts with 'http://' or 'https://'
-		var websocketUrl = "ws" + StateStore.getState().taliesinApiUrl.substring(4) + "/stream/" + props.stream.name + "/ws";
-		var websocketProtocol: ["taliesin"];
+		//this.websocket = false;
 		
+		var interval = false;
 		if (props.stream.name) {
-			// Connect to websocket
-			try {
-				websocket = new WebSocket(websocketUrl, websocketProtocol);
-        websocket.onopen = () => {
-					this.handleOpenWebsocket();
+			// I assume that taliesinApiUrl starts with 'http://' or 'https://'
+			var websocketUrl = "ws" + StateStore.getState().taliesinApiUrl.substring(4) + "/stream/" + props.stream.name + "/ws";
+			var websocketProtocol: ["taliesin"];
+			
+			if (props.stream.name) {
+				// Connect to websocket
+				if (this.websocket) {
+					console.log("close websocket before connecting");
+					this.websocket.onclose = null;
+					this.websocket.close();
 				}
-        websocket.onmessage = (event) => {
-          this.handleCommandResponse(JSON.parse(event.data));
-        };
-        websocket.onclose = () => {
-					if (!this.state.websocketReconnect) {
-						this.setState({websocket: false});
-					} else {
-						this.websocketReconnect();
+				try {
+					console.log("connect websocket");
+					this.websocket = new WebSocket(websocketUrl, websocketProtocol);
+					this.websocket.onopen = () => {
+						this.websocket.send(JSON.stringify({command: "authorization", token: StateStore.getState().token}));
 					}
-        };
-			} catch (e) {
-				websocket = false;
-				interval = setInterval(() => {
+					this.websocket.onmessage = (event) => {
+						this.handleCommandResponse(JSON.parse(event.data));
+					};
+					this.websocket.onclose = () => {
+						if (!this.state.websocketReconnect) {
+							this.websocket = false;
+						} else {
+							this.websocketReconnect();
+						}
+					};
+				} catch (e) {
+					this.websocket = false;
+					interval = setInterval(() => {
+						this.loadMedia();
+					}, 10000);
 					this.loadMedia();
-				}, 10000);
-				this.loadMedia();
+				}
+			} else {
+				this.websocket = false;
 			}
 		}
 		
@@ -48,7 +60,6 @@ class AudioPlayer extends Component {
 			playIndex: props.index,
 			streamUrl: "#", 
 			interval: interval,
-			websocket: websocket,
 			websocketUrl: websocketUrl,
 			websocketProtocol: websocketProtocol,
 			websocketReconnect: true,
@@ -81,8 +92,7 @@ class AudioPlayer extends Component {
 		this.loadMedia = this.loadMedia.bind(this);
 		this.dispatchPlayerStatus = this.dispatchPlayerStatus.bind(this);
 		this.sendStreamComand = this.sendStreamComand.bind(this);
-    
-		this.handleOpenWebsocket = this.handleOpenWebsocket.bind(this);
+		
 		this.handleCommandResponse = this.handleCommandResponse.bind(this);
 		this.websocketReconnect = this.websocketReconnect.bind(this);
 		
@@ -119,8 +129,8 @@ class AudioPlayer extends Component {
 							break;
 					}
 				} else if (reduxState.lastAction === "newApiToken") {
-					if (this.state.websocket) {
-						this.state.websocket.send(JSON.stringify({command: "authorization", token: StateStore.getState().token}));
+					if (this.websocket && this.websocket.readyState === this.websocket.OPEN) {
+						this.websocket.send(JSON.stringify({command: "authorization", token: StateStore.getState().token}));
 					}
 				}
 			}
@@ -129,52 +139,22 @@ class AudioPlayer extends Component {
 	}
 	
 	componentWillReceiveProps(nextProps) {
-		var oldName = this.state.stream.name;
-		var websocket = this.state.websocket, interval = false;
-		if (this.state.interval) {
-			clearInterval(this.state.interval);
-		}
+		console.log("componentWillReceiveProps");
 		var websocketUrl = "ws" + StateStore.getState().taliesinApiUrl.substring(4) + "/stream/" + nextProps.stream.name + "/ws";
-		if (nextProps.stream.name && (!websocket || oldName !== nextProps.stream.name)) {
-			if (this.state.websocket) {
-				websocket.onclose = null;
-				websocket.close();
-			}
-			// Connect to websocket
-			try {
-				websocket = new WebSocket(websocketUrl, this.state.websocketProtocol);
-        websocket.onopen = () => {
-					this.handleOpenWebsocket();
-				}
-        websocket.onmessage = (event) => {
-          this.handleCommandResponse(JSON.parse(event.data));
-        };
-        websocket.onclose = () => {
-					if (!this.state.websocketReconnect) {
-						this.setState({websocket: false});
-					} else {
-						this.websocketReconnect();
-					}
-        };
-			} catch (e) {
-				websocket = false;
-				interval = setInterval(() => {
-					this.loadMedia();
-				}, 10000);
-				this.loadMedia();
-			}
-		}
-
+		var newWebsocket = (this.state.websocketUrl !== websocketUrl);
+		
 		this.setState({
 			stream: nextProps.stream, 
 			websocketUrl: websocketUrl,
 			websocketReconnect: true,
-			websocket: websocket,
-			interval: interval,
 			playNow: nextProps.play, 
 			playIndex: nextProps.index
 		}, () => {
 			this.loadMedia();
+			if (newWebsocket) {
+				console.log("websocketReconnect", websocketUrl);
+				this.websocketReconnect();
+			}
 		});
 	}
 	
@@ -192,64 +172,62 @@ class AudioPlayer extends Component {
 		if (this.state.interval) {
 			clearInterval(this.state.interval);
 		}
-		this.setState({websocketReconnect: false}, () => {
-			this.state.websocket.close();
-		});
-	}
-	
-	websocketReconnect() {
-		if (this.state.websocket) {
-			var websocket = this.state.websocket;
-			websocket.onclose = null;
-			try {
-				websocket = new WebSocket(this.state.websocketUrl, this.state.websocketProtocol);
-        websocket.onopen = this.handleOpenWebsocket();
-        websocket.onmessage = (event) => {
-          this.handleCommandResponse(JSON.parse(event.data));
-        };
-        websocket.onclose = () => {
-					if (!this.state.websocketReconnect) {
-						this.setState({websocket: false});
-					} else {
-						this.websocketReconnect();
-					}
-        };
-			} catch (e) {
-				websocket = false;
-			}
-			this.setState({websocket: websocket});
+		if (this.websocket) {
+			this.websocket.onclose = null;
+			this.websocket.close();
 		}
 	}
 	
-	handleOpenWebsocket() {
-		this.state.websocket.send(JSON.stringify({command: "authorization", token: StateStore.getState().token}));
+	websocketReconnect() {
+		if (this.websocket) {
+			this.websocket.onclose = null;
+			this.websocket.close();
+		}
+		try {
+			this.websocket = new WebSocket(this.state.websocketUrl, this.state.websocketProtocol);
+			this.websocket.onopen = () => {
+				this.websocket.send(JSON.stringify({command: "authorization", token: StateStore.getState().token}));
+			}
+			this.websocket.onmessage = (event) => {
+				this.handleCommandResponse(JSON.parse(event.data));
+			};
+			this.websocket.onclose = () => {
+				if (this.state.websocketReconnect) {
+					this.websocketReconnect();
+				}
+			};
+		} catch (e) {
+			this.websocket = false;
+		}
 	}
-  
+	
 	handleCommandResponse(response) {
+		console.log("websocket message", response);
 		switch (response.command) {
 			case "authorization":
 				if (response.result !== "connected") {
-					var websocket = this.state.websocket;
-					websocket.onclose = null;
-					this.setState({websocket: false}, () => {
-						websocket.close();
-					});
+					this.websocket.onclose = null;
+					this.websocket.close();
 				} else {
-					this.sendStreamComand("now");
+					if (this.state.stream.webradio) {
+						this.sendStreamComand("now");
+					} else {
+						this.sendStreamComand("list", {offset: this.state.jukeboxIndex, limit: 1});
+					}
 				}
 				break;
 			case "now":
-				if (StateStore.getState().profile.mediaNow.data_source !== response.result.data_source || StateStore.getState().profile.mediaNow.path !== response.result.path) {
-					this.setState({media: response.result}, () => {
-						if (response.result !== "not_found") {
-							this.sendStreamComand("next");
-							StateStore.dispatch({type: "setMediaNow", media: response.result});
-						}
-					});
+				if (response.result !== "not_found" && response.result !== "invalid_param") {
+					if (StateStore.getState().profile.mediaNow.data_source !== response.result.data_source || StateStore.getState().profile.mediaNow.path !== response.result.path) {
+						this.setState({media: response.result}, () => {
+								this.sendStreamComand("next");
+								StateStore.dispatch({type: "setMediaNow", media: response.result});
+						});
+					}
 				}
 				break;
 			case "next":
-				if (response.result !== "not_found") {
+				if (response.result !== "not_found" && response.result !== "invalid_param") {
 					StateStore.dispatch({type: "setMediaNext", media: response.result});
 				}
 				break;
@@ -269,7 +247,7 @@ class AudioPlayer extends Component {
 				break;
 			case "list":
 				if (response.result[0].data_source !== StateStore.getState().profile.mediaNow.data_source || response.result[0].path !== StateStore.getState().profile.mediaNow.path) {
-					StateStore.dispatch({type: "setMediaNow", result: response.result[0]});
+					StateStore.dispatch({type: "setMediaNow", media: response.result[0]});
 				}
 				break;
 			default:
@@ -278,8 +256,8 @@ class AudioPlayer extends Component {
 	}
 	
 	sendStreamComand(command, parameters) {
-		if (this.state.websocket && this.state.websocket.send) {
-			this.state.websocket.send(JSON.stringify({command: command, parameters: parameters}));
+		if (this.websocket && this.websocket.readyState === this.websocket.OPEN) {
+			this.websocket.send(JSON.stringify({command: command, parameters: parameters}));
 		} else {
 			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: command, parameters: parameters})
 			.then((result) => {
@@ -305,7 +283,7 @@ class AudioPlayer extends Component {
 					this.handlePlay();
 				});
 			}
-			if (!this.state.websocket) {
+			if (!this.websocket) {
 				if (!this.state.stream.webradio) {
 					this.sendStreamComand("list", {offset: this.state.jukeboxIndex, limit: 1});
 				} else {
@@ -382,7 +360,11 @@ class AudioPlayer extends Component {
 			}
 			this.setState(newState, () => {
 				this.dispatchPlayerStatus({status: "play"});
-				this.sendStreamComand("now");
+				if (this.state.stream.webradio) {
+					this.sendStreamComand("now");
+				} else {
+					this.sendStreamComand("list", {offset: this.state.jukeboxIndex, limit: 1});
+				}
 			});
 			this.rap.audioEl.play();
 		}

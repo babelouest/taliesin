@@ -23,6 +23,11 @@
 #define _GNU_SOURCE
 #include <string.h>
 
+// TODO Remove after tests
+#include <netinet/in.h>
+#include <arpa/inet.h>
+// TODO
+
 #include "taliesin.h"
 
 int has_scope(json_t * scope_array, const char * scope) {
@@ -1469,7 +1474,7 @@ void callback_websocket_stream_manager (const struct _u_request * request, struc
       ws_stream->status = TALIESIN_WEBSOCKET_PLAYLIST_STATUS_CLOSE;
       ws_stream->webradio->message_type = TALIESIN_PLAYLIST_MESSAGE_TYPE_NONE;
       pthread_mutex_lock(&ws_stream->webradio->message_lock);
-      pthread_cond_signal(&ws_stream->webradio->message_cond);
+      pthread_cond_broadcast(&ws_stream->webradio->message_cond);
       pthread_mutex_unlock(&ws_stream->webradio->message_lock);
     } else {
       ws_stream->status = TALIESIN_WEBSOCKET_PLAYLIST_STATUS_CLOSE;
@@ -1512,7 +1517,7 @@ void callback_websocket_stream_onclose (const struct _u_request * request, struc
     if (ws_stream->jukebox != NULL) {
       ws_stream->jukebox->message_type = TALIESIN_WEBSOCKET_PLAYLIST_STATUS_CLOSING;
       pthread_mutex_lock(&ws_stream->jukebox->message_lock);
-      pthread_cond_signal(&ws_stream->jukebox->message_cond);
+      pthread_cond_broadcast(&ws_stream->jukebox->message_cond);
       pthread_mutex_unlock(&ws_stream->jukebox->message_lock);
       
       while (ws_stream->status != TALIESIN_WEBSOCKET_PLAYLIST_STATUS_CLOSE) {
@@ -1523,7 +1528,7 @@ void callback_websocket_stream_onclose (const struct _u_request * request, struc
     } else if (ws_stream->webradio != NULL) {
       ws_stream->webradio->message_type = TALIESIN_PLAYLIST_MESSAGE_TYPE_CLOSING;
       pthread_mutex_lock(&ws_stream->webradio->message_lock);
-      pthread_cond_signal(&ws_stream->webradio->message_cond);
+      pthread_cond_broadcast(&ws_stream->webradio->message_cond);
       pthread_mutex_unlock(&ws_stream->webradio->message_lock);
       
       while (ws_stream->status != TALIESIN_WEBSOCKET_PLAYLIST_STATUS_CLOSE) {
@@ -1633,7 +1638,7 @@ void callback_websocket_stream_incoming_message (const struct _u_request * reque
       ws_stream->is_authenticated = 0;
     }
   } else if (ws_stream->is_authenticated || !ws_stream->config->use_oauth2_authentication) {
-    if (ws_stream->expiration && ws_stream->expiration > now) {
+    if (ws_stream->expiration > now) {
       if (ws_stream->webradio != NULL) {
         j_is_valid = is_webradio_command_valid(ws_stream->config, ws_stream->webradio, j_message, ws_stream->username, ws_stream->is_admin);
       } else if (ws_stream->jukebox != NULL) {

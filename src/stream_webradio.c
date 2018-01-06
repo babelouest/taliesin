@@ -921,7 +921,7 @@ int audio_stream_enqueue_buffer(struct _t_webradio * webradio, size_t max_size, 
     if (stream->first_buffer != NULL) {
       webradio->message_type = TALIESIN_PLAYLIST_MESSAGE_TYPE_NEW_MEDIA;
       pthread_mutex_lock(&webradio->message_lock);
-      pthread_cond_signal(&webradio->message_cond);
+      pthread_cond_broadcast(&webradio->message_cond);
       pthread_mutex_unlock(&webradio->message_lock);
       if (media_add_history(webradio->config, webradio->name, webradio->tpl_id, stream->first_buffer->file->tm_id) != T_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "audio_stream_enqueue_buffer - Error media_add_history");
@@ -948,7 +948,7 @@ int audio_stream_enqueue_buffer(struct _t_webradio * webradio, size_t max_size, 
           stream->first_buffer = new_buffer;
           webradio->message_type = TALIESIN_PLAYLIST_MESSAGE_TYPE_NEW_MEDIA;
           pthread_mutex_lock(&webradio->message_lock);
-          pthread_cond_signal(&webradio->message_cond);
+          pthread_cond_broadcast(&webradio->message_cond);
           pthread_mutex_unlock(&webradio->message_lock);
           if (media_add_history(webradio->config, webradio->name, webradio->tpl_id, stream->first_buffer->file->tm_id) != T_OK) {
             y_log_message(Y_LOG_LEVEL_ERROR, "audio_stream_enqueue_buffer - Error media_add_history");
@@ -1635,7 +1635,7 @@ void * webradio_run_thread(void * args) {
   webradio->audio_stream->transcode_status = TALIESIN_STREAM_TRANSCODE_STATUS_COMPLETE;
   webradio->message_type = TALIESIN_PLAYLIST_MESSAGE_TYPE_CLOSE;
   pthread_mutex_lock(&webradio->message_lock);
-  pthread_cond_signal(&webradio->message_cond);
+  pthread_cond_broadcast(&webradio->message_cond);
   pthread_mutex_unlock(&webradio->message_lock);
   while (webradio->audio_stream->nb_client_connected) {
     pthread_mutex_lock(&webradio->audio_stream->client_lock);

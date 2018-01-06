@@ -304,6 +304,8 @@
 		"select_image": "Select image",
 		"image_file": "Image file",
 		"content": "Content",
+    "name": "Name",
+    "stream_name": "Stream name",
 		"title_add_data_source": "Add new Data Source",
 		"title_edit_data_source": "Edit Data Source '{{data_source}}'",
 		"path_on_server": "Path on server",

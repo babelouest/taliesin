@@ -142,7 +142,7 @@ class ElementButtons extends Component {
 					url += "/" + encodeURI(this.state.subCategory) + "/" + encodeURI(this.state.subCategoryValue);
 				}
 			}
-			StateStore.getState().APIManager.taliesinApiRequest("GET", url + "?" + player.type + (player.recursive?"&recursive":"") + "&format=" + player.format + "&channels=" + player.channels + "&bitrate=" + player.bitrate + "&sample_rate=" + player.sampleRate + (player.random?"&random":""))
+			StateStore.getState().APIManager.taliesinApiRequest("GET", url + "?" + player.type + (player.recursive?"&recursive":"") + "&format=" + player.format + "&channels=" + player.channels + "&bitrate=" + player.bitrate + "&sample_rate=" + player.sampleRate + (player.random?"&random":"") + (player.name?"&name="+encodeURI(player.name):""))
 			.then((result) => {
 				var streamList = StateStore.getState().streamList;
 				streamList.push(result);

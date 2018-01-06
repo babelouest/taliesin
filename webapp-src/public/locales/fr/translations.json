@@ -304,6 +304,8 @@
 		"select_image": "Sélectionner une image",
 		"image_file": "Image",
 		"content": "Contenu",
+    "name": "Nom",
+    "stream_name": "Nom du flux",
 		"title_add_data_source": "Ajouter une nouvelle Source de Données",
 		"title_edit_data_source": "Éditer la Source de Données '{{data_source}}'",
 		"path_on_server": "Chemin sur le serveur",

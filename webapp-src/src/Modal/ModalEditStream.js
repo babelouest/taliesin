@@ -8,6 +8,7 @@ class ModalEditStream extends Component {
 		super(props);
 		
 		this.state = {
+      name: "",
 			show: props.show, 
 			dataSource: props.dataSource, 
 			path: props.path,
@@ -33,6 +34,7 @@ class ModalEditStream extends Component {
 		};
 		
 		this.close = this.close.bind(this);
+		this.handleChangeName = this.handleChangeName.bind(this);
 		this.handleChangeRecursive = this.handleChangeRecursive.bind(this);
 		this.handleChangeRandom = this.handleChangeRandom.bind(this);
 		this.handleChangeType = this.handleChangeType.bind(this);
@@ -45,6 +47,7 @@ class ModalEditStream extends Component {
 	
 	componentWillReceiveProps(nextProps) {
 		this.setState({
+      name: "",
 			show: nextProps.show, 
 			dataSource: nextProps.dataSource, 
 			path: nextProps.path,
@@ -76,6 +79,7 @@ class ModalEditStream extends Component {
 		}
 		if (result) {
 			this.state.onCloseCb({
+        name: this.state.name,
 				dataSource: this.state.dataSource, 
 				element: this.state.element,
 				path: this.state.path, 
@@ -92,6 +96,10 @@ class ModalEditStream extends Component {
 			this.state.onCloseCb(false);
 		}
 	}
+  
+  handleChangeName(e) {
+    this.setState({name: e.target.value});
+  }
 	
 	handleChangeRecursive() {
 		this.setState({recursive: !this.state.recursive});
@@ -252,6 +260,20 @@ class ModalEditStream extends Component {
 				<Modal.Body>
 					<form onSubmit={(e) => {this.close(true, e)}}>
 						{path}
+						<Row>
+							<Col md={4}>
+								<Label>{i18n.t("modal.stream_name")}</Label>
+							</Col>
+							<Col md={8}>
+								<FormControl
+                  type="text"
+                  value={this.state.name}
+                  placeholder={i18n.t("modal.name")}
+                  onChange={this.handleChangeName}
+                />
+							</Col>
+						</Row>
+            <hr/>
 						{recursive}
 						<Row>
 							<Col md={4}>

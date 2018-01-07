@@ -29,6 +29,7 @@
 		"image": "Image",
 		"add_to_playlist": "Add to playlist",
 		"add_to_stream": "Add to stream",
+    "remove": "Remove",
 		"edit": "Edit",
 		"create_stream": "Create stream",
 		"scope_me": "Me",
@@ -316,7 +317,12 @@
 		"non_recursive": "Non recursive",
 		"create_stream": "Create stream",
 		"play_as": "Play as",
-		"play_now_current_player": "Play now"
+		"play_now_current_player": "Play now",
+    "remove_title": "Remove from a stream or a playlist",
+    "message_delete_from_stream_success": "Removed from stream",
+    "message_delete_from_stream_error": "Error removing from stream",
+    "message_delete_from_playlist_success": "Removed from playlist",
+    "message_delete_from_playlist_error": "Error removing from playlist"
 	},
   "config": {
     "audioExtensions": "Audio files extensions",

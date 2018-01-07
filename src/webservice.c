@@ -1543,13 +1543,13 @@ void callback_websocket_stream_onclose (const struct _u_request * request, struc
     ws_stream->jukebox->nb_websocket--;
     ws_stream->jukebox->message_type = TALIESIN_PLAYLIST_MESSAGE_TYPE_TRASH;
     pthread_mutex_lock(&ws_stream->jukebox->websocket_lock);
-    pthread_cond_signal(&ws_stream->jukebox->websocket_cond);
+    pthread_cond_broadcast(&ws_stream->jukebox->websocket_cond);
     pthread_mutex_unlock(&ws_stream->jukebox->websocket_lock);
   } else if (ws_stream->webradio != NULL) {
     ws_stream->webradio->nb_websocket--;
     ws_stream->webradio->message_type = TALIESIN_PLAYLIST_MESSAGE_TYPE_TRASH;
     pthread_mutex_lock(&ws_stream->webradio->websocket_lock);
-    pthread_cond_signal(&ws_stream->webradio->websocket_cond);
+    pthread_cond_broadcast(&ws_stream->webradio->websocket_cond);
     pthread_mutex_unlock(&ws_stream->webradio->websocket_lock);
   }
   o_free(ws_stream->username);

@@ -154,9 +154,34 @@ struct _t_file * file_list_dequeue_file(struct _t_file_list * file_list, unsigne
         file->next = NULL;
         file_list->nb_files--;
       }
-      pthread_mutex_unlock(&file_list->file_lock);
       return file;
     }
+  } else {
+    return NULL;
+  }
+}
+
+struct _t_file * file_list_dequeue_file_from_id_nolock(struct _t_file_list * file_list, json_int_t tm_id) {
+  struct _t_file * file, * previous;
+  
+  if (file_list != NULL && tm_id > 0) {
+    file = file_list->start;
+    previous = NULL;
+    while (file != NULL) {
+      if (file->tm_id == tm_id) {
+        if (previous == NULL) {
+          file_list->start = file->next;
+        } else {
+          previous->next = file->next;
+        }
+        file->next = NULL;
+        file_list->nb_files--;
+        return file;
+      }
+      previous = file;
+      file = file->next;
+    }
+    return NULL;
   } else {
     return NULL;
   }
@@ -289,7 +314,7 @@ json_t * file_list_has_media_list(struct config_elements * config, struct _t_fil
   j_tm_id_list = json_array();
   if (j_tm_id_list != NULL) {
     if (pthread_mutex_lock(&file_list->file_lock)) {
-      y_log_message(Y_LOG_LEVEL_ERROR, "Error lock mutex file_list");
+      y_log_message(Y_LOG_LEVEL_ERROR, "file_list_has_media_list - Error lock mutex file_list");
       j_return = json_pack("{si}", "result", T_ERROR);
     } else {
       while (file != NULL) {
@@ -330,4 +355,25 @@ json_t * file_list_has_media_list(struct config_elements * config, struct _t_fil
   }
   json_decref(j_tm_id_list);
   return j_return;
+}
+
+int file_list_remove_media_list(struct config_elements * config, struct _t_file_list * file_list, json_t * j_media_list) {
+  json_t * j_element;
+  size_t index;
+  struct _t_file * file;
+  int ret;
+  
+  if (pthread_mutex_lock(&file_list->file_lock)) {
+    y_log_message(Y_LOG_LEVEL_ERROR, "file_list_remove_media_list - Error lock mutex file_list");
+    ret = T_ERROR;
+  } else {
+    json_array_foreach(j_media_list, index, j_element) {
+      while ((file = file_list_dequeue_file_from_id_nolock(file_list, json_integer_value(json_object_get(j_element, "tm_id")))) != NULL) {
+        file_list_clean_file(file);
+      }
+    }
+    pthread_mutex_unlock(&file_list->file_lock);
+    ret = T_OK;
+  }
+  return ret;
 }

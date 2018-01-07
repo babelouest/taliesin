@@ -508,6 +508,7 @@ void             file_list_clean(struct _t_file_list * file_list);
 void             file_list_clean_file(struct _t_file * file);
 int              file_list_add_media_list(struct config_elements * config, struct _t_file_list * file_list, json_t * media_list);
 json_t *         file_list_has_media_list(struct config_elements * config, struct _t_file_list * file_list, json_t * media_list, json_int_t offset, json_int_t limit);
+int              file_list_remove_media_list(struct config_elements * config, struct _t_file_list * file_list, json_t * j_media_list);
 int              file_list_empty_nolock(struct _t_file_list * file_list);
 
 // Jukebox audio buffer

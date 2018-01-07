@@ -235,6 +235,45 @@ static int jukebox_delete_db_stream_media(struct config_elements * config, struc
   return ret;
 }
 
+static int jukebox_delete_db_stream_media_list(struct config_elements * config, struct _t_jukebox * jukebox, json_t * tm_id_array) {
+  json_t * j_query, * j_result;
+  json_int_t ts_id;
+  int res, ret;
+  
+  j_query = json_pack("{sss[s]s{ss}}",
+                      "table",
+                      TALIESIN_TABLE_STREAM,
+                      "columns",
+                        "ts_id",
+                      "where",
+                        "ts_name",
+                        jukebox->name);
+  res = h_select(config->conn, j_query, &j_result, NULL);
+  json_decref(j_query);
+  if (res == H_OK) {
+    if (json_array_size(j_result) > 0) {
+      ts_id = json_integer_value(json_object_get(json_array_get(j_result, 0), "ts_id"));
+      j_query = json_pack("{sss{sIs{sssO}}}", "table", TALIESIN_TABLE_STREAM_ELEMENT, "where", "ts_id", ts_id, "tm_id", "operator", "IN", "value", tm_id_array);
+      res = h_delete(config->conn, j_query, NULL);
+      json_decref(j_query);
+      if (res == H_OK) {
+        ret = T_OK;
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_delete_db_stream_media_list - Error executing j_query (2)");
+        ret = T_ERROR_DB;
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_delete_db_stream_media_list - stream not found");
+      ret = T_ERROR_NOT_FOUND;
+    }
+    json_decref(j_result);
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_delete_db_stream_media_list - Error executing j_query (1)");
+    ret = T_ERROR_DB;
+  }
+  return ret;
+}
+
 static int jukebox_add_db_stream(struct config_elements * config, struct _t_jukebox * jukebox) {
   json_t * j_query, * j_last_id;
   int res, ret;
@@ -980,16 +1019,22 @@ json_t * is_jukebox_command_valid(struct config_elements * config, struct _t_juk
         } else if (o_strcmp(str_command, "remove_list") == 0) {
           if (!json_is_object(json_object_get(j_command, "parameters"))) {
             json_array_append_new(j_result, json_pack("{ss}", "parameters", "parameters must be a json object"));
-          } else if (json_object_get(json_object_get(j_command, "parameters"), "index") == NULL || 
-                     json_is_array(json_object_get(j_command, "parameters")) ||
-                     (json_object_get(json_object_get(j_command, "parameters"), "index") != NULL && 
-                      (!json_is_integer(json_object_get(json_object_get(j_command, "parameters"), "index")) ||
-                      json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "index")) < 0)
-                     ) || 
-                     (json_is_array(json_object_get(j_command, "parameters")) && 
-                     !json_array_size(json_object_get(j_command, "parameters")))
-                    ) {
-            json_array_append_new(j_result, json_pack("{ss}", "parameters", "index must ba a positive integer or a JSON array with at least one element"));
+          } else if (json_object_get(json_object_get(j_command, "parameters"), "index") == NULL && json_object_get(json_object_get(j_command, "parameters"), "media") == NULL) {
+            json_array_append_new(j_result, json_pack("{ss}", "parameters", "parameters must have an index value or a media array"));
+          } else if (json_object_get(json_object_get(j_command, "parameters"), "index") != NULL &&
+                    (!json_is_integer(json_object_get(json_object_get(j_command, "parameters"), "index")) ||
+                      json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "index")) < 0)) {
+            json_array_append_new(j_result, json_pack("{ss}", "parameters", "index must ba a positive integer"));
+          } else if (json_object_get(json_object_get(j_command, "parameters"), "media") != NULL) {
+            if (!json_is_array(json_object_get(json_object_get(j_command, "parameters"), "media"))) {
+              json_array_append_new(j_result, json_pack("{ss}", "parameter", "media must be a JSON array"));
+            } else {
+              json_array_foreach(json_object_get(j_command, "parameters"), index, j_element) {
+                if (!is_valid_path_element_parameter(config, j_element, username, is_admin) && !is_valid_category_element_parameter(config, j_element, username, is_admin) && !is_valid_playlist_element_parameter(config, j_element, username)) {
+                  json_array_append_new(j_result, json_pack("{ss}", "parameter", "parameter is not a valid playlist element"));
+                }
+              }
+            }
           }
         } else if (o_strcmp(str_command, "attach_playlist") == 0) {
           if (!json_is_object(json_object_get(j_command, "parameters"))) {
@@ -1137,16 +1182,51 @@ json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * ju
     json_decref(j_result);
     j_return = json_pack("{si}", "result", ret);
   } else if (0 == o_strcmp(str_command, "remove_list")) {
-    if (jukebox_remove_media_by_index(jukebox, json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "index")), &tm_id) == T_OK) {
-      if (jukebox_delete_db_stream_media(config, jukebox, tm_id) == T_OK) {
-        j_return = json_pack("{si}", "result", T_OK);
+    if (json_object_get(json_object_get(j_command, "parameters"), "index") != NULL) {
+      if (jukebox_remove_media_by_index(jukebox, json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "index")), &tm_id) == T_OK) {
+        if (jukebox_delete_db_stream_media(config, jukebox, tm_id) == T_OK) {
+          j_return = json_pack("{si}", "result", T_OK);
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error jukebox_delete_db_stream_media");
+          j_return = json_pack("{si}", "result", T_ERROR);
+        }
       } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error jukebox_delete_db_stream_media");
         j_return = json_pack("{si}", "result", T_ERROR);
+        y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error jukebox_remove_media_by_index");
       }
     } else {
-      j_return = json_pack("{si}", "result", T_ERROR);
-      y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error jukebox_remove_media_by_index");
+      j_result = media_append_list_to_media_list(config, json_object_get(json_object_get(j_command, "parameters"), "media"), username);
+      if (check_result_value(j_result, T_OK)) {
+        if (json_array_size(json_object_get(j_result, "media")) > 0) {
+          if (file_list_remove_media_list(config, jukebox->file_list, json_object_get(j_result, "media")) == T_OK) {
+            j_media_list = json_array();
+            if (j_media_list != NULL) {
+              json_array_foreach(json_object_get(j_result, "media"), index, j_element) {
+                json_array_append(j_media_list, json_object_get(j_element, "tm_id"));
+              }
+              if (jukebox_delete_db_stream_media_list(config, jukebox, j_media_list) == T_OK) {
+                j_return = json_pack("{si}", "result", T_OK);
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error jukebox_delete_db_stream_media_list");
+                j_return = json_pack("{si}", "result", T_ERROR);
+              }
+            } else {
+              y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error allocating resources for j_media_list");
+              j_return = json_pack("{si}", "result", T_ERROR);
+            }
+            json_decref(j_media_list);
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error deleting from jukebox");
+            j_return = json_pack("{si}", "result", T_ERROR);
+          }
+        } else {
+          j_return = json_pack("{si}", "result", T_ERROR_NOT_FOUND);
+        }
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error media_append_list_to_media_list");
+        j_return = json_pack("{si}", "result", T_ERROR);
+      }
+      json_decref(j_result);
     }
   } else if (0 == o_strcmp(str_command, "has_list")) {
     if (json_object_get(json_object_get(j_command, "parameters"), "offset") != NULL) {

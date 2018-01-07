@@ -3,6 +3,7 @@ import { Modal, Row, Col, Image, Button, ButtonGroup, DropdownButton, MenuItem }
 import FontAwesome from 'react-fontawesome';
 import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
+import ModalRemove from '../Modal/ModalRemove';
 
 class ModalMedia extends Component {
 	constructor(props) {
@@ -15,7 +16,8 @@ class ModalMedia extends Component {
 			close: props.onClose, 
 			imgBlob: false,
 			streamList: StateStore.getState().streamList,
-			playlist: StateStore.getState().playlists
+			playlist: StateStore.getState().playlists,
+      removeModalShow: false
 		};
 		
 		this.onCloseModal = this.onCloseModal.bind(this);
@@ -44,7 +46,8 @@ class ModalMedia extends Component {
 			close: nextProps.onClose, 
 			imgBlob: false,
 			streamList: StateStore.getState().streamList,
-			playlist: StateStore.getState().playlists
+			playlist: StateStore.getState().playlists,
+      removeModalShow: false
 		}, () => {
 			this.getMediaFolder();
 			this.getMediaCover();
@@ -359,6 +362,10 @@ class ModalMedia extends Component {
 											{i18n.t("common.add_to_playlist")}
 										</MenuItem>
 										{playlist}
+                    <MenuItem divider />
+                    <MenuItem onClick={() => {this.setState({removeModalShow: true});}}>
+                      {i18n.t("common.remove")}
+                    </MenuItem>
 									</DropdownButton>
 								</ButtonGroup>&nbsp;
 								{this.state.title}
@@ -415,6 +422,12 @@ class ModalMedia extends Component {
 								</Col>
 							</Row>
 						</Modal.Body>
+            <ModalRemove
+              show={this.state.removeModalShow}
+              onCloseCb={() => {this.setState({removeModalShow: false});}}
+              dataSource={this.state.media.data_source} 
+              path={this.state.media.path} 
+            />
 					</Modal>
 			);
 		} else {

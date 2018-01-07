@@ -5,6 +5,7 @@ import StateStore from '../lib/StateStore';
 import ModalEditStream from '../Modal/ModalEditStream';
 import ModalEditPlaylist from '../Modal/ModalEditPlaylist';
 import ModalEditCategory from '../Modal/ModalEditCategory';
+import ModalRemove from '../Modal/ModalRemove';
 import i18n from '../lib/i18n';
 
 class ElementButtons extends Component {
@@ -23,7 +24,8 @@ class ElementButtons extends Component {
 			addPlaylistShow: false,
 			editCategoryShow: false,
 			onEditCategory: props.onEditCategory,
-			hideRefresh: props.hideRefresh
+			hideRefresh: props.hideRefresh,
+      removeModalShow: false
 		};
 
 		this.playElement = this.playElement.bind(this);
@@ -37,6 +39,7 @@ class ElementButtons extends Component {
 		this.refreshFolder = this.refreshFolder.bind(this);
 		this.viewCategory = this.viewCategory.bind(this);
 		this.onCloseCategory = this.onCloseCategory.bind(this);
+		this.handleSelectRemove = this.handleSelectRemove.bind(this);
 		
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
@@ -62,7 +65,8 @@ class ElementButtons extends Component {
 			addPlaylistShow: false,
 			editCategoryShow: false,
 			onEditCategory: nextProps.onEditCategory,
-			hideRefresh: nextProps.hideRefresh
+			hideRefresh: nextProps.hideRefresh,
+      removeModalShow: false
 		});
 	}
 	
@@ -273,6 +277,11 @@ class ElementButtons extends Component {
 			}
 		});
 	}
+  
+  handleSelectRemove() {
+    console.log(this.state.removeDropdown);
+    this.setState({removeDropdown: !this.state.removeDropdown});
+  }
 	
 	render() {
 		var streamList = [], playlist = [<MenuItem key={0} onClick={() => this.addToNewPlaylist()}>New playlist</MenuItem>], refreshButton, refreshButtonMenu, categoryButton, categoryButtonMenu, modalCategory;
@@ -338,6 +347,10 @@ class ElementButtons extends Component {
 							{i18n.t("common.add_to_playlist")}
 						</MenuItem>
 						{playlist}
+						<MenuItem divider />
+						<MenuItem onClick={() => {this.setState({removeModalShow: true});}}>
+							{i18n.t("common.remove")}
+						</MenuItem>
 					</DropdownButton>
 				</ButtonGroup>
 				<DropdownButton className="visible-xs" id={"xs-manage"-this.state.element.name} title={
@@ -367,6 +380,10 @@ class ElementButtons extends Component {
 						{i18n.t("common.add_to_playlist")}
 					</MenuItem>
 					{playlist}
+          <MenuItem divider />
+          <MenuItem onClick={() => {this.setState({removeModalShow: true});}}>
+            {i18n.t("common.remove")}
+          </MenuItem>
 				</DropdownButton>
 				<ModalEditStream 
 					show={this.state.show} 
@@ -380,6 +397,17 @@ class ElementButtons extends Component {
 					onCloseCb={this.runPlayElementAdvanced} 
 				/>
 				<ModalEditPlaylist show={this.state.addPlaylistShow} onCloseCb={this.onSavePlaylist} add={true} playlist={false} />
+				<ModalRemove
+          show={this.state.removeModalShow}
+          onCloseCb={() => {this.setState({removeModalShow: false});}}
+          dataSource={this.state.dataSource} 
+					element={this.state.element} 
+					path={this.state.path} 
+					category={this.state.category} 
+					categoryValue={this.state.categoryValue} 
+					subCategory={this.state.subCategory} 
+					subCategoryValue={this.state.subCategoryValue} 
+        />
 				{modalCategory}
 			</div>
 		);

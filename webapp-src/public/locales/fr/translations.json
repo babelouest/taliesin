@@ -29,6 +29,7 @@
 		"image": "Image",
 		"add_to_playlist": "Ajouter à la playlist",
 		"add_to_stream": "Ajouter au flux",
+    "remove": "Supprimer",
 		"edit": "Éditer",
 		"create_stream": "Créer un flux",
 		"scope_me": "Moi",
@@ -316,7 +317,12 @@
 		"non_recursive": "Non récursif",
 		"create_stream": "Créer un flux",
 		"play_as": "Lire comme",
-		"play_now_current_player": "Lire maintenant"
+		"play_now_current_player": "Lire maintenant",
+    "remove_title": "Supprimer d'un flux ou d'une playlist",
+    "message_delete_from_stream_success": "Supprimé dans le flux",
+    "message_delete_from_stream_error": "Erreur lors de la suppression dans le flux",
+    "message_delete_from_playlist_success": "Supprimé dans la playlist",
+    "message_delete_from_playlist_error": "Erreur lors de la suppression dans la playlist"
 	},
   "config": {
     "audioExtensions": "Extensions pour fichiers audio",

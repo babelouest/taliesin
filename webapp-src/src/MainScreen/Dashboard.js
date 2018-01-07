@@ -91,7 +91,7 @@ class Dashboard extends Component {
 	loadRandom() {
 		if (this._ismounted) {
 			this.setState({random: [], randomLoaded: false}, () => {
-				StateStore.getState().APIManager.taliesinApiRequest("PUT", "/search/", {sort: "random", limit: 10})
+				StateStore.getState().APIManager.taliesinApiRequest("PUT", "/search/", {sort: "random", limit: 8})
 				.then((result) => {
 					var list = [], listComponents = [];
 					result.forEach((element, index) => {

@@ -547,7 +547,7 @@ class StreamDetails extends Component {
 							</Col>
 							<Col md={6} sm={6} xs={6}>
 								<span>
-									{this.state.stream.webradio?"Webradio":"Jukebox"}
+									{this.state.stream.webradio?i18n.t("common.webradio"):i18n.t("common.jukebox")}
 								</span>
 							</Col>
 						</Row>
@@ -572,7 +572,7 @@ class StreamDetails extends Component {
 							</Col>
 							<Col md={6} sm={6} xs={6}>
 								<span>
-									{this.state.stream.stereo?"Stereo":"Mono"}
+									{this.state.stream.stereo?i18n.t("common.stereo"):i18n.t("common.mono")}
 								</span>
 							</Col>
 						</Row>
@@ -601,7 +601,7 @@ class StreamDetails extends Component {
 							</Col>
 						</Row>
 					</Panel>
-					<Panel collapsible header="Media list" eventKey="2" onSelect={this.handleSelectMediaList}>
+					<Panel collapsible header={i18n.t("stream.media_list")} eventKey="2" onSelect={this.handleSelectMediaList}>
 						<Row>
 							<Col md={4}>
 								<ButtonGroup>
@@ -642,7 +642,7 @@ class StreamDetails extends Component {
 						{this.state.mediaListLoaded?"":<FontAwesome name="spinner" spin />}
 					</Panel>
 					{history}
-					<Panel collapsible header="Clients" eventKey="4">
+					<Panel collapsible header={i18n.t("stream.clients")} eventKey="4">
 						{clientList}
 					</Panel>
 					<ModalConfirm show={this.state.modalConfirmShow} title={this.state.modalTitle} message={this.state.modalMessage} onCloseCb={this.confirmDelete} />

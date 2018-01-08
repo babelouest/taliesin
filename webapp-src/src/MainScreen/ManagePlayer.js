@@ -109,7 +109,7 @@ class ManagePlayer extends Component {
 		this.internalPlayerList = [];
 		
 		this.state.playerList.forEach((player, index) => {
-			var enabledSwitch, switches = [<MenuItem key="0" eventKey="0" onClick={() => this.handleSelectSwitch(player)} className={!player.switch?"bg-success":""}>None</MenuItem>];
+			var enabledSwitch, switches = [<MenuItem key="0" eventKey="0" onClick={() => this.handleSelectSwitch(player)} className={!player.switch?"bg-success":""}>{i18n.t("common.none")}</MenuItem>];
 			if (player.enabled) {
 				enabledSwitch = 
 					<ToggleButtonGroup type="checkbox" defaultValue={["1"]}>
@@ -167,7 +167,7 @@ class ManagePlayer extends Component {
 					{lines}
 				</tbody>
 			</table>
-			<Button title={i18n.t("common.save")} onClick={this.handleSavePlayers}>Save</Button>
+			<Button title={i18n.t("common.save")} onClick={this.handleSavePlayers}>{i18n.t("common.save")}</Button>
 		</div>);
 	}
 }

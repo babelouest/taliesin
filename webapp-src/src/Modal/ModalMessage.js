@@ -30,7 +30,7 @@ class ModalMessage extends Component {
 				</Modal.Body>
 
 				<Modal.Footer>
-					<Button bsStyle="primary" onClick={this.close}>Close</Button>
+					<Button bsStyle="primary" onClick={this.close}>{i18n.t("common.close")}</Button>
 				</Modal.Footer>
 
 			</Modal>

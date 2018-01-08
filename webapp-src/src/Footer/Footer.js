@@ -67,14 +67,6 @@ class Footer extends Component {
 	
 	componentDidMount() {
 		this._ismounted = true;
-		
-		if (!this.state.currentPlayer.name) {
-			var currentPlayer = this.state.currentPlayer;
-			currentPlayer.name = i18n.t("player." + currentPlayer.type);
-			this.setState({currentPlayer: currentPlayer}, () => {
-				StateStore.dispatch({type: "setCurrentPlayer", currentPlayer: currentPlayer});
-			});
-		}
 	}
 
 	componentWillUnmount() {
@@ -153,7 +145,7 @@ class Footer extends Component {
 				middleButtons =
 					<Col md={2} sm={2} xs={2} className="text-center">
 						<ButtonGroup className="hidden-xs hidden-sm">
-							<Button title={i18n.t("player.full_screen")} onClick={ ()=> this.showFullScreen()}>
+							<Button title={this.state.folded?i18n.t("player.extend"):i18n.t("player.fold")} onClick={ ()=> this.showFullScreen()}>
 								<FontAwesome name={"arrows-alt"} />
 							</Button>
 							<Button title={i18n.t("player.extend")} onClick={ ()=> this.setState({ folded: !this.state.folded, play: false })}>
@@ -170,7 +162,7 @@ class Footer extends Component {
 							</MenuItem>
 							<MenuItem onClick={ ()=> this.setState({ folded: !this.state.folded, play: false })}>
 								<FontAwesome name={this.state.folded?"chevron-circle-up":"chevron-circle-down"} />
-								&nbsp;{this.state.folded?"Extend":"Fold"}
+								&nbsp;{this.state.folded?i18n.t("player.extend"):i18n.t("player.fold")}
 							</MenuItem>
 							<MenuItem onClick={ ()=> this.showMediaList()}>
 								<FontAwesome name={"list"} />

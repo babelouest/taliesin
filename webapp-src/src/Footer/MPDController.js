@@ -42,7 +42,7 @@ class MPDController extends Component {
 		this.handleChangeVolume = this.handleChangeVolume.bind(this);
 		this._notificationSystem = null;
 		
-		if (this.state.stream.name) {
+		if (this.state.stream.name && this.state.player.name) {
 			this.loadStream();
 		} else {
 			this.MPDConnect();
@@ -83,13 +83,13 @@ class MPDController extends Component {
 				}
 			}
 		});
-		
 	}
 	
 	componentWillReceiveProps(nextProps) {
 		var newStream = (nextProps.stream && nextProps.stream.name !== this.state.stream.name);
+		var newPlayer = (nextProps.player && nextProps.player.name !== this.state.player.name);
 		var newState = {
-			player: StateStore.getState().externalPlayerList.find((externalPlayer) => {return nextProps.player.name === externalPlayer.name})||{type: false, name: false}
+			player: StateStore.getState().externalPlayerList.find((externalPlayer) => {return nextProps.player.name === externalPlayer.name})||this.state.player
 		};
 		if (nextProps.play) {
 			newState.playNow = nextProps.play;
@@ -101,7 +101,7 @@ class MPDController extends Component {
 			newState.playIndex = nextProps.index;
 		}
 		this.setState(newState, () => {
-			if (!nextProps.stream.name) {
+			if (newPlayer) {
 				this.MPDConnect();
 			} else if (newStream) {
 				this.loadStream();
@@ -150,9 +150,9 @@ class MPDController extends Component {
 		StateStore.getState().APIManager.angharadApiRequest("GET", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/status")
 		.then((status) => {
 			this.setState({jukeboxRepeat: status.repeat, jukeboxRandom: status.random, volume: status.volume, jukeboxIndex: status.song_pos, play: (status.state==="play")}, () => {
+				StateStore.dispatch({ type: "setCurrentPlayerStatus", volume: status.volume });
 				if (status.song_pos !== StateStore.getState().profile.jukeboxIndex) {
 					StateStore.dispatch({ type: "setJukeboxIndex", index: status.song_pos });
-					StateStore.dispatch({ type: "setCurrentPlayerStatus", volume: status.volume });
 					this.loadMedia();
 				} else if (this.state.stream.webradio) {
 					this.loadMedia();
@@ -193,9 +193,7 @@ class MPDController extends Component {
 						}
 					}
 					StateStore.dispatch({ type: "setCurrentPlayerStatus", volume: status.volume });
-					if (status.song_pos !== StateStore.getState().profile.jukeboxIndex) {
-						StateStore.dispatch({ type: "setJukeboxIndex", index: status.song_pos });
-					}
+					this.MPDStatus();
 				});
 			});
 		});
@@ -228,7 +226,7 @@ class MPDController extends Component {
 			} else {
 				StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "list", parameters: {offset: this.state.jukeboxIndex, limit: 1}})
 				.then((result) => {
-					if (result[0] && result[0].data_source !== StateStore.getState().profile.mediaNow.data_source && result[0].path !== StateStore.getState().profile.mediaNow.path) {
+					if (result[0] && (result[0].data_source !== StateStore.getState().profile.mediaNow.data_source || result[0].path !== StateStore.getState().profile.mediaNow.path)) {
 						StateStore.dispatch({type: "setMediaNow", media: result[0]});
 					}
 				});
@@ -282,7 +280,7 @@ class MPDController extends Component {
 		StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/stop/")
 		.then(() => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Stop',
+				message: i18n.t("common.stop"),
 				level: 'success'
 			});
 			this.MPDStatus();
@@ -294,7 +292,7 @@ class MPDController extends Component {
 		StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/pause/")
 		.then(() => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: 'Pause',
+				message: i18n.t("common.pause"),
 				level: 'success'
 			});
 		});

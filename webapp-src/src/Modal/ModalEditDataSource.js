@@ -192,8 +192,8 @@ class ModalEditDataSource extends Component {
 				</Modal.Body>
 
 				<Modal.Footer>
-					<Button bsStyle="primary" onClick={() => this.close(true)} disabled={this.getNameValidationState() !== "success"}>OK</Button>
-					<Button bsStyle="primary" onClick={() => this.close(false)}>Cancel</Button>
+					<Button bsStyle="primary" onClick={() => this.close(true)} disabled={this.getNameValidationState() !== "success"}>{i18n.t("common.ok")}</Button>
+					<Button bsStyle="primary" onClick={() => this.close(false)}>{i18n.t("common.cancel")}</Button>
 				</Modal.Footer>
 
 			</Modal>

@@ -462,7 +462,7 @@ class AudioPlayer extends Component {
 	}
 	
 	render() {
-		var playButton, duration, volume, metadata, streamName = "None";
+		var playButton, duration, volume, metadata, streamName = i18n.t("common.none");
 		if (this.state.stream && this.state.stream.display_name) {
 			if (this.state.stream.display_name.startsWith("{") && this.state.stream.display_name.indexOf("} - ") !== -1) {
 				streamName = this.state.stream.display_name.substring(this.state.stream.display_name.indexOf("} - ") + 3);

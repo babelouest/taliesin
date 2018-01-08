@@ -1,6 +1,6 @@
 # Taliesin web client
 
-Copyright 2017 - Nicolas Mora <mail@babelouest.org>
+Copyright 2017-2018 - Nicolas Mora <mail@babelouest.org>
 
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
 

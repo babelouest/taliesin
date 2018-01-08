@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Button, Modal } from 'react-bootstrap';
+import i18n from '../lib/i18n';
 
 class ModalConfirm extends Component {
 	constructor(props) {
@@ -32,8 +33,8 @@ class ModalConfirm extends Component {
 				</Modal.Body>
 
 				<Modal.Footer>
-					<Button bsStyle="primary" onClick={() => this.close(true)}>OK</Button>
-					<Button bsStyle="primary" onClick={() => this.close(false)}>Cancel</Button>
+					<Button bsStyle="primary" onClick={() => this.close(true)}>{i18n.t("common.ok")}</Button>
+					<Button bsStyle="primary" onClick={() => this.close(false)}>{i18n.t("common.cancel")}</Button>
 				</Modal.Footer>
 
 			</Modal>

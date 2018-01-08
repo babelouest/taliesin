@@ -56,7 +56,7 @@ StateStore.subscribe(() => {
 			.then((externalPlayerList) => {
 				var parsedList = [];
 				externalPlayerList.forEach((strPlayer) => {parsedList.push(JSON.parse(strPlayer))});
-				StateStore.dispatch({ type: 'setExternalPlayerList', externalPlayerList: parsedList });
+				StateStore.dispatch({ type: "setExternalPlayerList", externalPlayerList: parsedList });
 			});
 			
 			// Get current stream list

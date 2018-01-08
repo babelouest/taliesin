@@ -25,7 +25,7 @@ class ElementButtons extends Component {
 			editCategoryShow: false,
 			onEditCategory: props.onEditCategory,
 			hideRefresh: props.hideRefresh,
-      removeModalShow: false
+			removeModalShow: false
 		};
 
 		this.playElement = this.playElement.bind(this);
@@ -66,7 +66,7 @@ class ElementButtons extends Component {
 			editCategoryShow: false,
 			onEditCategory: nextProps.onEditCategory,
 			hideRefresh: nextProps.hideRefresh,
-      removeModalShow: false
+			removeModalShow: false
 		});
 	}
 	
@@ -277,11 +277,11 @@ class ElementButtons extends Component {
 			}
 		});
 	}
-  
-  handleSelectRemove() {
-    console.log(this.state.removeDropdown);
-    this.setState({removeDropdown: !this.state.removeDropdown});
-  }
+	
+	handleSelectRemove() {
+		console.log(this.state.removeDropdown);
+		this.setState({removeDropdown: !this.state.removeDropdown});
+	}
 	
 	render() {
 		var streamList = [], playlist = [<MenuItem key={0} onClick={() => this.addToNewPlaylist()}>New playlist</MenuItem>], refreshButton, refreshButtonMenu, categoryButton, categoryButtonMenu, modalCategory;
@@ -380,10 +380,10 @@ class ElementButtons extends Component {
 						{i18n.t("common.add_to_playlist")}
 					</MenuItem>
 					{playlist}
-          <MenuItem divider />
-          <MenuItem onClick={() => {this.setState({removeModalShow: true});}}>
-            {i18n.t("common.remove")}
-          </MenuItem>
+					<MenuItem divider />
+					<MenuItem onClick={() => {this.setState({removeModalShow: true});}}>
+						{i18n.t("common.remove")}
+					</MenuItem>
 				</DropdownButton>
 				<ModalEditStream 
 					show={this.state.show} 
@@ -398,16 +398,16 @@ class ElementButtons extends Component {
 				/>
 				<ModalEditPlaylist show={this.state.addPlaylistShow} onCloseCb={this.onSavePlaylist} add={true} playlist={false} />
 				<ModalRemove
-          show={this.state.removeModalShow}
-          onCloseCb={() => {this.setState({removeModalShow: false});}}
-          dataSource={this.state.dataSource} 
+					show={this.state.removeModalShow}
+					onCloseCb={() => {this.setState({removeModalShow: false});}}
+					dataSource={this.state.dataSource} 
 					element={this.state.element} 
 					path={this.state.path} 
 					category={this.state.category} 
 					categoryValue={this.state.categoryValue} 
 					subCategory={this.state.subCategory} 
 					subCategoryValue={this.state.subCategoryValue} 
-        />
+				/>
 				{modalCategory}
 			</div>
 		);

@@ -159,7 +159,7 @@ class MediaRow extends Component {
 		if (this.state.date) {
 			date = 
 			<Col md={2} sm={12} xs={12}>
-				<Label className="visible-xs visible-sm">Date</Label> {(new Date(this.state.date * 1000)).toLocaleString()}
+				<Label className="visible-xs visible-sm">{i18n.t("common.date")}</Label> {(new Date(this.state.date * 1000)).toLocaleString()}
 			</Col>;
 		}
 		if (this.state.imgThumbBlob) {

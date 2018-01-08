@@ -53,7 +53,7 @@ class StreamMediaList extends Component {
 				curIndex = StateStore.getState().profile.jukeboxIndex;
 			}
 		}
-		if (curIndex > 5) {
+		if (curIndex > 100) {
 			curIndex -= 5;
 		} else {
 			curIndex = 0;
@@ -68,9 +68,9 @@ class StreamMediaList extends Component {
 				var list = [];
 				result.forEach((media, index) => {
 					if (StateStore.getState().profile.mediaNow && media.data_source === StateStore.getState().profile.mediaNow.data_source && media.path === StateStore.getState().profile.mediaNow.path) {
-						list.push(<MediaRow stream={this.state.stream.webradio?false:this.state.stream.name} elements={this.state.stream.elements} media={media} index={index} key={index} highlight={true} />);
+						list.push(<MediaRow stream={this.state.stream.webradio?false:this.state.stream.name} elements={this.state.stream.elements} media={media} index={index+this.state.offset} key={index} highlight={true} />);
 					} else {
-						list.push(<MediaRow stream={this.state.stream.webradio?false:this.state.stream.name} elements={this.state.stream.elements} media={media} index={index} key={index} />);
+						list.push(<MediaRow stream={this.state.stream.webradio?false:this.state.stream.name} elements={this.state.stream.elements} media={media} index={index+this.state.offset} key={index} />);
 					}
 				});
 				this.setState({list: list, listLoaded: true});

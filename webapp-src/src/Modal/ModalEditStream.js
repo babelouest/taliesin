@@ -8,7 +8,7 @@ class ModalEditStream extends Component {
 		super(props);
 		
 		this.state = {
-      name: "",
+			name: "",
 			show: props.show, 
 			dataSource: props.dataSource, 
 			path: props.path,
@@ -22,10 +22,10 @@ class ModalEditStream extends Component {
 			recursive: true,
 			random: true,
 			type: "jukebox",
-			format: StateStore.getState().serverConfig.defrault_stream_format,
-			channels: StateStore.getState().serverConfig.defrault_stream_channels,
-			bitrate: StateStore.getState().serverConfig.defrault_stream_bitrate,
-			sampleRate: StateStore.getState().serverConfig.defrault_stream_sample_rate,
+			format: StateStore.getState().serverConfig.default_stream_format,
+			channels: StateStore.getState().serverConfig.default_stream_channels,
+			bitrate: StateStore.getState().serverConfig.default_stream_bitrate,
+			sampleRate: StateStore.getState().serverConfig.default_stream_sample_rate,
 			formatDisabled: false,
 			channelsDisabled: false,
 			bitrateDisabled: false,
@@ -47,7 +47,7 @@ class ModalEditStream extends Component {
 	
 	componentWillReceiveProps(nextProps) {
 		this.setState({
-      name: "",
+			name: "",
 			show: nextProps.show, 
 			dataSource: nextProps.dataSource, 
 			path: nextProps.path,
@@ -61,10 +61,6 @@ class ModalEditStream extends Component {
 			recursive: true,
 			random: true,
 			type: "jukebox",
-			format: StateStore.getState().serverConfig.defrault_stream_format,
-			channels: StateStore.getState().serverConfig.defrault_stream_channels,
-			bitrate: StateStore.getState().serverConfig.defrault_stream_bitrate,
-			sampleRate: StateStore.getState().serverConfig.defrault_stream_sample_rate,
 			formatDisabled: false,
 			channelsDisabled: false,
 			bitrateDisabled: false,
@@ -79,7 +75,7 @@ class ModalEditStream extends Component {
 		}
 		if (result) {
 			this.state.onCloseCb({
-        name: this.state.name,
+				name: this.state.name,
 				dataSource: this.state.dataSource, 
 				element: this.state.element,
 				path: this.state.path, 
@@ -96,10 +92,10 @@ class ModalEditStream extends Component {
 			this.state.onCloseCb(false);
 		}
 	}
-  
-  handleChangeName(e) {
-    this.setState({name: e.target.value});
-  }
+	
+	handleChangeName(e) {
+		this.setState({name: e.target.value});
+	}
 	
 	handleChangeRecursive() {
 		this.setState({recursive: !this.state.recursive});
@@ -266,14 +262,14 @@ class ModalEditStream extends Component {
 							</Col>
 							<Col md={8}>
 								<FormControl
-                  type="text"
-                  value={this.state.name}
-                  placeholder={i18n.t("modal.name")}
-                  onChange={this.handleChangeName}
-                />
+									type="text"
+									value={this.state.name}
+									placeholder={i18n.t("modal.name")}
+									onChange={this.handleChangeName}
+								/>
 							</Col>
 						</Row>
-            <hr/>
+						<hr/>
 						{recursive}
 						<Row>
 							<Col md={4}>
@@ -368,8 +364,8 @@ class ModalEditStream extends Component {
 				</Modal.Body>
 
 				<Modal.Footer>
-					<Button bsStyle="primary" onClick={() => this.close(true)}>OK</Button>
-					<Button bsStyle="primary" onClick={() => this.close(false)}>Cancel</Button>
+					<Button bsStyle="primary" onClick={() => this.close(true)}>{i18n.t("common.ok")}</Button>
+					<Button bsStyle="primary" onClick={() => this.close(false)}>{i18n.t("common.cancel")}</Button>
 				</Modal.Footer>
 
 			</Modal>

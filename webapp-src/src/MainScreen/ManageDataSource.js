@@ -32,6 +32,7 @@ class ManageDataSource extends Component {
 		this.getRefreshStatusList = this.getRefreshStatusList.bind(this);
 		this.getRefreshStatus = this.getRefreshStatus.bind(this);
 		this.addDataSource = this.addDataSource.bind(this);
+		this.refreshDataSourceList = this.refreshDataSourceList.bind(this);
 		this.onCloseModal = this.onCloseModal.bind(this);
 		
 		this.getRefreshStatusList();
@@ -101,6 +102,17 @@ class ManageDataSource extends Component {
 	
 	addDataSource() {
 		this.setState({modalShow: true, modalAdd: true});
+	}
+	
+	refreshDataSourceList() {
+		StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source")
+		.then((result) => {
+			StateStore.dispatch({type: "setDataSource", dataSourceList: result});
+			this.getRefreshStatusList();
+		})
+		.fail((result) => {
+			StateStore.dispatch({type: "setDataSource", dataSourceList: [], currentDataSource: false});
+		});
 	}
 	
 	onCloseModal(dataSource, add) {
@@ -336,9 +348,14 @@ class ManageDataSource extends Component {
 		});
 		return (
 			<div>
-				<Button title="Add a new data source" onClick={() => this.addDataSource()}>
-					<FontAwesome name={"plus"} />
-				</Button>
+				<ButtonGroup>
+					<Button title={i18n.t("data_source.add")} onClick={() => this.addDataSource()}>
+						<FontAwesome name={"plus"} />
+					</Button>
+					<Button title={i18n.t("data_source.refresh")} onClick={() => this.refreshDataSourceList()}>
+						<FontAwesome name={"refresh"} />
+					</Button>
+				</ButtonGroup>
 				<Table striped bordered condensed hover>
 					<thead>
 						<tr>
@@ -366,7 +383,7 @@ class ManageDataSource extends Component {
 					</tbody>
 				</Table>
 				<ModalEditDataSource show={this.state.modalShow} onCloseCb={this.onCloseModal} dataSource={this.state.dataSourceEdit} add={this.state.modalAdd} />
-				<ModalConfirm show={this.state.modalDeleteShow} title={"Delete Data Source"} message={this.state.modalDeleteMessage} onCloseCb={this.confirmDeleteDataSource}/>
+				<ModalConfirm show={this.state.modalDeleteShow} title={i18n.t("data_source.delete_title")} message={this.state.modalDeleteMessage} onCloseCb={this.confirmDeleteDataSource}/>
 			</div>
 		);
 	}

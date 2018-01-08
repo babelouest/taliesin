@@ -365,7 +365,7 @@ class ManageStream extends Component {
 		});
 		return (
 			<div>
-				<Button title="Reload" onClick={this.reloadStreamList}>
+				<Button title={i18n.t("stream.reload")} onClick={this.reloadStreamList}>
 					<FontAwesome name={"refresh"} />
 				</Button>
 				<Table striped bordered condensed hover>

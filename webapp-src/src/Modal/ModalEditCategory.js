@@ -227,8 +227,8 @@ class ModalEditCategory extends Component {
 				</Modal.Body>
 
 				<Modal.Footer>
-					<Button bsStyle="primary" onClick={() => this.save()} disabled={!this.state.edit}>Save</Button>
-					<Button bsStyle="primary" onClick={() => this.close()}>Close</Button>
+					<Button bsStyle="primary" onClick={() => this.save()} disabled={!this.state.edit}>{i18n.t("common.save")}</Button>
+					<Button bsStyle="primary" onClick={() => this.close()}>{i18n.t("common.close")}</Button>
 				</Modal.Footer>
 
 			</Modal>

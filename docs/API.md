@@ -4,8 +4,6 @@ Here is the full documentaition of the REST API.
 
 All data returned are in JSON format.
 
-The prefix is `/api` by default, so this value will be used in this document, but you can change this in the `taliesin.config` file.
-
 ## Authentication
 
 Most endpoints relies on a valid Glewlwyd Bearer token in the header, with a valid signature. For all requests, the username is provided by the Bearer token.
@@ -16,7 +14,7 @@ Most endpoints relies on a valid Glewlwyd Bearer token in the header, with a val
 
 #### URL
 
-`/data_source/`
+`/api/data_source/`
 
 #### Method
 
@@ -48,7 +46,7 @@ Internal Error
 
 #### URL
 
-`/data_source/@data_source_name`
+`/api/data_source/@data_source_name`
 
 #### Method
 
@@ -88,7 +86,7 @@ Internal Error
 
 #### URL
 
-`/data_source/`
+`/api/data_source/`
 
 #### Method
 
@@ -129,7 +127,7 @@ Note: By design, the user can't change the data source path, name or scope
 
 #### URL
 
-`/data_source/@data_source_name`
+`/api/data_source/@data_source_name`
 
 #### Method
 
@@ -171,7 +169,7 @@ Content: json array containing all errors
 
 #### URL
 
-`/data_source/@data_source_name`
+`/api/data_source/@data_source_name`
 
 #### Method
 
@@ -205,7 +203,7 @@ Internal Error
 
 #### URL
 
-`/data_source/@data_source_name/refresh/@relative_path`
+`/api/data_source/@data_source_name/refresh/@relative_path`
 
 #### Method
 
@@ -243,7 +241,7 @@ Internal Error
 
 #### URL
 
-`/data_source/@data_source_name/refresh`
+`/api/data_source/@data_source_name/refresh`
 
 #### Method
 
@@ -286,7 +284,7 @@ Internal Error
 
 #### URL
 
-`/data_source/@data_source_name/refresh/`
+`/api/data_source/@data_source_name/refresh/`
 
 #### Method
 
@@ -320,7 +318,7 @@ Internal Error
 
 #### URL
 
-`/data_source/@data_source_name/clean`
+`/api/data_source/@data_source_name/clean`
 
 #### Method
 
@@ -356,9 +354,9 @@ Internal Error
 
 #### URL
 
-`/data_source/@data_source/@data_source_name/browse/path/@relative_path_to_folder`
+`/api/data_source/@data_source/@data_source_name/browse/path/@relative_path_to_folder`
 
-Example: `/data_source/dataSource1/browse/path/Open Goldberg Variation/`
+Example: `/api/data_source/dataSource1/browse/path/Open Goldberg Variation/`
 
 #### Method
 
@@ -412,7 +410,7 @@ Internal Error
 
 #### URL
 
-`/data_source/@data_source/@data_source_name/browse/path/@relative_path_to_file`
+`/api/data_source/@data_source/@data_source_name/browse/path/@relative_path_to_file`
 
 #### Method
 
@@ -454,7 +452,7 @@ Internal Error
 
 #### URL
 
-`/data_source/@data_source/@data_source_name/category/@level`
+`/api/data_source/@data_source/@data_source_name/category/@level`
 
 #### Method
 
@@ -492,7 +490,7 @@ Internal Error
 
 #### URL
 
-`/data_source/@data_source/@data_source_name/category/@level/@category`
+`/api/data_source/@data_source/@data_source_name/category/@level/@category`
 
 #### Method
 
@@ -537,7 +535,7 @@ Internal Error
 
 #### URL
 
-`/data_source/@data_source/@data_source_name/category/@level/@category/info`
+`/api/data_source/@data_source/@data_source_name/category/@level/@category/info`
 
 #### Method
 
@@ -574,11 +572,11 @@ Internal Error
 
 #### URL
 
-`/data_source/@data_source/@data_source_name/category/@level/@category/info`
+`/api/data_source/@data_source/@data_source_name/category/@level/@category/info`
 
 #### Method
 
-`GET`
+`PUT`
 
 **Required**
 
@@ -615,11 +613,41 @@ Error input parameters
 
 Content: json array containing all errors
 
+### Delete category informations
+
+#### URL
+
+`/api/data_source/@data_source/@data_source_name/category/@level/@category/info`
+
+#### Method
+
+`DELETE`
+
+**Required**
+
+`@data_source_name`: Data Source name
+`@level`: level name of the category, values available are `artist`, `album`, `year`, `genre`
+`@category`: category name
+
+#### Success response
+
+Code 200
+
+#### Error Response
+
+Code 404
+
+Level or category not found
+
+Code 500
+
+Internal Error
+
 ### Browse subcategories for a category
 
 #### URL
 
-`/data_source/@data_source/@data_source_name/category/@level/@category/@sublevel`
+`/api/data_source/@data_source/@data_source_name/category/@level/@category/@sublevel`
 
 #### Method
 
@@ -659,7 +687,7 @@ Internal Error
 
 #### URL
 
-`/data_source/@data_source/@data_source_name/category/@level/@category/@sublevel/@subcategory`
+`/api/data_source/@data_source/@data_source_name/category/@level/@category/@sublevel/@subcategory`
 
 #### Method
 
@@ -712,7 +740,7 @@ Internal Error
 
 #### URL
 
-`/playlist/`
+`/api/playlist/`
 
 #### Method
 
@@ -730,9 +758,6 @@ Content
     "description": string, max 512 characters
     "scope": string, values available are "me" or "all"
     "elements": integer, number of media files in the playlist
-		"media": [ Array of media files in theplaylist
-			{...}
-		],
 		"stream": [ // List of streams attached to this playlist
 			{
 				"name": string, name of the string
@@ -754,7 +779,7 @@ Internal Error
 
 #### URL
 
-`/playlist/@playlist_name`
+`/api/playlist/@playlist_name`
 
 #### Method
 
@@ -765,6 +790,12 @@ Internal Error
 **Required**
 
 `@playlist_name`: Playlist name
+
+**Optional**
+
+`offset`: Start offset for media list (default 0)
+
+`limit`: Maximum number of elements in the media list (default 100)
 
 #### Success response
 
@@ -777,7 +808,7 @@ Content
 	"description": string, max 512 characters
 	"scope": string, values available are "me" or "all"
 	"elements": integer, number of media files in the playlist
-	"media": [ Array of media files in theplaylist
+	"media": [ Array of media files in the playlist
 		{...}
 	],
 	"stream": [ // List of streams attached to this playlist
@@ -804,7 +835,7 @@ Internal Error
 
 #### URL
 
-`/playlist/`
+`/api/playlist/`
 
 #### Method
 
@@ -851,7 +882,7 @@ Note: By design, the user can't change the scope
 
 #### URL
 
-`/playlist/@playlist_name`
+`/api/playlist/@playlist_name`
 
 #### Method
 
@@ -900,7 +931,7 @@ Content: json array containing all errors
 
 #### URL
 
-`/playlist/@playlist_name`
+`/api/playlist/@playlist_name`
 
 #### Method
 
@@ -934,7 +965,7 @@ Internal Error
 
 #### URL
 
-`/playlist/@playlist_name/add_media`
+`/api/playlist/@playlist_name/add_media`
 
 #### Method
 
@@ -987,7 +1018,7 @@ Content: json array containing all errors
 
 #### URL
 
-`/playlist/@playlist_name/delete_media`
+`/api/playlist/@playlist_name/delete_media`
 
 #### Method
 
@@ -1044,17 +1075,17 @@ A webradio is a single stream that will play all songs at random or in sequence.
 
 ### Play media based on a path, a category or a subcategory
 
-#### URL
+#### URLs
 
-`/data_source/@data_source/@data_source_name/browse/path/@relative_path_to_folder?[webradio|jukebox][&random][&recursive][&format=][&bitrate=][&sample_rate=][&channels=][&name=]`
+`/api/data_source/@data_source/@data_source_name/browse/path/@relative_path_to_folder?[webradio|jukebox][&random][&recursive][&format=][&bitrate=][&sample_rate=][&channels=][&name=]`
 
-`/data_source/@data_source/@data_source_name/browse/category/@level/@category/@sublevel/@subcategory?[webradio|jukebox][&random][&format=][&bitrate=][&sample_rate=][&channels=][&name=]`
+`/api/data_source/@data_source/@data_source_name/browse/category/@level/@category/@sublevel/@subcategory?[webradio|jukebox][&random][&format=][&bitrate=][&sample_rate=][&channels=][&name=]`
 
-`/data_source/@data_source/@data_source_name/browse/category/@level/@category/@sublevel/@subcategory?[webradio|jukebox][&random][&format=][&bitrate=][&sample_rate=][&channels=][&name=]`
+`/api/data_source/@data_source/@data_source_name/browse/category/@level/@category/@sublevel/@subcategory?[webradio|jukebox][&random][&format=][&bitrate=][&sample_rate=][&channels=][&name=]`
 
-Examples: `/data_source/dataSource1/browse/path/Open Goldberg Variation?webradio&recursive`
-          `/data_source/dataSource1/browse/path/Open Goldberg Variation/KIMIKO ISHIZAKA - Goldberg Variations BWV 988 - 01 - Aria__44k-24b.mp3?jukebox`
-          `/data_source/dataSource1/browse/category/artist/Kimiko Ishizaka?jukebox&format=flac&sample_rate=48000`
+Examples: `/api/data_source/dataSource1/browse/path/Open Goldberg Variation?webradio&recursive`
+          `/api/data_source/dataSource1/browse/path/Open Goldberg Variation/KIMIKO ISHIZAKA - Goldberg Variations BWV 988 - 01 - Aria__44k-24b.mp3?jukebox`
+          `/api/data_source/dataSource1/browse/category/artist/Kimiko Ishizaka?jukebox&format=flac&sample_rate=48000`
 
 #### Method
 
@@ -1116,7 +1147,7 @@ Content
   "nb_client": integer, number of clients currently listening to the stream
   "last_seen": integer, date in epoch format when the stream was used last, for jukebox streams only
   "stored_playlist": string, name of the playlist the stream is based on, optional
-	clients: [ Array of clients
+	"clients": [ Array of clients
 		{
 			"ip_address": string, ip address of the client
 			"user_agent": string, user agent of the client
@@ -1143,7 +1174,7 @@ Internal Error
 
 #### URL
 
-`/playlist/@playlist_name/?[webradio|jukebox][&random][&format=][&bitrate=][&sample_rate=][&channels=][&name=]`
+`/api/playlist/@playlist_name/?[webradio|jukebox][&random][&format=][&bitrate=][&sample_rate=][&channels=][&name=]`
 
 Examples: `/playlist/playlist1?webradio`
           `/playlist/playlist2?jukebox`
@@ -1205,7 +1236,7 @@ Content
   "nb_client": integer, number of clients currently listening to the stream
   "last_seen": integer, date in epoch format when the stream was used last, for jukebox streams only
   "stored_playlist": string, name of the playlist the stream is based on, optional
-	clients: [ Array of clients
+	"clients": [ Array of clients
 		{
 			"ip_address": string, ip address of the client
 			"user_agent": string, user agent of the client
@@ -1236,9 +1267,9 @@ You can get cover from media files, folders, playlists and categories The query 
 
 #### URLs
 
-`/data_source/@data_source/@data_source_name/browse/path/@relative_path?cover[&thumbnail][&base64]`
-`/data_source/@data_source/@data_source_name/category/@level/@category?cover[&thumbnail][&base64]`
-`/playlist/@playlist_name?cover[&thumbnail][&base64]`
+`/api/data_source/@data_source/@data_source_name/browse/path/@relative_path?cover[&thumbnail][&base64]`
+`/api/data_source/@data_source/@data_source_name/category/@level/@category?cover[&thumbnail][&base64]`
+`/api/playlist/@playlist_name?cover[&thumbnail][&base64]`
 
 #### Method
 
@@ -1278,7 +1309,7 @@ Simple search allows to search by folder name, media file name, categories (arti
 
 #### URL
 
-`/search?q=[search_pattern]&category=[playlist|stream|folder|file|title|title|artist|album|year|genre]`
+`/api/search?q=[search_pattern]&category=[playlist|stream|folder|file|title|title|artist|album|year|genre]`
 
 #### Method
 
@@ -1346,7 +1377,7 @@ Advanced search allows to find for media files only, you can specify multiple se
 
 #### URL
 
-`/search`
+`/api/search`
 
 #### Method
 
@@ -1419,7 +1450,7 @@ Internal Error
 
 #### URL
 
-`/stream/`
+`/api/stream/`
 
 #### Method
 
@@ -1444,7 +1475,7 @@ Content
 		"nb_client": integer, number of clients currently listening to the stream
 		"last_seen": integer, date in epoch format when the stream was used last, for jukebox streams only
 		"stored_playlist": string, name of the playlist the stream is based on, optional
-		clients: [ Array of clients
+		"clients": [ Array of clients
 			{
 				"ip_address": string, ip address of the client
 				"user_agent": string, user agent of the client
@@ -1462,11 +1493,11 @@ Internal Error
 
 ### Listen to a stream
 
-For a stream to be available to usual media players, we can't use a Oauth2 Bearer token to authenticate the stream, because it's not supported, because it's way too overkill. Instead, all Taliesin stream address use a 32 bytes identifier which is randomly generated, so an unauthorized client needs to guess the stream name to access it.
+For a stream to be available to usual media players, we can't use a Oauth2 Bearer token to authenticate the stream, because it's not supported, and would be way too overkill. Instead, all Taliesin stream address use a 32 bytes identifier which is randomly generated, so an unauthorized client needs to guess the stream name to access it.
 
 #### URL
 
-`/stream/@stream_name[?index=]`
+`/api/stream/@stream_name[?index=]`
 
 #### Method
 
@@ -1480,14 +1511,14 @@ For a stream to be available to usual media players, we can't use a Oauth2 Beare
 
 **Optional**
 
-`index`: media index in the stream playlist, for jukebox streams only. If the stream is a jukebox and no index is speciied, the server will return a m3u file with all jukebox stream media.
+`index`: media index in the stream playlist, for jukebox streams only. If the stream is a jukebox and no index is specified, the server will return a m3u file with all jukebox stream media.
 
 #### Success response
 
 Code 200
 
 Binary data of the stream to be played by the client.
-The stream is also compatible with ICY metatags, so the client application, e.g. VLC or MPD will display the current media information using the following pattern:
+The stream sends ICY metatags for a webradio type, so the client application, e.g. VLC or MPD will display the current media information using the following pattern:
 
 `[Artist - ][Album ][(Year) - ][Title|filename]`
 
@@ -1509,7 +1540,7 @@ For a stream cover to be available to usual media players, we can't use a Oauth2
 
 #### URL
 
-`/stream/@stream_name/cover[?index=][&base64]`
+`/api/stream/@stream_name/cover[?index=][&base64]`
 
 #### Method
 
@@ -1546,7 +1577,7 @@ Internal Error
 
 #### URL
 
-`/stream/@stream_name/manage`
+`/api/stream/@stream_name/manage`
 
 #### Method
 
@@ -1578,7 +1609,8 @@ The commands available are:
 - `next`: Return the next media information, for webradio only
 - `list`: Return the list of all media available in this stream
 - `append_list`: Append a list of media in the current stream media list, parameter format is [{data_source: string, path: string, recursive: boolean},{category: string, category_value: string, sub_category: string, sub_category_value: string}]
-- `remove_list`: Remove a media in the current stream media list, parameter format is {index: integer}
+- `has_media`: Return a list of media that matches the specified pattern, parameter format is {offset: number, limit: number, media: [{data_source: string, path: string, recursive: boolean},{data_source: string, category: string, category_value: string, subcategory: string, subcategory_value: string}]}
+- `remove_media`: Remove media in the current stream media list, parameter format is {index: integer} or {media: [{data_source: string, path: string, recursive: boolean},{data_source: string, category: string, category_value: string, subcategory: string, subcategory_value: string}]}
 - `move`: Move a media in the stream list to a different index, parameter format is {index: integer, target: integer}
 - `attach_playlist`: Attach the stream to a stored playlist, parameter format is {name: string}
 - `reload`: Reload the stream media list with the attached stored playlist if one is specified
@@ -1623,7 +1655,7 @@ The returned data available are:
   "nb_client": integer, number of clients currently listening to the stream
   "last_seen": integer, date in epoch format when the stream was used last, for jukebox streams only
   "stored_playlist": string, name of the playlist the stream is based on, optional
-	clients: [ Array of clients
+	"clients": [ Array of clients
 		{
 			"ip_address": string, ip address of the client
 			"user_agent": string, user agent of the client
@@ -1673,6 +1705,24 @@ The returned data available are:
 ]
 ```
 
+- Command `has_media`
+```javscript
+[
+  {
+    "datestamp": string, epoch value when the media was played
+    "media": {
+      "data_source": string,
+      "name": string
+      "path": string
+      "type": string
+      "tags": {
+        "key": "value"
+      }
+    }
+  }
+]
+```
+
 #### Error Response
 
 Code 404
@@ -1715,7 +1765,7 @@ The other commands are the same as the REST API commands.
 
 #### URL
 
-`/stream/@stream_name/ws`
+`/api/stream/@stream_name/ws`
 
 #### Method
 
@@ -1747,7 +1797,8 @@ The commands available are:
 - `next`: Return the next media information, for webradio only
 - `list`: Return the list of all media available in this stream
 - `append_list`: Append a list of media in the current stream media list, parameter format is [{data_source: string, path: string}]
-- `remove_list`: Remove a media in the current stream media list, parameter format is {index: integer}
+- `has_media`: Return a list of media that matches the specified pattern, parameter format is {offset: number, limit: number, media: [{data_source: string, path: string, recursive: boolean},{data_source: string, category: string, category_value: string, subcategory: string, subcategory_value: string}]}
+- `remove_media`: Remove media in the current stream media list, parameter format is {index: integer} or {media: [{data_source: string, path: string, recursive: boolean},{data_source: string, category: string, category_value: string, subcategory: string, subcategory_value: string}]}
 - `move`: Move a media in the stream list to a different index, parameter format is {index: integer, target: integer}
 - `attach_playlist`: Attach the stream to a stored playlist, parameter format is {name: string}
 - `reload`: Reload the stream media list with the attached stored playlist if one is specified
@@ -1799,7 +1850,7 @@ The returned data available are:
 		"nb_client": integer, number of clients currently listening to the stream
 		"last_seen": integer, date in epoch format when the stream was used last, for jukebox streams only
 		"stored_playlist": string, name of the playlist the stream is based on, optional
-		clients: [ Array of clients
+		"clients": [ Array of clients
 			{
 				"ip_address": string, ip address of the client
 				"user_agent": string, user agent of the client
@@ -1859,6 +1910,24 @@ The returned data available are:
 }
 ```
 
+- Command `has_media`
+```javscript
+[
+  {
+    "datestamp": string, epoch value when the media was played
+    "media": {
+      "data_source": string,
+      "name": string
+      "path": string
+      "type": string
+      "tags": {
+        "key": "value"
+      }
+    }
+  }
+]
+```
+
 #### Error Response
 
 Code 404
@@ -1868,6 +1937,152 @@ Stream not found
 Code 403
 
 User can't manage this stream
+
+Code 500
+
+Internal Error
+
+## Application configuration management
+
+### List users that can be impersonate by an administrator
+
+#### URL
+
+`/api/users/`
+
+#### Method
+
+`GET`
+
+#### Success response
+
+Code 200
+
+Content
+```javascript
+[
+  {
+    "username": string, max 128 characters
+  }
+]
+```
+
+#### Error Response
+
+Code 401
+
+User does not have scope `taliesin_admin` available.
+
+Code 500
+
+Internal Error
+
+### List configuration values of a specified type
+
+#### URL
+
+`/api/config/@type`
+
+#### Method
+
+`GET`
+
+#### URL Parameters
+
+**Required**
+
+`@type`: string, type to get the configuration. Values available are: "audio_file_extension", "video_file_extension", "subtitle_file_extension", "image_file_extension", "cover_file_pattern", "external_player"
+
+#### Success response
+
+Code 200
+
+Content
+```javascript
+[
+  // Array of string values
+]
+```
+
+Note: The type "external_player" will return an array of string that need to be parsed as JSON values themselves
+
+#### Error Response
+
+Code 500
+
+Internal Error
+
+### Update configuration values of a specified type
+
+#### URL
+
+`/api/config/@type`
+
+#### Method
+
+`PUT`
+
+#### URL Parameters
+
+**Required**
+
+`@type`: string, type to get the configuration. Values available are: "audio_file_extension", "video_file_extension", "subtitle_file_extension", "image_file_extension", "cover_file_pattern", "external_player"
+
+#### Success response
+
+Code 200
+
+Content
+```javascript
+[
+  // Array of string values
+]
+```
+
+Notes:
+- The type "external_player" should contain a JSON object stringified.
+- The order of elements for the type "cover_file_pattern" will determine the pattern.
+
+#### Error Response
+
+Code 401
+
+User does not have scope `taliesin_admin` available.
+
+Code 500
+
+Internal Error
+
+### Get server configuration
+
+#### URL
+
+`/config`
+
+#### Method
+
+`GET`
+
+#### Success response
+
+Code 200
+
+Content
+```javascript
+[
+  "api_prefix": string, prefix for the API URLs, default is "api"
+	"oauth_scope_user": string, scope value required for a normal user, default is "taliesin",
+	"oauth_scope_admin": string, scope value required for an administrator, default is "taliesin_admin",
+	"default_stream_format": string, default value for webradio stream format if none is specified, values available are "mp3", "vorbis", "flac"
+	"default_stream_channels": number, default channels available if none specified, values available are 1 (mono) and 2 (stereo)
+	"default_stream_sample_rate": number, default sample rate if none specified, values available are 8000, 11025, 22050, 32000, 44100 or 48000
+	"default_stream_bitrate": number, default bitrate if none is specified, values available are 32000, 96000, 128000, 192000, 256000 or 320000
+]
+```
+
+Note: Authentication isn't required for this API
+
+#### Error Response
 
 Code 500
 

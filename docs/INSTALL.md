@@ -14,7 +14,7 @@ $ cd ..
 
 $ # Install Orcania
 $ git clone https://github.com/babelouest/orcania.git
-$ cd orcania/
+$ cd orcania/src/
 $ make
 $ sudo make install
 $ cd ../..
@@ -41,7 +41,7 @@ $ sudo make install
 $ cd ../..
 
 $ git clone git@github.com:babelouest/taliesin.git
-$ cd taliesin/src
+$ cd taliesin/src/
 $ make && sudo make install
 ```
 
@@ -55,18 +55,21 @@ You can use a MySql/MariaDB database or a SQLite3 database file.
 Use the dedicated script, `taliesin.mariadb.sql` or `taliesin.sqlite3.sql` to initialize your database.
 
 ```shell
-$ mysql taliesin < taliesin.mariadb.conf # or sqlite3 [path/to/taliesin.db] < taliesin.sqlite3.sql
+$ # Example to install the database with MariaDB
+$ mysql taliesin < taliesin.mariadb.conf 
+$ # Example to install the database with SQLite3
+$ sqlite3 [path/to/taliesin.db] < taliesin.sqlite3.sql
 ```
 
-### Glewlwyd token validation
+### Glewlwyd OAuth2 token validation
 
-You must set the configuration values to correspond with your OAuth2 glewlwyd server. The glewlwyd configuration block is labelled `jwt`
+If you set the config parameter `use_oauth2_authentication` to true, you must set the configuration values to correspond with your OAuth2 Glewlwyd server. The Glewlwyd configuration block is labelled `jwt`.
 
 In this block, you must set the value `use_rsa` to `true` if you use RSA signatures for the tokens, then specify the path to the RSA public key file in the value `rsa_pub_file`. If you use an ECDSA signature, set the parameter `use_ecdsa` to true and set the path to your ECDSA public key file. If you use `sha` digest as signature, set `use_sha` to `true`, then specify the secret used to encode the tokens in the value `sha_secret`.
 
 ### Install service
 
-The files `taliesin-init` (SysV init) and `taliesin.service` (Systemd) can be used to have taliesin as a daemon. They are fitted for a Raspbian distrbution, but can easily be changed for other systems.
+The files `taliesin-init` (SysV init) and `taliesin.service` (Systemd) can be used to run taliesin as a daemon. They are fitted for a Raspbian distrbution, but can easily be changed for other systems.
 
 #### Install as a SysV init daemon and run
 
@@ -94,7 +97,7 @@ Taliesin front-end is a React JS application with Redux, it will need a non conf
 
 ## Setup the web application
 
-The web application is located in `webapp`, its source is located in `webapp-src`, go to `webapp-src/README.md` if you want more details on the front-end implementation.
+The web application is located in `webapp`, its source is located in `webapp-src`, go to [webapp-src/README.md](https://github.com/babelouest/taliesin/blob/master/webapp-src/README.md) if you want more details on the front-end implementation.
 
 You can either use Taliesin built-in static file server or host the web application in another place, e.g. an Apache or nginx instance.
 
@@ -104,17 +107,19 @@ To configure the front-end, rename the file `webapp/config.json.sample` to `weba
 
 ```javascript
 {
-  "taliesinApiUrl": "https://localhost:8576/api", // URL to your Taliesin API
-  "angharadApiUrl": "https://localhost:2473/api/", // URL to your Angharad API (optional)
+  "taliesinApiUrl": "http://localhost:8576/api", // URL to your Taliesin API
+  "angharadApiUrl": "http://localhost:2473/api", // URL to your Angharad API (optional)
+  "storageType": "local",                        // Storage type to keep local config values like last player used, last stream or last data source
   "oauth2Config": {
-    "storageType": "local", // local or cookie
-    "responseType": "code", // code or implicit
-    "serverUrl": "https://localhost:4593/api", // URL to your Glewlwyd API
+    "storageType": "local",                      // local or cookie
+    "responseType": "code",                      // code or implicit
+    "serverUrl": "http://localhost:4593/api",    // URL to your Glewlwyd API
     "authUrl": "auth", 
     "tokenUrl": "token", 
     "clientId": "taliesin", 
-    "redirectUri": "https://localhost:8576/", // Url to your Taliesin front-end
-    "scope": "taliesin taliesin_admin angharad"
+    "redirectUri": "http://localhost:8576/",     // Url to your Taliesin front-end
+    "scope": "taliesin taliesin_admin angharad g_profile"
+    "profileUrl": "profile"
   }
 }
 ```

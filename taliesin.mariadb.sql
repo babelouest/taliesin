@@ -1,7 +1,7 @@
 -- Mysql/MariaDB init script
 -- Create database and user
 -- CREATE DATABASE `taliesin`;
--- GRANT ALL PRIVILEGES ON taliesin.* TO 'taliesin'@'%' identified BY 'taliesin';
+-- GRANT ALL PRIVILEGES ON taliesin.* TO 'taliesin'@'localhost' identified BY 'taliesin';
 -- FLUSH PRIVILEGES;
 -- USE `taliesin`;
 

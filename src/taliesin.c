@@ -4,7 +4,7 @@
  * 
  * Main file
  *
- * Copyright 2017 Nicolas Mora <mail@babelouest.org>
+ * Copyright 2017-2018 Nicolas Mora <mail@babelouest.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU GENERAL PUBLIC LICENSE
@@ -510,7 +510,7 @@ void print_help(FILE * output) {
   fprintf(output, "\n");
   fprintf(output, "Version %s\n", _TALIESIN_VERSION_);
   fprintf(output, "\n");
-  fprintf(output, "Copyright 2017 Nicolas Mora <mail@babelouest.org>\n");
+  fprintf(output, "Copyright 2017-2018 Nicolas Mora <mail@babelouest.org>\n");
   fprintf(output, "\n");
   fprintf(output, "This program is free software; you can redistribute it and/or\n");
   fprintf(output, "modify it under the terms of the GNU GENERAL PUBLIC LICENSE\n");

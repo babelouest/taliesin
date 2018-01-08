@@ -4,7 +4,7 @@
  * 
  * Webservices (endpoints) implementations
  *
- * Copyright 2017 Nicolas Mora <mail@babelouest.org>
+ * Copyright 2017-2018 Nicolas Mora <mail@babelouest.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU GENERAL PUBLIC LICENSE
@@ -95,13 +95,13 @@ int callback_taliesin_server_configuration (const struct _u_request * request, s
                         ((struct config_elements *)user_data)->oauth_scope_user,
                         "oauth_scope_admin",
                         ((struct config_elements *)user_data)->oauth_scope_admin,
-                        "defrault_stream_format",
+                        "default_stream_format",
                         ((struct config_elements *)user_data)->stream_format,
-                        "defrault_stream_channels",
+                        "default_stream_channels",
                         ((struct config_elements *)user_data)->stream_channels,
-                        "defrault_stream_sample_rate",
+                        "default_stream_sample_rate",
                         ((struct config_elements *)user_data)->stream_sample_rate,
-                        "defrault_stream_bitrate",
+                        "default_stream_bitrate",
                         ((struct config_elements *)user_data)->stream_bitrate));
   return U_CALLBACK_COMPLETE;
 };

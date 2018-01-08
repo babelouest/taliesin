@@ -2,7 +2,7 @@
  *
  * Static file server Ulfius callback
  *
- * Copyright 2017 Nicolas Mora <mail@babelouest.org>
+ * Copyright 2017-2018 Nicolas Mora <mail@babelouest.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License

@@ -4,7 +4,7 @@
  * 
  * Declarations for constants and prototypes
  *
- * Copyright 2017 Nicolas Mora <mail@babelouest.org>
+ * Copyright 2017-2018 Nicolas Mora <mail@babelouest.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU GENERAL PUBLIC LICENSE
@@ -24,7 +24,7 @@
 #ifndef __TALIESIN_H_
 #define __TALIESIN_H_
 
-#define _TALIESIN_VERSION_ "0.9.9"
+#define _TALIESIN_VERSION_ "1.0.0"
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))

@@ -1,4 +1,25 @@
 /**
+ *
+ * Static file server Ulfius callback
+ *
+ * Copyright 2017-2018 Nicolas Mora <mail@babelouest.org>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License
+ * License as published by the Free Software Foundation;
+ * version 3 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU GENERAL PUBLIC LICENSE for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+/**
  * struct static_file_config must be initialized with proper values
  * files_path: path (relative or absolute) to the DocumentRoot folder
  * url_prefix: prefix used to access the callback function

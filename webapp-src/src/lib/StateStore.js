@@ -221,9 +221,7 @@ function stateStoreManager(state = defaultState, action) {
 				state.profile.dataSource = action.config.dataSource || state.profile.dataSource;
 				state.profile.view = action.config.view || state.profile.view;
 				state.profile.currentPlayer = action.config.currentPlayer || state.profile.currentPlayer;
-				if (state.profile.currentPlayer && state.profile.type!=="carleon") {
-					state.profile.stream = action.config.stream || state.profile.stream;
-				}
+				state.profile.stream = action.config.stream || state.profile.stream;
 			}
 			break;
 		default:

@@ -29,7 +29,7 @@
 		"image": "Image",
 		"add_to_playlist": "Ajouter à la playlist",
 		"add_to_stream": "Ajouter au flux",
-    "remove": "Supprimer",
+		"remove": "Supprimer",
 		"edit": "Éditer",
 		"create_stream": "Créer un flux",
 		"scope_me": "Moi",
@@ -70,10 +70,10 @@
 		"yes": "Oui",
 		"no": "Non",
 		"none": "Aucun",
-    "save": "Sauvegarder",
-    "ok": "OK",
-    "cancel": "Annuler",
-    "close": "Fermer",
+		"save": "Sauvegarder",
+		"ok": "OK",
+		"cancel": "Annuler",
+		"close": "Fermer",
 		"jukebox": "Jukebox",
 		"webradio": "Webradio",
 		"stereo": "Stéréo",
@@ -127,8 +127,8 @@
 		"log_out": "Déconnecter",
 		"log_in": "Connecter",
 		"connect": "Connection",
-    "change_user": "Changer d'utilisateur:",
-    "config": "Configuration générale",
+		"change_user": "Changer d'utilisateur:",
+		"config": "Configuration générale",
 		"me": "Moi"
 	},
 	"mainScreen": {
@@ -142,7 +142,7 @@
 		"stream": "Flux",
 		"stream_media_list": "Liste des media du flux",
 		"advanced_search": "Recherche Avancée",
-    "config": "Configuration"
+		"config": "Configuration"
 	},
 	"dashboard": {
 		"title": "Serveur de streaming Taliesin",
@@ -244,7 +244,10 @@
 		"stop_refresh": "Arrêter le rafraîchissement",
 		"clean": "Vider",
 		"last_refresh": "Dernier rafraîchissement",
-		"refresh_status": "Statut du rafraîchissement"
+		"refresh_status": "Statut du rafraîchissement",
+		"add": "Ajouter une nouvelle Source de données",
+		"refresh": "Rafraîchir la liste des Sources de Données",
+		"delete_title": "Supprimer la Source de Données"
 	},
 	"stream": {
 		"remove_title": "Fermer et supprimer le flux",
@@ -273,6 +276,7 @@
 		"delete": "Fermer et supprimer le flux",
 		"format": "Format",
 		"clients": "Clients",
+		"media_list": "Liste de média",
 		"playlist_attached": "Playlist attachée",
 		"ip_address": "Adresse IP",
 		"user_agent": "User-Agent",
@@ -305,8 +309,8 @@
 		"select_image": "Sélectionner une image",
 		"image_file": "Image",
 		"content": "Contenu",
-    "name": "Nom",
-    "stream_name": "Nom du flux",
+		"name": "Nom",
+		"stream_name": "Nom du flux",
 		"title_add_data_source": "Ajouter une nouvelle Source de Données",
 		"title_edit_data_source": "Éditer la Source de Données '{{data_source}}'",
 		"path_on_server": "Chemin sur le serveur",
@@ -318,19 +322,19 @@
 		"create_stream": "Créer un flux",
 		"play_as": "Lire comme",
 		"play_now_current_player": "Lire maintenant",
-    "remove_title": "Supprimer d'un flux ou d'une playlist",
-    "message_delete_from_stream_success": "Supprimé dans le flux",
-    "message_delete_from_stream_error": "Erreur lors de la suppression dans le flux",
-    "message_delete_from_playlist_success": "Supprimé dans la playlist",
-    "message_delete_from_playlist_error": "Erreur lors de la suppression dans la playlist"
+		"remove_title": "Supprimer d'un flux ou d'une playlist",
+		"message_delete_from_stream_success": "Supprimé dans le flux",
+		"message_delete_from_stream_error": "Erreur lors de la suppression dans le flux",
+		"message_delete_from_playlist_success": "Supprimé dans la playlist",
+		"message_delete_from_playlist_error": "Erreur lors de la suppression dans la playlist"
 	},
-  "config": {
-    "audioExtensions": "Extensions pour fichiers audio",
-    "videoExtensions": "Extensions pour fichiers video",
-    "subtitleExtensions": "Extensions pour fichiers de sous-titre",
-    "imageExtensions": "Extensions pour fichiers d'image",
-    "coverFilePattern": "Fichiers de couverture dans l'ordre de recherche",
-    "message_save_success": "Configuration sauvegardée",
-    "message_save_error": "Erreur lors de la sauvegarde de la configuration"
+	"config": {
+		"audioExtensions": "Extensions pour fichiers audio",
+		"videoExtensions": "Extensions pour fichiers video",
+		"subtitleExtensions": "Extensions pour fichiers de sous-titre",
+		"imageExtensions": "Extensions pour fichiers d'image",
+		"coverFilePattern": "Fichiers de couverture dans l'ordre de recherche",
+		"message_save_success": "Configuration sauvegardée",
+		"message_save_error": "Erreur lors de la sauvegarde de la configuration"
 	}
 }

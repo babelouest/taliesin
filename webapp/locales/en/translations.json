@@ -29,7 +29,7 @@
 		"image": "Image",
 		"add_to_playlist": "Add to playlist",
 		"add_to_stream": "Add to stream",
-    "remove": "Remove",
+		"remove": "Remove",
 		"edit": "Edit",
 		"create_stream": "Create stream",
 		"scope_me": "Me",
@@ -70,10 +70,10 @@
 		"yes": "Yes",
 		"no": "No",
 		"none": "None",
-    "save": "Save",
-    "ok": "OK",
-    "cancel": "Cancel",
-    "close": "Close",
+		"save": "Save",
+		"ok": "OK",
+		"cancel": "Cancel",
+		"close": "Close",
 		"jukebox": "Jukebox",
 		"webradio": "Webradio",
 		"stereo": "Stereo",
@@ -127,8 +127,8 @@
 		"log_out": "Log out",
 		"log_in": "Log in",
 		"connect": "Connect",
-    "change_user": "Change user:",
-    "config": "General configuration",
+		"change_user": "Change user:",
+		"config": "General configuration",
 		"me": "Me"
 	},
 	"mainScreen": {
@@ -142,7 +142,7 @@
 		"stream": "Stream",
 		"stream_media_list": "Stream Media List",
 		"advanced_search": "Advanced Search",
-    "config": "Configuration"
+		"config": "Configuration"
 	},
 	"dashboard": {
 		"title": "Taliesin Streaming server",
@@ -244,7 +244,10 @@
 		"stop_refresh": "Stop refresh",
 		"clean": "Clean",
 		"last_refresh": "Last refresh",
-		"refresh_status": "Refresh Status"
+		"refresh_status": "Refresh Status",
+		"add": "Add a new data source",
+		"refresh": "Refresh data source list",
+		"delete_title": "Delete data source"
 	},
 	"stream": {
 		"remove_title": "Close and remove stream",
@@ -273,6 +276,7 @@
 		"delete": "Close and delete stream",
 		"format": "Format",
 		"clients": "Clients",
+		"media_list": "Media list",
 		"playlist_attached": "Playlist attached",
 		"ip_address": "IP Address",
 		"user_agent": "User-Agent",
@@ -305,8 +309,8 @@
 		"select_image": "Select image",
 		"image_file": "Image file",
 		"content": "Content",
-    "name": "Name",
-    "stream_name": "Stream name",
+		"name": "Name",
+		"stream_name": "Stream name",
 		"title_add_data_source": "Add new Data Source",
 		"title_edit_data_source": "Edit Data Source '{{data_source}}'",
 		"path_on_server": "Path on server",
@@ -318,19 +322,19 @@
 		"create_stream": "Create stream",
 		"play_as": "Play as",
 		"play_now_current_player": "Play now",
-    "remove_title": "Remove from a stream or a playlist",
-    "message_delete_from_stream_success": "Removed from stream",
-    "message_delete_from_stream_error": "Error removing from stream",
-    "message_delete_from_playlist_success": "Removed from playlist",
-    "message_delete_from_playlist_error": "Error removing from playlist"
+		"remove_title": "Remove from a stream or a playlist",
+		"message_delete_from_stream_success": "Removed from stream",
+		"message_delete_from_stream_error": "Error removing from stream",
+		"message_delete_from_playlist_success": "Removed from playlist",
+		"message_delete_from_playlist_error": "Error removing from playlist"
 	},
-  "config": {
-    "audioExtensions": "Audio files extensions",
-    "videoExtensions": "Video files extensions",
-    "subtitleExtensions": "Subtitle files extensions",
-    "imageExtensions": "Image files extensions",
-    "coverFilePattern": "Cover file pattern in search order",
-    "message_save_success": "Configuration saved",
-    "message_save_error": "Error while saving configuration"
-  }
+	"config": {
+		"audioExtensions": "Audio files extensions",
+		"videoExtensions": "Video files extensions",
+		"subtitleExtensions": "Subtitle files extensions",
+		"imageExtensions": "Image files extensions",
+		"coverFilePattern": "Cover file pattern in search order",
+		"message_save_success": "Configuration saved",
+		"message_save_error": "Error while saving configuration"
+	}
 }

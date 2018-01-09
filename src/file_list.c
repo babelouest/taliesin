@@ -97,7 +97,10 @@ int file_list_insert_file_at(struct _t_file_list * file_list, struct _t_file * f
       return T_ERROR;
     } else {
       cur_file = file_list->start;
-      if (index >= (file_list->nb_files)) {
+      if (file_list->nb_files == 0) {
+        file_list->end = file;
+        file_list->start = file;
+      } else if (index >= (file_list->nb_files)) {
         file_list->end->next = file;
         file_list->end = file;
       } else if (index) {
@@ -154,6 +157,7 @@ struct _t_file * file_list_dequeue_file(struct _t_file_list * file_list, unsigne
         file->next = NULL;
         file_list->nb_files--;
       }
+      pthread_mutex_unlock(&file_list->file_lock);
       return file;
     }
   } else {

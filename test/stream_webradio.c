@@ -379,7 +379,7 @@ START_TEST(test_webradio_command_append_list_ok)
 }
 END_TEST
 
-START_TEST(test_webradio_command_remove_list_ok)
+START_TEST(test_webradio_command_remove_index_ok)
 {
   if (get_stream_name()) {
     struct _u_response resp;
@@ -430,6 +430,44 @@ START_TEST(test_webradio_command_has_media_ok)
     ck_assert_int_eq(res, 1);
 
     json_decref(j_command);
+  }
+}
+END_TEST
+
+START_TEST(test_webradio_command_remove_media_ok)
+{
+  if (get_stream_name()) {
+    struct _u_response resp;
+    char * url;
+    json_t * j_command = json_pack("{sss{s[{ssss}]}}", "command", "remove_list", "parameters", "media", "data_source", DATA_SOURCE_VALID, "path", "short/short1.mp3"), * j_result;
+    int res;
+    
+    url = msprintf(TALIESIN_SERVER_URI "/stream/%s/manage", valid_stream_name);
+    res = run_simple_authenticated_test(&user_req, "PUT", url, j_command, NULL, 200, NULL, NULL, NULL);
+    
+    ck_assert_int_eq(res, 1);
+
+    json_decref(j_command);
+
+    j_command = json_pack("{ss}", "command", "list");
+    
+    ulfius_init_response(&resp);
+    o_free(user_req.http_url);
+    user_req.http_url = msprintf(TALIESIN_SERVER_URI "/stream/%s/manage", valid_stream_name);
+    o_free(user_req.http_verb);
+    user_req.http_verb = o_strdup("PUT");
+    ulfius_set_json_body_request(&user_req, j_command);
+
+    if (ulfius_send_http_request(&user_req, &resp) == U_OK) {
+      j_result = ulfius_get_json_body_response(&resp, NULL);
+    }
+    
+    ck_assert_int_eq(resp.status, 200);
+    ck_assert_int_eq(json_array_size(j_result), 2);
+
+    json_decref(j_command);
+    json_decref(j_result);
+    ulfius_clean_response(&resp);
   }
 }
 END_TEST
@@ -803,8 +841,9 @@ static Suite *taliesin_suite(void)
   tcase_add_test(tc_core, test_webradio_command_append_list_ok);
   tcase_add_test(tc_core, test_webradio_command_has_media_ok);
   tcase_add_test(tc_core, test_webradio_command_has_media_not_found);
-  tcase_add_test(tc_core, test_webradio_command_remove_list_ok);
+  tcase_add_test(tc_core, test_webradio_command_remove_index_ok);
   tcase_add_test(tc_core, test_webradio_command_move_ok);
+  tcase_add_test(tc_core, test_webradio_command_remove_media_ok);
   tcase_add_test(tc_core, test_webradio_command_rename_ok);
   tcase_add_test(tc_core, test_webradio_command_reset_url_ok);
   tcase_add_test(tc_core, test_webradio_play_not_found);

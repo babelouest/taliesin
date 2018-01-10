@@ -161,31 +161,32 @@ class MediaRow extends Component {
 			<Col md={2} sm={12} xs={12}>
 				<Label className="visible-xs visible-sm">{i18n.t("common.date")}</Label> {(new Date(this.state.date * 1000)).toLocaleString()}
 			</Col>;
+		} else {
+			if (this.state.stream && !this.state.stream.webradio) {
+				firstCol =
+					<Col md={2} sm={12} xs={12}>
+						<ButtonGroup>
+							<Button title={i18n.t("common.play_now")} onClick={this.handlePlayNow}>
+								<FontAwesome name="play" />
+							</Button>
+							<Button title={i18n.t("common.remove_from_list")} onClick={this.handleRemove}>
+								<FontAwesome name="trash" />
+							</Button>
+						</ButtonGroup>
+						&nbsp;&nbsp;{(this.state.elements>=10&&this.state.index<9?"0":"") + (this.state.index + 1) + "/" + this.state.elements}
+						&nbsp;{this.state.highlight?<FontAwesome name="music" />:""}
+					</Col>;
+			} else if (this.state.stream && this.state.stream.webradio) {
+				firstCol =
+					<Col md={2} sm={12} xs={12}>
+						{this.state.highlight?<FontAwesome name="music" />:""}
+					</Col>;
+			}
 		}
 		if (this.state.imgThumbBlob) {
 			cover = <Image src={"data:image/jpeg;base64," + this.state.imgThumbBlob} thumbnail responsive className="cover-image-thumb"/>
 		} else {
 			cover = <Image src="/images/album-128.png" alt={this.state.media.name} className="cover-image-thumb" responsive />
-		}
-		if (this.state.stream && !this.state.stream.webradio) {
-			firstCol =
-				<Col md={2} sm={12} xs={12}>
-					<ButtonGroup>
-						<Button title={i18n.t("common.play_now")} onClick={this.handlePlayNow}>
-							<FontAwesome name="play" />
-						</Button>
-						<Button title={i18n.t("common.remove_from_list")} onClick={this.handleRemove}>
-							<FontAwesome name="trash" />
-						</Button>
-					</ButtonGroup>
-					&nbsp;&nbsp;{(this.state.elements>=10&&this.state.index<9?"0":"") + (this.state.index + 1) + "/" + this.state.elements}
-					&nbsp;{this.state.highlight?<FontAwesome name="music" />:""}
-				</Col>;
-		} else {
-			firstCol =
-				<Col md={2} sm={12} xs={12}>
-					{this.state.highlight?<FontAwesome name="music" />:""}
-				</Col>;
 		}
 		return (
 			<div>

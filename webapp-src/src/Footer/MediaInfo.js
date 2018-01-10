@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Image, Panel } from 'react-bootstrap';
+import { Image } from 'react-bootstrap';
 import ModalMedia from '../Modal/ModalMedia';
 
 class MediaInfo extends Component {

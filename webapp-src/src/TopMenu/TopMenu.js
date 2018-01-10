@@ -121,13 +121,13 @@ class TopMenu extends Component {
 		if (this.state.searchTimeout) {
 			clearTimeout(this.state.searchTimeout);
 		}
-		var searchTimeout = setTimeout(this.runSimpleSearch, 1000);
+		var searchTimeout = setTimeout(this.runSimpleSearch, 500);
 		this.setState({searchTimeout: searchTimeout, searching: true});
 	}
 	
 	runSimpleSearch() {
-		this.refs.myPopover.show();
-		if (this.state.searchPattern !== "" && !Object.keys(this.state.searchResult).length) {
+		if (this.state.searchPattern !== "") {
+			this.refs.myPopover.show();
 			StateStore.getState().APIManager.taliesinApiRequest("GET", "/search/?q=" + this.state.searchPattern)
 			.then((result) => {
 				this.setState({searchResult: result, searching: false}, () => {
@@ -137,6 +137,8 @@ class TopMenu extends Component {
 			.fail(() => {
 				this.refs.myPopover.hide();
 			});
+		} else {
+			this.refs.myPopover.hide();
 		}
 	}
 	

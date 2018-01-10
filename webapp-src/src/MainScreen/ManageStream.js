@@ -73,13 +73,11 @@ class ManageStream extends Component {
 	}
 	
 	buildStreamExternalList() {
-		if (this._ismounted) {
-			var streamList = this.state.streamList;
-			streamList.forEach((stream) => {
-				stream.external = this.buildStreamExternal(stream);
-			});
-			this.setState({streamList: streamList});
-		}
+		var streamList = this.state.streamList;
+		streamList.forEach((stream) => {
+			stream.external = this.buildStreamExternal(stream);
+		});
+		this.setState({streamList: streamList});
 	}
 	
 	buildStreamExternal(stream) {

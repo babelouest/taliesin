@@ -55,6 +55,7 @@ class AudioPlayer extends Component {
 			playNow: props.play,
 			playIndex: props.index,
 			streamUrl: "#", 
+			preload: "none",
 			interval: interval,
 			websocketUrl: websocketUrl,
 			websocketProtocol: websocketProtocol,
@@ -340,29 +341,31 @@ class AudioPlayer extends Component {
 	}
 	
 	handlePlay() {
-		if (this.state.stream.name && this.state.taliesinApiUrl) {
-			this.handleStop();
-			var randStr = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);
-			var indexStr = this.state.stream.webradio?"":("&index="+this.state.jukeboxIndex);
-			var newState = {streamUrl: this.state.taliesinApiUrl + "/stream/" + this.state.stream.name + "?rand=" + randStr + indexStr};
-			if (this.state.stream.webradio) {
-				var newPlayedIndex = this.state.jukeboxPlayedIndex;
-				newPlayedIndex.push(this.state.jukeboxIndex);
-				newState.jukeboxPlayedIndex = newPlayedIndex;
-			} else {
-				this.loadMedia();
-				StateStore.dispatch({type: "setJukeboxIndex", index: this.state.jukeboxIndex});
-			}
-			this.setState(newState, () => {
-				this.dispatchPlayerStatus({status: "play"});
+		this.setState({preload: (this.state.stream.webradio?"none":"auto")}, () => {
+			if (this.state.stream.name && this.state.taliesinApiUrl) {
+				this.handleStop();
+				var randStr = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);
+				var indexStr = this.state.stream.webradio?"":("&index="+this.state.jukeboxIndex);
+				var newState = {streamUrl: this.state.taliesinApiUrl + "/stream/" + this.state.stream.name + "?rand=" + randStr + indexStr};
 				if (this.state.stream.webradio) {
-					this.sendStreamComand("now");
+					var newPlayedIndex = this.state.jukeboxPlayedIndex;
+					newPlayedIndex.push(this.state.jukeboxIndex);
+					newState.jukeboxPlayedIndex = newPlayedIndex;
 				} else {
-					this.sendStreamComand("list", {offset: this.state.jukeboxIndex, limit: 1});
+					this.loadMedia();
+					StateStore.dispatch({type: "setJukeboxIndex", index: this.state.jukeboxIndex});
 				}
-			});
-			this.rap.audioEl.play();
-		}
+				this.setState(newState, () => {
+					this.dispatchPlayerStatus({status: "play"});
+					if (this.state.stream.webradio) {
+						this.sendStreamComand("now");
+					} else {
+						this.sendStreamComand("list", {offset: this.state.jukeboxIndex, limit: 1});
+					}
+				});
+				this.rap.audioEl.play();
+			}
+		})
 	}
 	
 	handleListen() {
@@ -540,6 +543,7 @@ class AudioPlayer extends Component {
 							onEnded={this.handleOnEnded}
 							onListen={this.handleListen}
 							listenInterval={1000}
+							preload={this.state.preload}
 						/>
 					</div>
 				</div>

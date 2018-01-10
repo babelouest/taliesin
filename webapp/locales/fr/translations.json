@@ -276,6 +276,8 @@
 		"delete": "Fermer et supprimer le flux",
 		"format": "Format",
 		"clients": "Clients",
+		"history": "Historique",
+		"info": "Informations sur le flux",
 		"media_list": "Liste de média",
 		"playlist_attached": "Playlist attachée",
 		"ip_address": "Adresse IP",

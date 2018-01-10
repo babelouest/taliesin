@@ -275,6 +275,8 @@
 		"reset_url": "Reset URL",
 		"delete": "Close and delete stream",
 		"format": "Format",
+		"history": "History",
+		"info": "Stream information",
 		"clients": "Clients",
 		"media_list": "Media list",
 		"playlist_attached": "Playlist attached",

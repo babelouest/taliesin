@@ -100,7 +100,7 @@ class Footer extends Component {
 	}
 	
 	render() {
-		if (StateStore.getState().status === "connected") {
+		if (StateStore.getState().status === "connected" || StateStore.getState().status === "noauth") {
 			var webradioNow, webradioNext, jukeboxNow, middleButtons, streamSelector, audioPlayer;
 			if (this.state.stream.name) {
 				if (this.state.stream.webradio) {

@@ -21,7 +21,7 @@ class StreamDetails extends Component {
 			modalTitle: "", 
 			modalMessage: "", 
 			modalValue: "",
-			historyExpanded: false,
+			historyExpanded: true,
 			historyList: [],
 			historyOffset: 0,
 			historyLoaded: false,
@@ -50,6 +50,8 @@ class StreamDetails extends Component {
 		this.getMediaList = this.getMediaList.bind(this);
 		this.handleMediaListPrevious = this.handleMediaListPrevious.bind(this);
 		this.handleMediaListNext = this.handleMediaListNext.bind(this);
+		
+		this.getHistory();
 	}
 	
 	componentWillReceiveProps(nextProps) {
@@ -62,7 +64,7 @@ class StreamDetails extends Component {
 			modalTitle: "", 
 			modalMessage: "", 
 			modalValue: "",
-			historyExpanded: false,
+			historyExpanded: true,
 			historyList: [],
 			historyOffset: 0,
 			historyLoaded: false,
@@ -70,6 +72,8 @@ class StreamDetails extends Component {
 			mediaList: [],
 			mediaListOffset: 0,
 			mediaListLoaded: false
+		}, () => {
+			this.getHistory();
 		});
 	}
 
@@ -396,7 +400,7 @@ class StreamDetails extends Component {
 		}
 		if (this.state.stream.webradio) {
 			history =
-				<Panel collapsible header="History" eventKey="3" onSelect={this.handleSelectHistory}>
+				<Panel collapsible header={i18n.t("stream.history")} eventKey="3" onSelect={this.handleSelectHistory} defaultExpanded={true}>
 					<Row>
 						<Col md={12}>
 							<ButtonGroup>
@@ -503,7 +507,48 @@ class StreamDetails extends Component {
 					</Col>
 				</Row>
 				<PanelGroup>
-					<Panel collapsible header="Infos" eventKey="1" defaultExpanded={true}>
+					{history}
+					<Panel collapsible header={i18n.t("stream.media_list")} eventKey="2" onSelect={this.handleSelectMediaList}>
+						<Row>
+							<Col md={4}>
+								<ButtonGroup>
+									<Button onClick={this.handleMediaListPrevious} disabled={!this.state.mediaListOffset}>
+										{i18n.t("common.previous_page")}
+									</Button>
+									<Button onClick={this.handleMediaListNext} disabled={(this.state.mediaListOffset + this.state.mediaList.length) >= this.state.stream.elements}>
+										{i18n.t("common.next_page")}
+									</Button>
+								</ButtonGroup>
+							</Col>
+							<Col md={2} sm={6} xs={6}>
+								<Label>{i18n.t("stream.total_media_files")}</Label>
+							</Col>
+							<Col md={2} sm={6} xs={6}>
+								<span>{this.state.stream.elements}</span>
+							</Col>
+						</Row>
+						<Row className="hidden-xs">
+							{playNowTitle}
+							<Col md={2}>
+								<Label>{i18n.t("common.data_source")}</Label>
+							</Col>
+							<Col md={2}>
+								<Label>{i18n.t("common.artist")}</Label>
+							</Col>
+							<Col md={2}>
+								<Label>{i18n.t("common.album")}</Label>
+							</Col>
+							<Col md={2}>
+								<Label>{i18n.t("common.title")}</Label>
+							</Col>
+							<Col md={2}>
+								<Label>{i18n.t("common.cover")}</Label>
+							</Col>
+						</Row>
+						{this.state.mediaList}
+						{this.state.mediaListLoaded?"":<FontAwesome name="spinner" spin />}
+					</Panel>
+					<Panel collapsible header={i18n.t("stream.info")} eventKey="1">
 						<Row>
 							<Col md={6} sm={6} xs={6}>
 								<Label>
@@ -601,47 +646,6 @@ class StreamDetails extends Component {
 							</Col>
 						</Row>
 					</Panel>
-					<Panel collapsible header={i18n.t("stream.media_list")} eventKey="2" onSelect={this.handleSelectMediaList}>
-						<Row>
-							<Col md={4}>
-								<ButtonGroup>
-									<Button onClick={this.handleMediaListPrevious} disabled={!this.state.mediaListOffset}>
-										{i18n.t("common.previous_page")}
-									</Button>
-									<Button onClick={this.handleMediaListNext} disabled={(this.state.mediaListOffset + this.state.mediaList.length) >= this.state.stream.elements}>
-										{i18n.t("common.next_page")}
-									</Button>
-								</ButtonGroup>
-							</Col>
-							<Col md={2} sm={6} xs={6}>
-								<Label>{i18n.t("stream.total_media_files")}</Label>
-							</Col>
-							<Col md={2} sm={6} xs={6}>
-								<span>{this.state.stream.elements}</span>
-							</Col>
-						</Row>
-						<Row className="hidden-xs">
-							{playNowTitle}
-							<Col md={2}>
-								<Label>{i18n.t("common.data_source")}</Label>
-							</Col>
-							<Col md={2}>
-								<Label>{i18n.t("common.artist")}</Label>
-							</Col>
-							<Col md={2}>
-								<Label>{i18n.t("common.album")}</Label>
-							</Col>
-							<Col md={2}>
-								<Label>{i18n.t("common.title")}</Label>
-							</Col>
-							<Col md={2}>
-								<Label>{i18n.t("common.cover")}</Label>
-							</Col>
-						</Row>
-						{this.state.mediaList}
-						{this.state.mediaListLoaded?"":<FontAwesome name="spinner" spin />}
-					</Panel>
-					{history}
 					<Panel collapsible header={i18n.t("stream.clients")} eventKey="4">
 						{clientList}
 					</Panel>

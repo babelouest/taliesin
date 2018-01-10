@@ -13,38 +13,44 @@ import StateStore from './lib/StateStore';
 config.fetchConfig()
 .then(function () {
 	var curOauth2Config = config.getConfigValue("oauth2Config");
-	var oauth2Connector = new OAuth2Connector({
-		storageType: curOauth2Config.storageType, 
-		responseType: curOauth2Config.responseType, 
-		serverUrl: curOauth2Config.serverUrl, 
-		authUrl: curOauth2Config.authUrl, 
-		tokenUrl: curOauth2Config.tokenUrl, 
-		clientId: curOauth2Config.clientId, 
-		redirectUri: curOauth2Config.redirectUri, 
-		scope: curOauth2Config.scope,
-		profileUrl: curOauth2Config.profileUrl,
-		changeStatusCb: function (newStatus, token, expiration) {
-			StateStore.dispatch({ type: 'setStoredValues', config: config.getLocalConfig() });
-			if (newStatus === "connected") {
-				StateStore.dispatch({ type: 'connection', status: newStatus, token: token, expiration: expiration, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), angharadApiUrl: config.getConfigValue("angharadApiUrl")});
-				ReactDOM.render(<App/>, document.getElementById('root'));
-			} else if (newStatus === "disconnected") {
-				StateStore.dispatch({ type: 'connection', status: newStatus, token: false, expiration: 0, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), angharadApiUrl: config.getConfigValue("angharadApiUrl") });
-				ReactDOM.render(<App/>, document.getElementById('root'));
-			} else if (newStatus === "refresh") {
-				StateStore.dispatch({ type: "newApiToken", token: token, expiration: expiration});
-			} else if (newStatus === "profile") {
-				StateStore.dispatch({ type: "setProfile", profile: token});
+	if (curOauth2Config) {
+		var oauth2Connector = new OAuth2Connector({
+			storageType: curOauth2Config.storageType, 
+			responseType: curOauth2Config.responseType, 
+			serverUrl: curOauth2Config.serverUrl, 
+			authUrl: curOauth2Config.authUrl, 
+			tokenUrl: curOauth2Config.tokenUrl, 
+			clientId: curOauth2Config.clientId, 
+			redirectUri: curOauth2Config.redirectUri, 
+			scope: curOauth2Config.scope,
+			profileUrl: curOauth2Config.profileUrl,
+			changeStatusCb: function (newStatus, token, expiration) {
+				StateStore.dispatch({ type: 'setStoredValues', config: config.getLocalConfig() });
+				if (newStatus === "connected") {
+					StateStore.dispatch({ type: 'connection', status: newStatus, token: token, expiration: expiration, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), angharadApiUrl: config.getConfigValue("angharadApiUrl"), oauth2: true});
+					ReactDOM.render(<App/>, document.getElementById('root'));
+				} else if (newStatus === "disconnected") {
+					StateStore.dispatch({ type: 'connection', status: newStatus, token: false, expiration: 0, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), angharadApiUrl: config.getConfigValue("angharadApiUrl"), oauth2: true });
+					ReactDOM.render(<App/>, document.getElementById('root'));
+				} else if (newStatus === "refresh") {
+					StateStore.dispatch({ type: "newApiToken", token: token, expiration: expiration});
+				} else if (newStatus === "profile") {
+					StateStore.dispatch({ type: "setProfile", profile: token});
+				}
 			}
-		}
-	});
-	StateStore.dispatch({ type: "setOauth2Connector", oauth2Connector: oauth2Connector});
+		});
+		StateStore.dispatch({ type: "setOauth2Connector", oauth2Connector: oauth2Connector});
+	} else {
+		StateStore.dispatch({ type: 'setStoredValues', config: config.getLocalConfig() });
+		StateStore.dispatch({ type: 'connection', status: "noauth", taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), angharadApiUrl: "", oauth2: false});
+		ReactDOM.render(<App/>, document.getElementById('root'));
+	}
 	ReactDOM.render(<App/>, document.getElementById('root'));
 });
 
 StateStore.subscribe(() => {
 	if (StateStore.getState().lastAction === "connection") {
-		if (StateStore.getState().status === "connected") {
+		if (StateStore.getState().status === "connected" || StateStore.getState().status === "noauth") {
 			// Check if user is admin or not by getting users list
 			StateStore.getState().APIManager.taliesinApiRequest("GET", "/users")
 			.then((users) => {

@@ -10,8 +10,6 @@ class AudioPlayer extends Component {
 	constructor(props) {
 		super(props);
 		
-		//this.websocket = false;
-		
 		var interval = false;
 		if (props.stream.name) {
 			// I assume that taliesinApiUrl starts with 'http://' or 'https://'
@@ -179,21 +177,23 @@ class AudioPlayer extends Component {
 			this.websocket.onclose = null;
 			this.websocket.close();
 		}
-		try {
-			this.websocket = new WebSocket(this.state.websocketUrl, this.state.websocketProtocol);
-			this.websocket.onopen = () => {
-				this.websocket.send(JSON.stringify({command: "authorization", token: StateStore.getState().token}));
-			}
-			this.websocket.onmessage = (event) => {
-				this.handleCommandResponse(JSON.parse(event.data));
-			};
-			this.websocket.onclose = () => {
-				if (this.state.websocketReconnect) {
-					this.websocketReconnect();
+		if (this.state.stream.name) {
+			try {
+				this.websocket = new WebSocket(this.state.websocketUrl, this.state.websocketProtocol);
+				this.websocket.onopen = () => {
+					this.websocket.send(JSON.stringify({command: "authorization", token: StateStore.getState().token}));
 				}
-			};
-		} catch (e) {
-			this.websocket = false;
+				this.websocket.onmessage = (event) => {
+					this.handleCommandResponse(JSON.parse(event.data));
+				};
+				this.websocket.onclose = () => {
+					if (this.state.websocketReconnect) {
+						this.websocketReconnect();
+					}
+				};
+			} catch (e) {
+				this.websocket = false;
+			}
 		}
 	}
 	

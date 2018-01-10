@@ -8,14 +8,15 @@ class APIManager {
 		if (parameters) {
 			this.taliesinApiUrl = parameters.taliesinApiUrl || "";
 			this.angharadApiUrl = parameters.angharadApiUrl || "";
+      this.oauth2 = !!parameters.oauth2;
 		}
 	}
 	
 	APIRequest (method, url, data) {
-		if (this.counter <= 310) {
+		if (this.counter <= 100) {
 			this.counter++;
 			var curDate = new Date();
-			if (StateStore.getState().token_expiration*1000 > curDate.getTime()) {
+			if (!this.oauth2 || StateStore.getState().token_expiration*1000 > curDate.getTime()) {
 				return this.APIRequestExecute(method, url, data)
 				.always(() => {
 					this.counter--;

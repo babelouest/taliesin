@@ -279,7 +279,6 @@ class ElementButtons extends Component {
 	}
 	
 	handleSelectRemove() {
-		console.log(this.state.removeDropdown);
 		this.setState({removeDropdown: !this.state.removeDropdown});
 	}
 	

@@ -116,7 +116,7 @@ class Dashboard extends Component {
 	}
 	
 	render() {
-		if (StateStore.getState().status === "connected") {
+		if (StateStore.getState().status === "connected" || StateStore.getState().status === "noauth") {
 			var recentLoading, randomLoading;
 			if (!this.state.recentLoaded) {
 				recentLoading = <FontAwesome name="spinner" spin />;

@@ -55,14 +55,15 @@ function stateStoreManager(state = defaultState, action) {
 		case "connection":
 			state.APIManager = new APIManager({
 				taliesinApiUrl: action.taliesinApiUrl,
-				angharadApiUrl: action.angharadApiUrl
+				angharadApiUrl: action.angharadApiUrl,
+				oauth2: action.oauth2
 			});
 			state.taliesinApiUrl = action.taliesinApiUrl;
 			state.angharadApiUrl = action.angharadApiUrl;
 			state.status = action.status;
 			state.token = action.token;
 			state.token_expiration = action.expiration;
-			state.ready = (!!state.APIManager && !!state.token && (state.status==="connected") && !!state.oauth2Connector);
+			state.ready = (!!state.APIManager && ((!!state.token && state.status==="connected" && !!state.oauth2Connector) || state.status==="noauth"));
 			break;
 		case "setProfile":
 			state.profile.oauth2Profile = action.profile;

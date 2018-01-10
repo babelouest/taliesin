@@ -240,7 +240,7 @@ class TopMenu extends Component {
 	}
 	
 	render() {
-		if (StateStore.getState().status === "connected") {
+		if (StateStore.getState().status === "connected" || StateStore.getState().status === "noauth") {
 			var searchOverlay = 
 				<Popover id="searchResult">
 						{i18n.t("topmenu.searching")} <FontAwesome name="spinner" spin />
@@ -393,21 +393,33 @@ class TopMenu extends Component {
 			});
 			var userDropdown;
 			if (StateStore.getState().profile.isAdmin) {
-				var userList = [];
-				this.state.userList.forEach((user, index) => {
-					if (this.state.currentUser === user.username) {
-						userList.push(<MenuItem key={index} className="bg-success">{user.username}{StateStore.getState().profile.oauth2Profile.login===user.username?" ("+i18n.t("topmenu.me")+")":""}</MenuItem>);
-					} else {
-						userList.push(<MenuItem key={index} onClick={() => {this.handlechangeUser(user.username)}}>{user.username}{StateStore.getState().profile.oauth2Profile.login===user.username?" ("+i18n.t("topmenu.me")+")":""}</MenuItem>);
-					}
-				});
-				userDropdown = 
-					<NavDropdown title={<span><i className="fa fa-cog"></i></span>} id="nav-view">
-						<MenuItem onClick={() => this.handleManageConfig()} className={this.state.browse==="file"?"bg-success":""}>{i18n.t("topmenu.config")}</MenuItem>
-						<MenuItem divider />
-						<MenuItem>{i18n.t("topmenu.change_user")}</MenuItem>
-						{userList}
-					</NavDropdown>;
+				if (StateStore.getState().status === "noauth") {
+					userDropdown = 
+						<NavDropdown title={<span><i className="fa fa-cog"></i></span>} id="nav-view">
+							<MenuItem onClick={() => this.handleManageConfig()} className={this.state.browse==="file"?"bg-success":""}>{i18n.t("topmenu.config")}</MenuItem>
+						</NavDropdown>;
+				} else {
+					var userList = [];
+					var foundMe = false;
+					this.state.userList.forEach((user, index) => {
+						if (this.state.currentUser === user.username) {
+							foundMe = true;
+							userList.push(<MenuItem key={index} className="bg-success">{user.username}{StateStore.getState().profile.oauth2Profile.login===user.username?" ("+i18n.t("topmenu.me")+")":""}</MenuItem>);
+						} else {
+							userList.push(<MenuItem key={index} onClick={() => {this.handlechangeUser(user.username)}}>{user.username}{StateStore.getState().profile.oauth2Profile.login===user.username?" ("+i18n.t("topmenu.me")+")":""}</MenuItem>);
+						}
+						if (!foundMe) {
+							userList.push(<MenuItem key={index} className="bg-success">{this.state.currentUser}{" ("+i18n.t("topmenu.me")+")"}</MenuItem>);
+						}
+					});
+					userDropdown = 
+						<NavDropdown title={<span><i className="fa fa-cog"></i></span>} id="nav-view">
+							<MenuItem onClick={() => this.handleManageConfig()} className={this.state.browse==="file"?"bg-success":""}>{i18n.t("topmenu.config")}</MenuItem>
+							<MenuItem divider />
+							<MenuItem>{i18n.t("topmenu.change_user")}</MenuItem>
+							{userList}
+						</NavDropdown>;
+				}
 			}
 			return (
 				<div>

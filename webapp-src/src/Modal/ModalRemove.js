@@ -161,7 +161,6 @@ class ModalRemove extends Component {
 				this.setState({streamList: streamList, streamToLoad: true});
 			})
 			.fail((result) => {
-				console.log("error: ", result);
 				StateStore.getState().NotificationManager.addNotification({
 					message: i18n.t("stream.message_stream_list_reload_error"),
 					level: 'error'

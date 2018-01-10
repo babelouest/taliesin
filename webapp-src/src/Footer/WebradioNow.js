@@ -7,7 +7,6 @@ class WebradioNow extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			folded: props.folded,
 			imgThumbBlob: false, 
 			media: StateStore.getState().profile.mediaNow,
 		};
@@ -38,7 +37,7 @@ class WebradioNow extends Component {
 	
 	componentWillReceiveProps(nextProps) {
 		var newMedia = (this.state.media.data_source !== nextProps.media.data_source || this.state.media.path !== nextProps.media.path);
-		this.setState({folded: nextProps.folded, media: nextProps.media}, () => {
+		this.setState({media: nextProps.media}, () => {
 			if (newMedia) {
 				this.loadCover();
 				this.setPageTitle();
@@ -83,7 +82,7 @@ class WebradioNow extends Component {
 	
 	render() {
 		return (
-			<MediaInfo media={this.state.media} imgThumbBlob={this.state.imgThumbBlob} meta={i18n.t("player.play_now")} folded={this.state.folded} index={-1}/>
+			<MediaInfo media={this.state.media} imgThumbBlob={this.state.imgThumbBlob} meta={i18n.t("player.play_now")} index={-1}/>
 		);
 	}
 }

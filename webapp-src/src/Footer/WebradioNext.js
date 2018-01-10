@@ -7,7 +7,6 @@ class WebradioNext extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			folded: props.folded,
 			imgThumbBlob: false, 
 			media: props.media,
 		};
@@ -29,7 +28,7 @@ class WebradioNext extends Component {
 	
 	componentWillReceiveProps(nextProps) {
 		var newMedia = (this.state.media.data_source !== nextProps.media.data_source || this.state.media.path !== nextProps.media.path);
-		this.setState({folded: nextProps.folded, media: nextProps.media}, () => {
+		this.setState({media: nextProps.media}, () => {
 			if (newMedia) {
 				this.loadCover();
 			}
@@ -50,7 +49,7 @@ class WebradioNext extends Component {
 	
 	render() {
 		return (
-			<MediaInfo media={this.state.media} imgThumbBlob={this.state.imgThumbBlob} meta={i18n.t("player.play_next")} folded={this.state.folded} index={-1}/>
+			<MediaInfo media={this.state.media} imgThumbBlob={this.state.imgThumbBlob} meta={i18n.t("player.play_next")} index={-1}/>
 		);
 	}
 }

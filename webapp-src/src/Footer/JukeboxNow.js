@@ -6,7 +6,6 @@ class JukeboxNow extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			folded: props.folded,
 			imgThumbBlob: false, 
 			media: props.media,
 			index: props.index,
@@ -30,7 +29,7 @@ class JukeboxNow extends Component {
 	
 	componentWillReceiveProps(nextProps) {
 		var newMedia = (this.state.media.data_source !== nextProps.media.data_source || this.state.media.path !== nextProps.media.path);
-		this.setState({folded: nextProps.folded, media: (nextProps.media?nextProps.media:this.state.media), index: nextProps.index, total: nextProps.total}, () => {
+		this.setState({media: (nextProps.media?nextProps.media:this.state.media), index: nextProps.index, total: nextProps.total}, () => {
 			if (newMedia) {
 				this.loadCover();
 				this.setPageTitle();
@@ -82,7 +81,7 @@ class JukeboxNow extends Component {
 	
 	render() {
 		return (
-			<MediaInfo media={this.state.media} imgThumbBlob={this.state.imgThumbBlob} meta="Jukebox" folded={this.state.folded} index={this.state.index} total={this.state.total}/>
+			<MediaInfo media={this.state.media} imgThumbBlob={this.state.imgThumbBlob} meta="Jukebox" index={this.state.index} total={this.state.total}/>
 		);
 	}
 }

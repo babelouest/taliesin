@@ -108,17 +108,6 @@ body {
 	position:relative;
 }
 
-.media-background
-{
-	background: center;
-	background-size: 100%;
-	filter: blur(1px);
-	position:absolute;
-	width: 100%;
-	height: 100%;
-	z-index: -100;
-}
-
 .media-content label
 {
 	width: 100%;

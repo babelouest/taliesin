@@ -11,8 +11,7 @@ class MediaInfo extends Component {
 			imgBlob: false, 
 			imgLoaded: false, 
 			title: this.buildTitle(props.media, props.index, props.total), 
-			meta: props.meta, 
-			folded: props.folded, 
+			meta: props.meta,
 			showModal: false
 		};
 		this.handleOpenModal = this.handleOpenModal.bind(this);
@@ -23,8 +22,7 @@ class MediaInfo extends Component {
 		this.setState({
 			media: nextProps.media, 
 			title: this.buildTitle(nextProps.media, nextProps.index, nextProps.total), 
-			imgThumbBlob: nextProps.imgThumbBlob,
-			folded: nextProps.folded
+			imgThumbBlob: nextProps.imgThumbBlob
 		});
 	}
 	
@@ -58,17 +56,13 @@ class MediaInfo extends Component {
 	
 	render() {
 		var image = "";
-		if (!this.state.folded) {
-			if (this.state.imgThumbBlob) {
-				image = <Image src={"data:image/jpeg;base64," + this.state.imgThumbBlob} thumbnail responsive className="cover-image-thumb"/>;
-			} else {
-				image = <Image src="images/generic-album.png" thumbnail responsive className="cover-image-thumb"/>;
-			}
+		if (this.state.imgThumbBlob) {
+			image = <Image src={"data:image/jpeg;base64," + this.state.imgThumbBlob} thumbnail responsive className="cover-image-thumb"/>;
+		} else {
+			image = <Image src="images/generic-album.png" thumbnail responsive className="cover-image-thumb"/>;
 		}
 		return (
 			<div className="media-container">
-				<div className="media-background" style={{backgroundImage:this.state.imgThumbBlob?"url(data:image/png;base64,"+this.state.imgThumbBlob+")":"" }}>
-				</div>
 				<div className="media-content">
 					<a role="button" onClick={this.handleOpenModal} title={this.state.title}>
 						<div>
@@ -77,9 +71,9 @@ class MediaInfo extends Component {
 						<div className="scroll-left">
 							<span>{this.state.title}</span>
 						</div>
-						<Panel collapsible expanded={!this.state.folded} className="text-center cover-panel">
+						<div className="text-center hidden-xs hidden-sm">
 							{image}
-						</Panel>
+						</div>
 					</a>
 				</div>
 				<ModalMedia show={this.state.showModal} media={this.state.media} title={this.state.title} onClose={this.handleCloseModal} />

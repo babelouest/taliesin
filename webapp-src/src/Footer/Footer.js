@@ -24,7 +24,6 @@ class Footer extends Component {
 			jukeboxIndex: 0,
 			mediaNow: StateStore.getState().profile.mediaNow,
 			mediaNext: StateStore.getState().profile.mediaNext,
-			folded: true, 
 			fullScreen: false,
 			currentPlayer: StateStore.getState().profile.currentPlayer,
 			play: false,
@@ -74,13 +73,13 @@ class Footer extends Component {
 	}
 	
 	showFullScreen() {
-		this.setState({folded: true, play: false }, () => {
+		this.setState({play: false }, () => {
 			StateStore.dispatch({type: "showFullScreen", show: true});
 		});
 	}
 	
 	showMediaList() {
-		this.setState({folded: true, play: false }, () => {
+		this.setState({play: false }, () => {
 			StateStore.dispatch({type: "setCurrentBrowse", browse: "showStreamMediaList"});
 		});
 	}
@@ -106,16 +105,16 @@ class Footer extends Component {
 				if (this.state.stream.webradio) {
 					webradioNow =
 						<Col md={2} sm={6} xs={6}>
-							<WebradioNow media={this.state.mediaNow} folded={this.state.folded} />
+							<WebradioNow media={this.state.mediaNow} />
 						</Col>;
 					webradioNext = 
 						<Col md={2} sm={6} xs={6}>
-							<WebradioNext media={this.state.mediaNext} folded={this.state.folded} />
+							<WebradioNext media={this.state.mediaNext} />
 						</Col>;
 				} else {
 					jukeboxNow =
 						<Col md={4} sm={12} xs={12}>
-							<JukeboxNow media={this.state.mediaNow} index={this.state.jukeboxIndex} folded={this.state.folded} total={this.state.stream.elements} />
+							<JukeboxNow media={this.state.mediaNow} index={this.state.jukeboxIndex} total={this.state.stream.elements} />
 						</Col>;
 				}
 			}
@@ -145,11 +144,8 @@ class Footer extends Component {
 				middleButtons =
 					<Col md={2} sm={2} xs={2} className="text-center">
 						<ButtonGroup className="hidden-xs hidden-sm">
-							<Button title={this.state.folded?i18n.t("player.extend"):i18n.t("player.fold")} onClick={ ()=> this.showFullScreen()}>
+							<Button title={i18n.t("player.full_screen")} onClick={ ()=> this.showFullScreen()}>
 								<FontAwesome name={"arrows-alt"} />
-							</Button>
-							<Button title={i18n.t("player.extend")} onClick={ ()=> this.setState({ folded: !this.state.folded, play: false })}>
-								<FontAwesome name={this.state.folded?"chevron-circle-up":"chevron-circle-down"} />
 							</Button>
 							<Button title={i18n.t("player.list_media")} onClick={ ()=> this.showMediaList()}>
 								<FontAwesome name={"list"} />
@@ -159,10 +155,6 @@ class Footer extends Component {
 							<MenuItem onClick={ ()=> this.showFullScreen()}>
 								<FontAwesome name={"arrows-alt"} />
 								&nbsp;Full-screen
-							</MenuItem>
-							<MenuItem onClick={ ()=> this.setState({ folded: !this.state.folded, play: false })}>
-								<FontAwesome name={this.state.folded?"chevron-circle-up":"chevron-circle-down"} />
-								&nbsp;{this.state.folded?i18n.t("player.extend"):i18n.t("player.fold")}
 							</MenuItem>
 							<MenuItem onClick={ ()=> this.showMediaList()}>
 								<FontAwesome name={"list"} />

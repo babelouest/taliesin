@@ -429,7 +429,7 @@ json_t * media_advanced_search(struct config_elements * config, const char * use
   
   if (json_object_get(search_criteria, "type") != NULL && json_string_length(json_object_get(search_criteria, "type")) > 0) {
     escape = h_escape_string(config->conn, json_string_value(json_object_get(search_criteria, "type")));
-    tmp = msprintf("%s AND `"TALIESIN_TABLE_MEDIA"`.`tm_name` LIKE '%s'", query, escape);
+    tmp = msprintf("%s AND `"TALIESIN_TABLE_MEDIA"`.`tm_type` = '%s'", query, escape);
     o_free(escape);
     o_free(query);
     query = tmp;
@@ -731,6 +731,7 @@ json_t * media_advanced_search(struct config_elements * config, const char * use
     query = tmp;
   }
 
+	y_log_message(Y_LOG_LEVEL_DEBUG, "search query is %s", query);
   res = h_execute_query_json(config->conn, query, &j_result);
   o_free(query);
   if (res == H_OK) {

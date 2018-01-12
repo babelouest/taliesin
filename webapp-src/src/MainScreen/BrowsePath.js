@@ -83,17 +83,6 @@ class BrowsePath extends Component {
 						break;
 					}
 				}
-				
-				return (
-					<div>
-						<Row>
-							<input type="text" placeholder={i18n.t("common.filter")} value={this.filter} className="form-control" onChange={this.filterList}/>
-						</Row>
-						<Row>
-							{currentList}
-						</Row>
-					</div>
-				);
 			} else {
 				for (index in currentElementList) {
 					if (index >= this.state.offset) {
@@ -105,52 +94,52 @@ class BrowsePath extends Component {
 						break;
 					}
 				}
-				
-				return (
-					<div>
-						<Row style={{marginTop: "10px"}}>
-							<Col md={12} sm={12} xs={12} className="text-right">
-								<ButtonGroup>
-									<Button disabled={!this.state.offset} onClick={() => {this.navigate(-100)}}>
-										<span className="hidden-sm hidden-xs">{i18n.t("common.previous_page")}</span>
-										<span className="visible-sm visible-xs">
-											<FontAwesome name="chevron-left" />
-										</span>
-									</Button>
-									<Button disabled={(this.state.offset + this.state.limit) >= currentElementList.length} onClick={() => {this.navigate(100)}}>
-										<span className="hidden-sm hidden-xs">{i18n.t("common.next_page")}</span>
-										<span className="visible-sm visible-xs">
-											<FontAwesome name="chevron-right" />
-										</span>
-									</Button>
-								</ButtonGroup>
-							</Col>
-						</Row>
-						<Row>
-							<input type="text" placeholder="Filter" value={this.filter} className="form-control" onChange={this.filterList}/>
-						</Row>
-						{currentList}
-						<Row style={{marginTop: "10px"}}>
-							<Col md={12} sm={12} xs={12} className="text-right">
-								<ButtonGroup>
-									<Button disabled={!this.state.offset} onClick={() => {this.navigate(-100)}}>
-										<span className="hidden-sm hidden-xs">{i18n.t("common.previous_page")}</span>
-										<span className="visible-sm visible-xs">
-											<FontAwesome name="chevron-left" />
-										</span>
-									</Button>
-									<Button disabled={(this.state.offset + this.state.limit) >= currentElementList.length} onClick={() => {this.navigate(100)}}>
-										<span className="hidden-sm hidden-xs">{i18n.t("common.next_page")}</span>
-										<span className="visible-sm visible-xs">
-											<FontAwesome name="chevron-right" />
-										</span>
-									</Button>
-								</ButtonGroup>
-							</Col>
-						</Row>
-					</div>
-				);
 			}
+			
+			return (
+				<div>
+					<Row style={{marginTop: "10px"}}>
+						<Col md={12} sm={12} xs={12} className="text-right">
+							<ButtonGroup>
+								<Button disabled={!this.state.offset} onClick={() => {this.navigate(-100)}}>
+									<span className="hidden-sm hidden-xs">{i18n.t("common.previous_page")}</span>
+									<span className="visible-sm visible-xs">
+										<FontAwesome name="chevron-left" />
+									</span>
+								</Button>
+								<Button disabled={(this.state.offset + this.state.limit) >= currentElementList.length} onClick={() => {this.navigate(100)}}>
+									<span className="hidden-sm hidden-xs">{i18n.t("common.next_page")}</span>
+									<span className="visible-sm visible-xs">
+										<FontAwesome name="chevron-right" />
+									</span>
+								</Button>
+							</ButtonGroup>
+						</Col>
+					</Row>
+					<Row>
+						<input type="text" placeholder="Filter" value={this.filter} className="form-control" onChange={this.filterList}/>
+					</Row>
+					{currentList}
+					<Row style={{marginTop: "10px"}}>
+						<Col md={12} sm={12} xs={12} className="text-right">
+							<ButtonGroup>
+								<Button disabled={!this.state.offset} onClick={() => {this.navigate(-100)}}>
+									<span className="hidden-sm hidden-xs">{i18n.t("common.previous_page")}</span>
+									<span className="visible-sm visible-xs">
+										<FontAwesome name="chevron-left" />
+									</span>
+								</Button>
+								<Button disabled={(this.state.offset + this.state.limit) >= currentElementList.length} onClick={() => {this.navigate(100)}}>
+									<span className="hidden-sm hidden-xs">{i18n.t("common.next_page")}</span>
+									<span className="visible-sm visible-xs">
+										<FontAwesome name="chevron-right" />
+									</span>
+								</Button>
+							</ButtonGroup>
+						</Col>
+					</Row>
+				</div>
+			);
 		} else {
 			return (
 				<Row>

@@ -10,9 +10,9 @@ class WebradioNow extends Component {
 			imgThumbBlob: false, 
 			media: StateStore.getState().profile.mediaNow,
 		};
-		this.loadCover();
-		this.setPageTitle();
 
+		this.loadCover();
+		
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
 			if (reduxState.lastAction === "showFullScreen") {
@@ -33,10 +33,11 @@ class WebradioNow extends Component {
 	
 	componentDidMount() {
 		this._ismounted = true;
+		this.setPageTitle();
 	}
 	
 	componentWillReceiveProps(nextProps) {
-		var newMedia = (this.state.media.data_source !== nextProps.media.data_source || this.state.media.path !== nextProps.media.path);
+		var newMedia = (!this.state.media && nextProps.media) || (this.state.media.data_source !== nextProps.media.data_source || this.state.media.path !== nextProps.media.path);
 		this.setState({media: nextProps.media}, () => {
 			if (newMedia) {
 				this.loadCover();

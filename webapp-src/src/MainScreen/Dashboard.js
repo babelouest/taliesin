@@ -64,7 +64,7 @@ class Dashboard extends Component {
 	loadRecent() {
 		if (this._ismounted) {
 			this.setState({recent: [], recentLoaded: false}, () => {
-				StateStore.getState().APIManager.taliesinApiRequest("PUT", "/search/", {sort: "last_updated", sort_direction: "desc"})
+				StateStore.getState().APIManager.taliesinApiRequest("PUT", "/search/", {type: "audio", sort: "last_updated", sort_direction: "desc"})
 				.then((result) => {
 					var list = [], listComponents = [];
 					result.forEach((element, index) => {
@@ -91,7 +91,7 @@ class Dashboard extends Component {
 	loadRandom() {
 		if (this._ismounted) {
 			this.setState({random: [], randomLoaded: false}, () => {
-				StateStore.getState().APIManager.taliesinApiRequest("PUT", "/search/", {sort: "random", limit: 8})
+				StateStore.getState().APIManager.taliesinApiRequest("PUT", "/search/", {type: "audio", sort: "random", limit: 12})
 				.then((result) => {
 					var list = [], listComponents = [];
 					result.forEach((element, index) => {
@@ -117,16 +117,20 @@ class Dashboard extends Component {
 	
 	render() {
 		if (StateStore.getState().status === "connected" || StateStore.getState().status === "noauth") {
-			var recentLoading, randomLoading;
+			var recentLoading, randomLoading, noDataSource;
 			if (!this.state.recentLoaded) {
 				recentLoading = <FontAwesome name="spinner" spin />;
 			}
 			if (!this.state.randomLoaded) {
 				randomLoading = <FontAwesome name="spinner" spin />;
 			}
+			if (!StateStore.getState().streamList.length && StateStore.getState().streamList.streamListLoaded) {
+				noDataSource = <h4 className="bg-warning">{i18n.t("dashboard.no_data_source")}</h4>
+			}
 			return (
 				<div>
 					<h2>{i18n.t("dashboard.title")}</h2>
+					{noDataSource}
 					<PanelGroup>
 						<Panel collapsible header={i18n.t("dashboard.streams")} eventKey="1" defaultExpanded={true}>
 							<ManageStream />

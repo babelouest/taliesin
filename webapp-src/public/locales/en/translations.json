@@ -152,7 +152,8 @@
 		"refresh": "Refresh",
 		"random": "Random albums",
 		"connect_message": "Please connect to the application",
-		"connecting_message": "Connecting"
+		"connecting_message": "Connecting",
+		"no_data_source": "You seem to have no Data Source available, click on the top menu 'Data Source' -> 'Manage Data Sources' to add a new Data Source."
 	},
 	"advanced_search": {
 		"number_times_played": "Number of times played",

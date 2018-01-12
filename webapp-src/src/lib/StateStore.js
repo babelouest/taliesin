@@ -17,6 +17,7 @@ var defaultState = {
 	NotificationManager: false,
 	userList: [],
 	dataSourceList: [],
+	dataSourceListLoaded: false,
 	externalPlayerList: [],
 	streamList: [],
 	playlists:[],
@@ -84,7 +85,8 @@ function stateStoreManager(state = defaultState, action) {
 			state.serverConfig = action.config;
 			break;
 		case "setDataSource":
-			state.dataSourceList = action.dataSourceList
+			state.dataSourceList = action.dataSourceList;
+			state.dataSourceListLoaded = action.loaded;
 			if (action.currentDataSource) {
 				state.profile.dataSource = action.currentDataSource;
 				state.profile.path = "";

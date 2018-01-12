@@ -81,10 +81,10 @@ StateStore.subscribe(() => {
 				if (result.length > 0 && !result.find((ds) => {return ds.name === StateStore.getState().profile.dataSource.name})) {
 					currentDataSource = result[0];
 				}
-				StateStore.dispatch({type: "setDataSource", dataSourceList: result, currentDataSource: currentDataSource});
+				StateStore.dispatch({type: "setDataSource", dataSourceList: result, currentDataSource: currentDataSource, loaded: true});
 			})
 			.fail((result) => {
-				StateStore.dispatch({type: "setDataSource", dataSourceList: [], currentDataSource: false});
+				StateStore.dispatch({type: "setDataSource", dataSourceList: [], currentDataSource: false, loaded: true});
 			});
 			
 			// Get playlist list

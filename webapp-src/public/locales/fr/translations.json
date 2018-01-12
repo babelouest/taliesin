@@ -152,7 +152,8 @@
 		"refresh": "Rafraîchir",
 		"random": "Albums au hasard",
 		"connect_message": "Veuillez vous connecter à l'application",
-		"connecting_message": "Connexion en cours"
+		"connecting_message": "Connexion en cours",
+		"no_data_source": "Il semble que vous n'avez pas de Source de Données, cliquez sur 'Sources de Données' -> 'Gérer les Sources de Données' dans le menu en haut pour ajouter une nouvelle Source de Données."
 	},
 	"advanced_search": {
 		"number_times_played": "Nombre de fois lu",

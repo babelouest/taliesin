@@ -31,8 +31,6 @@ class ManageStream extends Component {
 			}
 		});
 		
-		this.buildStreamExternalList();
-
 		this.playStream = this.playStream.bind(this);
 		this.playStreamExternal = this.playStreamExternal.bind(this);
 		this.deleteStream = this.deleteStream.bind(this);
@@ -59,13 +57,12 @@ class ManageStream extends Component {
 			modalMessage: "", 
 			modalValue: "",
 			curStream: false
-		}, () => {
-			this.buildStreamExternalList();
 		});
 	}
 	
 	componentDidMount() {
 		this._ismounted = true;
+		this.buildStreamExternalList();
 	}
 
 	componentWillUnmount() {

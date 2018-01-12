@@ -107,11 +107,11 @@ class ManageDataSource extends Component {
 	refreshDataSourceList() {
 		StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source" + (StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser?"?username="+StateStore.getState().profile.currentUser:""))
 		.then((result) => {
-			StateStore.dispatch({type: "setDataSource", dataSourceList: result});
+			StateStore.dispatch({type: "setDataSource", dataSourceList: result, loaded: true});
 			this.getRefreshStatusList();
 		})
 		.fail((result) => {
-			StateStore.dispatch({type: "setDataSource", dataSourceList: [], currentDataSource: false});
+			StateStore.dispatch({type: "setDataSource", dataSourceList: [], currentDataSource: false, loaded: true});
 		});
 	}
 	

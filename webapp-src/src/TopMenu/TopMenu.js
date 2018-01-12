@@ -411,7 +411,7 @@ class TopMenu extends Component {
 							userList.push(<MenuItem key={index} onClick={() => {this.handlechangeUser(user.username)}}>{user.username}{StateStore.getState().profile.oauth2Profile.login===user.username?" ("+i18n.t("topmenu.me")+")":""}</MenuItem>);
 						}
 						if (!foundMe) {
-							userList.push(<MenuItem key={index} className="bg-success">{this.state.currentUser}{" ("+i18n.t("topmenu.me")+")"}</MenuItem>);
+							userList.push(<MenuItem key={this.state.userList.length} className="bg-success">{this.state.currentUser}{" ("+i18n.t("topmenu.me")+")"}</MenuItem>);
 						}
 					});
 					userDropdown = 

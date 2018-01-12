@@ -43,7 +43,7 @@ class MPDController extends Component {
 		this._notificationSystem = null;
 		
 		if (this.state.stream.name && this.state.player.name) {
-			this.loadStream();
+			this.loadStream(this.state.playNow);
 		} else {
 			this.MPDConnect();
 		}
@@ -86,8 +86,8 @@ class MPDController extends Component {
 	}
 	
 	componentWillReceiveProps(nextProps) {
-		var newStream = (nextProps.stream && nextProps.stream.name !== this.state.stream.name);
-		var newPlayer = (nextProps.player && nextProps.player.name !== this.state.player.name);
+		var newStream = (nextProps.stream.name && nextProps.stream.name !== this.state.stream.name);
+		var newPlayer = (nextProps.player.name && nextProps.player.name !== this.state.player.name);
 		var newState = {
 			player: StateStore.getState().externalPlayerList.find((externalPlayer) => {return nextProps.player.name === externalPlayer.name})||this.state.player
 		};
@@ -104,7 +104,7 @@ class MPDController extends Component {
 			if (newPlayer) {
 				this.MPDConnect();
 			} else if (newStream) {
-				this.loadStream();
+				this.loadStream(this.state.playNow);
 			} else if (this.state.playNow) {
 				this.setState({playNow: false, jukeboxIndex: this.state.playIndex}, () => {
 					this.handlePlay();
@@ -124,7 +124,7 @@ class MPDController extends Component {
 		this._ismounted = false;
 	}
 	
-	loadStream() {
+	loadStream(playNow) {
 		var playlist = [];
 		if (this.state.stream.webradio) {
 			playlist.push(StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name + "?rand=" + Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5))
@@ -136,8 +136,8 @@ class MPDController extends Component {
 		StateStore.getState().APIManager.angharadApiRequest("POST", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/playlist", playlist)
 		.then((status) => {
 			this.loadMedia();
-			if (this.state.playNow) {
-				this.setState({playNow: false, jukeboxIndex: this.state.playIndex}, () => {
+			if (playNow) {
+				this.setState({playNow: false, jukeboxIndex: this.state.stream.webradio?-1:this.state.playIndex}, () => {
 					this.handlePlay();
 				});
 			} else {
@@ -171,46 +171,51 @@ class MPDController extends Component {
 	}
 	
 	MPDConnect() {
-		StateStore.getState().APIManager.angharadApiRequest("GET", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/status")
-		.then((status) => {
-			this.setState({jukeboxRepeat: status.repeat, jukeboxRandom: status.random, volume: status.volume, jukeboxIndex: status.song_pos, play: (status.state==="play")}, () => {
-				StateStore.getState().APIManager.angharadApiRequest("GET", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/playlist/0")
-				.then((result) => {
-					// Parse result to check if it's a taliesin stream
-					if (result.uri && result.uri.startsWith(StateStore.getState().taliesinApiUrl + "/stream")) {
-						var streamName = result.uri.substring((StateStore.getState().taliesinApiUrl + "/stream").length);
-						if (result.uri.indexOf("?") > -1) {
-							streamName = result.uri.substring((StateStore.getState().taliesinApiUrl + "/stream").length + 1, result.uri.indexOf("?"));
-						}
-						var currentStream = StateStore.getState().streamList.find((stream) => {
-							return streamName.indexOf(stream.name) > -1;
-						});
-						if (!!currentStream && currentStream.name !== StateStore.getState().profile.stream.name) {
-							this.setState({stream: currentStream}, () => {
-								this.loadMedia();
-								StateStore.dispatch({type: "loadStream", stream: currentStream});
+		if (this.state.player.name) {
+			StateStore.getState().APIManager.angharadApiRequest("GET", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/status")
+			.then((status) => {
+				this.setState({jukeboxRepeat: status.repeat, jukeboxRandom: status.random, volume: status.volume, jukeboxIndex: status.song_pos, play: (status.state==="play")}, () => {
+					StateStore.getState().APIManager.angharadApiRequest("GET", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/playlist/0")
+					.then((result) => {
+						// Parse result to check if it's a taliesin stream
+						if (result.uri && result.uri.startsWith(StateStore.getState().taliesinApiUrl + "/stream")) {
+							var streamName = result.uri.substring((StateStore.getState().taliesinApiUrl + "/stream").length);
+							if (result.uri.indexOf("?") > -1) {
+								streamName = result.uri.substring((StateStore.getState().taliesinApiUrl + "/stream").length + 1, result.uri.indexOf("?"));
+							}
+							var currentStream = StateStore.getState().streamList.find((stream) => {
+								return streamName.indexOf(stream.name) > -1;
 							});
+							if (!!currentStream) {
+								this.setState({stream: currentStream}, () => {
+									this.loadMedia();
+									StateStore.dispatch({type: "loadStream", stream: currentStream});
+								});
+							} else {
+								StateStore.dispatch({type: "loadStream", stream: {name: false, webradio: false}});
+								this.setState({jukeboxIndex: -1});
+							}
+						} else {
+							StateStore.dispatch({type: "loadStream", stream: {name: false, webradio: false}});
+							this.setState({jukeboxIndex: -1});
 						}
-					}
-					StateStore.dispatch({ type: "setCurrentPlayerStatus", volume: status.volume });
-					this.MPDStatus();
+						StateStore.dispatch({ type: "setCurrentPlayerStatus", volume: status.volume });
+						this.MPDStatus();
+					});
 				});
 			});
-		});
-		if (this.state.player.switch) {
-			StateStore.getState().APIManager.angharadApiRequest("GET", "/benoic/device/" + encodeURIComponent(this.state.player.switch.device) + "/switch/" + encodeURIComponent(this.state.player.switch.name))
-			.then((status) => {
-				this.setState({switchOn: !!status.value});
-			});
+			if (this.state.player.switch) {
+				StateStore.getState().APIManager.angharadApiRequest("GET", "/benoic/device/" + encodeURIComponent(this.state.player.switch.device) + "/switch/" + encodeURIComponent(this.state.player.switch.name))
+				.then((status) => {
+					this.setState({switchOn: !!status.value});
+				});
+			}
 		}
 	}
 	
 	loadMedia() {
 		if (this.state.stream.name) {
 			if (this.state.stream.webradio) {
-				if (StateStore.getState().profile.jukeboxIndex !== -1) {
-					StateStore.dispatch({ type: "setJukeboxIndex", index: -1 });
-				}
 				StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "now"})
 				.then((result) => {
 					if (StateStore.getState().profile.mediaNow.data_source !== result.data_source || StateStore.getState().profile.mediaNow.path !== result.path) {

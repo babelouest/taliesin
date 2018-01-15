@@ -25,6 +25,7 @@ var defaultState = {
 	profile: {
 		isAdmin: false,
 		oauth2Profile: false,
+		useWebsocket: true,
 		currentUser: false,
 		dataSource: false, 
 		path: "",
@@ -226,6 +227,9 @@ function stateStoreManager(state = defaultState, action) {
 				state.profile.currentPlayer = action.config.currentPlayer || state.profile.currentPlayer;
 				state.profile.stream = action.config.stream || state.profile.stream;
 			}
+			break;
+		case "setUseWebsocket":
+			state.profile.useWebsocket = action.useWebsocket;
 			break;
 		default:
 			break;

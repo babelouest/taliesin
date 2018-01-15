@@ -26,6 +26,7 @@ config.fetchConfig()
 			profileUrl: curOauth2Config.profileUrl,
 			changeStatusCb: function (newStatus, token, expiration) {
 				StateStore.dispatch({ type: 'setStoredValues', config: config.getLocalConfig() });
+				StateStore.dispatch({ type: 'setUseWebsocket', useWebsocket: config.getConfigValue("useWebsocket") });
 				if (newStatus === "connected") {
 					StateStore.dispatch({ type: 'connection', status: newStatus, token: token, expiration: expiration, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), angharadApiUrl: config.getConfigValue("angharadApiUrl"), oauth2: true});
 					ReactDOM.render(<App/>, document.getElementById('root'));

@@ -218,8 +218,10 @@ int main (int argc, char ** argv) {
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/stream/", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_stream_get_list, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "PUT", config->api_prefix, "/stream/:stream_name/manage", TALIESIN_CALLBACK_PRIORITY_AUTHENTICATION, &callback_taliesin_check_access, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "PUT", config->api_prefix, "/stream/:stream_name/manage", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_stream_manage, (void*)config);
+#ifndef U_DISABLE_WEBSOCKET
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/stream/:stream_name/ws", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_stream_manage_ws, (void*)config);
-  
+#endif
+
   // Search endpoints
   ulfius_add_endpoint_by_val(config->instance, "*", config->api_prefix, "/search/", TALIESIN_CALLBACK_PRIORITY_AUTHENTICATION, &callback_taliesin_check_access, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/search/", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_search, (void*)config);

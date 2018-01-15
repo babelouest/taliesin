@@ -24,7 +24,7 @@
 #ifndef __TALIESIN_H_
 #define __TALIESIN_H_
 
-#define _TALIESIN_VERSION_ "1.0.0"
+#define _TALIESIN_VERSION_ "1.0.4"
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
@@ -698,12 +698,14 @@ int callback_taliesin_playlist_load (const struct _u_request * request, struct _
 int callback_taliesin_stream_media (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_stream_get_list (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_stream_manage (const struct _u_request * request, struct _u_response * response, void * user_data);
-int callback_taliesin_stream_manage_ws (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_stream_cover (const struct _u_request * request, struct _u_response * response, void * user_data);
 
+#ifndef U_DISABLE_WEBSOCKET
+int callback_taliesin_stream_manage_ws (const struct _u_request * request, struct _u_response * response, void * user_data);
 void callback_websocket_stream_manager (const struct _u_request * request, struct _websocket_manager * websocket_manager, void * websocket_user_data);
 void callback_websocket_stream_onclose (const struct _u_request * request, struct _websocket_manager * websocket_manager, void * websocket_user_data);
 void callback_websocket_stream_incoming_message (const struct _u_request * request, struct _websocket_manager * websocket_manager, const struct _websocket_message * last_message, void * websocket_user_data);
+#endif
 
 int callback_taliesin_search (const struct _u_request * request, struct _u_response * response, void * user_data);
 

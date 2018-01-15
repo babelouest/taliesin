@@ -23,11 +23,6 @@
 #define _GNU_SOURCE
 #include <string.h>
 
-// TODO Remove after tests
-#include <netinet/in.h>
-#include <arpa/inet.h>
-// TODO
-
 #include "taliesin.h"
 
 int has_scope(json_t * scope_array, const char * scope) {
@@ -1370,6 +1365,7 @@ int callback_taliesin_stream_manage (const struct _u_request * request, struct _
   return res;
 }
 
+#ifndef U_DISABLE_WEBSOCKET
 int callback_taliesin_stream_manage_ws (const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct config_elements * config = (struct config_elements *)user_data;
   struct _t_webradio * current_webradio = NULL;
@@ -1708,6 +1704,7 @@ void callback_websocket_stream_incoming_message (const struct _u_request * reque
   }
   json_decref(j_message);
 }
+#endif
 
 int callback_taliesin_stream_cover (const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct config_elements * config = (struct config_elements *)user_data;

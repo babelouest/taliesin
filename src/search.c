@@ -731,7 +731,6 @@ json_t * media_advanced_search(struct config_elements * config, const char * use
     query = tmp;
   }
 
-	y_log_message(Y_LOG_LEVEL_DEBUG, "search query is %s", query);
   res = h_execute_query_json(config->conn, query, &j_result);
   o_free(query);
   if (res == H_OK) {

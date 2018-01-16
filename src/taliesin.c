@@ -88,7 +88,7 @@ int main (int argc, char ** argv) {
   config->cover_file_pattern = NULL;
   config->external_player = NULL;
   pthread_mutexattr_init ( &mutexattr );
-  pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_RECURSIVE_NP );
+  pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_RECURSIVE );
   if (pthread_mutex_init(&config->playlist_lock, &mutexattr)) {
     fprintf(stderr, "Error setting playlist_lock\n");
     return 1;
@@ -678,8 +678,8 @@ int build_config_from_file(struct config_elements * config) {
         if (config_setting_lookup_string(database, "path", &db_sqlite_path) == CONFIG_TRUE) {
           config->conn = h_connect_sqlite(db_sqlite_path);
           if (config->conn == NULL) {
-            config_destroy(&cfg);
             fprintf(stderr, "Error opening sqlite database %s\n", db_sqlite_path);
+            config_destroy(&cfg);
             return 0;
           } else {
             if (h_exec_query_sqlite(config->conn, "PRAGMA foreign_keys = ON;") != H_OK) {

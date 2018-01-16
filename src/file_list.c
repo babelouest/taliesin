@@ -31,7 +31,7 @@ int file_list_init(struct _t_file_list * file_list) {
     file_list->start = NULL;
     file_list->end = NULL;
     pthread_mutexattr_init ( &mutexattr );
-    pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_RECURSIVE_NP );
+    pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_RECURSIVE );
     if (pthread_mutex_init(&file_list->file_lock, &mutexattr)) {
       y_log_message(Y_LOG_LEVEL_ERROR, "Error setting file_lock");
       return T_ERROR;

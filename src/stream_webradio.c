@@ -57,7 +57,7 @@ int webradio_init(struct _t_webradio * webradio, const char * format, unsigned s
       webradio->nb_websocket = 0;
       if (file_list_init(webradio->file_list) == T_OK) {
         pthread_mutexattr_init ( &mutexattr );
-        pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_RECURSIVE_NP );
+        pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_RECURSIVE );
         if (!pthread_mutex_init(&webradio->audio_stream->write_lock, &mutexattr) &&
             !pthread_mutex_init(&webradio->audio_stream->transcode_lock, &mutexattr) &&
             !pthread_mutex_init(&webradio->audio_stream->client_lock, NULL) &&

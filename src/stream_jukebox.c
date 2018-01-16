@@ -47,7 +47,7 @@ int jukebox_init(struct _t_jukebox * jukebox, const char * format, unsigned shor
       jukebox->nb_websocket = 0;
       if (file_list_init(jukebox->file_list) == T_OK) {
         pthread_mutexattr_init ( &mutexattr );
-        pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_RECURSIVE_NP );
+        pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_RECURSIVE );
         if (!pthread_mutex_init(&jukebox->websocket_lock, NULL) &&
             !pthread_cond_init(&jukebox->websocket_cond, NULL) &&
             !pthread_mutex_init(&jukebox->message_lock, NULL) &&
@@ -105,7 +105,7 @@ int jukebox_audio_buffer_init (struct _jukebox_audio_buffer * jukebox_audio_buff
     if (!pthread_mutex_init(&jukebox_audio_buffer->buffer_lock, NULL) &&
         !pthread_cond_init(&jukebox_audio_buffer->buffer_cond, NULL)) {
         pthread_mutexattr_init ( &mutexattr );
-        pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_RECURSIVE_NP );
+        pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_RECURSIVE );
         if (!pthread_mutex_init(&jukebox_audio_buffer->write_lock, &mutexattr)) {
           return T_OK;
         } else {

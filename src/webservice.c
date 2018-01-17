@@ -148,7 +148,7 @@ int callback_taliesin_check_admin_access (const struct _u_request * request, str
     }
   } else {
     scope = msprintf("%s %s", config->oauth_scope_user, config->oauth_scope_admin);
-    response->shared_data = (void*)json_pack("{ssso}", "username", TALIESIN_NO_AUTHENTICATION_USERNAME, "scope", scope);
+    response->shared_data = (void*)json_pack("{ssss}", "username", TALIESIN_NO_AUTHENTICATION_USERNAME, "scope", scope);
     o_free(scope);
     return U_CALLBACK_CONTINUE;
   }

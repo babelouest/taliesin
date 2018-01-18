@@ -79,7 +79,7 @@ allow_origin="*"
 log_mode="file"
 
 # log level: NONE, ERROR, WARNING, INFO, DEBUG
-log_level="WARNING"
+log_level="INFO"
 
 # output to log file (required if log_mode is file)
 log_file="/tmp/taliesin.log"

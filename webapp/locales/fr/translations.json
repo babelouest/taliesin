@@ -301,8 +301,13 @@
 		"switch": "Interrupteur",
 		"select_stream": "Flux",
 		"message_saved": "Liste des lecteurs externes sauvegardée",
+		"message_saved_error": "Erreur lors de la sauvegarde",
 		"switch_attached": "Interrupteur attaché au lecteur",
-		"manage": "Gérer les lecteurs"
+		"manage": "Gérer les lecteurs",
+		"delete_title": "Supprimer un lecteur",
+		"delete_message": "Êtes-vous sûr de vouloir supprimer le lecteur {{player}}?",
+		"message_deleted": "Lecteur supprimé",
+		"message_deleted_error": "Erreur lors de la suppression du lecteur"
 	},
 	"modal": {
 		"category_save_ok": "Catégorie sauvegardée",
@@ -326,6 +331,11 @@
 		"play_as": "Lire comme",
 		"play_now_current_player": "Lire maintenant",
 		"remove_title": "Supprimer d'un flux ou d'une playlist",
+		"add_player": "Ajouter un lecteur",
+		"edit_player": "Modifier un lecteur",
+		"mpd_host": "Machine hôte",
+		"mpd_port": "Port",
+		"mpd_password": "Mot de passe",
 		"message_delete_from_stream_success": "Supprimé dans le flux",
 		"message_delete_from_stream_error": "Erreur lors de la suppression dans le flux",
 		"message_delete_from_playlist_success": "Supprimé dans la playlist",

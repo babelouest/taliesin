@@ -1,0 +1,15 @@
+[Unit]
+Description=Angharad House Automation Server
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=-/usr/loca/etc/carleon/carleon.conf
+ExecStart=/usr/local/bin/carleon-standalone --config-file=/usr/local/etc/carleon/carleon.conf
+User=pi
+KillMode=process
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+Alias=carleon

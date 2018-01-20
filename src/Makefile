@@ -19,11 +19,18 @@
 # License along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+ifndef DISABLE_OAUTH2
+	OAUTH2_OBJECTS=glewlwyd_resource.o
+	INITIAL_LIBS=-ljwt
+else
+	INITIAL_FLAG=-DDISABLE_OAUTH2
+endif
+
 CC=gcc
 #CC=clang
 CFLAGS=-c -Wall $(ADDITIONALFLAGS)
-LIBS=-lc -lulfius -lyder -ljansson -lorcania -lhoel -ljwt -lconfig -lpthread -lavcodec -lavutil -lavresample -lavformat -lavfilter -lswscale -lz
-OBJECTS=glewlwyd_resource.o static_file_callback.o misc.o libav-transcode-filter.o config.o file_list.o filesystem.o data_source.o media.o playlist.o stream.o stream_jukebox.o stream_webradio.o search.o webservice.o taliesin.o
+LIBS=-lc -lulfius -lyder -ljansson -lorcania -lhoel -lconfig -lpthread -lavcodec -lavutil -lavresample -lavformat -lavfilter -lswscale -lz $(INITIAL_LIBS)
+OBJECTS=$(OAUTH2_OBJECTS) static_file_callback.o misc.o libav-transcode-filter.o config.o file_list.o filesystem.o data_source.o media.o playlist.o stream.o stream_jukebox.o stream_webradio.o search.o webservice.o taliesin.o
 PREFIX=/usr/local
 CONFIG_FILE=../taliesin.conf
 
@@ -32,11 +39,11 @@ all: release
 clean:
 	rm -f *.o taliesin valgrind.txt
 
-debug: ADDITIONALFLAGS=-DDEBUG -g -O0
+debug: ADDITIONALFLAGS=$(INITIAL_FLAG) -DDEBUG -g -O0
 
 debug: taliesin
 
-release: ADDITIONALFLAGS=-O3
+release: ADDITIONALFLAGS=$(INITIAL_FLAG) -O3
 
 release: taliesin
 

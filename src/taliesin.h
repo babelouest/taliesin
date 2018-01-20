@@ -42,7 +42,10 @@
 #define _HOEL_SQLITE
 #include <hoel.h>
 
+#ifndef DISABLE_OAUTH2
 #include "glewlwyd_resource.h"
+#endif
+
 #include "static_file_callback.h"
 
 /**

@@ -67,7 +67,9 @@ int main (int argc, char ** argv) {
   config->instance = o_malloc(sizeof(struct _u_instance));
   config->allow_origin = NULL;
   config->use_oauth2_authentication = 0;
+#ifndef DISABLE_OAUTH2
   config->glewlwyd_resource_config = o_malloc(sizeof(struct _glewlwyd_resource_config));
+#endif
   config->static_file_config = o_malloc(sizeof(struct _static_file_config));
   config->use_secure_connection = 0;
   config->secure_connection_key_file = NULL;
@@ -97,7 +99,11 @@ int main (int argc, char ** argv) {
   config->stream_channels = TALIESIN_STREAM_DEFAULT_CHANNELS;
   config->stream_sample_rate = TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
   config->stream_bitrate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
+#ifndef DISABLE_OAUTH2
   if (config->instance == NULL || config->glewlwyd_resource_config == NULL || config->static_file_config == NULL) {
+#else
+  if (config->instance == NULL || config->static_file_config == NULL) {
+#endif
     fprintf(stderr, "Memory error - config->instance || config->glewlwyd_resource_config || config->static_file_config\n");
     return 1;
   }
@@ -112,11 +118,13 @@ int main (int argc, char ** argv) {
     return 1;
   }
   ulfius_init_instance(config->instance, TALIESIN_DEFAULT_PORT, NULL, NULL);
+#ifndef DISABLE_OAUTH2
   config->glewlwyd_resource_config->method = G_METHOD_HEADER;
   config->glewlwyd_resource_config->realm = NULL;
   config->glewlwyd_resource_config->oauth_scope = NULL;
   config->glewlwyd_resource_config->jwt_decode_key = NULL;
   config->glewlwyd_resource_config->jwt_alg = JWT_ALG_NONE;
+#endif
 
   config->static_file_config->files_path = NULL;
   config->static_file_config->url_prefix = NULL;
@@ -342,9 +350,11 @@ void exit_server(struct config_elements ** config, int exit_value) {
     o_free((*config)->secure_connection_pem_file);
     o_free((*config)->oauth_scope_user);
     o_free((*config)->oauth_scope_admin);
+#ifndef DISABLE_OAUTH2
     o_free((*config)->glewlwyd_resource_config->oauth_scope);
     o_free((*config)->glewlwyd_resource_config->jwt_decode_key);
     o_free((*config)->glewlwyd_resource_config);
+#endif
     o_free((*config)->stream_format);
     free_string_array((*config)->audio_file_extension);
     free_string_array((*config)->video_file_extension);
@@ -561,12 +571,17 @@ void exit_handler(int signal) {
 int build_config_from_file(struct config_elements * config) {
   
   config_t cfg;
-  config_setting_t * root, * database, * jwt, * mime_type_list, * mime_type;
+  config_setting_t * root, * database, * mime_type_list, * mime_type;
   const char * cur_server_remote_address, * cur_prefix, * cur_log_mode, * cur_log_level, * cur_log_file = NULL, * one_log_mode, * cur_allow_origin,
              * db_type, * db_sqlite_path, * db_mariadb_host = NULL, * db_mariadb_user = NULL,
-             * db_mariadb_password = NULL, * db_mariadb_dbname = NULL, * cur_static_files_path = NULL, * cur_rsa_pub_file = NULL, * cur_ecdsa_pub_file = NULL,
-             * cur_sha_secret = NULL, * cur_oauth_scope_user = NULL, * cur_oauth_scope_admin = NULL, * extension = NULL, * mime_type_value = NULL, * cur_stream_format = NULL;
-  int db_mariadb_port = 0, cur_key_size = 512, cur_use_rsa = 0, cur_use_ecdsa = 0, cur_use_sha = 0, cur_stream_channels = 0, cur_stream_sample_rate = 0, cur_stream_bit_rate = 0, cur_use_oauth2_authentication = 1, cur_user_can_create_data_source = 0, i = 0;
+             * db_mariadb_password = NULL, * db_mariadb_dbname = NULL, * cur_static_files_path = NULL,
+             * cur_oauth_scope_user = NULL, * cur_oauth_scope_admin = NULL, * extension = NULL, * mime_type_value = NULL, * cur_stream_format = NULL;
+  int db_mariadb_port = 0, cur_stream_channels = 0, cur_stream_sample_rate = 0, cur_stream_bit_rate = 0, cur_use_oauth2_authentication = 1, cur_user_can_create_data_source = 0, i = 0;
+#ifndef DISABLE_OAUTH2
+  config_setting_t * jwt;
+  const char * cur_rsa_pub_file = NULL, * cur_ecdsa_pub_file = NULL, * cur_sha_secret = NULL;
+  int cur_key_size = 512, cur_use_rsa = 0, cur_use_ecdsa = 0, cur_use_sha = 0;
+#endif
   
   config_init(&cfg);
   
@@ -751,6 +766,7 @@ int build_config_from_file(struct config_elements * config) {
   }
   
   if (config->use_oauth2_authentication) {
+#ifndef DISABLE_OAUTH2
     jwt = config_setting_get_member(root, "jwt");
     if (jwt != NULL) {
       config_setting_lookup_bool(jwt, "use_rsa", &cur_use_rsa);
@@ -827,6 +843,10 @@ int build_config_from_file(struct config_elements * config) {
         return 0;
       }
     }
+#else
+    fprintf(stderr, "Error, Taliesin was built without a jwt library\n");
+    return 0;
+#endif
   }
   
   if (config_lookup_string(&cfg, "oauth_scope_user", &cur_oauth_scope_user)) {
@@ -847,6 +867,7 @@ int build_config_from_file(struct config_elements * config) {
     }
   }
   
+#ifndef DISABLE_OAUTH2
   if (config->oauth_scope_user != NULL && config->oauth_scope_admin != NULL) {
     config->glewlwyd_resource_config->oauth_scope = msprintf("%s %s", config->oauth_scope_user, config->oauth_scope_admin);
     if (config->glewlwyd_resource_config->oauth_scope == NULL) {
@@ -859,6 +880,7 @@ int build_config_from_file(struct config_elements * config) {
     config_destroy(&cfg);
     return 0;
   }
+#endif
   
   if (config_lookup_string(&cfg, "stream_format", &cur_stream_format)) {
     if (0 == o_strcasecmp(cur_stream_format, "mp3") || 0 == o_strcasecmp(cur_stream_format, "vorbis") || 0 == o_strcasecmp(cur_stream_format, "flac")) {

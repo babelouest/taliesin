@@ -25,10 +25,12 @@
 
 #include "taliesin.h"
 
-int has_scope(json_t * scope_array, const char * scope) {
+int has_scope(struct config_elements * config, json_t * scope_array, const char * scope) {
   json_t * element;
   size_t index;
-  if (scope_array != NULL && scope != NULL && json_is_array(scope_array)) {
+  if (!config->use_oauth2_authentication) {
+    return 1;
+  } else if (scope_array != NULL && scope != NULL && json_is_array(scope_array)) {
     json_array_foreach(scope_array, index, element) {
       if (json_is_string(element) && 0 == o_strcmp(json_string_value(element), scope)) {
         return 1;
@@ -40,7 +42,7 @@ int has_scope(json_t * scope_array, const char * scope) {
 
 const char * get_username(const struct _u_request * request, struct _u_response * response, struct config_elements * config) {
   const char * username = NULL;
-  if (has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin)) {
+  if (has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin)) {
     // user can be himself or impersonated
     if (u_map_get(request->map_url, "username") != NULL) {
       username = u_map_get(request->map_url, "username");
@@ -109,7 +111,11 @@ int callback_taliesin_check_access (const struct _u_request * request, struct _u
   char * scope;
   
   if (config->use_oauth2_authentication) {
+#ifdef DISABLE_OAUTH2
+    return U_CALLBACK_UNAUTHORIZED;
+#else
     return callback_check_glewlwyd_access_token(request, response, config->glewlwyd_resource_config);
+#endif
   } else {
     scope = msprintf("%s %s", config->oauth_scope_user, config->oauth_scope_admin);
     response->shared_data = (void*)json_pack("{ssss}", "username", TALIESIN_NO_AUTHENTICATION_USERNAME, "scope", scope);
@@ -124,11 +130,16 @@ int callback_taliesin_check_access (const struct _u_request * request, struct _u
 int callback_taliesin_check_admin_access (const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct config_elements * config = (struct config_elements *)user_data;
   char * scope;
+#ifndef DISABLE_OAUTH2
   int res, found = 0;
   json_t * j_element;
   size_t index;
+#endif
   
   if (config->use_oauth2_authentication) {
+#ifdef DISABLE_OAUTH2
+    return U_CALLBACK_UNAUTHORIZED;
+#else
     if ((res = callback_check_glewlwyd_access_token(request, response, config->glewlwyd_resource_config)) == U_CALLBACK_CONTINUE) {
       json_array_foreach(json_object_get(((json_t *)response->shared_data), "scope"), index, j_element) {
         if (0 ==  o_strcmp(json_string_value(j_element), config->oauth_scope_admin)) {
@@ -146,6 +157,7 @@ int callback_taliesin_check_admin_access (const struct _u_request * request, str
     } else {
       return res;
     }
+#endif
   } else {
     scope = msprintf("%s %s", config->oauth_scope_user, config->oauth_scope_admin);
     response->shared_data = (void*)json_pack("{ssss}", "username", TALIESIN_NO_AUTHENTICATION_USERNAME, "scope", scope);
@@ -210,7 +222,7 @@ int callback_taliesin_data_source_add (const struct _u_request * request, struct
   json_t * j_body = ulfius_get_json_body_request(request, NULL), * j_is_valid;
   int res = U_CALLBACK_CONTINUE;
   
-  j_is_valid = is_data_source_valid(config, get_username(request, response, config), has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin), j_body, 0);
+  j_is_valid = is_data_source_valid(config, get_username(request, response, config), has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin), j_body, 0);
   if (j_is_valid != NULL) {
     if (json_array_size(j_is_valid) == 0) {
       if (data_source_add(config, get_username(request, response, config), j_body) != T_OK) {
@@ -235,7 +247,7 @@ int callback_taliesin_data_source_add (const struct _u_request * request, struct
 int callback_taliesin_data_source_set (const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct config_elements * config = (struct config_elements *)user_data;
   json_t * j_body = ulfius_get_json_body_request(request, NULL), * j_is_valid, * j_data_source;
-  int res = U_CALLBACK_CONTINUE, is_admin = has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin);
+  int res = U_CALLBACK_CONTINUE, is_admin = has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin);
   
   j_data_source = data_source_get(config, get_username(request, response, config), u_map_get(request->map_url, "data_source"), 1);
   if (check_result_value(j_data_source, T_OK)) {
@@ -283,7 +295,7 @@ int callback_taliesin_data_source_delete (const struct _u_request * request, str
   
   j_data_source = data_source_get(config, get_username(request, response, config), u_map_get(request->map_url, "data_source"), 1);
   if (check_result_value(j_data_source, T_OK)) {
-    if (data_source_can_update(json_object_get(j_data_source, "data_source"), has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin))) {
+    if (data_source_can_update(json_object_get(j_data_source, "data_source"), has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin))) {
       if (data_source_delete(config, get_username(request, response, config), u_map_get(request->map_url, "data_source")) != T_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_data_source_delete - Error data_source_delete");
         res = U_CALLBACK_ERROR;
@@ -313,7 +325,7 @@ int callback_taliesin_data_source_refresh_run (const struct _u_request * request
   
   j_data_source = data_source_get(config, get_username(request, response, config), u_map_get(request->map_url, "data_source"), 1);
   if (check_result_value(j_data_source, T_OK)) {
-    if (data_source_can_update(json_object_get(j_data_source, "data_source"), has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin))) {
+    if (data_source_can_update(json_object_get(j_data_source, "data_source"), has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin))) {
       decoded_url = url_decode(request->http_url);
       if (decoded_url != NULL) {
         path = o_strdup((decoded_url + snprintf(NULL, 0, "/%s/data_source/%s/refresh/", config->api_prefix, u_map_get(request->map_url, "data_source"))));
@@ -402,7 +414,7 @@ int callback_taliesin_data_source_refresh_stop (const struct _u_request * reques
   
   j_data_source = data_source_get(config, get_username(request, response, config), u_map_get(request->map_url, "data_source"), 1);
   if (check_result_value(j_data_source, T_OK)) {
-    if (data_source_can_update(json_object_get(j_data_source, "data_source"), has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin))) {
+    if (data_source_can_update(json_object_get(j_data_source, "data_source"), has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin))) {
       if ((res = data_source_refresh_stop(config, json_object_get(j_data_source, "data_source"))) == T_ERROR) {
         y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_data_source_refresh_stop - Error data_source_refresh_stop");
         response->status = 500;
@@ -432,7 +444,7 @@ int callback_taliesin_data_source_clean (const struct _u_request * request, stru
   
   j_data_source = data_source_get(config, get_username(request, response, config), u_map_get(request->map_url, "data_source"), 1);
   if (check_result_value(j_data_source, T_OK)) {
-    if (data_source_can_update(json_object_get(j_data_source, "data_source"), has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin))) {
+    if (data_source_can_update(json_object_get(j_data_source, "data_source"), has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin))) {
       if (data_source_refresh_run(config, json_deep_copy(json_object_get(j_data_source, "data_source")), NULL, 1) != T_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_data_source_clean - Error data_source_refresh_run");
         response->status = 500;
@@ -1298,7 +1310,7 @@ int callback_taliesin_stream_manage (const struct _u_request * request, struct _
     }
   }
   if (current_webradio != NULL) {
-    j_is_valid = is_webradio_command_valid(config, current_webradio, j_body, get_username(request, response, config), has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin));
+    j_is_valid = is_webradio_command_valid(config, current_webradio, j_body, get_username(request, response, config), has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin));
     if (j_is_valid != NULL) {
       if (json_array_size(j_is_valid) == 0) {
         j_result_command = webradio_command(config, current_webradio, get_username(request, response, config), j_body);
@@ -1327,7 +1339,7 @@ int callback_taliesin_stream_manage (const struct _u_request * request, struct _
       res = U_CALLBACK_ERROR;
     }
   } else if (current_playlist != NULL) {
-    j_is_valid = is_jukebox_command_valid(config, current_playlist, j_body, get_username(request, response, config), has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin));
+    j_is_valid = is_jukebox_command_valid(config, current_playlist, j_body, get_username(request, response, config), has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin));
     if (j_is_valid != NULL) {
       if (json_array_size(j_is_valid) == 0) {
         j_result_command = jukebox_command(config, current_playlist, get_username(request, response, config), j_body);
@@ -1392,7 +1404,7 @@ int callback_taliesin_stream_manage_ws (const struct _u_request * request, struc
     ws_stream = o_malloc(sizeof(struct _ws_stream));
     if (ws_stream != NULL) {
       ws_stream->config = config;
-      ws_stream->is_admin = has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin);
+      ws_stream->is_admin = has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin);
       if (ws_stream->is_admin && u_map_get(request->map_url, "username") != NULL) {
         ws_stream->username = o_strdup(u_map_get(request->map_url, "username"));
       } else {
@@ -1554,16 +1566,20 @@ void callback_websocket_stream_onclose (const struct _u_request * request, struc
 
 void callback_websocket_stream_incoming_message (const struct _u_request * request, struct _websocket_manager * websocket_manager, const struct _websocket_message * last_message, void * websocket_user_data) {
   struct _ws_stream * ws_stream = (struct _ws_stream *)websocket_user_data;
-  json_t * j_message = json_loadb(last_message->data, last_message->data_len, 0, NULL), * j_is_valid = NULL, * j_result_command, * j_out_message, * j_access_token, * j_res_scope;
+  json_t * j_message = json_loadb(last_message->data, last_message->data_len, 0, NULL), * j_is_valid = NULL, * j_result_command, * j_out_message;
   char * message;
   const char * token_value;
-  int res_validity;
   time_t now;
+#ifndef DISABLE_OAUTH2
+  json_t * j_res_scope, * j_access_token;
+  int res_validity;
+#endif
   
   time(&now);
   if (json_is_object(j_message) && json_is_string(json_object_get(j_message, "command")) && 0 == o_strcasecmp("authorization", json_string_value(json_object_get(j_message, "command")))) {
     token_value = json_string_value(json_object_get(j_message, "token"));
     if (token_value != NULL) {
+#ifndef DISABLE_OAUTH2
       j_access_token = access_token_check_signature(ws_stream->config->glewlwyd_resource_config, token_value);
       if (check_result_value(j_access_token, G_OK)) {
         res_validity = access_token_check_validity(ws_stream->config->glewlwyd_resource_config, json_object_get(j_access_token, "grants"));
@@ -1623,6 +1639,31 @@ void callback_websocket_stream_incoming_message (const struct _u_request * reque
         ws_stream->is_authenticated = 0;
       }
       json_decref(j_access_token);
+#else
+      if (ws_stream->config->use_oauth2_authentication) {
+        j_out_message = json_pack("{ssss}", "command", "authorization", "result", "invalid_request");
+        message = json_dumps(j_out_message, JSON_COMPACT);
+        if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
+        }
+        o_free(message);
+        json_decref(j_out_message);
+        ws_stream->is_authenticated = 0;
+      } else {
+        j_out_message = json_pack("{ssss}", "command", "authorization", "result", "connected");
+        message = json_dumps(j_out_message, JSON_COMPACT);
+        if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
+        }
+        o_free(message);
+        json_decref(j_out_message);
+        ws_stream->is_authenticated = 1;
+        ws_stream->expiration = now + 3600;;
+        if (ws_stream->username == NULL) {
+          ws_stream->username = o_strdup(TALIESIN_NO_AUTHENTICATION_USERNAME);
+        }
+      }
+#endif
     } else {
       j_out_message = json_pack("{ssss}", "command", "authorization", "result", "invalid_request");
       message = json_dumps(j_out_message, JSON_COMPACT);
@@ -1892,7 +1933,7 @@ int callback_taliesin_playlist_add (const struct _u_request * request, struct _u
   int res = U_CALLBACK_CONTINUE;
   json_int_t tpl_id;
   
-  j_is_valid = is_playlist_valid(config, get_username(request, response, config), has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin), j_body, 0, 1);
+  j_is_valid = is_playlist_valid(config, get_username(request, response, config), has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin), j_body, 0, 1);
   if (j_is_valid != NULL) {
     if (json_array_size(j_is_valid) == 0) {
       j_result = media_append_list_to_media_list(config, json_object_get(j_body, "media"), get_username(request, response, config));
@@ -1930,7 +1971,7 @@ int callback_taliesin_playlist_add (const struct _u_request * request, struct _u
 int callback_taliesin_playlist_set (const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct config_elements * config = (struct config_elements *)user_data;
   json_t * j_body = ulfius_get_json_body_request(request, NULL), * j_is_valid, * j_playlist;
-  int res = U_CALLBACK_CONTINUE, is_admin = has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin);
+  int res = U_CALLBACK_CONTINUE, is_admin = has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin);
   
   j_playlist = playlist_get(config, get_username(request, response, config), u_map_get(request->map_url, "playlist"), 1, 0, 1);
   if (check_result_value(j_playlist, T_OK)) {
@@ -1974,7 +2015,7 @@ int callback_taliesin_playlist_set (const struct _u_request * request, struct _u
 int callback_taliesin_playlist_delete (const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct config_elements * config = (struct config_elements *)user_data;
   json_t * j_playlist;
-  int res = U_CALLBACK_CONTINUE, is_admin = has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin);
+  int res = U_CALLBACK_CONTINUE, is_admin = has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin);
   
   j_playlist = playlist_get(config, get_username(request, response, config), u_map_get(request->map_url, "playlist"), 1, 0, 1);
   if (check_result_value(j_playlist, T_OK)) {
@@ -2003,11 +2044,11 @@ int callback_taliesin_playlist_delete (const struct _u_request * request, struct
 int callback_taliesin_playlist_add_media (const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct config_elements * config = (struct config_elements *)user_data;
   json_t * j_playlist, * j_is_valid, * j_body = ulfius_get_json_body_request(request, NULL), * j_result;
-  int res = U_CALLBACK_CONTINUE, is_admin = has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin);
+  int res = U_CALLBACK_CONTINUE, is_admin = has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin);
   
   j_playlist = playlist_get(config, get_username(request, response, config), u_map_get(request->map_url, "playlist"), 1, 0, 1);
   if (check_result_value(j_playlist, T_OK)) {
-    if (playlist_can_update(json_object_get(j_playlist, "playlist"), has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin))) {
+    if (playlist_can_update(json_object_get(j_playlist, "playlist"), has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin))) {
       j_is_valid = is_playlist_element_list_valid(config, is_admin, get_username(request, response, config), j_body);
       if (j_is_valid != NULL) {
         if (json_array_size(j_is_valid) == 0) {
@@ -2058,11 +2099,11 @@ int callback_taliesin_playlist_add_media (const struct _u_request * request, str
 int callback_taliesin_playlist_delete_media (const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct config_elements * config = (struct config_elements *)user_data;
   json_t * j_playlist, * j_is_valid, * j_body = ulfius_get_json_body_request(request, NULL), * j_result;
-  int res = U_CALLBACK_CONTINUE, is_admin = has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin);
+  int res = U_CALLBACK_CONTINUE, is_admin = has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin);
   
   j_playlist = playlist_get(config, get_username(request, response, config), u_map_get(request->map_url, "playlist"), 1, 0, 1);
   if (check_result_value(j_playlist, T_OK)) {
-    if (playlist_can_update(json_object_get(j_playlist, "playlist"), has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin))) {
+    if (playlist_can_update(json_object_get(j_playlist, "playlist"), has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin))) {
       j_is_valid = is_playlist_element_list_valid(config, is_admin, get_username(request, response, config), j_body);
       if (j_is_valid != NULL) {
         if (json_array_size(j_is_valid) == 0) {
@@ -2109,13 +2150,13 @@ int callback_taliesin_playlist_delete_media (const struct _u_request * request, 
 int callback_taliesin_playlist_has_media (const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct config_elements * config = (struct config_elements *)user_data;
   json_t * j_playlist, * j_is_valid, * j_body = ulfius_get_json_body_request(request, NULL), * j_result, * j_media_list;
-  int res = U_CALLBACK_CONTINUE, is_admin = has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin);
+  int res = U_CALLBACK_CONTINUE, is_admin = has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin);
   size_t offset = u_map_get(request->map_url, "offset")!=NULL?strtol(u_map_get(request->map_url, "offset"), NULL, 10):0,
          limit = (u_map_get(request->map_url, "limit")!=NULL&&strtol(u_map_get(request->map_url, "limit"), NULL, 10)>0)?strtol(u_map_get(request->map_url, "limit"), NULL, 10):TALIESIN_MEDIA_LIMIT_DEFAULT;
   
   j_playlist = playlist_get(config, get_username(request, response, config), u_map_get(request->map_url, "playlist"), 1, 0, 1);
   if (check_result_value(j_playlist, T_OK)) {
-    if (playlist_can_update(json_object_get(j_playlist, "playlist"), has_scope(json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin))) {
+    if (playlist_can_update(json_object_get(j_playlist, "playlist"), has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin))) {
       j_is_valid = is_playlist_element_list_valid(config, is_admin, get_username(request, response, config), j_body);
       if (j_is_valid != NULL) {
         if (json_array_size(j_is_valid) == 0) {

@@ -3,6 +3,7 @@ import { PanelGroup, Panel, Row, Col, Label, ButtonGroup, Button, DropdownButton
 import FontAwesome from 'react-fontawesome';
 import $ from 'jquery';
 import StateStore from '../lib/StateStore';
+import StreamMediaList from './StreamMediaList';
 import ModalConfirm from '../Modal/ModalConfirm';
 import ModalEdit from '../Modal/ModalEdit';
 import MediaRow from './MediaRow';
@@ -47,9 +48,6 @@ class StreamDetails extends Component {
 		this.handleHistoryNext = this.handleHistoryNext.bind(this);
 		this.handleSelectMediaList = this.handleSelectMediaList.bind(this);
 		this.handleHistoryRefresh = this.handleHistoryRefresh.bind(this);
-		this.getMediaList = this.getMediaList.bind(this);
-		this.handleMediaListPrevious = this.handleMediaListPrevious.bind(this);
-		this.handleMediaListNext = this.handleMediaListNext.bind(this);
 		
 		this.getHistory();
 	}
@@ -276,48 +274,12 @@ class StreamDetails extends Component {
 		});
 	}
 	
-	getMediaList() {
-		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "list", parameters: {offset: this.state.mediaListOffset?this.state.mediaListOffset:undefined, limit: 10}})
-		.then((result) => {
-			var mediaList = [];
-			result.forEach((media, index) => {
-				mediaList.push(
-					<MediaRow stream={this.state.stream.webradio?false:this.state.stream.name} elements={this.state.stream.elements} media={media} index={index} key={index} />
-				);
-			});
-			this.setState({mediaList: mediaList, mediaListLoaded: true});
-		})
-		.fail(() => {
-			StateStore.getState().NotificationManager.addNotification({
-				message: i18n.t("stream.message_stream_media_list_error"),
-				level: 'error'
-			});
-			this.setState({mediaList: [], mediaListLoaded: true});
-		});
-	}
-	
 	handleSelectMediaList() {
-		this.setState({mediaListExpanded: !this.state.mediaListExpanded, mediaList: [], mediaListLoaded: false}, () => {
-			if (this.state.mediaListExpanded) {
-				this.getMediaList();
-			}
-		});
-	}
-	
-	handleMediaListPrevious() {
-		this.setState({mediaListOffset: this.state.mediaListOffset - 10, mediaList: [], mediaListLoaded: false}, () => {
-			this.getMediaList();
-		});
-	}
-	
-	handleMediaListNext() {
-		this.setState({mediaListOffset: this.state.mediaListOffset + 10, mediaList: [], mediaListLoaded: false}, () => {
-			this.getMediaList();
-		});
+		this.setState({mediaListExpanded: !this.state.mediaListExpanded});
 	}
 	
 	render() {
-		var streamRandom, playlistAttached, history, clientList = [], playNowTitle;
+		var streamRandom, playlistAttached, history, clientList = [], mediaList;
 		if (this.state.stream.webradio) {
 			if (this.state.stream.random) {
 				streamRandom = 
@@ -439,10 +401,9 @@ class StreamDetails extends Component {
 					{this.state.historyList}
 					{this.state.historyLoaded?"":<FontAwesome name="spinner" spin />}
 				</Panel>
-		} else {
-			playNowTitle = 
-				<Col md={2}>
-				</Col>
+		}
+		if (this.state.mediaListExpanded) {
+			mediaList = <StreamMediaList stream={this.state.stream}/>
 		}
 		return (
 			<div>
@@ -509,44 +470,7 @@ class StreamDetails extends Component {
 				<PanelGroup>
 					{history}
 					<Panel collapsible header={i18n.t("stream.media_list")} eventKey="2" onSelect={this.handleSelectMediaList}>
-						<Row>
-							<Col md={4}>
-								<ButtonGroup>
-									<Button onClick={this.handleMediaListPrevious} disabled={!this.state.mediaListOffset}>
-										{i18n.t("common.previous_page")}
-									</Button>
-									<Button onClick={this.handleMediaListNext} disabled={(this.state.mediaListOffset + this.state.mediaList.length) >= this.state.stream.elements}>
-										{i18n.t("common.next_page")}
-									</Button>
-								</ButtonGroup>
-							</Col>
-							<Col md={2} sm={6} xs={6}>
-								<Label>{i18n.t("stream.total_media_files")}</Label>
-							</Col>
-							<Col md={2} sm={6} xs={6}>
-								<span>{this.state.stream.elements}</span>
-							</Col>
-						</Row>
-						<Row className="hidden-xs">
-							{playNowTitle}
-							<Col md={2}>
-								<Label>{i18n.t("common.data_source")}</Label>
-							</Col>
-							<Col md={2}>
-								<Label>{i18n.t("common.artist")}</Label>
-							</Col>
-							<Col md={2}>
-								<Label>{i18n.t("common.album")}</Label>
-							</Col>
-							<Col md={2}>
-								<Label>{i18n.t("common.title")}</Label>
-							</Col>
-							<Col md={2}>
-								<Label>{i18n.t("common.cover")}</Label>
-							</Col>
-						</Row>
-						{this.state.mediaList}
-						{this.state.mediaListLoaded?"":<FontAwesome name="spinner" spin />}
+						{mediaList}
 					</Panel>
 					<Panel collapsible header={i18n.t("stream.info")} eventKey="1">
 						<Row>

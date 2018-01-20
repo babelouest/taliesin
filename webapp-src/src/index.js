@@ -43,7 +43,7 @@ config.fetchConfig()
 		StateStore.dispatch({ type: "setOauth2Connector", oauth2Connector: oauth2Connector});
 	} else {
 		StateStore.dispatch({ type: 'setStoredValues', config: config.getLocalConfig() });
-		StateStore.dispatch({ type: 'connection', status: "noauth", taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), angharadApiUrl: "", oauth2: false});
+		StateStore.dispatch({ type: 'connection', status: "noauth", taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), angharadApiUrl: config.getConfigValue("angharadApiUrl"), oauth2: false});
 		ReactDOM.render(<App/>, document.getElementById('root'));
 	}
 	ReactDOM.render(<App/>, document.getElementById('root'));

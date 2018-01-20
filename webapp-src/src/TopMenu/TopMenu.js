@@ -427,7 +427,7 @@ class TopMenu extends Component {
 				<div>
 					<Navbar collapseOnSelect>
 						<Navbar.Header>
-							<Navbar.Brand>
+							<Navbar.Brand role="button" onClick={() => this.handleBrowseDashboard()}>
 								Taliesin
 							</Navbar.Brand>
 							<Navbar.Toggle />

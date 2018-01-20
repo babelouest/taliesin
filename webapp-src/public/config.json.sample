@@ -2,7 +2,7 @@
 	"taliesinApiUrl": "http://localhost:8576/api",
 	"angharadApiUrl": "http://localhost:2473/api",
 	"storageType": "local", 
-	"useWebsockets": true,
+	"useWebsocket": true,
 	"oauth2Config": {
 		"storageType": "local", 
 		"responseType": "code", 

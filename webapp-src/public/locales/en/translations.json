@@ -301,8 +301,13 @@
 		"switch": "Player switch",
 		"select_stream": "Stream",
 		"message_saved": "External player list saved",
+		"message_saved_error": "Error while saving",
 		"switch_attached": "Switch attached",
-		"manage": "Manage players"
+		"manage": "Manage players",
+		"delete_title": "Delete player",
+		"delete_message": "Are your sure you want to delete the player {{player}}?",
+		"message_deleted": "Player deleted",
+		"message_deleted_error": "Error while deleting player"
 	},
 	"modal": {
 		"category_save_ok": "Category saved",
@@ -326,6 +331,11 @@
 		"play_as": "Play as",
 		"play_now_current_player": "Play now",
 		"remove_title": "Remove from a stream or a playlist",
+		"add_player": "Add a player",
+		"edit_player": "Edit a player",
+		"mpd_host": "Host",
+		"mpd_port": "Port",
+		"mpd_password": "Password",
 		"message_delete_from_stream_success": "Removed from stream",
 		"message_delete_from_stream_error": "Error removing from stream",
 		"message_delete_from_playlist_success": "Removed from playlist",

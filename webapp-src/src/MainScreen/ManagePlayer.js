@@ -1,13 +1,17 @@
 import React, { Component } from 'react';
-import { DropdownButton, ToggleButtonGroup, ToggleButton, MenuItem, Button } from 'react-bootstrap';
+import { DropdownButton, ToggleButtonGroup, ToggleButton, MenuItem, Button, ButtonGroup } from 'react-bootstrap';
+import FontAwesome from 'react-fontawesome';
+
 import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
+import ModalEditMPD from '../Modal/ModalEditMPD';
+import ModalConfirm from '../Modal/ModalConfirm';
 
 class ManagePlayer extends Component {	
 	constructor(props) {
 		super(props);
 		
-		this.state = {playerList: [], switchList: []};
+		this.state = {playerList: [], switchList: [], showModal: false, addPlayer: true, currentPlayer: {}, modalDeleteShow: false};
 		this.internalPlayerList = [];
 		
 		this.getInitialList();
@@ -16,6 +20,17 @@ class ManagePlayer extends Component {
 		this.handleSelectSwitch = this.handleSelectSwitch.bind(this);
 		this.handleSavePlayers = this.handleSavePlayers.bind(this);
 		this.handleChangeEnabled = this.handleChangeEnabled.bind(this);
+		this.handleAddPlayer = this.handleAddPlayer.bind(this);
+		this.handleEditPlayer = this.handleEditPlayer.bind(this);
+		this.handleDeletePlayer = this.handleDeletePlayer.bind(this);
+		this.savePlayer = this.savePlayer.bind(this);
+		this.confirmDeletePlayer = this.confirmDeletePlayer.bind(this);
+	}
+	
+	componentWillReceiveProps(nextProps) {
+		this.setState({playerList: [], switchList: [], showModal: false, addPlayer: true, currentPlayer: {}, modalDeleteShow: false}, () => {
+			this.getInitialList()
+		});
 	}
 	
 	getInitialList() {
@@ -59,12 +74,6 @@ class ManagePlayer extends Component {
 		});
 	}
 	
-	componentWillReceiveProps(nextProps) {
-		this.setState({playerList: [], switchList: []}, () => {
-			this.getInitialList()
-		});
-	}
-	
 	handleSelectSwitch(player, device, switcher) {
 		var playerList = this.state.playerList;
 		
@@ -104,6 +113,77 @@ class ManagePlayer extends Component {
 		this.setState({playerList: playerList});
 	}
 	
+	handleAddPlayer() {
+		this.setState({showModal: true, addPlayer: true, currentPlayer: false});
+	}
+	
+	handleEditPlayer(player) {
+		this.setState({showModal: true, addPlayer: false, currentPlayer: player});
+	}
+	
+	handleDeletePlayer(player) {
+		this.setState({modalDeleteShow: true, currentPlayer: player});
+	}
+	
+	savePlayer(result, add, player) {
+		this.setState({showModal: false}, () => {
+			if (result) {
+				if (add) {
+					StateStore.getState().APIManager.angharadApiRequest("POST", "/carleon/service-mpd/", {name: player.name, description: player.description||undefined, host: player.host||undefined, port: player.port||undefined, password: player.password||undefined})
+					.then((services) => {
+						StateStore.getState().NotificationManager.addNotification({
+							message: i18n.t("player.message_saved"),
+							level: 'info'
+						});
+						this.getInitialList();
+					})
+					.fail(() => {
+						StateStore.getState().NotificationManager.addNotification({
+							message: i18n.t("player.message_saved_error"),
+							level: 'error'
+						});
+					});
+				} else {
+					StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(player.name), {description: player.description||undefined, host: player.host||undefined, port: player.port||undefined, password: player.password||undefined})
+					.then((services) => {
+						StateStore.getState().NotificationManager.addNotification({
+							message: i18n.t("player.message_saved"),
+							level: 'info'
+						});
+						this.getInitialList();
+					})
+					.fail(() => {
+						StateStore.getState().NotificationManager.addNotification({
+							message: i18n.t("player.message_saved_error"),
+							level: 'error'
+						});
+					});
+				}
+			}
+		});
+	}
+	
+	confirmDeletePlayer(result) {
+		this.setState({modalDeleteShow: false}, () => {
+			if (result) {
+				StateStore.getState().APIManager.angharadApiRequest("DELETE", "/carleon/service-mpd/" + encodeURIComponent(this.state.currentPlayer.name))
+				.then((services) => {
+					StateStore.getState().NotificationManager.addNotification({
+						message: i18n.t("player.message_deleted"),
+						level: 'info'
+					});
+					this.getInitialList();
+				})
+				.fail(() => {
+					StateStore.getState().NotificationManager.addNotification({
+						message: i18n.t("player.message_deleted_error"),
+						level: 'error'
+					});
+				});
+			}
+		});
+	}
+	
 	render() {
 		var lines = [];
 		this.internalPlayerList = [];
@@ -118,7 +198,7 @@ class ManagePlayer extends Component {
 			} else {
 				enabledSwitch = 
 					<ToggleButtonGroup type="checkbox">
-					<ToggleButton value="1" onChange={() => {this.handleChangeEnabled(index)}}>{i18n.t("common.disabled")}</ToggleButton>
+						<ToggleButton value="1" onChange={() => {this.handleChangeEnabled(index)}}>{i18n.t("common.disabled")}</ToggleButton>
 					</ToggleButtonGroup>
 			}
 			
@@ -139,7 +219,7 @@ class ManagePlayer extends Component {
 			<tr key={index}>
 				<td>{player.name}</td>
 				<td>
-					<DropdownButton id={"switch-" + player.name} title={player.switch?this.state.switchList.find((switcher) => {return switcher.name === player.switch.name}).display:"None"}>
+					<DropdownButton id={"switch-" + player.name} title={this.state.switchList.length&&player.switch?this.state.switchList.find((switcher) => {return switcher.name === player.switch.name}).display:i18n.t("common.none")}>
 						{switches}
 					</DropdownButton>
 				</td>
@@ -148,6 +228,16 @@ class ManagePlayer extends Component {
 						{enabledSwitch}
 					</ToggleButtonGroup>
 				</td>
+				<td>
+					<ButtonGroup>
+						<Button onClick={() => {this.handleEditPlayer(player)}} title={i18n.t("common.edit")}>
+							<FontAwesome name={"pencil"} />
+						</Button>
+						<Button onClick={() => {this.handleDeletePlayer(player)}} title={i18n.t("common.delete")}>
+							<FontAwesome name={"trash"} />
+						</Button>
+					</ButtonGroup>
+				</td>
 			</tr>
 			);
 			this.internalPlayerList.push(player);
@@ -155,12 +245,16 @@ class ManagePlayer extends Component {
 		
 		return (
 		<div>
+			<Button onClick={() => {this.handleAddPlayer()}} title={i18n.t("common.add")}>
+				<FontAwesome name={"plus"} />
+			</Button>
 			<table className="table">
 				<thead>
 					<tr>
 						<td>{i18n.t("common.name")}</td>
 						<td>{i18n.t("player.switch_attached")}</td>
 						<td>{i18n.t("common.enabled")}</td>
+						<td></td>
 					</tr>
 				</thead>
 				<tbody>
@@ -168,6 +262,8 @@ class ManagePlayer extends Component {
 				</tbody>
 			</table>
 			<Button title={i18n.t("common.save")} onClick={this.handleSavePlayers}>{i18n.t("common.save")}</Button>
+			<ModalEditMPD show={this.state.showModal} player={this.state.currentPlayer} add={this.state.addPlayer} onCloseCb={this.savePlayer} />
+			<ModalConfirm show={this.state.modalDeleteShow} title={i18n.t("player.delete_title")} message={i18n.t("player.delete_message", {player: this.state.currentPlayer.name})} onCloseCb={this.confirmDeletePlayer}/>
 		</div>);
 	}
 }

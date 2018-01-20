@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Image } from 'react-bootstrap';
+
 import ModalMedia from '../Modal/ModalMedia';
 
 class MediaInfo extends Component {
@@ -63,7 +64,7 @@ class MediaInfo extends Component {
 		}
 		return (
 			<div className="media-container">
-				<div className="media-content">
+				<div className="media-content hidden-sm hidden-xs">
 					<a role="button" onClick={this.handleOpenModal} title={this.state.title}>
 						<div>
 							<label>{this.state.meta}</label>
@@ -71,10 +72,18 @@ class MediaInfo extends Component {
 						<div className="scroll-left">
 							<span>{this.state.title}</span>
 						</div>
-						<div className="text-center hidden-xs hidden-sm">
+						<div className="text-center">
 							{image}
 						</div>
 					</a>
+				</div>
+				<div className="visible-sm visible-xs text-center">
+					<div>
+						<label>{this.state.meta}</label>
+					</div>
+					<div>
+						<span>{this.state.title}</span>
+					</div>
 				</div>
 				<ModalMedia show={this.state.showModal} media={this.state.media} title={this.state.title} onClose={this.handleCloseModal} />
 			</div>

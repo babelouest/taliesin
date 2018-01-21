@@ -26,7 +26,10 @@ ARG ORCANIA_VERSION=1.1.1
 ARG YDER_VERSION=1.1.1
 ARG ULFIUS_VERSION=2.2.4
 ARG HOEL_VERSION=1.3.1
-ARG TALIESIN_VERSION=1.0.10
+
+COPY ["src", "/tmp/taliesin"]
+
+COPY ["webapp/", "/var/www"]
 
 # libtool and autoconf may be required, install them with 'sudo apt-get install libtool autoconf'
 RUN cd /tmp && \
@@ -84,17 +87,12 @@ RUN cd /tmp && \
 		cp ulfius.h /usr/local/include && \
 
 # Install Taliesin
-    cd /tmp && \
-    wget https://github.com/babelouest/taliesin/archive/v${TALIESIN_VERSION}.tar.gz && \
-    tar -zxvf v${TALIESIN_VERSION}.tar.gz && \
-    rm v${TALIESIN_VERSION}.tar.gz && \
-    cd taliesin-${TALIESIN_VERSION}/src && \
-    make debug && \
+    cd /tmp/taliesin && \
+    make && \
     make install && \
-		cp -R ../webapp /var/www && \
 
 # Clean /tmp folder
-		rm -rf /tmp/libjwt-${LIBJWT_VERSION} /tmp/orcania-${ORCANIA_VERSION} /tmp/yder-${YDER_VERSION} /tmp/hoel-${HOEL_VERSION} /tmp/ulfius-${ULFIUS_VERSION} /tmp/taliesin-${TALIESIN_VERSION}
+		rm -rf /tmp/libjwt-${LIBJWT_VERSION} /tmp/orcania-${ORCANIA_VERSION} /tmp/yder-${YDER_VERSION} /tmp/hoel-${HOEL_VERSION} /tmp/ulfius-${ULFIUS_VERSION} /tmp/taliesin
 
 # Configuration required for shared objects
 RUN mkdir -p /var/taliesin/conf && \

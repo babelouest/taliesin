@@ -39,7 +39,12 @@ class PlayerSelector extends Component {
 				)
 			}
 		});
-		var playerName = this.state.player.name;
+		var playerName;
+		if (this.state.player.name) {
+			playerName = this.state.player.name;
+		} else {
+			playerName = i18n.t("player." + this.state.player.type);
+		}
 		if (playerName.length > 10) {
 			playerName = playerName.substring(0, 10) + "...";
 		}

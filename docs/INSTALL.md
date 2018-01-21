@@ -4,6 +4,53 @@
 
 Follow the documentation [docs/minimal/README.md](https://github.com/babelouest/taliesin/blob/master/docs/minimal/README.md) to install a minimal instance of Taliesin on a Raspberry PI with Raspbian installed.
 
+## Docker image
+
+You can install a Docker image based on Alpine Linux 3.7.
+
+### Quickstart with a Taliesin server without authentication and a SQLite3 database
+
+You must map a volume to store the SQLite3 database on the docker host and another volume to map the path to your media files.
+
+Example:
+
+```shell
+docker run -it -p 8576:8576 -v /tmp/taliesin/:/var/cache/taliesin -v /media/Music/:/media babelouest/taliesin_x86_64_sqlite_noauth_quickstart
+```
+
+### Quickstart with your own configuration file
+
+The folder `taliesin/docker/x86_64_custom` contains a Docker file, sql and configuration files.
+
+You can update the files `config.json` and `taliesin.conf` with your own settings, update the file `Docker` and uncomment some of the following if required:
+
+```shell
+#COPY ["taliesin.sqlite3.sql", "/"]
+#COPY ["taliesin.mariadb.sql", "/"]
+#COPY ["oauth-key.pem", "/var/taliesin/conf/"]
+```
+
+Then, build the image:
+
+```shell
+$ cd taliesin/docker/x86_64_custom
+$ docker build -t my_taliesin .
+```
+
+When your docker image is ready, you can run it, don't forget to map the media volume at least, and the sqlite3 database volume if necessary.
+
+#### Run a built docker image configured with a SQLite3 database
+
+```shell
+$ docker run -it --rm -p 8576:8576 -v /tmp/taliesin/:/var/cache/taliesin -v /media/Music/:/media my_taliesin
+```
+
+#### Run a built docker image configured with a MariaDB/Mysql database
+
+```shell
+$ docker run -it --rm -p 8576:8576 -p 3306:3306 -v /media/Music/:/media my_taliesin
+```
+
 ## Manual install Taliesin and its dependencies
 
 Taliesin requires [libav](https://libav.org/) version 11, or equivalent ffmpeg, available in Debian Stretch or Ubuntu 17.04. It also requires [ulfius](https://github.com/babelouest/ulfius), [hoel](https://github.com/babelouest/hoel), [libjwt](https://github.com/benmcollins/libjwt), [libconfig](http://www.hyperrealm.com/libconfig/libconfig.html) and their dependencies.

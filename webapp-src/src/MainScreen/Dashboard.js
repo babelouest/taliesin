@@ -124,7 +124,7 @@ class Dashboard extends Component {
 			if (!this.state.randomLoaded) {
 				randomLoading = <FontAwesome name="spinner" spin />;
 			}
-			if (!StateStore.getState().streamList.length && StateStore.getState().streamList.streamListLoaded) {
+			if (!StateStore.getState().dataSourceList.length && StateStore.getState().dataSourceListLoaded) {
 				noDataSource = <h4 className="bg-warning">{i18n.t("dashboard.no_data_source")}</h4>
 			}
 			return (

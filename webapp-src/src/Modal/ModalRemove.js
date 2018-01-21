@@ -153,7 +153,7 @@ class ModalRemove extends Component {
 				message: i18n.t("modal.message_delete_from_stream_success"),
 				level: 'info'
 			});
-			StateStore.getState().APIManager.taliesinApiRequest("GET", "/stream" + (StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser?"?username="+StateStore.getState().profile.currentUser:""))
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/stream" + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:""))
 			.then((result) => {
 				StateStore.dispatch({type: "setStreamList", streamList: result});
 				var streamList = this.state.streamList;
@@ -252,7 +252,7 @@ class ModalRemove extends Component {
 		}
 		StateStore.getState().APIManager.taliesinApiRequest("DELETE", "/playlist/" + encodeURIComponent(playlist) + "/delete_media/", command)
 		.then((result) => {
-			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist" + (StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser?"?username="+StateStore.getState().profile.currentUser:""))
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist" + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:""))
 			.then((result) => {
 				StateStore.dispatch({type: "setPlaylists", playlists: result});
 				var playlists = this.state.playlists;

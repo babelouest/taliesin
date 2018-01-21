@@ -119,7 +119,7 @@ class BrowsePlaylist extends Component {
 	
 	getPlaylistCover(name) {
 		if (this._ismounted) {
-			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + name + "?cover&thumbnail&base64" + (StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser?"&username="+StateStore.getState().profile.currentUser:""))
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + name + "?cover&thumbnail&base64" + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"&username="+StateStore.getState().profile.currentUser:""))
 			.then((cover) => {
 				var list = this.state.playlist;
 				for (var i in list) {
@@ -135,7 +135,7 @@ class BrowsePlaylist extends Component {
 	
 	showPlaylist(playlist) {
 		if (this._ismounted) {
-			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + playlist.name + "?offset=" + this.state.offset + "&limit=" + this.state.limit + (StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser?"&username="+StateStore.getState().profile.currentUser:""))
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + playlist.name + "?offset=" + this.state.offset + "&limit=" + this.state.limit + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"&username="+StateStore.getState().profile.currentUser:""))
 			.then((pl) => {
 				this.setState({showPlaylist: true, shownPlaylist: playlist, mediaList: pl.media}, () => {
 					this.getMediaCovers();
@@ -165,7 +165,7 @@ class BrowsePlaylist extends Component {
 	
 	getMediaCover(media) {
 		if (this._ismounted) {
-			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + media.data_source + "/browse/path/" + media.path + "?cover&thumbnail&base64" + (StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser?"&username="+StateStore.getState().profile.currentUser:""))
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + media.data_source + "/browse/path/" + media.path + "?cover&thumbnail&base64" + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"&username="+StateStore.getState().profile.currentUser:""))
 			.then((cover) => {
 				var list = this.state.mediaList;
 				for (var i in list) {
@@ -186,7 +186,7 @@ class BrowsePlaylist extends Component {
 	
 	onAddPlaylist(playlist) {
 		if (playlist && this._ismounted) {
-			StateStore.getState().APIManager.taliesinApiRequest("POST", "/playlist/" + (StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser?"?username="+StateStore.getState().profile.currentUser:""), playlist)
+			StateStore.getState().APIManager.taliesinApiRequest("POST", "/playlist/" + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:""), playlist)
 			.then(() => {
 				var list = this.state.playlist
 				list.push(playlist);
@@ -258,7 +258,7 @@ class BrowsePlaylist extends Component {
 	}
 	
 	runPlayElement(playlist) {
-		StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(playlist.name) + "/load?jukebox" + (StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser?"&username="+StateStore.getState().profile.currentUser:"") + "&name={" + (StateStore.getState().profile.currentPlayer.name) + "} - " + playlist.name)
+		StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(playlist.name) + "/load?jukebox" + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"&username="+StateStore.getState().profile.currentUser:"") + "&name={" + (StateStore.getState().profile.currentPlayer.name) + "} - " + playlist.name)
 		.then((result) => {
 			var streamList = StateStore.getState().streamList;
 			streamList.push(result);
@@ -288,7 +288,7 @@ class BrowsePlaylist extends Component {
 	
 	runPlaylistAdvanced(player) {
 		if (player) {
-			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(this.state.curPlaylist.name) + "/load?" + player.type + (player.recursive?"&recursive":"") + (StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser?"?username="+StateStore.getState().profile.currentUser:"") + "&format=" + player.format + "&channels=" + player.channels + "&bitrate=" + player.bitrate + "&sample_rate=" + player.sampleRate + (player.random?"&random":"") + "&name=" + this.state.curPlaylist.name)
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(this.state.curPlaylist.name) + "/load?" + player.type + (player.recursive?"&recursive":"") + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:"") + "&format=" + player.format + "&channels=" + player.channels + "&bitrate=" + player.bitrate + "&sample_rate=" + player.sampleRate + (player.random?"&random":"") + "&name=" + this.state.curPlaylist.name)
 			.then((result) => {
 				var streamList = StateStore.getState().streamList;
 				streamList.push(result);
@@ -313,7 +313,7 @@ class BrowsePlaylist extends Component {
 	
 	onEditPlaylist(playlist) {
 		if (playlist && this._ismounted) {
-			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/playlist/" + playlist.name + (StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser?"?username="+StateStore.getState().profile.currentUser:""), playlist)
+			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/playlist/" + playlist.name + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:""), playlist)
 			.then(() => {
 				var list = this.state.playlist
 				for (var i in list) {
@@ -345,7 +345,7 @@ class BrowsePlaylist extends Component {
 	
 	onDeletePlaylist(result) {
 		if (result && this._ismounted) {
-			StateStore.getState().APIManager.taliesinApiRequest("DELETE", "/playlist/" + encodeURIComponent(this.state.curPlaylist.name) + (StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser?"?username="+StateStore.getState().profile.currentUser:""))
+			StateStore.getState().APIManager.taliesinApiRequest("DELETE", "/playlist/" + encodeURIComponent(this.state.curPlaylist.name) + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:""))
 			.then((result) => {
 				var list = this.state.playlist
 				list.splice(this.state.playlist.indexOf(this.state.curPlaylist), 1);
@@ -368,7 +368,7 @@ class BrowsePlaylist extends Component {
 	onCloseStreamModal(player) {
 		if (this._ismounted) {
 			if (player) {
-				StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(this.state.curPlaylist.name) + "/load?" + player.type + (StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser?"&username="+StateStore.getState().profile.currentUser:"") + "&format=" + player.format + "&channels=" + player.channels + "&bitrate=" + player.bitrate + "&sample_rate=" + player.sampleRate)
+				StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(this.state.curPlaylist.name) + "/load?" + player.type + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"&username="+StateStore.getState().profile.currentUser:"") + "&format=" + player.format + "&channels=" + player.channels + "&bitrate=" + player.bitrate + "&sample_rate=" + player.sampleRate)
 				.then((result) => {
 					var streamList = StateStore.getState().streamList;
 					streamList.push(result);
@@ -392,7 +392,7 @@ class BrowsePlaylist extends Component {
 	
 	deleteMedia(media) {
 		if (this._ismounted) {
-			StateStore.getState().APIManager.taliesinApiRequest("DELETE", "/playlist/" + this.state.shownPlaylist.name + (StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser?"?username="+StateStore.getState().profile.currentUser:""), {data_source: media.data_source, path: media.path})
+			StateStore.getState().APIManager.taliesinApiRequest("DELETE", "/playlist/" + this.state.shownPlaylist.name + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:""), {data_source: media.data_source, path: media.path})
 			.then(() => {
 				var list = this.state.mediaList;
 				list.splice(list.indexOf(media), 1);
@@ -408,7 +408,7 @@ class BrowsePlaylist extends Component {
 	}
 	
 	refreshPlaylists() {
-		StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist" + (StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser?"?username="+StateStore.getState().profile.currentUser:""))
+		StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist" + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:""))
 		.then((result) => {
 			StateStore.dispatch({type: "setPlaylists", playlists: result});
 			StateStore.getState().NotificationManager.addNotification({
@@ -447,9 +447,9 @@ class BrowsePlaylist extends Component {
 	}
 	
 	addToPlaylist(playlist, curPlaylist) {
-		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/playlist/" + encodeURIComponent(playlist) + "/add_media" + (StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser?"?username="+StateStore.getState().profile.currentUser:""), [{playlist: curPlaylist}])
+		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/playlist/" + encodeURIComponent(playlist) + "/add_media" + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:""), [{playlist: curPlaylist}])
 		.then((result) => {
-			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(playlist) + (StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser?"?username="+StateStore.getState().profile.currentUser:""))
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(playlist) + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:""))
 			.then((newPlaylist) => {
 				StateStore.dispatch({type: "setPlaylist", playlist: newPlaylist});
 				StateStore.getState().NotificationManager.addNotification({

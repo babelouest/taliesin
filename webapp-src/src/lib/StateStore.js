@@ -222,10 +222,16 @@ function stateStoreManager(state = defaultState, action) {
 			break;
 		case "setStoredValues":
 			if (action.config) {
-				state.profile.dataSource = action.config.dataSource || state.profile.dataSource;
+				if (action.config.dataSource && state.dataSourceList.find((ds) => {return ds.name === action.config.dataSource.name;})) {
+					state.profile.dataSource = action.config.dataSource;
+				}
+				if (action.config.currentPlayer && state.externalPlayerList.find((pl) => {return pl.name === action.config.currentPlayer.name;})) {
+					state.profile.currentPlayer = action.config.currentPlayer;
+				}
+				if (action.config.stream && state.streamList.find((s) => {return s.name === action.config.stream.name;})) {
+					state.profile.stream = action.config.stream;
+				}
 				state.profile.view = action.config.view || state.profile.view;
-				state.profile.currentPlayer = action.config.currentPlayer || state.profile.currentPlayer;
-				state.profile.stream = action.config.stream || state.profile.stream;
 			}
 			break;
 		case "setUseWebsocket":

@@ -5,8 +5,8 @@ RUN apk add --no-cache \
     sqlite
 
 COPY ["entrypoint.sh", "taliesin.sqlite3.sql", "/"]
-COPY ["taliesin.conf", "/var/taliesin/conf/"]
-COPY ["config.json", "/var/www"]
+COPY ["taliesin.conf.orig", "/var/taliesin/conf/taliesin.conf"]
+COPY ["config.json.orig", "/var/www/config.json"]
 
 EXPOSE 8576
 

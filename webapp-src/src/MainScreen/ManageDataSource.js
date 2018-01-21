@@ -129,6 +129,7 @@ class ManageDataSource extends Component {
 					dataSourceList.push(dataSource);
 					this.setState({dataSourceList: dataSourceList, modalShow: false});
 					this.getRefreshStatus(dataSource);
+          this.refreshDataSource(dataSource);
 				})
 				.fail((error) => {
 					StateStore.getState().NotificationManager.addNotification({

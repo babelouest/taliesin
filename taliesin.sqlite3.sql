@@ -45,7 +45,7 @@ CREATE TABLE `t_folder` (
   `tic_id` INTEGER,
   FOREIGN KEY(`tds_id`) REFERENCES `t_data_source`(`tds_id`) ON DELETE CASCADE,
   FOREIGN KEY(`tf_parent_id`) REFERENCES `t_folder`(`tf_id`) ON DELETE CASCADE,
-  FOREIGN KEY(`tic_id`) REFERENCES `t_image_cover`(`tic_id`) ON DELETE CASCADE
+  FOREIGN KEY(`tic_id`) REFERENCES `t_image_cover`(`tic_id`) ON DELETE SET NULL
 );
 CREATE INDEX `i_tf_name` ON `t_folder`(`tf_name`);
 
@@ -62,7 +62,7 @@ CREATE TABLE `t_media` (
   `tic_id` INTEGER,
   FOREIGN KEY(`tds_id`) REFERENCES `t_data_source`(`tds_id`) ON DELETE CASCADE,
   FOREIGN KEY(`tf_id`) REFERENCES `t_folder`(`tf_id`) ON DELETE CASCADE,
-  FOREIGN KEY(`tic_id`) REFERENCES `t_image_cover`(`tic_id`) ON DELETE CASCADE
+  FOREIGN KEY(`tic_id`) REFERENCES `t_image_cover`(`tic_id`) ON DELETE SET NULL
 );
 CREATE INDEX `i_tm_name` ON `t_media`(`tm_name`);
 CREATE INDEX `i_tm_type` ON `t_media`(`tm_type`);

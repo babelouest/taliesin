@@ -167,7 +167,7 @@ END_TEST
 
 START_TEST(test_create_playlist_adm_ok)
 {
-  char * url = msprintf("%s/playlist", TALIESIN_SERVER_URI);
+  char * url = msprintf("%s/playlist?username=%s", TALIESIN_SERVER_URI, user_login);
   json_t * j_playlist = json_pack("{sssssss[{ssss}{ssss}]}",
                                   "name", PLAYLIST_ADMIN_VALID,
                                   "description", "description for "PLAYLIST_ADMIN_VALID,
@@ -455,7 +455,7 @@ END_TEST
 
 START_TEST(test_delete_playlist_adm_ok)
 {
-  char * url = msprintf("%s/playlist/%s", TALIESIN_SERVER_URI, PLAYLIST_ADMIN_VALID);
+  char * url = msprintf("%s/playlist/%s?username=%s", TALIESIN_SERVER_URI, PLAYLIST_ADMIN_VALID, user_login);
   
   int res = run_simple_authenticated_test(&admin_req, "DELETE", url, NULL, NULL, 200, NULL, NULL, NULL);
   free(url);

@@ -89,6 +89,7 @@ int main (int argc, char ** argv) {
   config->image_file_extension = NULL;
   config->cover_file_pattern = NULL;
   config->external_player = NULL;
+  
   pthread_mutexattr_init ( &mutexattr );
   pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_RECURSIVE );
   if (pthread_mutex_init(&config->playlist_lock, &mutexattr)) {

@@ -380,26 +380,30 @@ int playlist_replace_element_list(struct config_elements * config, json_int_t tp
   res = h_delete(config->conn, j_query, NULL);
   json_decref(j_query);
   if (res == H_OK) {
-    // Insert new elements
-    j_query = json_pack("{sss[]}",
-                        "table",
-                        TALIESIN_TABLE_PLAYLIST_ELEMENT,
-                        "values");
-    if (j_query != NULL) {
-      json_array_foreach(json_object_get(j_playlist, "media"), index, j_element) {
-        json_array_append_new(json_object_get(j_query, "values"), json_pack("{sIsO}", "tpl_id", tpl_id, "tm_id", json_object_get(j_element, "tm_id")));
-      }
-      res = h_insert(config->conn, j_query, NULL);
-      json_decref(j_query);
-      if (res != H_OK) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "playlist_replace_element_list - Error executing j_query (2)");
-        ret = T_ERROR_DB;
+    if (json_array_size(json_object_get(j_playlist, "media"))) {
+      // Insert new elements
+      j_query = json_pack("{sss[]}",
+                          "table",
+                          TALIESIN_TABLE_PLAYLIST_ELEMENT,
+                          "values");
+      if (j_query != NULL) {
+        json_array_foreach(json_object_get(j_playlist, "media"), index, j_element) {
+          json_array_append_new(json_object_get(j_query, "values"), json_pack("{sIsO}", "tpl_id", tpl_id, "tm_id", json_object_get(j_element, "tm_id")));
+        }
+        res = h_insert(config->conn, j_query, NULL);
+        json_decref(j_query);
+        if (res != H_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "playlist_replace_element_list - Error executing j_query (2)");
+          ret = T_ERROR_DB;
+        } else {
+          ret = T_OK;
+        }
       } else {
-        ret = T_OK;
+        y_log_message(Y_LOG_LEVEL_ERROR, "playlist_replace_element_list - Error allocating resources for j_query");
+        ret = T_ERROR_MEMORY;
       }
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "playlist_replace_element_list - Error allocating resources for j_query");
-      ret = T_ERROR_MEMORY;
+      ret = T_OK;
     }
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "playlist_replace_element_list - Error executing j_query (1)");

@@ -73,7 +73,7 @@ if (LIBCONFIG_FOUND)
 endif ()
 
 include(FindLibavcodec)
-set(LIBAVCODEC_MIN_VERSION 57.0.0)
+set(LIBAVCODEC_MIN_VERSION 56.0.0)
 find_package(Libavcodec ${LIBAVCODEC_MIN_VERSION} REQUIRED)
 if (LIBAVCODEC_FOUND)
     set(LIBS ${LIBS} ${LIBAVCODEC_LIBRARIES})
@@ -87,7 +87,7 @@ if (LIBAVUTIL_FOUND)
 endif ()
 
 include(FindLibavresample)
-set(LIBAVRESAMPLE_MIN_VERSION 57.0.0)
+set(LIBAVRESAMPLE_MIN_VERSION 56.0.0)
 find_package(Libavresample ${LIBARESAMPLE_MIN_VERSION} REQUIRED)
 if (LIBAVRESAMPLE_FOUND)
     set(LIBS ${LIBS} ${LIBAVRESAMPLE_LIBRARIES})
@@ -210,9 +210,10 @@ endif ()
 
 # install target
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/taliesin
-        DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(FILES taliesin.conf.sample DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/taliesin RENAME taliesin.conf COMPONENT config)
+install(TARGETS taliesin
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES taliesin.conf.sample 
+        DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/taliesin RENAME taliesin.conf COMPONENT config)
 install(DIRECTORY webapp/
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/taliesin/webapp/ COMPONENT runtime)
 
@@ -250,7 +251,7 @@ set(CPACK_GENERATOR "TGZ;DEB;RPM")
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "mail@babelouest.org")
 set(CPACK_DEBIAN_PACKAGE_DESCRIPTION ${PROJECT_DESCRIPTION})
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/babelouest/taliesin")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.3.4), libconfig9, libhoel1.4, libjansson4 (>= 2.7), libjwt0, liborcania1.1, libulfius2.2, libyder2.0, lsb-base (>= 3.0-6)")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.3.4), libconfig9, libjansson4 (>= 2.7), liborcania (>= 1.2.0), libyder (>= 1.2.0), libulfius (>= 2.3.0), libhoel (>= 1.4.0), lsb-base (>= 3.0-6)")
 set(CPACK_PACKAGE_FILE_NAME ${PACKAGE_FILE_NAME})
 
 set(CPACK_SOURCE_GENERATOR "TGZ")

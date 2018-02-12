@@ -78,12 +78,14 @@ class MediaInfo extends Component {
 					</a>
 				</div>
 				<div className="visible-sm visible-xs text-center">
-					<div>
-						<label>{this.state.meta}</label>
-					</div>
-					<div>
-						<span>{this.state.title}</span>
-					</div>
+					<a role="button" onClick={this.handleOpenModal} title={this.state.title}>
+						<div>
+							<label>{this.state.meta}</label>
+						</div>
+						<div>
+							<span>{this.state.title}</span>
+						</div>
+					</a>
 				</div>
 				<ModalMedia show={this.state.showModal} media={this.state.media} title={this.state.title} onClose={this.handleCloseModal} />
 			</div>

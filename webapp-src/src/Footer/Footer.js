@@ -41,17 +41,28 @@ class Footer extends Component {
 			} else if (reduxState.lastAction === "setCurrentPlayer") {
 				this.setState({currentPlayer: StateStore.getState().profile.currentPlayer, stream: {name: false}, play: false});
 			} else if (reduxState.lastAction === "loadStream") {
-				this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, play: false}, () => {this.buildExternal()});
+				this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, play: false}, () => {
+					this.buildExternal();
+					this.setWindowTitle();
+				});
 			} else if (reduxState.lastAction === "setStream") {
 				if (StateStore.getState().profile.stream.name === this.state.stream.name) {
-					this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, play: false}, () => {this.buildExternal()});
+					this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, play: false}, () => {
+					this.buildExternal();
+					this.setWindowTitle();
+				});
 				}
 			} else if (reduxState.lastAction === "loadStreamAndPlay") {
-				this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, jukeboxIndex: StateStore.getState().profile.jukeboxIndex, play: true}, () => {this.buildExternal()});
+				this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, jukeboxIndex: StateStore.getState().profile.jukeboxIndex, play: true}, () => {
+					this.buildExternal();
+					this.setWindowTitle();
+				});
 			} else if (reduxState.lastAction === "setJukeboxIndex") {
 				this.setState({jukeboxIndex: StateStore.getState().profile.jukeboxIndex, play: false});
 			} else if (reduxState.lastAction === "setMediaNow") {
-				this.setState({mediaNow: StateStore.getState().profile.mediaNow, play: false});
+				this.setState({mediaNow: StateStore.getState().profile.mediaNow, play: false}, () => {
+					this.setWindowTitle();
+				});
 			} else if (reduxState.lastAction === "setMediaNext") {
 				this.setState({mediaNext: StateStore.getState().profile.mediaNext, play: false});
 			} else if (reduxState.lastAction === "setStoredValues") {
@@ -62,6 +73,38 @@ class Footer extends Component {
 		this.showFullScreen = this.showFullScreen.bind(this);
 		this.showMediaList = this.showMediaList.bind(this);
 		this.buildExternal = this.buildExternal.bind(this);
+		this.setWindowTitle = this.setWindowTitle.bind(this);
+		this.buildTitle = this.buildTitle.bind(this);
+		
+		this.setWindowTitle();
+	}
+	
+	setWindowTitle() {
+		if (this.state.mediaNow) {
+			document.title = this.buildTitle(this.state.mediaNow, (this.state.stream.webradio?-1:this.state.jukeboxIndex), this.state.stream.elements) + " - Taliesin";
+		} else {
+			document.title = "Taliesin";
+		}
+	}
+	
+	buildTitle(media, index, total) {
+		var title = "";
+		if (!!media) {
+			if (index > -1) {
+				title += ((index+1)<10?"0"+(index+1):(index+1)) + "/" + (total<10?"0"+total:total) + " - ";
+			}
+			if (!!media.tags) {
+				if (index === -1) {
+					if (media.tags.artist || media.tags.album_artist) {
+						title += (media.tags.artist || media.tags.album_artist) + " - ";
+					}
+				}
+				title += (media.tags.title || media.name.replace(/\.[^/.]+$/, ""));
+			} else {
+				title += media.name.replace(/\.[^/.]+$/, "");
+			}
+		}
+		return title;
 	}
 	
 	componentDidMount() {
@@ -133,7 +176,7 @@ class Footer extends Component {
 			} else if (this.state.currentPlayer.type==="internal") {
 				audioPlayer =
 					<Col md={3} sm={6} xs={6} className="player-box">
-						<AudioPlayer stream={this.state.stream} play={this.state.play} index={this.state.jukeboxIndex} />
+						<AudioPlayer stream={this.state.stream} play={this.state.play} index={this.state.jukeboxIndex} duration={this.state.stream.webradio?0:(this.state.mediaNow.duration/1000)} />
 					</Col>;
 			} else { // External
 				audioPlayer =

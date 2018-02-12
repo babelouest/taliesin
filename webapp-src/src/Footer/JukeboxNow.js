@@ -12,10 +12,8 @@ class JukeboxNow extends Component {
 			total: props.total
 		};
 		this.loadCover();
-		this.setPageTitle();
 		
 		this.loadCover = this.loadCover.bind(this);
-		this.setPageTitle = this.setPageTitle.bind(this);
 	}
 	
 	componentWillUnmount() {
@@ -32,7 +30,6 @@ class JukeboxNow extends Component {
 		this.setState({media: (nextProps.media?nextProps.media:this.state.media), index: nextProps.index, total: nextProps.total}, () => {
 			if (newMedia) {
 				this.loadCover();
-				this.setPageTitle();
 			}
 		});
 	}
@@ -46,16 +43,6 @@ class JukeboxNow extends Component {
 			.fail(() => {
 				this.setState({imgThumbBlob: false});
 			});
-		}
-	}
-	
-	setPageTitle() {
-		if (this._ismounted) {
-			if (this.state.media) {
-				document.title = this.buildTitle(this.state.media) + " - Taliesin"
-			} else {
-				document.title = "Taliesin";
-			}
 		}
 	}
 	

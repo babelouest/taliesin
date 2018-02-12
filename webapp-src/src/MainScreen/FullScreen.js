@@ -213,9 +213,26 @@ class FullScreen extends Component {
 						</Col>
 					</Row>);
 			}
+			var dm = Math.floor(this.state.media.duration/60000);
+			if (dm < 10) {
+				dm = "0" + dm;
+			}
+			var ds = Math.floor(this.state.media.duration/1000)%60;
+			if (ds < 10) {
+				ds = "0" + ds;
+			}
+			metadata.push(
+				<Row key={1}>
+					<Col xs={6} className="text-right">
+						<label className="text-fullscreen">{i18n.t("common.duration")}</label>
+					</Col>
+					<Col xs={6}>
+						<span className="text-fullscreen">{dm}:{ds}</span>
+					</Col>
+				</Row>);
 			if (this.state.media.tags.artist) {
 				metadata.push(
-					<Row key={1}>
+					<Row key={2}>
 						<Col xs={6} className="text-right">
 							<label className="text-fullscreen">{i18n.t("common.artist")}</label>
 						</Col>
@@ -226,7 +243,7 @@ class FullScreen extends Component {
 			}
 			if (this.state.media.tags.album) {
 				metadata.push(
-					<Row key={2}>
+					<Row key={3}>
 						<Col xs={6} className="text-right">
 							<label className="text-fullscreen">{i18n.t("common.album")}</label>
 						</Col>
@@ -237,7 +254,7 @@ class FullScreen extends Component {
 			}
 			if (this.state.media.tags.date) {
 				metadata.push(
-					<Row key={3}>
+					<Row key={4}>
 						<Col xs={6} className="text-right">
 							<label className="text-fullscreen">{i18n.t("common.date")}</label>
 						</Col>
@@ -248,7 +265,7 @@ class FullScreen extends Component {
 			}
 			if (this.state.media.tags.genre) {
 				metadata.push(
-					<Row key={4}>
+					<Row key={5}>
 						<Col xs={6} className="text-right">
 							<label className="text-fullscreen">{i18n.t("common.genre")}</label>
 						</Col>

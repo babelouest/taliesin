@@ -36,6 +36,7 @@ class StreamDetails extends Component {
 		this.renameStream = this.renameStream.bind(this);
 		this.saveStream = this.saveStream.bind(this);
 		this.reloadStream = this.reloadStream.bind(this);
+		this.refreshStream = this.refreshStream.bind(this);
 		this.resetStream = this.resetStream.bind(this);
 		this.confirmDelete = this.confirmDelete.bind(this);
 		this.confirmRename = this.confirmRename.bind(this);
@@ -98,6 +99,24 @@ class StreamDetails extends Component {
 		.fail(() => {
 			StateStore.getState().NotificationManager.addNotification({
 				message: i18n.t("stream.message_stream_reload_error"),
+				level: 'error'
+			});
+		});
+	}
+	
+	refreshStream() {
+		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "info"})
+		.then((result) => {
+			StateStore.dispatch({type: "setStream", stream: result});
+			StateStore.getState().NotificationManager.addNotification({
+				message: i18n.t("stream.message_stream_refresh_ok"),
+				level: 'info'
+			});
+			this.setState({stream: result});
+		})
+		.fail(() => {
+			StateStore.getState().NotificationManager.addNotification({
+				message: i18n.t("stream.message_stream_refresh_error"),
 				level: 'error'
 			});
 		});
@@ -431,6 +450,9 @@ class StreamDetails extends Component {
 							</Button>
 							<Button title={i18n.t("stream.delete")} onClick={this.deleteStream}>
 								<FontAwesome name={"trash"} />
+							</Button>
+							<Button title={i18n.t("stream.reload")} onClick={this.refreshStream}>
+								<FontAwesome name={"refresh"} />
 							</Button>
 						</ButtonGroup>
 						<DropdownButton className="visible-xs" id={"xs-manage"-this.state.stream.name} title={

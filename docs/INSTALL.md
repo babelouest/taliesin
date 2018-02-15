@@ -4,6 +4,25 @@
 
 Follow the documentation [docs/minimal/README.md](https://github.com/babelouest/taliesin/blob/master/docs/minimal/README.md) to install a minimal instance of Taliesin on a Raspberry PI with Raspbian installed.
 
+## Pre-compiled packages
+
+You can install Taliesin with a pre-compiled package available in the [release pages](https://github.com/babelouest/taliesin/releases/latest/). The package files `taliesin-full_*` contain the package libraries of `orcania`, `yder`, `ulfius` and `hoel` precompiled for `taliesin`, plus `taliesin` package. To install a pre-compiled package, you need to have installed the following libraries:
+
+```
+libjansson
+libavfilter
+libavcodec
+libavformat
+libavresample
+libavutil
+libcurl-gnutls
+libgnutls
+libgcrypt
+libsqlite3
+libmariadbclient
+libconfig
+```
+
 ## Docker image
 
 You can install a Docker image based on Alpine Linux 3.7.

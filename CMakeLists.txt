@@ -27,8 +27,10 @@ set(PROGRAM_VERSION_MINOR "1")
 set(PROGRAM_VERSION_PATCH "0")
 set(PROJECT_DESCRIPTION "Lightweight audio streaming server")
 set(PROJECT_BUGREPORT_PATH "https://github.com/babelouest/taliesin/issues")
-set(ULFIUS_VERSION_DOWNLOAD "2.3.0-b.2")
-set(HOEL_VERSION_DOWNLOAD "1.4.0-b.3")
+set(ORCANIA_VERSION_DOWNLOAD "1.2.0-b.5")
+set(YDER_VERSION_DOWNLOAD "1.2.0-b.6")
+set(ULFIUS_VERSION_DOWNLOAD "2.3.0-b.8")
+set(HOEL_VERSION_DOWNLOAD "1.4.0-b.9")
 
 include(GNUInstallDirs)
 include(CheckSymbolExists)
@@ -134,11 +136,46 @@ add_executable(taliesin ${CMAKE_CURRENT_SOURCE_DIR}/src/taliesin.h
                 ${CMAKE_CURRENT_SOURCE_DIR}/src/taliesin.c )
 target_link_libraries(taliesin ${LIBS} pthread)
 
+set(Orcania_FIND_QUIETLY ON) # force to find Orcania quietly
+include(FindOrcania)
+find_package(Orcania 1.1 QUIET) # try to find orcania
+if (NOT ORCANIA_FOUND)
+    include(DownloadProject)
+    download_project(PROJ orcania # ... otherwise, download archive
+            URL "https://github.com/babelouest/orcania/archive/v${ORCANIA_VERSION_DOWNLOAD}.tar.gz"
+            QUIET)
+    add_subdirectory(${orcania_SOURCE_DIR} ${orcania_BINARY_DIR})
+    include_directories(${orcania_SOURCE_DIR}/include)
+    add_dependencies(taliesin orcania)
+		set(ORCANIA_LIBRARIES orcania)
+endif ()
+set(LIBS ${LIBS} ${ORCANIA_LIBRARIES})
+
+set(Yder_FIND_QUIETLY ON) # force to find Yder quietly
+include(FindYder)
+find_package(Yder 1.1 QUIET) # try to find Yder
+if (NOT YDER_FOUND)
+    include(DownloadProject)
+    option(CHECK_ORCANIA "specific param" off)
+    download_project(PROJ yder # ... otherwise, download archive
+            URL "https://github.com/babelouest/yder/archive/v${YDER_VERSION_DOWNLOAD}.tar.gz"
+            QUIET)
+    add_subdirectory(${yder_SOURCE_DIR} ${yder_BINARY_DIR})
+    include_directories(${yder_SOURCE_DIR}/include)
+    include_directories(${orcania_SOURCE_DIR}/include)
+    add_dependencies(taliesin yder)
+		set(YDER_LIBRARIES yder)
+endif ()
+set(LIBS ${LIBS} ${YDER_LIBRARIES})
+
 set(Ulfius_FIND_QUIETLY ON)
 include(FindUlfius)
 find_package(Ulfius 2.2 QUIET)
 if (NOT ULFIUS_FOUND)
     include(DownloadProject)
+    option(WITH_WEBSOCKET "specific param" off)
+    option(INSTALL_HEADER "specific param" off)
+    option(CHECK_YDER "specific param" off)
     download_project(PROJ ulfius
             URL "https://github.com/babelouest/ulfius/archive/v${ULFIUS_VERSION_DOWNLOAD}.tar.gz"
             QUIET)
@@ -146,29 +183,30 @@ if (NOT ULFIUS_FOUND)
     include_directories(${yder_SOURCE_DIR}/include)
     include_directories(${orcania_SOURCE_DIR}/include)
     include_directories(${ulfius_SOURCE_DIR}/include)
-    add_dependencies(ulfius yder)
-    add_dependencies(ulfius orcania)
-    add_dependencies(ulfius ulfius)
+    add_dependencies(taliesin ulfius)
+		set(ULFIUS_LIBRARIES ulfius)
 endif ()
-
-set(ULFIUS_LIBRARIES ulfius yder orcania)
-target_link_libraries(taliesin ${LIBS} ${ULFIUS_LIBRARIES})
+set(LIBS ${LIBS} ${ULFIUS_LIBRARIES})
 
 set(Hoel_FIND_QUIETLY ON)
 include(FindHoel)
 find_package(Hoel 1.3 QUIET)
 if (NOT HOEL_FOUND)
     include(DownloadProject)
+    option(WITH_PGSQL "specific param" off)
+    option(INSTALL_HEADER "specific param" off)
+    option(CHECK_YDER "specific param" off)
     download_project(PROJ hoel
             URL "https://github.com/babelouest/hoel/archive/v${HOEL_VERSION_DOWNLOAD}.tar.gz"
             QUIET)
     add_subdirectory(${hoel_SOURCE_DIR} ${hoel_BINARY_DIR})
     include_directories(${hoel_SOURCE_DIR}/include)
     add_dependencies(taliesin hoel)
+		set(HOEL_LIBRARIES hoel)
 endif ()
+set(LIBS ${LIBS} ${HOEL_LIBRARIES})
 
-set(HOEL_LIBRARIES hoel)
-target_link_libraries(taliesin ${LIBS} ${HOEL_LIBRARIES})
+target_link_libraries(taliesin ${LIBS})
 
 # tests
 

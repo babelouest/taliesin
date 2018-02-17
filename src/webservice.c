@@ -496,7 +496,7 @@ int callback_taliesin_media_get_path (const struct _u_request * request, struct 
         if (last != NULL) {
           path[last - path] = '\0';
         }
-        decode_path = url_decode(path);
+        decode_path = o_strdup(path);
         decode_path_save = decode_path;
         while (decode_path[0] == '/') {
           decode_path++;

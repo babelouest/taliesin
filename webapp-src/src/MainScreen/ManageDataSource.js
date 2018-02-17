@@ -74,8 +74,8 @@ class ManageDataSource extends Component {
 				var refreshStatus = this.state.refreshStatus;
 				refreshStatus[dataSource.name] = result;
 				this.setState({refreshStatus: refreshStatus});
-        dataSource.status = result.status;
-        StateStore.dispatch({type: "setDataSource", dataSource: dataSource});
+				dataSource.status = result.status;
+				StateStore.dispatch({type: "setDataSource", dataSource: dataSource});
 				if (this._ismounted && (result.status === "running" || result.status === "pending" || result.status === "preparing")) {
 					window.setTimeout(() => {this.getRefreshStatus(dataSource)}, 5000);
 				}
@@ -131,7 +131,10 @@ class ManageDataSource extends Component {
 					dataSourceList.push(dataSource);
 					this.setState({dataSourceList: dataSourceList, modalShow: false});
 					this.getRefreshStatus(dataSource);
-          this.refreshDataSource(dataSource);
+					if (dataSourceList.length === 1) {
+						StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: dataSource});
+					}
+					this.refreshDataSource(dataSource);
 				})
 				.fail((error) => {
 					StateStore.getState().NotificationManager.addNotification({
@@ -224,12 +227,12 @@ class ManageDataSource extends Component {
 	deleteDataSource(dataSource) {
 		this.setState({dataSourceToDelete: dataSource, modalDeleteShow: true, modalDeleteMessage: i18n.t("data_source.message_confirm_delete", {data_source: dataSource.name})});
 	}
-  
-  openDataSource(dataSource) {
-    StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: dataSource});
+	
+	openDataSource(dataSource) {
+		StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: dataSource});
 		StateStore.dispatch({type: "setCurrentBrowse", browse: "path"});
 		StateStore.dispatch({type: "setCurrentPath", path: ""});
-  }
+	}
 	
 	confirmDeleteDataSource(result) {
 		this.setState({modalDeleteShow: false}, () => {
@@ -260,6 +263,12 @@ class ManageDataSource extends Component {
 				});
 			}
 		});
+	}
+	
+	openDataSource(dataSource) {
+		StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: dataSource});
+		StateStore.dispatch({type: "setCurrentBrowse", browse: "path"});
+		StateStore.dispatch({type: "setCurrentPath", path: ""});
 	}
 	
 	render() {
@@ -296,14 +305,14 @@ class ManageDataSource extends Component {
 			dataSourceList.push(
 				<tr key={index}>
 					<td>
-            <a role="button" onClick={() => this.openDataSource(dataSource)}>
-              {dataSource.name}
-            </a>
+						<a role="button" onClick={() => this.openDataSource(dataSource)}>
+							{dataSource.name}
+						</a>
 					</td>
 					<td className="hidden-xs">
-            <a role="button" onClick={() => this.openDataSource(dataSource)}>
-              {dataSource.description}
-            </a>
+						<a role="button" onClick={() => this.openDataSource(dataSource)}>
+							{dataSource.description}
+						</a>
 					</td>
 					<td className="text-center">
 						{dataSource.scope==="all"?<FontAwesome name={"users"} />:<FontAwesome name={"user"} />}

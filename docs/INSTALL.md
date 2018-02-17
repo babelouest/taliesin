@@ -23,6 +23,27 @@ libmariadbclient
 libconfig
 ```
 
+For example, to install Taliesin with the `taliesin-full_1.0.12_Debian_stretch_x86_64.tar.gz` package downloaded on the `releases` page, you must execute the following commands:
+
+```shell
+$ sudo apt install -y autoconf libjansson-dev libssl-dev libavfilter libavcodec libavformat libavresample libavutil libcurl-gnutls libgnutls libgcrypt libsqlite3 libmariadbclient libconfig
+$ wget https://github.com/benmcollins/libjwt/archive/v1.9.tar.gz
+$ tar -zxvf v1.9.tar.gz
+$ cd libjwt-1.9
+$ autoreconf -i
+$ ./configure
+$ make && sudo make install
+$ wget https://github.com/babelouest/taliesin/releases/download/v1.0.12/taliesin-full_1.0.12_Debian_stretch_x86_64.tar.gz
+$ tar xf hoel-dev-full_1.4.0_Debian_stretch_x86_64.tar.gz
+$ sudo dpkg -i liborcania_1.2.0_Debian_stretch_x86_64.deb
+$ sudo dpkg -i libyder_1.2.0_Debian_stretch_x86_64.deb
+$ sudo dpkg -i libhoel_1.4.0_Debian_stretch_x86_64.deb
+$ sudo dpkg -i libulfius_2.3.0_Debian_stretch_x86_64.deb
+$ sudo dpkg -i taliesin_1.0.12_Debian_stretch_x86_64.deb
+```
+
+If there's no package available for your distribution, you can recompile it manually using `CMake` or `Makefile`.
+
 ## Docker image
 
 You can install a Docker image based on Alpine Linux 3.7.
@@ -81,7 +102,27 @@ $ git clone https://github.com/benmcollins/libjwt.git
 $ cd libjwt
 $ autoreconf -a && ./configure --without-openssl && make && sudo make install
 $ cd ..
+```
 
+### CMake
+
+Download Taliesin from Github, then use the CMake script to build the application:
+
+```shell
+# Install Taliesin
+$ git clone https://github.com/babelouest/taliesin.git
+$ mkdir taliesin/build
+$ cd taliesin/build
+$ cmake ..
+$ make 
+$ sudo make install
+```
+
+### Good ol' Makefile
+
+Download Taliesin and its dependencies hosted on github, compile and install.
+
+```shell
 $ # Install Orcania
 $ git clone https://github.com/babelouest/orcania.git
 $ cd orcania/src/
@@ -106,7 +147,7 @@ $ cd ../..
 $ # Install Hoel
 $ git clone https://github.com/babelouest/hoel.git
 $ cd hoel/src/
-$ make
+$ make DISABLE_POSTGRESQL=1
 $ sudo make install
 $ cd ../..
 

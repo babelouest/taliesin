@@ -265,12 +265,6 @@ class ManageDataSource extends Component {
 		});
 	}
 	
-	openDataSource(dataSource) {
-		StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: dataSource});
-		StateStore.dispatch({type: "setCurrentBrowse", browse: "path"});
-		StateStore.dispatch({type: "setCurrentPath", path: ""});
-	}
-	
 	render() {
 		var dataSourceList = [];
 		this.state.dataSourceList.forEach((dataSource, index) => {

@@ -249,7 +249,8 @@
 		"refresh_status": "Refresh Status",
 		"add": "Add a new data source",
 		"refresh": "Refresh data source list",
-		"delete_title": "Delete data source"
+		"delete_title": "Delete data source",
+    "unavailabe": "Data source is unavailable at the moment, please try again later"
 	},
 	"stream": {
 		"remove_title": "Close and remove stream",

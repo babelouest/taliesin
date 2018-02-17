@@ -217,7 +217,7 @@ class AudioPlayer extends Component {
 				break;
 			case "now":
 				if (response.result !== "not_found" && response.result !== "invalid_param") {
-					if (StateStore.getState().profile.mediaNow.data_source !== response.result.data_source || StateStore.getState().profile.mediaNow.path !== response.result.path) {
+					if (response.result.data_source && response.result.path && (StateStore.getState().profile.mediaNow.data_source !== response.result.data_source || StateStore.getState().profile.mediaNow.path !== response.result.path)) {
 						this.setState({media: response.result}, () => {
 								this.sendStreamComand("next");
 								StateStore.dispatch({type: "setMediaNow", media: response.result});
@@ -245,7 +245,7 @@ class AudioPlayer extends Component {
 				});
 				break;
 			case "list":
-				if (response.result[0].data_source !== StateStore.getState().profile.mediaNow.data_source || response.result[0].path !== StateStore.getState().profile.mediaNow.path) {
+				if (response.result[0].data_source && response.result[0].path && (response.result[0].data_source !== StateStore.getState().profile.mediaNow.data_source || response.result[0].path !== StateStore.getState().profile.mediaNow.path)) {
 					StateStore.dispatch({type: "setMediaNow", media: response.result[0]});
 				}
 				break;

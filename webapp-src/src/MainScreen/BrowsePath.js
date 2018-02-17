@@ -18,7 +18,8 @@ class BrowsePath extends Component {
 			filter: "", 
 			loaded: false,
 			offset: 0,
-			limit: 100
+			limit: 100,
+      unavailable: false
 		};
 		
 		this.getElementList();
@@ -58,7 +59,11 @@ class BrowsePath extends Component {
 				this.setState({loaded: true, elementListInitial: result, elementList: result});
 			})
 			.fail((result) => {
-				this.setState({loaded: true, elementListInitial: [], elementList: []});
+        if (result.status === 503) {
+          this.setState({loaded: true, elementListInitial: [], elementList: [], unavailable: true});
+        } else {
+          this.setState({loaded: true, elementListInitial: [], elementList: []});
+        }
 			});
 		}
 	}
@@ -72,7 +77,11 @@ class BrowsePath extends Component {
 		var currentElementList = this.state.elementList, index;
 		
 		if (this.state.loaded) {
-			if (this.state.view === "icon") {
+      if (this.state.unavailable) {
+        currentList.push(
+          <h4 className="bg-warning">{i18n.t("data_source.unavailabe")}</h4>
+        );
+			} else if (this.state.view === "icon") {
 				for (index in currentElementList) {
 					if (index >= this.state.offset) {
 						currentList.push(

@@ -216,7 +216,7 @@ class MPDController extends Component {
 			if (this.state.stream.webradio) {
 				StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "now"})
 				.then((result) => {
-					if (StateStore.getState().profile.mediaNow.data_source !== result.data_source || StateStore.getState().profile.mediaNow.path !== result.path) {
+					if (result.data_source && result.path && (StateStore.getState().profile.mediaNow.data_source !== result.data_source || StateStore.getState().profile.mediaNow.path !== result.path)) {
 						this.setState({media: result}, () => {
 							StateStore.dispatch({type: "setMediaNow", media: result});
 						});

@@ -9,6 +9,7 @@ import App from './App';
 import config from './lib/ConfigManager';
 import OAuth2Connector from './lib/OAuth2Connector';
 import StateStore from './lib/StateStore';
+import i18n from './lib/i18n';
 
 config.fetchConfig()
 .then(function () {
@@ -25,7 +26,14 @@ config.fetchConfig()
 			scope: curOauth2Config.scope,
 			profileUrl: curOauth2Config.profileUrl,
 			changeStatusCb: function (newStatus, token, expiration) {
-				StateStore.dispatch({ type: 'setStoredValues', config: config.getLocalConfig() });
+				var curConfig = config.getLocalConfig();
+				if ((curConfig.currentPlayer && curConfig.currentPlayer.type === "external" && !StateStore.getState().externalPlayerList.find((pl) => {return pl.name === curConfig.currentPlayer.name;})) || !curConfig.currentPlayer) {
+					curConfig.currentPlayer = {type: "internal", name: i18n.t("player.internal")}
+				}
+				if (curConfig.currentPlayer.type === "external") {
+					curConfig.stream = false;
+				}
+				StateStore.dispatch({ type: 'setStoredValues', config: curConfig });
 				StateStore.dispatch({ type: 'setUseWebsocket', useWebsocket: config.getConfigValue("useWebsocket") });
 				if (newStatus === "connected") {
 					StateStore.dispatch({ type: 'connection', status: newStatus, token: token, expiration: expiration, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), angharadApiUrl: config.getConfigValue("angharadApiUrl"), oauth2: true});
@@ -82,10 +90,10 @@ StateStore.subscribe(() => {
 				if (result.length > 0 && !result.find((ds) => {return ds.name === StateStore.getState().profile.dataSource.name})) {
 					currentDataSource = result[0];
 				}
-				StateStore.dispatch({type: "setDataSource", dataSourceList: result, currentDataSource: currentDataSource, loaded: true});
+				StateStore.dispatch({type: "setDataSourceList", dataSourceList: result, currentDataSource: currentDataSource, loaded: true});
 			})
 			.fail((result) => {
-				StateStore.dispatch({type: "setDataSource", dataSourceList: [], currentDataSource: false, loaded: true});
+				StateStore.dispatch({type: "setDataSourceList", dataSourceList: [], currentDataSource: false, loaded: true});
 			});
 			
 			// Get playlist list

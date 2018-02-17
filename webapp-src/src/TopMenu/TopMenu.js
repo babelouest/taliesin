@@ -54,7 +54,7 @@ class TopMenu extends Component {
 			var reduxState = StateStore.getState();
 			if (reduxState.lastAction === "setCurrentDataSource") {
 				this.setState({dataSource: reduxState.profile.dataSource});
-			} else if (reduxState.lastAction === "setDataSource") {
+			} else if (reduxState.lastAction === "setDataSourceList" || reduxState.lastAction === "setDataSource") {
 				this.setState({dataSourceList: reduxState.dataSourceList, dataSource: reduxState.profile.dataSource});
 			} else if (reduxState.lastAction === "setCurrentView") {
 				this.setState({view: reduxState.profile.view});

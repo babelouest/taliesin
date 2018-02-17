@@ -269,7 +269,7 @@ For the following exemple, it configuration configures a reverse-proxy and encap
         SSLCertificateKeyFile /path/to/privkey.pem
 
         ProxyPassMatch ^/api/stream/(.*)/ws$ ws://localhost:8576/api/stream/$1/ws
-        ProxyPass / http://localhost:8576/ retry=0 connectiontimeout=30 timeout=300
+        ProxyPass / http://localhost:8576/ retry=0 connectiontimeout=30 timeout=300 nocanon
 
         ProxyPassReverse / http://localhost:8576/
 </VirtualHost>

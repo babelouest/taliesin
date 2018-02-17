@@ -249,7 +249,8 @@
 		"refresh_status": "Statut du rafraîchissement",
 		"add": "Ajouter une nouvelle Source de données",
 		"refresh": "Rafraîchir la liste des Sources de Données",
-		"delete_title": "Supprimer la Source de Données"
+		"delete_title": "Supprimer la Source de Données",
+    "unavailabe": "La source de données est inaccessible pour le moment, veuillez réessayer plus tard"
 	},
 	"stream": {
 		"remove_title": "Fermer et supprimer le flux",

@@ -7,13 +7,13 @@ import i18n from '../lib/i18n';
 class DataSourceList extends Component {
 	constructor(props) {
 		super(props);
+		
 		this.state = { currentDataSource: props.dataSource, dataSourceList: props.list };
 		
 		this.handleSelectDataSource = this.handleSelectDataSource.bind(this);
 		this.handleManageDataSource = this.handleManageDataSource.bind(this);
-		
 	}
-	
+  
 	componentWillReceiveProps(nextProps) {
 		this.setState({ currentDataSource: nextProps.dataSource, dataSourceList: nextProps.list });
 	}
@@ -32,8 +32,9 @@ class DataSourceList extends Component {
 		var rows = [];
 		var self = this;
 		this.state.dataSourceList.forEach(function(dataSource, index) {
+      var disabled = (dataSource.status === "running" || dataSource.status === "preparing" || dataSource.status === "error");
 			rows.push(
-				<MenuItem key={index} onClick={() => self.handleSelectDataSource(dataSource)} data-name={dataSource.name} className={dataSource.name===self.state.currentDataSource.name?"bg-success":""}>{dataSource.name}</MenuItem>
+				<MenuItem key={index} onClick={() => self.handleSelectDataSource(dataSource)} data-name={dataSource.name} className={disabled?"bg-warning":(dataSource.name===self.state.currentDataSource.name?"bg-success":"")} disabled={disabled}>{dataSource.name}</MenuItem>
 			);
 		});
 		return (

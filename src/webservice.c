@@ -20,7 +20,10 @@
  * License along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#define _GNU_SOURCE
+
+#ifndef _GNU_SOURCE
+  #define _GNU_SOURCE
+#endif
 #include <string.h>
 
 #include "taliesin.h"
@@ -493,7 +496,7 @@ int callback_taliesin_media_get_path (const struct _u_request * request, struct 
         if (last != NULL) {
           path[last - path] = '\0';
         }
-        decode_path = url_decode(path);
+        decode_path = o_strdup(path);
         decode_path_save = decode_path;
         while (decode_path[0] == '/') {
           decode_path++;

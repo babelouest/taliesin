@@ -34,11 +34,11 @@ class BrowsePlaylist extends Component {
 		
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
-			if (reduxState.lastAction === "setPlaylists" || reduxState.lastAction === "setPlaylist") {
+			if ((reduxState.lastAction === "setPlaylists" || reduxState.lastAction === "setPlaylist") && this._ismounted) {
 				this.setState({playlist: reduxState.playlists}, () => {
 					this.getCovers();
 				});
-			} else if (reduxState.lastAction === "setStreamList" || reduxState.lastAction === "setStream") {
+			} else if ((reduxState.lastAction === "setStreamList" || reduxState.lastAction === "setStream") && this._ismounted) {
 				this.setState({streamList: reduxState.streamList});
 			}
 		});

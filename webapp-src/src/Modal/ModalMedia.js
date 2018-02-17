@@ -265,7 +265,7 @@ class ModalMedia extends Component {
 	}
 	
 	render() {
-		var metadata = [], mediaImage = "", separator = "", streamList = [], playlist = [<MenuItem key={0} onClick={() => this.addToNewPlaylist()}>{i18n.t("common.new_playlist")}</MenuItem>];
+		var metadata = [], mediaImage = "", separator = "", streamList = [], playlist = [<MenuItem key={0} onClick={() => this.addToNewPlaylist()}>{i18n.t("common.new_playlist")}</MenuItem>], dm, ds;
 		if (this.state.media) {
 			if (this.state.media.tags && this.state.media.tags.title) {
 				metadata.push(
@@ -342,6 +342,14 @@ class ModalMedia extends Component {
 					</MenuItem>
 				);
 			});
+			dm = Math.floor(this.state.media.duration/60000);
+			if (dm < 10) {
+				dm = "0" + dm;
+			}
+			ds = Math.floor(this.state.media.duration/1000)%60;
+			if (ds < 10) {
+				ds = "0" + ds;
+			}
 			return (
 					<Modal show={this.state.show} onHide={this.onCloseModal}>
 						<Modal.Header closeButton>
@@ -392,6 +400,14 @@ class ModalMedia extends Component {
 							</Row>
 							<Row>
 								<Col xs={6}>
+									<label>{i18n.t("common.duration")}</label>
+								</Col>
+								<Col xs={6}>
+									<span>{dm}:{ds}</span>
+								</Col>
+							</Row>
+							<Row>
+								<Col xs={6}>
 									<label>{i18n.t("common.path")}</label>
 								</Col>
 								<Col xs={6}>
@@ -403,7 +419,7 @@ class ModalMedia extends Component {
 									<label>{i18n.t("common.open_folder")}</label>
 								</Col>
 								<Col xs={6}>
-									<span><a role="button" onClick={this.handleSelectFolder}>{this.state.media.folder}</a></span>
+									<span><a role="button" onClick={this.handleSelectFolder}>{this.state.media.folder || "/"}</a></span>
 								</Col>
 							</Row>
 							<Row>

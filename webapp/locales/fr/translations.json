@@ -6,6 +6,7 @@
 		"cover": "Pochette",
 		"tags": "Tags",
 		"title": "Titre",
+		"duration": "Durée",
 		"artist": "Artiste",
 		"album": "Album",
 		"year": "Année",
@@ -248,7 +249,8 @@
 		"refresh_status": "Statut du rafraîchissement",
 		"add": "Ajouter une nouvelle Source de données",
 		"refresh": "Rafraîchir la liste des Sources de Données",
-		"delete_title": "Supprimer la Source de Données"
+		"delete_title": "Supprimer la Source de Données",
+    "unavailabe": "La source de données est inaccessible pour le moment, veuillez réessayer plus tard"
 	},
 	"stream": {
 		"remove_title": "Fermer et supprimer le flux",
@@ -259,6 +261,8 @@
 		"save_as_playlist_message": "Veuillez entrer le nom de la nouvelle playlists basée sur le flux '{{stream}}'",
 		"message_stream_reload_ok": "Flux rechargé",
 		"message_stream_reload_error": "Erreur lors du rechargement du flux",
+		"message_stream_refresh_ok": "Flux rafraîchit",
+		"message_stream_refresh_error": "Erreur lors du rafraîchissement du flux",
 		"message_stream_reset_ok": "URL du flux réinitialisée",
 		"message_stream_reset_error": "Erreur lors de la réinitialisation de l'URL du flux",
 		"message_stream_delete_ok": "Flux supprimé",

@@ -95,6 +95,12 @@ class StreamMediaList extends Component {
 	}
 	
 	render() {
+		var paddingCol;
+		if (!this.state.stream.webradio) {
+			paddingCol =
+				<Col md={2}>
+				</Col>
+		}
 		return (
 			<div>
 				<Row>
@@ -116,8 +122,7 @@ class StreamMediaList extends Component {
 					</Col>
 				</Row>
 				<Row className="hidden-xs">
-					<Col md={2}>
-					</Col>
+				{paddingCol}
 					<Col md={2}>
 						<Label>{i18n.t("common.data_source")}</Label>
 					</Col>

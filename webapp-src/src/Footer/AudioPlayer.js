@@ -28,7 +28,7 @@ class AudioPlayer extends Component {
 			next: false, 
 			taliesinApiUrl: StateStore.getState().taliesinApiUrl, 
 			currentTime: 0, 
-			duration: 0,
+			duration: props.duration,
 			volume: 0,
 			jukeboxIndex: 0,
 			jukeboxPlayedIndex: [],
@@ -108,7 +108,8 @@ class AudioPlayer extends Component {
 			websocketUrl: websocketUrl,
 			websocketReconnect: true,
 			playNow: nextProps.play, 
-			playIndex: nextProps.index
+			playIndex: nextProps.index,
+			duration: nextProps.duration
 		}, () => {
 			this.loadMedia();
 			if (newWebsocket) {
@@ -179,7 +180,7 @@ class AudioPlayer extends Component {
 					}
 				};
 				if (this.state.interval) {
-					this.clearInterval(this.state.interval);
+					clearInterval(this.state.interval);
 					this.setState({interval: false});
 				}
 			}
@@ -216,7 +217,7 @@ class AudioPlayer extends Component {
 				break;
 			case "now":
 				if (response.result !== "not_found" && response.result !== "invalid_param") {
-					if (StateStore.getState().profile.mediaNow.data_source !== response.result.data_source || StateStore.getState().profile.mediaNow.path !== response.result.path) {
+					if (response.result.data_source && response.result.path && (StateStore.getState().profile.mediaNow.data_source !== response.result.data_source || StateStore.getState().profile.mediaNow.path !== response.result.path)) {
 						this.setState({media: response.result}, () => {
 								this.sendStreamComand("next");
 								StateStore.dispatch({type: "setMediaNow", media: response.result});
@@ -244,7 +245,7 @@ class AudioPlayer extends Component {
 				});
 				break;
 			case "list":
-				if (response.result[0].data_source !== StateStore.getState().profile.mediaNow.data_source || response.result[0].path !== StateStore.getState().profile.mediaNow.path) {
+				if (response.result[0].data_source && response.result[0].path && (response.result[0].data_source !== StateStore.getState().profile.mediaNow.data_source || response.result[0].path !== StateStore.getState().profile.mediaNow.path)) {
 					StateStore.dispatch({type: "setMediaNow", media: response.result[0]});
 				}
 				break;
@@ -325,7 +326,6 @@ class AudioPlayer extends Component {
 			this.rap.audioEl.src = URL.createObjectURL(new Blob([], {type:"audio/mp3"}));
 			this.setState({play: false}, () => {
 				this.dispatchPlayerStatus({status: "stop"});
-				document.title = "Taliesin";
 			});
 		}
 	}
@@ -423,11 +423,13 @@ class AudioPlayer extends Component {
 	
 	displayDuration(currentTime, duration) {
 		var cMin = Math.floor(currentTime / 60), cSec = Math.floor(currentTime) % 60, dMin, dSec;
-		var jsx = <span>{(cMin<10?"0"+cMin:cMin)}:{(cSec<10?"0"+cSec:cSec)}</span>
+		var jsx;
 		if (duration) {
 			dMin = Math.floor(duration / 60);
 			dSec = Math.floor(duration) % 60;
-			jsx += <span> / {(dMin<10?"0"+dMin:dMin)}:{(dSec<10?"0"+dSec:dSec)}</span>;
+			jsx = <span>{(cMin<10?"0"+cMin:cMin)}:{(cSec<10?"0"+cSec:cSec)} / {(dMin<10?"0"+dMin:dMin)}:{(dSec<10?"0"+dSec:dSec)}</span>;
+		} else {
+			jsx = <span>{(cMin<10?"0"+cMin:cMin)}:{(cSec<10?"0"+cSec:cSec)}</span>;
 		}
 		return jsx;
 	}
@@ -481,16 +483,23 @@ class AudioPlayer extends Component {
 				<span>{streamName}</span>
 			</div>;
 		if (this.state.play) {
-			if (this.rap.audioEl.paused) {
+			if (this.state.stream.webradio) {
 				playButton = 
-					<Button title={i18n.t("common.play")} onClick={this.handlePlay}>
+					<Button title={i18n.t("common.play")} disabled={true}>
 						<FontAwesome name={"play"} />
 					</Button>;
 			} else {
-				playButton = 
-					<Button title={i18n.t("common.pause")} onClick={this.handlePause}>
-						<FontAwesome name={"pause"} />
-					</Button>;
+				if (this.rap.audioEl.paused) {
+					playButton = 
+						<Button title={i18n.t("common.play")} onClick={this.handlePlay}>
+							<FontAwesome name={"play"} />
+						</Button>;
+				} else {
+					playButton = 
+						<Button title={i18n.t("common.pause")} onClick={this.handlePause}>
+							<FontAwesome name={"pause"} />
+						</Button>;
+				}
 			}
 			duration = this.displayDuration(this.state.currentTime, this.state.duration);
 		} else {

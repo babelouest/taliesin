@@ -6,6 +6,7 @@
 		"cover": "Cover",
 		"tags": "Tags",
 		"title": "Title",
+		"duration": "Duration",
 		"artist": "Artist",
 		"album": "Album",
 		"year": "Year",
@@ -248,7 +249,8 @@
 		"refresh_status": "Refresh Status",
 		"add": "Add a new data source",
 		"refresh": "Refresh data source list",
-		"delete_title": "Delete data source"
+		"delete_title": "Delete data source",
+    "unavailabe": "Data source is unavailable at the moment, please try again later"
 	},
 	"stream": {
 		"remove_title": "Close and remove stream",
@@ -259,6 +261,8 @@
 		"save_as_playlist_message": "Enter the name for the new playlist from the stream '{{stream}}'",
 		"message_stream_reload_ok": "Stream reloaded",
 		"message_stream_reload_error": "Error reloading stream",
+		"message_stream_refresh_ok": "Stream refreshed",
+		"message_stream_refresh_error": "Error refreshing stream",
 		"message_stream_reset_ok": "Stream URL reset",
 		"message_stream_reset_error": "Error resetting stream URL",
 		"message_stream_delete_ok": "Stream deleted",

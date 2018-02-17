@@ -55,7 +55,7 @@ class ElementPathIcon extends Component {
 	getThumbnail() {
 		if (this._ismounted) {
 			if (!this.state.thumb && (this.state.element.type === "audio" || this.state.element.type === "folder" || this.state.element.type === "image")) {
-				StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/path/" + encodeURI(this.state.path).replace(/#/g, "%23").replace(/\+/g, "%2B") + "/" + this.state.element.name + "?cover&thumbnail&base64")
+				StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/path/" + encodeURI(this.state.path).replace(/#/g, "%23").replace(/\+/g, "%2B") + "/" + encodeURI(this.state.element.name).replace(/#/g, "%23").replace(/\+/g, "%2B") + "?cover&thumbnail&base64")
 				.then((result) => {
 					this.setState({thumb: result, thumbLoaded: true});
 				})

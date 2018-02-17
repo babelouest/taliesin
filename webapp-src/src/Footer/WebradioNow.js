@@ -23,7 +23,6 @@ class WebradioNow extends Component {
 		});
 		
 		this.loadCover = this.loadCover.bind(this);
-		this.setPageTitle = this.setPageTitle.bind(this);
 	}
 	
 	componentWillUnmount() {
@@ -33,7 +32,6 @@ class WebradioNow extends Component {
 	
 	componentDidMount() {
 		this._ismounted = true;
-		this.setPageTitle();
 	}
 	
 	componentWillReceiveProps(nextProps) {
@@ -41,7 +39,6 @@ class WebradioNow extends Component {
 		this.setState({media: nextProps.media}, () => {
 			if (newMedia) {
 				this.loadCover();
-				this.setPageTitle();
 			}
 		});
 	}
@@ -55,16 +52,6 @@ class WebradioNow extends Component {
 			.fail(() => {
 				this.setState({imgThumbBlob: false});
 			});
-		}
-	}
-	
-	setPageTitle() {
-		if (this._ismounted) {
-			if (this.state.media) {
-				document.title = this.buildTitle(this.state.media) + " - Taliesin"
-			} else {
-				document.title = "Taliesin";
-			}
 		}
 	}
 	

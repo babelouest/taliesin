@@ -85,7 +85,7 @@ function stateStoreManager(state = defaultState, action) {
 		case "setServerConfig":
 			state.serverConfig = action.config;
 			break;
-		case "setDataSource":
+		case "setDataSourceList":
 			state.dataSourceList = action.dataSourceList;
 			state.dataSourceListLoaded = action.loaded;
 			if (action.currentDataSource) {
@@ -94,6 +94,13 @@ function stateStoreManager(state = defaultState, action) {
 				config.setLocalConfigValue("dataSource", action.currentDataSource);
 			}
 			break;
+    case "setDataSource":
+      for (i in state.dataSourceList) {
+        if (state.dataSourceList[i].name === action.dataSource.name) {
+          state.dataSourceList[i] = action.dataSource;
+        }
+      }
+      break;
 		case "setCurrentDataSource":
 			state.profile.dataSource = action.currentDataSource;
 			config.setLocalConfigValue("dataSource", action.currentDataSource);
@@ -225,10 +232,10 @@ function stateStoreManager(state = defaultState, action) {
 				if (action.config.dataSource && state.dataSourceList.find((ds) => {return ds.name === action.config.dataSource.name;})) {
 					state.profile.dataSource = action.config.dataSource;
 				}
-				if (action.config.currentPlayer && state.externalPlayerList.find((pl) => {return pl.name === action.config.currentPlayer.name;})) {
+				if (action.config.currentPlayer && (action.config.currentPlayer.type !== "external" || state.externalPlayerList.find((pl) => {return pl.name === action.config.currentPlayer.name;}))) {
 					state.profile.currentPlayer = action.config.currentPlayer;
 				}
-				if (action.config.stream && state.streamList.find((s) => {return s.name === action.config.stream.name;})) {
+				if (action.config.stream) {
 					state.profile.stream = action.config.stream;
 				}
 				state.profile.view = action.config.view || state.profile.view;

@@ -24,7 +24,7 @@ class ManageStream extends Component {
 
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
-			if (reduxState.lastAction === "setStreamList" || reduxState.lastAction === "setStream") {
+			if ((reduxState.lastAction === "setStreamList" || reduxState.lastAction === "setStream") && this._ismounted) {
 				this.setState({streamList: reduxState.streamList}, () => {
 					this.buildStreamExternalList();
 				});

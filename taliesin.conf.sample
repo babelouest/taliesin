@@ -17,7 +17,7 @@ api_prefix="api"
 server_remote_address = "http://localhost:8576/"
 
 # path to static files to access webapp
-app_files_path="/home/pi/taliesin/webapp"
+app_files_path="/usr/share/taliesin/webapp"
 
 # mime types for webapp files
 app_files_mime_types =
@@ -90,8 +90,8 @@ oauth_scope_admin="taliesin_admin"
 
 # TLS/SSL configuration values
 use_secure_connection=false
-secure_connection_key_file="cert.key"
-secure_connection_pem_file="cert.pem"
+secure_connection_key_file="/usr/etc/taliesin/cert.key"
+secure_connection_pem_file="/usr/etc/taliesin/cert.pem"
 
 # MariaDB/Mysql database connection
 #database =
@@ -108,7 +108,7 @@ secure_connection_pem_file="cert.pem"
 database =
 {
    type               = "sqlite3";
-   path               = "/hme/pi/taliesin.db";
+   path               = "/var/cache/taliesin/taliesin.db";
 };
 
 # security parameters
@@ -126,12 +126,12 @@ jwt =
 {
    key_size = 512
    
-   use_rsa = false
-   rsa_pub_file = "public-rsa.pem"
+   use_rsa = true
+   rsa_pub_file = "/usr/etc/taliesin/public-rsa.pem"
    
    use_ecdsa = false
-   ecdsa_pub_file = "public-ecdsa.pem"
+   ecdsa_pub_file = "/usr/etc/taliesin/public-ecdsa.pem"
    
-   use_sha = true
+   use_sha = false
    sha_secret = "secret"
 }

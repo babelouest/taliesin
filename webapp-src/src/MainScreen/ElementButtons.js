@@ -102,10 +102,10 @@ class ElementButtons extends Component {
 	runPlayElement() {
 		var url, streamName;
 		if (this.state.path) {
-			url = "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/path/" + encodeURI(this.state.path).replace(/#/g, "%23");
+			url = "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/path/" + encodeURI(this.state.path).replace(/#/g, "%23").replace(/\+/g, "%2B");
 			streamName = this.state.element.name;
 		} else {
-			url = "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/category/" + encodeURI(this.state.category) + "/" + encodeURI(this.state.categoryValue);
+			url = "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/category/" + encodeURI(this.state.category) + "/" + encodeURI(this.state.categoryValue).replace(/#/g, "%23").replace(/\+/g, "%2B");
 			streamName = this.state.categoryValue;
 			if (this.state.subCategory) {
 				url += "/" + encodeURI(this.state.subCategory) + "/" + encodeURI(this.state.subCategoryValue);

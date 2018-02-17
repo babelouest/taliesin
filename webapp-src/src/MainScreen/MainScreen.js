@@ -35,7 +35,7 @@ class MainScreen extends Component {
 		
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
-			if (reduxState.lastAction === "setCurrentDataSource" || reduxState.lastAction === "setDataSource") {
+			if (reduxState.lastAction === "setCurrentDataSource" || reduxState.lastAction === "setDataSourceList") {
 				this.setState({dataSource: reduxState.profile.dataSource, path: reduxState.profile.path});
 			} else if (reduxState.lastAction === "setCurrentPath") {
 				this.setState({path: reduxState.profile.path});

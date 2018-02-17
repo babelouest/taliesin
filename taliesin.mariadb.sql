@@ -26,9 +26,10 @@ CREATE TABLE `t_data_source` (
   `tds_path` VARCHAR(1024) NOT NULL,
   `tds_icon` VARCHAR(128),
   `tds_last_updated` TIMESTAMP NULL DEFAULT NULL,
-  `tds_refresh_status` TINYINT DEFAULT 0 -- 0: not running, 1 pending, 2: preparing, 3: runnin, 4: cleaning, 5: error, 6: stop, 7: not found
+  `tds_refresh_status` TINYINT DEFAULT 0 -- 0: not running, 1 pending, 2: preparing, 3: running, 4: cleaning, 5: error, 6: stop, 7: not found
 );
 CREATE INDEX `i_tds_name` ON `t_data_source`(`tds_name`);
+CREATE INDEX `i_tds_username` ON `t_data_source`(`tds_username`);
 
 CREATE TABLE `t_image_cover` (
   `tic_id` INT(11) PRIMARY KEY AUTO_INCREMENT,
@@ -50,7 +51,7 @@ CREATE TABLE `t_folder` (
   `tic_id` INT(11),
   FOREIGN KEY(`tds_id`) REFERENCES `t_data_source`(`tds_id`) ON DELETE CASCADE,
   FOREIGN KEY(`tf_parent_id`) REFERENCES `t_folder`(`tf_id`) ON DELETE CASCADE,
-  FOREIGN KEY(`tic_id`) REFERENCES `t_image_cover`(`tic_id`) ON DELETE CASCADE
+  FOREIGN KEY(`tic_id`) REFERENCES `t_image_cover`(`tic_id`) ON DELETE SET NULL
 );
 CREATE INDEX `i_tf_name` ON `t_folder`(`tf_name`);
 
@@ -67,7 +68,7 @@ CREATE TABLE `t_media` (
   `tic_id` INT(11),
   FOREIGN KEY(`tds_id`) REFERENCES `t_data_source`(`tds_id`) ON DELETE CASCADE,
   FOREIGN KEY(`tf_id`) REFERENCES `t_folder`(`tf_id`) ON DELETE CASCADE,
-  FOREIGN KEY(`tic_id`) REFERENCES `t_image_cover`(`tic_id`) ON DELETE CASCADE
+  FOREIGN KEY(`tic_id`) REFERENCES `t_image_cover`(`tic_id`) ON DELETE SET NULL
 );
 CREATE INDEX `i_tm_name` ON `t_media`(`tm_name`);
 CREATE INDEX `i_tm_type` ON `t_media`(`tm_type`);

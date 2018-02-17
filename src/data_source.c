@@ -709,13 +709,13 @@ void * thread_run_refresh_data_source(void * data) {
   int i;
   char * root_path;
 
-  // Wait for previous scans to be completed
-  while (refresh_config->index && refresh_config->refresh_status == DATA_SOURCE_REFRESH_STATUS_PENDING) {
-    pthread_mutex_lock(&config->refresh_lock);
-    pthread_cond_wait(&config->refresh_cond, &config->refresh_lock);
-    pthread_mutex_unlock(&config->refresh_lock);
-  }
   if (tds_id > 0) {
+    // Wait for previous scans to be completed
+    while (refresh_config->index && refresh_config->refresh_status == DATA_SOURCE_REFRESH_STATUS_PENDING) {
+      pthread_mutex_lock(&config->refresh_lock);
+      pthread_cond_wait(&config->refresh_cond, &config->refresh_lock);
+      pthread_mutex_unlock(&config->refresh_lock);
+    }
     refresh_config->refresh_status = refresh_config->refresh_action;
     if (data_source_set_refresh_status(config, tds_id, DATA_SOURCE_REFRESH_STATUS_RUNNING) == T_OK) {
       if (refresh_config->refresh_status == DATA_SOURCE_REFRESH_STATUS_RUNNING) {
@@ -767,6 +767,7 @@ void * thread_run_refresh_data_source(void * data) {
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error getting tds_id");
   }
+  
   for (i=0; i<config->nb_refresh_status - 1; i++) {
     if (json_integer_value(json_object_get(config->refresh_status_list[i]->j_data_source, "tds_id")) == tds_id) {
       break;

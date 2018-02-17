@@ -137,7 +137,7 @@ class MPDController extends Component {
 		.then((status) => {
 			this.loadMedia();
 			if (playNow) {
-				this.setState({playNow: false, jukeboxIndex: this.state.stream.webradio?-1:this.state.playIndex}, () => {
+				this.setState({playNow: false, jukeboxIndex: (this.state.stream.webradio||this.state.jukeboxRandom)?-1:this.state.playIndex}, () => {
 					this.handlePlay();
 				});
 			} else {
@@ -153,12 +153,10 @@ class MPDController extends Component {
 				StateStore.dispatch({ type: "setCurrentPlayerStatus", volume: status.volume });
 				if (status.song_pos !== StateStore.getState().profile.jukeboxIndex) {
 					StateStore.dispatch({ type: "setJukeboxIndex", index: status.song_pos });
+					StateStore.dispatch({ type: "setCurrentPlayerStatus", repeat: status.repeat, random: status.random, status: status.state});
 					this.loadMedia();
 				} else if (this.state.stream.webradio) {
 					this.loadMedia();
-				}
-				if (!this.state.play) {
-					document.title = "Taliesin";
 				}
 			});
 		});
@@ -218,7 +216,7 @@ class MPDController extends Component {
 			if (this.state.stream.webradio) {
 				StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "now"})
 				.then((result) => {
-					if (StateStore.getState().profile.mediaNow.data_source !== result.data_source || StateStore.getState().profile.mediaNow.path !== result.path) {
+					if (result.data_source && result.path && (StateStore.getState().profile.mediaNow.data_source !== result.data_source || StateStore.getState().profile.mediaNow.path !== result.path)) {
 						this.setState({media: result}, () => {
 							StateStore.dispatch({type: "setMediaNow", media: result});
 						});
@@ -284,6 +282,7 @@ class MPDController extends Component {
 		this.setState({play: false});
 		StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/stop/")
 		.then(() => {
+			StateStore.dispatch({ type: "setCurrentPlayerStatus", status: "stop"});
 			StateStore.getState().NotificationManager.addNotification({
 				message: i18n.t("common.stop"),
 				level: 'success'
@@ -296,6 +295,7 @@ class MPDController extends Component {
 		this.setState({play: false});
 		StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/pause/")
 		.then(() => {
+			StateStore.dispatch({ type: "setCurrentPlayerStatus", status: "pause"});
 			StateStore.getState().NotificationManager.addNotification({
 				message: i18n.t("common.pause"),
 				level: 'success'
@@ -318,6 +318,7 @@ class MPDController extends Component {
 		}
 		StateStore.getState().APIManager.angharadApiRequest("PUT", url)
 		.then(() => {
+			StateStore.dispatch({ type: "setCurrentPlayerStatus", status: "play"});
 			StateStore.getState().NotificationManager.addNotification({
 				message: i18n.t("common.play"),
 				level: 'success'
@@ -329,14 +330,18 @@ class MPDController extends Component {
 	handleRepeat() {
 		StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/repeat/" + (this.state.jukeboxRepeat?"0":"1"))
 		.then(() => {
-			this.setState({jukeboxRepeat: !this.state.jukeboxRepeat});
+			this.setState({jukeboxRepeat: !this.state.jukeboxRepeat}, () => {
+				StateStore.dispatch({type: "setCurrentPlayerStatus", repeat: this.state.jukeboxRepeat});
+			});
 		});
 	}
 	
 	handleRandom() {
 		StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/random/" + (this.state.jukeboxRandom?"0":"1"))
 		.then(() => {
-			this.setState({jukeboxRandom: !this.state.jukeboxRandom});
+			this.setState({jukeboxRandom: !this.state.jukeboxRandom}, () => {
+				StateStore.dispatch({type: "setCurrentPlayerStatus", random: this.state.jukeboxRandom});
+			});
 		});
 	}
 	
@@ -359,10 +364,17 @@ class MPDController extends Component {
 	render() {
 		var playButton, volume, switchButton, streamName;
 		if (this.state.play) {
-			playButton = 
-				<Button title={i18n.t("common.play")} onClick={this.handlePause}>
-					<FontAwesome name={"pause"} />
-				</Button>;
+			if (this.state.stream.webradio) {
+				playButton = 
+					<Button title={i18n.t("common.play")} disabled={true}>
+						<FontAwesome name={"play"} />
+					</Button>;
+			} else {
+				playButton = 
+					<Button title={i18n.t("common.play")} onClick={this.handlePause}>
+						<FontAwesome name={"pause"} />
+					</Button>;
+			}
 		} else {
 			playButton = 
 				<Button title={i18n.t("common.play")} onClick={this.handlePlay}>
@@ -404,10 +416,10 @@ class MPDController extends Component {
 					</ButtonGroup>
 					&nbsp;
 					<ButtonGroup>
-						<Button title={i18n.t("common.repeat")} onClick={this.handleRepeat} disabled={this.state.stream.webradio} className={(this.state.jukeboxRepeat&&!this.state.stream.webradio)?"btn-primary":""}>
+						<Button title={i18n.t("common.repeat")} onClick={this.handleRepeat} className={(this.state.jukeboxRepeat&&!this.state.stream.webradio)?"btn-primary":""}>
 							<FontAwesome name={"repeat"} />
 						</Button>
-						<Button title={i18n.t("common.random")} onClick={this.handleRandom} disabled={this.state.stream.webradio} className={(this.state.jukeboxRandom&&!this.state.stream.webradio)?"btn-primary":""}>
+						<Button title={i18n.t("common.random")} onClick={this.handleRandom} className={(this.state.jukeboxRandom&&!this.state.stream.webradio)?"btn-primary":""}>
 							<FontAwesome name={"random"} />
 						</Button>
 						<DropdownButton title={volume} id="dropdown-volume">

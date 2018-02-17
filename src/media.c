@@ -21,7 +21,9 @@
  *
  */
 
-#define _GNU_SOURCE
+#ifndef _GNU_SOURCE
+  #define _GNU_SOURCE
+#endif
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
@@ -833,31 +835,33 @@ int media_add(struct config_elements * config, json_int_t tds_id, json_int_t tf_
     if (res == H_OK) {
       j_last_id = h_last_insert_id(config->conn);
       if (j_last_id != NULL) {
-        // Insert media metadata
-        tm_id = json_integer_value(j_last_id);
-        json_decref(j_last_id);
-        j_query = json_pack("{sss[]}",
-                            "table",
-                            TALIESIN_TABLE_META_DATA,
-                            "values");
-        if (j_query != NULL) {
-          json_object_foreach(json_object_get(json_object_get(j_media, "metadata"), "tags"), key, j_tag) {
-            json_array_append_new(json_object_get(j_query, "values"), json_pack("{sIssss}", "tm_id", tm_id, "tmd_key", key, "tmd_value", json_string_value(j_tag)));
+        if (json_object_size(json_object_get(json_object_get(j_media, "metadata"), "tags"))) {
+          // Insert media metadata
+          tm_id = json_integer_value(j_last_id);
+          j_query = json_pack("{sss[]}",
+                              "table",
+                              TALIESIN_TABLE_META_DATA,
+                              "values");
+          if (j_query != NULL) {
+            json_object_foreach(json_object_get(json_object_get(j_media, "metadata"), "tags"), key, j_tag) {
+              json_array_append_new(json_object_get(j_query, "values"), json_pack("{sIssss}", "tm_id", tm_id, "tmd_key", key, "tmd_value", json_string_value(j_tag)));
+            }
+            res = h_insert(config->conn, j_query, NULL);
+            json_decref(j_query);
+            if (res != H_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "media_add - error insert media metadata in database");
+              ret = T_ERROR_DB;
+            }
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "media_add - error allocating resources for j_query (2)");
+            ret = T_ERROR_MEMORY;
           }
-          res = h_insert(config->conn, j_query, NULL);
-          json_decref(j_query);
-          if (res != H_OK) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "media_add - error insert media metadata in database");
-            ret = T_ERROR_DB;
-          }
-        } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "media_add - error allocating resources for j_query (2)");
-          ret = T_ERROR_MEMORY;
         }
       } else {
         y_log_message(Y_LOG_LEVEL_ERROR, "media_add - error getting last tm_id");
         ret = T_ERROR_DB;
       }
+      json_decref(j_last_id);
     } else {
       y_log_message(Y_LOG_LEVEL_ERROR, "media_add - error insert media in database");
       ret = T_ERROR_DB;
@@ -2404,7 +2408,7 @@ json_t * media_append_list_to_media_list(struct config_elements * config, json_t
             y_log_message(Y_LOG_LEVEL_ERROR, "media_append_list_to_media_list - Error media_get_audio_list_from_path");
           }
           json_decref(j_result);
-        } else {
+        } else if (!check_result_value(j_data_source, T_ERROR_NOT_FOUND)) {
           y_log_message(Y_LOG_LEVEL_ERROR, "media_append_list_to_media_list - Error data_source_get (1)");
         }
         json_decref(j_data_source);
@@ -2418,7 +2422,7 @@ json_t * media_append_list_to_media_list(struct config_elements * config, json_t
             y_log_message(Y_LOG_LEVEL_ERROR, "media_append_list_to_media_list - Error media_subcategory_list");
           }
           json_decref(j_result);
-        } else {
+        } else if (!check_result_value(j_data_source, T_ERROR_NOT_FOUND)) {
           y_log_message(Y_LOG_LEVEL_ERROR, "media_append_list_to_media_list - Error data_source_get (3)");
         }
         json_decref(j_data_source);
@@ -2432,7 +2436,7 @@ json_t * media_append_list_to_media_list(struct config_elements * config, json_t
             y_log_message(Y_LOG_LEVEL_ERROR, "media_append_list_to_media_list - Error media_category_list");
           }
           json_decref(j_result);
-        } else {
+        } else if (!check_result_value(j_data_source, T_ERROR_NOT_FOUND)) {
           y_log_message(Y_LOG_LEVEL_ERROR, "media_append_list_to_media_list - Error data_source_get (2)");
         }
         json_decref(j_data_source);
@@ -2440,7 +2444,7 @@ json_t * media_append_list_to_media_list(struct config_elements * config, json_t
         j_result = playlist_get(config, username, json_string_value(json_object_get(j_element, "playlist")), 1, 0, 0);
         if (check_result_value(j_result, T_OK)) {
           json_array_extend(j_media_list, json_object_get(json_object_get(j_result, "playlist"), "media"));
-        } else {
+        } else if (!check_result_value(j_result, T_ERROR_NOT_FOUND)) {
           y_log_message(Y_LOG_LEVEL_ERROR, "media_append_list_to_media_list - Error playlist_get");
         }
         json_decref(j_result);

@@ -256,6 +256,20 @@ install(DIRECTORY webapp/
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/taliesin/webapp/ COMPONENT runtime)
 install(FILES webapp-src/public/config.json.sample 
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/taliesin/webapp/ RENAME config.json COMPONENT config)
+install(FILES README.md
+        DESTINATION ${CMAKE_INSTALL_DOCDIR}/ COMPONENT runtime)
+install(FILES docs/INSTALL.md
+        DESTINATION ${CMAKE_INSTALL_DOCDIR}/ COMPONENT runtime)
+install(FILES docs/API.md
+        DESTINATION ${CMAKE_INSTALL_DOCDIR}/ COMPONENT runtime)
+install(FILES taliesin-init
+        DESTINATION ${CMAKE_INSTALL_DOCDIR}/ COMPONENT runtime)
+install(FILES taliesin.service
+        DESTINATION ${CMAKE_INSTALL_DOCDIR}/ COMPONENT runtime)
+install(FILES taliesin.mariadb.sql
+        DESTINATION ${CMAKE_INSTALL_DOCDIR}/ COMPONENT runtime)
+install(FILES taliesin.sqlite3.sql
+        DESTINATION ${CMAKE_INSTALL_DOCDIR}/ COMPONENT runtime)
 
 set(TARGETS taliesin)
 

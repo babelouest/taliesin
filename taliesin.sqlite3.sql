@@ -28,7 +28,7 @@ CREATE INDEX `i_tds_name` ON `t_data_source`(`tds_name`);
 CREATE TABLE `t_image_cover` (
   `tic_id` INTEGER PRIMARY KEY AUTOINCREMENT,
   `tds_id` INTEGER,
-  `tic_cover_original` MEDIUMBLOB,
+  `tic_path` TEXT NOT NULL, -- According to PATH_MAX
   `tic_cover_thumbnail` MEDIUMBLOB,
   `tic_fingerprint` TEXT,
   FOREIGN KEY(`tds_id`) REFERENCES `t_data_source`(`tds_id`) ON DELETE CASCADE

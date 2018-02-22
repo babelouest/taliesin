@@ -34,7 +34,7 @@ CREATE INDEX `i_tds_username` ON `t_data_source`(`tds_username`);
 CREATE TABLE `t_image_cover` (
   `tic_id` INT(11) PRIMARY KEY AUTO_INCREMENT,
   `tds_id` INT(11),
-  `tic_cover_original` MEDIUMBLOB,
+  `tic_path` VARCHAR(4096) NOT NULL, -- According to PATH_MAX
   `tic_cover_thumbnail` MEDIUMBLOB,
   `tic_fingerprint` VARCHAR(32),
   FOREIGN KEY(`tds_id`) REFERENCES `t_data_source`(`tds_id`) ON DELETE CASCADE

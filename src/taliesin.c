@@ -210,6 +210,7 @@ int main (int argc, char ** argv) {
   ulfius_add_endpoint_by_val(config->instance, "DELETE", config->api_prefix, "/playlist/:playlist/delete_media", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_playlist_delete_media, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "POST", config->api_prefix, "/playlist/:playlist/has_media", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_playlist_has_media, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/playlist/:playlist/load", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_playlist_load, (void*)config);
+  ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/playlist/:playlist/export", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_playlist_export, (void*)config);
   
   // Config endpoints
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/users/", TALIESIN_CALLBACK_PRIORITY_AUTHENTICATION, &callback_taliesin_check_admin_access, (void*)config);
@@ -685,7 +686,7 @@ int build_config_from_file(struct config_elements * config) {
     fprintf(stderr, "Error initializing logs\n");
     exit_server(&config, TALIESIN_ERROR);
   }
-    
+  
   root = config_root_setting(&cfg);
   database = config_setting_get_member(root, "database");
   if (database != NULL) {

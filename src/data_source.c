@@ -148,6 +148,38 @@ json_t * data_source_get(struct config_elements * config, const char * username,
   return j_return;
 }
 
+json_t * data_source_get_by_id(struct config_elements * config, json_int_t tds_id) {
+  json_t * j_query, * j_result, * j_return;
+  int res;
+  
+  j_query = json_pack("{sss[ssssss]s{ss}}",
+                      "table",
+                      TALIESIN_TABLE_DATA_SOURCE,
+                      "columns",
+                        "tds_id",
+                        "tds_username AS username",
+                        "tds_name AS name",
+                        "tds_description AS description",
+                        "tds_path AS path",
+                        config->conn->type==HOEL_DB_TYPE_MARIADB?"UNIX_TIMESTAMP(tds_last_updated) AS last_updated":"tds_last_updated AS last_updated",
+                      "where",
+                        "tds_id",
+                        tds_id);
+  res = h_select(config->conn, j_query, &j_result, NULL);
+  json_decref(j_query);
+  if (res == H_OK) {
+    if (json_array_size(j_result) > 0) {
+      j_return = json_pack("{sisO}", "result", T_OK, "data_source", json_array_get(j_result, 0));
+    } else {
+      j_return = json_pack("{si}", "result", T_ERROR_NOT_FOUND);
+    }
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "data_source_get_by_id - Error executing j_query");
+    j_return = json_pack("{si}", "result", T_ERROR_DB);
+  }
+  return j_return;
+}
+
 int data_source_can_update(json_t * j_data_source, int is_admin) {
   return (is_admin || o_strcmp(TALIESIN_SCOPE_ME, json_string_value(json_object_get(j_data_source, "scope"))) == 0);
 }
@@ -657,8 +689,10 @@ int data_source_clean_removed(struct config_elements * config, json_int_t tds_id
 }
 
 void run_data_source_clean(struct config_elements * config, json_int_t tds_id) {
-  json_t * j_query;
+  json_t * j_query, * j_stream_list, * j_element;
   char * cover_clause = msprintf("`tic_id` IN (SELECT `tic_id` FROM `%s` WHERE `tds_id`=%" JSON_INTEGER_FORMAT ") OR `tic_id` IN (SELECT `tic_id` FROM `%s` WHERE `tds_id`=%" JSON_INTEGER_FORMAT ")", TALIESIN_TABLE_MEDIA, tds_id, TALIESIN_TABLE_FOLDER, tds_id);
+  size_t index;
+  int i;
   
   j_query = json_pack("{sss{s{ssss}sI}}",
                       "table",
@@ -697,8 +731,36 @@ void run_data_source_clean(struct config_elements * config, json_int_t tds_id) {
   if (h_delete(config->conn, j_query, NULL) != H_OK) {
     y_log_message(Y_LOG_LEVEL_ERROR, "data_source_clean - error cleaning table %s", TALIESIN_TABLE_MEDIA);
   }
-  
   json_decref(j_query);
+  
+  // Delete stream when there's no more media in it
+  j_stream_list = db_stream_list(config);
+  if (check_result_value(j_stream_list, T_OK)) {
+    json_array_foreach(json_object_get(j_stream_list, "stream"), index, j_element) {
+      if (json_array_size(json_object_get(j_element, "media")) == 0) {
+        if (json_integer_value(json_object_get(j_element, "webradio"))) {
+          for (i=0; i<config->nb_webradio; i++) {
+            if (0 == o_strcmp(json_string_value(json_object_get(j_element, "name")), config->webradio_set[i]->name)) {
+              if (webradio_close(config, config->webradio_set[i]) != T_OK) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "data_source_clean - Error closing webradio %s", json_string_value(json_object_get(j_element, "name")));
+              }
+              break;
+            }
+          }
+        } else {
+          for (i=0; i<config->nb_jukebox; i++) {
+            if (0 == o_strcmp(json_string_value(json_object_get(j_element, "name")), config->jukebox_set[i]->name)) {
+              if (jukebox_close(config, config->jukebox_set[i]) != T_OK) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "data_source_clean - Error closing jukebox %s", json_string_value(json_object_get(j_element, "name")));
+              }
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+  json_decref(j_stream_list);
 }
 
 void * thread_run_refresh_data_source(void * data) {

@@ -1273,6 +1273,20 @@ json_t * is_webradio_command_valid(struct config_elements * config, struct _t_we
   return j_result;
 }
 
+int webradio_close(struct config_elements * config, struct _t_webradio * webradio) {
+  if (webradio_remove_db_stream(config, webradio->name) != T_OK) {
+    y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error webradio_remove_db_stream");
+    return T_ERROR;
+  }
+  webradio->audio_stream->status = TALIESIN_STREAM_STATUS_STOPPED;
+  if (webradio->audio_stream != NULL) {
+    pthread_mutex_lock(&webradio->audio_stream->buffer_lock);
+    pthread_cond_signal(&webradio->audio_stream->buffer_cond);
+    pthread_mutex_unlock(&webradio->audio_stream->buffer_lock);
+  }
+  return T_OK;
+}
+
 json_t * webradio_command(struct config_elements * config, struct _t_webradio * webradio, const char * username, json_t * j_command) {
   const char * str_command = json_string_value(json_object_get(j_command, "command"));
   int i, ret;
@@ -1284,15 +1298,7 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
   char * full_path, old_name[TALIESIN_PLAYLIST_NAME_LENGTH + 1] = {0};
   
   if (0 == o_strcmp(str_command, "stop")) {
-    if (webradio_remove_db_stream(config, webradio->name) != T_OK) {
-      y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error webradio_remove_db_stream");
-    }
-    webradio->audio_stream->status = TALIESIN_STREAM_STATUS_STOPPED;
-    if (webradio->audio_stream != NULL) {
-      pthread_mutex_lock(&webradio->audio_stream->buffer_lock);
-      pthread_cond_signal(&webradio->audio_stream->buffer_cond);
-      pthread_mutex_unlock(&webradio->audio_stream->buffer_lock);
-    }
+    webradio_close(config, webradio);
     j_return = json_pack("{si}", "result", T_OK);
   } else if (0 == o_strcmp(str_command, "reset_url")) {
     strcpy(old_name, webradio->name);

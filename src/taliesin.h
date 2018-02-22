@@ -486,6 +486,7 @@ json_t * username_get_list(struct config_elements * config);
 // Data source functions
 json_t   * data_source_list(struct config_elements * config, const char * username);
 json_t   * data_source_get(struct config_elements * config, const char * username, const char * data_source, int get_id);
+json_t   * data_source_get_by_id(struct config_elements * config, json_int_t tds_id);
 int        data_source_add(struct config_elements * config, const char * username, json_t * j_data_source);
 int        data_source_set(struct config_elements * config, const char * username, const char * data_source, json_t * j_data_source);
 int        data_source_delete(struct config_elements * config, const char * username, const char * data_source);
@@ -534,6 +535,7 @@ json_t         * webradio_get_clients(struct _t_webradio * webradio);
 json_t         * webradio_get_info(struct _t_webradio * webradio);
 json_t         * webradio_get_file_list(struct config_elements * config, struct _t_webradio * webradio, json_int_t offset, json_int_t limit);
 int              webradio_remove_media_by_index(struct _t_webradio * webradio, int index, json_int_t * tm_id);
+int              webradio_close(struct config_elements * config, struct _t_webradio * webradio);
 
 int      webradio_open_output_buffer(struct _audio_stream * audio_stream);
 ssize_t  webradio_buffer_metadata(char * buf, size_t max, struct _client_data_webradio * client_data);
@@ -579,28 +581,28 @@ json_t * jukebox_get_file_list(struct config_elements * config, struct _t_jukebo
 int      jukebox_remove_media_by_index(struct _t_jukebox * jukebox, int index, json_int_t * tm_id);
 
 // Media functions
-json_t   * media_get(struct config_elements * config, json_t * j_data_source, const char * path);
-json_t   * media_get_by_id(struct config_elements * config, json_int_t tm_id);
-json_t   * media_get_full(struct config_elements * config, json_t * j_data_source, const char * path);
-json_t   * media_get_file_list_from_path(struct config_elements * config, json_t * j_data_source, const char * path, int recursive);
-json_t   * media_get_audio_list_from_path(struct config_elements * config, json_t * j_data_source, const char * path, int recursive);
-json_t   * media_cover_get(struct config_elements * config, json_t * j_data_source, const char * path, int thumbnail);
-json_t   * media_cover_get_by_id(struct config_elements * config, json_int_t tm_id, int thumbnail);
-json_t   * media_list_folder(struct config_elements * config, json_t * j_data_source, json_int_t tf_id, int get_id);
-int        media_add(struct config_elements * config, json_int_t tds_id, json_int_t tf_id, const char * path, json_t * j_media);
-int        media_update(struct config_elements * config, json_int_t tm_id, json_t * j_media);
-json_t   * media_folder_get_cover(struct config_elements * config, json_t * j_data_source, const char * path);
-json_t   * media_folder_detect_cover_by_id(struct config_elements * config, json_t * j_data_source, json_int_t tf_id, const char * path);
-json_t   * media_cover_get_all(struct config_elements * config, json_t * j_data_source, const char * path);
-json_int_t folder_get_id(struct config_elements * config, json_t * j_data_source, json_int_t tf_parent_id, const char * path);
-json_t   * folder_get_all(struct config_elements * config, json_t * j_data_source, json_int_t tf_id);
-int        media_add_history(struct config_elements * config, const char * stream_name, json_int_t tpl_id, json_int_t tm_id);
-json_t   * media_get_history(struct config_elements * config, const char * stream_name, json_int_t offset, json_int_t limit);
-int        media_image_cover_clean_orphan(struct config_elements * config, json_int_t tds_id, json_int_t tic_id);
-int        is_valid_b64_image(const unsigned char * base64_image);
-json_int_t media_cover_save(struct config_elements * config, json_int_t tds_id, const unsigned char * image_base64);
-json_t *   media_get_tags_from_id(struct config_elements * config, json_int_t tm_id);
-json_t *   media_append_list_to_media_list(struct config_elements * config, json_t * append_list, const char * username);
+json_t        * media_get(struct config_elements * config, json_t * j_data_source, const char * path);
+json_t        * media_get_by_id(struct config_elements * config, json_int_t tm_id);
+json_t        * media_get_full(struct config_elements * config, json_t * j_data_source, const char * path);
+json_t        * media_get_file_list_from_path(struct config_elements * config, json_t * j_data_source, const char * path, int recursive);
+json_t        * media_get_audio_list_from_path(struct config_elements * config, json_t * j_data_source, const char * path, int recursive);
+json_t        * media_cover_get(struct config_elements * config, json_t * j_data_source, const char * path, int thumbnail);
+json_t        * media_cover_get_by_id(struct config_elements * config, json_int_t tm_id, int thumbnail);
+json_t        * media_list_folder(struct config_elements * config, json_t * j_data_source, json_int_t tf_id, int get_id);
+int             media_add(struct config_elements * config, json_int_t tds_id, json_int_t tf_id, const char * path, json_t * j_media);
+int             media_update(struct config_elements * config, json_int_t tm_id, json_t * j_media);
+json_t        * media_folder_get_cover(struct config_elements * config, json_t * j_data_source, const char * path);
+json_t        * media_folder_detect_cover_by_id(struct config_elements * config, json_t * j_data_source, json_int_t tf_id, const char * path);
+json_t        * media_cover_get_all(struct config_elements * config, json_t * j_data_source, const char * path, int thumbnail);
+json_int_t      folder_get_id(struct config_elements * config, json_t * j_data_source, json_int_t tf_parent_id, const char * path);
+json_t        * folder_get_all(struct config_elements * config, json_t * j_data_source, json_int_t tf_id);
+int             media_add_history(struct config_elements * config, const char * stream_name, json_int_t tpl_id, json_int_t tm_id);
+json_t        * media_get_history(struct config_elements * config, const char * stream_name, json_int_t offset, json_int_t limit);
+int             media_image_cover_clean_orphan(struct config_elements * config, json_int_t tds_id, json_int_t tic_id);
+int             is_valid_b64_image(const unsigned char * base64_image);
+json_t        * media_get_tags_from_id(struct config_elements * config, json_int_t tm_id);
+json_t        * media_append_list_to_media_list(struct config_elements * config, json_t * append_list, const char * username);
+unsigned char * media_get_cover_from_path(const char * path, size_t * size);
 
 // db stream functions
 json_t * db_stream_list(struct config_elements * config);
@@ -620,7 +622,6 @@ json_t * media_category_get_info(struct config_elements * config, json_t * j_dat
 int      media_category_set_info(struct config_elements * config, json_t * j_data_source, const char * level, const char * category, json_t * j_info);
 int      media_category_delete_info(struct config_elements * config, json_t * j_data_source, const char * level, const char * category);
 json_t * is_media_category_info_valid(struct config_elements * config, json_t * j_info);
-json_t * media_category_cover_get(struct config_elements * config, json_t * j_data_source, const char * level, const char * category, int thumbnail);
 
 // Database Playlists functions
 json_t   * playlist_list(struct config_elements * config, const char * username);
@@ -636,7 +637,6 @@ int        playlist_can_update(json_t * j_playlist, int is_admin);
 int        playlist_add_media(struct config_elements * config, json_int_t tpl_id, json_t * media_list);
 int        playlist_delete_media(struct config_elements * config, json_int_t tpl_id, json_t * media_list);
 json_t *   playlist_has_media(struct config_elements * config, json_int_t tpl_id, json_t * media_list, size_t offset, size_t limit);
-json_t   * playlist_media_cover_get(struct config_elements * config, const char * username, const char * name, int thumbnail);
 
 // Libav functions
 int open_input_file(const char *filename, AVFormatContext **input_format_context, AVCodecContext **input_codec_context, int type);
@@ -697,6 +697,7 @@ int callback_taliesin_playlist_add_media (const struct _u_request * request, str
 int callback_taliesin_playlist_delete_media (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_playlist_has_media (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_playlist_load (const struct _u_request * request, struct _u_response * response, void * user_data);
+int callback_taliesin_playlist_export (const struct _u_request * request, struct _u_response * response, void * user_data);
 
 int callback_taliesin_stream_media (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_stream_get_list (const struct _u_request * request, struct _u_response * response, void * user_data);

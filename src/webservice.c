@@ -625,10 +625,7 @@ int callback_taliesin_media_get_path (const struct _u_request * request, struct 
 
 int callback_taliesin_category_get_info (const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct config_elements * config = (struct config_elements *)user_data;
-  json_t * j_data_source, * j_result = NULL, * j_cover = NULL;
-  unsigned char * cover_decoded;
-  size_t cover_decoded_len, cover_b64_len;
-  const char * cover_b64;
+  json_t * j_data_source, * j_result = NULL;
   
   j_data_source = data_source_get(config, get_username(request, response, config), u_map_get(request->map_url, "data_source"), 1);
   if (check_result_value(j_data_source, T_OK)) {
@@ -637,42 +634,16 @@ int callback_taliesin_category_get_info (const struct _u_request * request, stru
           0 == o_strcmp(u_map_get(request->map_url, "level"), "album") ||
           0 == o_strcmp(u_map_get(request->map_url, "level"), "year") ||
           0 == o_strcmp(u_map_get(request->map_url, "level"), "genre")) {
-        if (u_map_get(request->map_url, "cover") == NULL) {
-          j_result = media_category_get_info(config, json_object_get(j_data_source, "data_source"), u_map_get(request->map_url, "level"), u_map_get(request->map_url, "category"));
-          if (check_result_value(j_result, T_OK)) {
-            ulfius_set_json_body_response(response, 200, json_object_get(j_result, "info"));
-          } else if (check_result_value(j_result, T_ERROR_NOT_FOUND)) {
-            response->status = 404;
-          } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_get_info - Error media_category_get_info");
-            response->status = 500;
-          }
-          json_decref(j_result);
+        j_result = media_category_get_info(config, json_object_get(j_data_source, "data_source"), u_map_get(request->map_url, "level"), u_map_get(request->map_url, "category"));
+        if (check_result_value(j_result, T_OK)) {
+          ulfius_set_json_body_response(response, 200, json_object_get(j_result, "info"));
+        } else if (check_result_value(j_result, T_ERROR_NOT_FOUND)) {
+          response->status = 404;
         } else {
-          j_cover = media_category_cover_get(config, json_object_get(j_data_source, "data_source"), u_map_get(request->map_url, "level"), u_map_get(request->map_url, "category"), (u_map_get(request->map_url, "thumbnail")!=NULL));
-          if (check_result_value(j_cover, T_OK)) {
-            cover_b64 = json_string_value(json_object_get(j_cover, "cover"));
-            if (u_map_get(request->map_url, "base64")!=NULL) {
-              ulfius_set_string_body_response(response, 200, cover_b64);
-            } else {
-              cover_b64_len = o_strlen(cover_b64);
-              cover_decoded = o_malloc(cover_b64_len);
-              if (o_base64_decode((const unsigned char *)cover_b64, cover_b64_len, cover_decoded, &cover_decoded_len)) {
-                ulfius_set_binary_body_response(response, 200, (const char *)cover_decoded, cover_decoded_len);
-              } else {
-                y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_get_info - Error decoding cover");
-                response->status = 500;
-              }
-              o_free(cover_decoded);
-            }
-          } else if (check_result_value(j_cover, T_ERROR_NOT_FOUND)) {
-            response->status = 404;
-          } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_get_info - Error getting cover");
-            response->status = 500;
-          }
-          json_decref(j_cover);
+          y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_get_info - Error media_category_get_info");
+          response->status = 500;
         }
+        json_decref(j_result);
       } else {
         response->status = 404;
       }
@@ -1873,11 +1844,8 @@ int callback_taliesin_playlist_list (const struct _u_request * request, struct _
 
 int callback_taliesin_playlist_get (const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct config_elements * config = (struct config_elements *)user_data;
-  json_t * j_result, * j_cover = NULL;
+  json_t * j_result;
   int res = U_CALLBACK_CONTINUE;
-  unsigned char * cover_decoded;
-  size_t cover_decoded_len, cover_b64_len;
-  const char * cover_b64;
   long offset = u_map_get(request->map_url, "offset")!=NULL?strtol(u_map_get(request->map_url, "offset"), NULL, 10):0,
        limit = (u_map_get(request->map_url, "limit")!=NULL&&strtol(u_map_get(request->map_url, "limit"), NULL, 10)>0)?strtol(u_map_get(request->map_url, "limit"), NULL, 10):TALIESIN_MEDIA_LIMIT_DEFAULT;
   
@@ -1889,36 +1857,10 @@ int callback_taliesin_playlist_get (const struct _u_request * request, struct _u
   }
   j_result = playlist_get(config, get_username(request, response, config), u_map_get(request->map_url, "playlist"), 0, offset, limit);
   if (check_result_value(j_result, T_OK)) {
-    if (u_map_get(request->map_url, "cover") == NULL) {
-      json_object_del(json_object_get(j_result, "playlist"), "tpl_id");
-      if (ulfius_set_json_body_response(response, 200, json_object_get(j_result, "playlist")) != U_OK) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_playlist_get - Error setting json response");
-        res = U_CALLBACK_ERROR;
-      }
-    } else {
-      j_cover = playlist_media_cover_get(config, get_username(request, response, config), u_map_get(request->map_url, "playlist"), (u_map_get(request->map_url, "thumbnail")!=NULL));
-      if (check_result_value(j_cover, T_OK)) {
-        cover_b64 = json_string_value(json_object_get(j_cover, "cover"));
-        if (u_map_get(request->map_url, "base64")!=NULL) {
-          ulfius_set_string_body_response(response, 200, cover_b64);
-        } else {
-          cover_b64_len = o_strlen(cover_b64);
-          cover_decoded = o_malloc(cover_b64_len);
-          if (o_base64_decode((const unsigned char *)cover_b64, cover_b64_len, cover_decoded, &cover_decoded_len)) {
-            ulfius_set_binary_body_response(response, 200, (const char *)cover_decoded, cover_decoded_len);
-          } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_cover_get - Error decoding cover");
-            response->status = 500;
-          }
-          o_free(cover_decoded);
-        }
-      } else if (check_result_value(j_cover, T_ERROR_NOT_FOUND)) {
-        response->status = 404;
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_cover_get - Error getting cover");
-        response->status = 500;
-      }
-      json_decref(j_cover);
+    json_object_del(json_object_get(j_result, "playlist"), "tpl_id");
+    if (ulfius_set_json_body_response(response, 200, json_object_get(j_result, "playlist")) != U_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_playlist_get - Error setting json response");
+      res = U_CALLBACK_ERROR;
     }
   } else if (check_result_value(j_result, T_ERROR_NOT_FOUND)) {
     response->status = 404;
@@ -2297,6 +2239,34 @@ int callback_taliesin_playlist_load (const struct _u_request * request, struct _
     res = U_CALLBACK_ERROR;
   }
   json_decref(j_playlist);
+  return res;
+}
+
+int callback_taliesin_playlist_export (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  struct config_elements * config = (struct config_elements *)user_data;
+  json_t * j_result;
+  int res = U_CALLBACK_CONTINUE;
+  char * escaped_filename, * content_disposition;
+
+  j_result = playlist_get(config, get_username(request, response, config), u_map_get(request->map_url, "playlist"), 0, 0, 0);
+  if (check_result_value(j_result, T_OK)) {
+    escaped_filename = url_encode(json_string_value(json_object_get(json_object_get(j_result, "playlist"), "name")));
+    content_disposition = msprintf("attachment; filename=%s.m3u", escaped_filename);
+    u_map_put(response->map_header, "Content-Type", "application/json");
+    u_map_put(response->map_header, "Content-Disposition", content_disposition);
+    if (ulfius_set_json_body_response(response, 200, json_object_get(json_object_get(j_result, "playlist"), "media")) != U_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_playlist_get - Error setting json response");
+      res = U_CALLBACK_ERROR;
+    }
+    o_free(escaped_filename);
+    o_free(content_disposition);
+  } else if (check_result_value(j_result, T_ERROR_NOT_FOUND)) {
+    response->status = 404;
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_playlist_get - Error getting data source");
+    res = U_CALLBACK_ERROR;
+  }
+  json_decref(j_result);
   return res;
 }
 

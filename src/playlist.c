@@ -416,11 +416,6 @@ json_int_t playlist_add(struct config_elements * config, const char * username, 
   json_t * j_query, * j_last_id;
   json_int_t tic_id = 0, tpl_id = -1;
   int res;
-  struct _t_file * file;
-  
-  if (json_object_get(j_playlist, "cover") != NULL) {
-    tic_id = media_cover_save(config, 0, (const unsigned char *)json_string_value(json_object_get(j_playlist, "cover")));
-  }
   
   j_query = json_pack("{sss{sossss}}",
                       "table",
@@ -440,29 +435,7 @@ json_int_t playlist_add(struct config_elements * config, const char * username, 
   if (res == H_OK) {
     j_last_id = h_last_insert_id(config->conn);
     tpl_id = json_integer_value(j_last_id);
-    if (tpl_id) {
-      if (file_list == NULL) {
-        if (playlist_replace_element_list(config, tpl_id, j_playlist) != T_OK) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add - Error insert playlist elements");
-        }
-      } else if (file_list->nb_files) {
-        j_query = json_pack("{sss[]}", "table", TALIESIN_TABLE_PLAYLIST_ELEMENT, "values");
-        if (j_query != NULL) {
-          file = file_list->start;
-          while (file != NULL) {
-            json_array_append_new(json_object_get(j_query, "values"), json_pack("{sIsI}", "tpl_id", tpl_id, "tm_id", file->tm_id));
-            file = file->next;
-          }
-          res = h_insert(config->conn, j_query, NULL);
-          json_decref(j_query);
-          if (res != H_OK) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add - Error executing j_query (2)");
-          }
-        } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add - Error allocating resources for j_query");
-        }
-      }
-    } else {
+    if (!tpl_id) {
       y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add - Error getting last id");
     }
     json_decref(j_last_id);
@@ -481,9 +454,6 @@ int playlist_set(struct config_elements * config, json_int_t tpl_id, json_t * j_
   int res, ret;
   json_int_t tic_id = 0;
   
-  if (json_object_get(j_playlist, "cover") != NULL) {
-    tic_id = media_cover_save(config, 0, (const unsigned char *)json_string_value(json_object_get(j_playlist, "cover")));
-  }
   j_query = json_pack("{sss{ss}s{sI}}",
                       "table",
                       TALIESIN_TABLE_PLAYLIST,
@@ -537,26 +507,30 @@ int playlist_add_media(struct config_elements * config, json_int_t tpl_id, json_
   int res, ret;
   size_t index;
   
-  // Insert new elements
-  j_query = json_pack("{sss[]}",
-                      "table",
-                      TALIESIN_TABLE_PLAYLIST_ELEMENT,
-                      "values");
-  if (j_query != NULL) {
-    json_array_foreach(media_list, index, j_element) {
-      json_array_append_new(json_object_get(j_query, "values"), json_pack("{sIsO}", "tpl_id", tpl_id, "tm_id", json_object_get(j_element, "tm_id")));
-    }
-    res = h_insert(config->conn, j_query, NULL);
-    json_decref(j_query);
-    if (res != H_OK) {
-      y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add_media - Error executing j_query");
-      ret = T_ERROR_DB;
+  if (media_list != NULL && json_array_size(media_list) > 0) {
+    // Insert new elements
+    j_query = json_pack("{sss[]}",
+                        "table",
+                        TALIESIN_TABLE_PLAYLIST_ELEMENT,
+                        "values");
+    if (j_query != NULL) {
+      json_array_foreach(media_list, index, j_element) {
+        json_array_append_new(json_object_get(j_query, "values"), json_pack("{sIsO}", "tpl_id", tpl_id, "tm_id", json_object_get(j_element, "tm_id")));
+      }
+      res = h_insert(config->conn, j_query, NULL);
+      json_decref(j_query);
+      if (res != H_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add_media - Error executing j_query");
+        ret = T_ERROR_DB;
+      } else {
+        ret = T_OK;
+      }
     } else {
-      ret = T_OK;
+      y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add_media - Error allocating resources for j_query");
+      ret = T_ERROR_MEMORY;
     }
-  } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add_media - Error allocating resources for j_query");
-    ret = T_ERROR_MEMORY;
+  } else{
+    ret = T_OK;
   }
   return ret;
 }
@@ -649,72 +623,6 @@ json_t * playlist_has_media(struct config_elements * config, json_int_t tpl_id, 
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "playlist_delete_media - Error allocating resources for j_tm_id_array");
     j_return = json_pack("{si}", "result", T_ERROR_MEMORY);
-  }
-  return j_return;
-}
-
-json_t * playlist_media_cover_get(struct config_elements * config, const char * username, const char * name, int thumbnail) {
-  json_t * j_query, * j_result_playlist, * j_result_image, * j_return;
-  int res;
-  char * temp, * clause_username;
-  
-  temp = h_escape_string(config->conn, username);
-  clause_username = msprintf("(`tpl_username` = '%s' OR `tpl_username` IS NULL)", temp);
-  o_free(temp);
-  j_query = json_pack("{sss[sssss]s{s{ssss}ss}}",
-                      "table",
-                      TALIESIN_TABLE_PLAYLIST,
-                      "columns",
-                        "tpl_id",
-                        "tpl_name AS name",
-                        "tpl_description AS description",
-                        "tpl_username",
-                        "tic_id",
-                      "where",
-                        " ",
-                          "operator",
-                          "raw",
-                          "value",
-                          clause_username,
-                        "tpl_name",
-                        name);
-  o_free(clause_username);
-  res = h_select(config->conn, j_query, &j_result_playlist, NULL);
-  json_decref(j_query);
-  if (res == H_OK) {
-    if (json_array_size(j_result_playlist) > 0 && json_object_get(json_array_get(j_result_playlist, 0), "tic_id") != json_null()) {
-      j_query = json_pack("{sss[]s{sI}}",
-                          "table",
-                          TALIESIN_TABLE_IMAGE_COVER,
-                          "columns",
-                          "where",
-                            "tic_id",
-                            json_integer_value(json_object_get(json_array_get(j_result_playlist, 0), "tic_id")));
-      if (thumbnail) {
-        json_array_append_new(json_object_get(j_query, "columns"), json_string("tic_cover_thumbnail AS cover"));
-      } else {
-        json_array_append_new(json_object_get(j_query, "columns"), json_string("tic_cover_original AS cover"));
-      }
-      res = h_select(config->conn, j_query, &j_result_image, NULL);
-      json_decref(j_query);
-      if (res == H_OK) {
-        if (json_array_size(j_result_image) > 0) {
-          j_return = json_pack("{siss}", "result", T_OK, "cover", json_string_value(json_object_get(json_array_get(j_result_image, 0), "cover")));
-        } else {
-          j_return = json_pack("{si}", "result", T_ERROR_NOT_FOUND);
-        }
-        json_decref(j_result_image);
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "playlist_media_cover_get - Error executing j_query (image)");
-        j_return = json_pack("{si}", "result", T_ERROR_DB);
-      }
-    } else {
-      j_return = json_pack("{si}", "result", T_ERROR_NOT_FOUND);
-    }
-    json_decref(j_result_playlist);
-  } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "playlist_media_cover_get - Error executing j_query (category)");
-    j_return = json_pack("{si}", "result", T_ERROR_DB);
   }
   return j_return;
 }

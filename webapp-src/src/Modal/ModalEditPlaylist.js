@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Button, Modal, FormControl, FormGroup, Row, Col, Label, Image } from 'react-bootstrap';
+import { Button, Modal, FormControl, FormGroup, Row, Col, Label } from 'react-bootstrap';
 import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
 
@@ -19,7 +19,6 @@ class ModalAddPlaylist extends Component {
 		this.handleChangeName = this.handleChangeName.bind(this);
 		this.handleChangeDescription = this.handleChangeDescription.bind(this);
 		this.handleChangeScope = this.handleChangeScope.bind(this);
-		this.handleUploadIcon = this.handleUploadIcon.bind(this);
 		this.getNameValidationState = this.getNameValidationState.bind(this);
 	}
 	
@@ -27,7 +26,7 @@ class ModalAddPlaylist extends Component {
 		this.setState({
 			show: nextProps.show, 
 			add: nextProps.add,
-			playlist: nextProps.add?{name: "", description: "", cover: undefined, scope: "me"}:nextProps.playlist, 
+			playlist: nextProps.add?{name: "", description: "", scope: "me"}:nextProps.playlist, 
 			iconPath: "",
 			onCloseCb: nextProps.onCloseCb,
 			nameValidateMessage: ""
@@ -86,36 +85,9 @@ class ModalAddPlaylist extends Component {
 		this.setState({ playlist: playlist });
 	}
 	
-	handleUploadIcon(e) {
-		var file = e.target.files[0];
-		var fr = new FileReader();
-		var self = this;
-		if (file.type.startsWith("image") && file.size <= 16*1024*1024) {
-			fr.onload = function(ev2) {
-				var encoded = btoa(ev2.target.result);
-				if (encoded.length <= 16*1024*1024) {
-					var playlist = self.state.playlist;
-					playlist.cover = encoded;
-					self.setState({playlist: playlist});
-				} else {
-					StateStore.getState().NotificationManager.addNotification({
-						message: i18n.t("player.file_too_large"),
-						level: 'error'
-					});
-				}
-			};
-			fr.readAsBinaryString(file);
-		} else {
-			StateStore.getState().NotificationManager.addNotification({
-				message: i18n.t("player.file_error"),
-				level: 'error'
-			});
-		}
-	}
-
 	render() {
 		var title = this.state.add?i18n.t("modal.title_add_playlist"):i18n.t("modal.title_edit_playlist", {playlist: this.state.playlist.name||""});
-		var scopeInput, cover;
+		var scopeInput;
 		if (StateStore.getState().profile.isAdmin && this.state.add) {
 			scopeInput =
 				<FormControl
@@ -134,24 +106,6 @@ class ModalAddPlaylist extends Component {
 			} else {
 				scopeInput = <span>{i18n.t("common.scope_me")}</span>;
 			}
-		}
-		if (this.state.playlist.cover) {
-			cover = 
-				<div>
-					<Row>
-						<Col md={12}>
-							<hr/>
-						</Col>
-					</Row>
-					<Row>
-						<Col md={4}>
-							<Label>{i18n.t("common.cover")}</Label>
-						</Col>
-						<Col md={8}>
-							<Image src={"data:image/jpeg;base64," + this.state.playlist.cover} responsive/>
-						</Col>
-					</Row>
-				</div>;
 		}
 		return (
 			<Modal show={this.state.show}>
@@ -211,24 +165,6 @@ class ModalAddPlaylist extends Component {
 								{scopeInput}
 							</Col>
 						</Row>
-						<Row>
-							<Col md={12}>
-								<hr/>
-							</Col>
-						</Row>
-						<Row>
-							<Col md={4}>
-								<Label>{i18n.t("modal.image_file")}</Label>
-							</Col>
-							<Col md={8}>
-								<FormControl
-									type="file"
-									placeholder={i18n.t("modal.image_file")}
-									onChange={this.handleUploadIcon}
-								/>
-							</Col>
-						</Row>
-						{cover}
 					</form>
 				</Modal.Body>
 

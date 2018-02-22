@@ -50,10 +50,10 @@ class ModalImportPlaylist extends Component {
 			fr.onload = function(ev2) {
 				self.setState({importData: ev2.target.result});
 			};
-			fr.readAsBinaryString(file);
+			fr.readAsText(file);
 		} else {
 			StateStore.getState().NotificationManager.addNotification({
-				message: i18n.t("player.file_error"),
+				message: i18n.t("modal.import_playlist_file_error"),
 				level: 'error'
 			});
 		}

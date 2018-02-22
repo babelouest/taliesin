@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { Col, Row, Image } from 'react-bootstrap';
 import BreadCrumbMenuCategory from './BreadCrumbMenuCategory';
 import ElementButtons from './ElementButtons';
-import StateStore from '../lib/StateStore';
 import ModalEditCategory from '../Modal/ModalEditCategory';
 import i18n from '../lib/i18n';
 
@@ -20,12 +19,10 @@ class BrowseHeaderCategory extends Component {
 			editCategoryShow: false
 		};
 		
-		this.loadCover = this.loadCover.bind(this);
 		this.onOpenCategory = this.onOpenCategory.bind(this);
 		this.onCloseCategory = this.onCloseCategory.bind(this);
 		this.onEditCategory = this.onEditCategory.bind(this);
 		
-		this.loadCover();
 	}
 	
 	componentWillReceiveProps(nextProps) {
@@ -37,8 +34,6 @@ class BrowseHeaderCategory extends Component {
 			subCategoryValue: nextProps.subCategoryValue, 
 			imgThumbBlob: false,
 			editCategoryShow: false
-		}, () => {
-			this.loadCover();
 		});
 	}
 	
@@ -47,36 +42,11 @@ class BrowseHeaderCategory extends Component {
 	}
 	
 	onCloseCategory() {
-		this.setState({editCategoryShow: false, imgThumbBlob: false}, () => {
-			this.loadCover();
-		});
+		this.setState({editCategoryShow: false, imgThumbBlob: false});
 	}
 	
 	onEditCategory() {
-		this.setState({imgThumbBlob: false}, () => {
-			this.loadCover();
-		});
-	}
-	
-	loadCover() {
-		if (!this.state.imgThumbBlob) {
-			var url = "/data_source/" + encodeURIComponent(this.state.dataSource) + "/info/category/";
-			if (this.state.subCategoryValue) {
-				url += encodeURIComponent(this.state.subCategory) + "/" + encodeURIComponent(this.state.subCategoryValue);
-			} else {
-				url += encodeURIComponent(this.state.category) + "/" + encodeURIComponent(this.state.categoryValue);
-			}
-			url += "?cover&thumbnail&base64";
-			StateStore.getState().APIManager.taliesinApiRequest("GET", url)
-			.then((result) => {
-				this.setState({imgThumbBlob: result});
-			})
-			.fail(() => {
-				this.setState({imgThumbBlob: false});
-			});
-		} else {
-			this.setState({imgThumbBlob: false});
-		}
+		this.setState({imgThumbBlob: false});
 	}
 	
 	render () {

@@ -32,21 +32,15 @@ class BrowsePlaylist extends Component {
 			limit: 100
 		};
 		
-		this.getCovers();
-		
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
 			if ((reduxState.lastAction === "setPlaylists" || reduxState.lastAction === "setPlaylist") && this._ismounted) {
-				this.setState({playlist: reduxState.playlists}, () => {
-					this.getCovers();
-				});
+				this.setState({playlist: reduxState.playlists});
 			} else if ((reduxState.lastAction === "setStreamList" || reduxState.lastAction === "setStream") && this._ismounted) {
 				this.setState({streamList: reduxState.streamList});
 			}
 		});
 
-		this.getCovers = this.getCovers.bind(this);
-		this.getPlaylistCover = this.getPlaylistCover.bind(this);
 		this.canUpdate = this.canUpdate.bind(this);
 		this.playNow = this.playNow.bind(this);
 		this.playAdvanced = this.playAdvanced.bind(this);
@@ -89,7 +83,6 @@ class BrowsePlaylist extends Component {
 			offset: 0,
 			limit: 100
 		}, () => {
-			this.getCovers();
 			if (this.state.playlistToShow) {
 				var playlist = this.state.playlistToShow;
 				this.setState({playlistToShow: false}, () => {
@@ -111,32 +104,6 @@ class BrowsePlaylist extends Component {
 
 	componentWillUnmount() {
 		this._ismounted = false;
-	}
-	
-	getCovers() {
-		if (this._ismounted) {
-			var list = this.state.playlist;
-			for (var i in list) {
-				this.getPlaylistCover(list[i].name);
-			}
-			this.setState({playlist: list});
-		}
-	}
-	
-	getPlaylistCover(name) {
-		if (this._ismounted) {
-			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + name + "?cover&thumbnail&base64" + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"&username="+StateStore.getState().profile.currentUser:""))
-			.then((cover) => {
-				var list = this.state.playlist;
-				for (var i in list) {
-					if (list[i].name === name) {
-						list[i].cover = cover;
-						this.setState({playlist: list});
-						break;
-					}
-				}
-			});
-		}
 	}
 	
 	showPlaylist(playlist) {
@@ -400,6 +367,7 @@ class BrowsePlaylist extends Component {
 	onImportPlaylist(result, data) {
 		this.setState({importPlaylistShow: false}, () => {
 			if (result && this._ismounted) {
+				console.log(data);
 				StateStore.getState().APIManager.taliesinApiRequest("PUT", "/playlist/" + encodeURIComponent(this.state.curPlaylist.name) + "/add_media" + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:""), JSON.parse(data))
 				.then(() => {
 					this.refreshPlaylists();
@@ -464,7 +432,6 @@ class BrowsePlaylist extends Component {
 				message: i18n.t("playlist.message_playlists_refreshed"),
 				level: 'info'
 			});
-			this.getCovers();
 		})
 		.fail((result) => {
 			StateStore.dispatch({type: "setPlaylists", playlists: []});

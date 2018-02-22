@@ -58,25 +58,17 @@ class ElementCategoryIcon extends Component {
 	
 	getThumbnail() {
 		if (!this.state.thumb) {
-			var url;
 			if (this.state.element.type !== "media") {
-				url = "/data_source/" + encodeURIComponent(this.state.dataSource) + "/info/category/";
-				if (this.state.subCategoryValue) {
-					url += encodeURIComponent(this.state.subCategory) + "/" + encodeURIComponent(this.state.subCategoryValue);
-				} else {
-					url += encodeURIComponent(this.state.category) + "/" + encodeURIComponent(this.state.categoryValue);
-				}
-			} else {
-				url = "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/path/" + encodeURI(this.state.element.path).replace(/#/g, "%23").replace(/\+/g, "%2B");
-			}
-			url += "?cover&thumbnail&base64";
-			StateStore.getState().APIManager.taliesinApiRequest("GET", url)
-			.then((result) => {
-				this.setState({thumb: result, thumbLoaded: true});
-			})
-			.fail(() => {
 				this.setState({thumb: false, thumbLoaded: true});
-			});
+			} else {
+				StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/path/" + encodeURI(this.state.element.path).replace(/#/g, "%23").replace(/\+/g, "%2B") + "?cover&thumbnail&base64")
+				.then((result) => {
+					this.setState({thumb: result, thumbLoaded: true});
+				})
+				.fail(() => {
+					this.setState({thumb: false, thumbLoaded: true});
+				});
+			}
 		} else {
 			this.setState({thumb: false, thumbLoaded: true});
 		}

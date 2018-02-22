@@ -4,6 +4,7 @@ import FontAwesome from 'react-fontawesome';
 import StateStore from '../lib/StateStore';
 import ModalConfirm from '../Modal/ModalConfirm';
 import ModalEditPlaylist from '../Modal/ModalEditPlaylist';
+import ModalImportPlaylist from '../Modal/ModalImportPlaylist';
 import ModalEditStream from '../Modal/ModalEditStream';
 import i18n from '../lib/i18n';
 
@@ -18,6 +19,7 @@ class BrowsePlaylist extends Component {
 			isAdmin: StateStore.getState().profile.isAdmin,
 			shownPlaylist: {},
 			addPlaylistShow: false,
+			importPlaylistShow: false,
 			modalEditShow: false,
 			modalDeleteShow: false,
 			editStreamShow: false,
@@ -54,9 +56,12 @@ class BrowsePlaylist extends Component {
 		this.addPlaylist = this.addPlaylist.bind(this);
 		this.onAddPlaylist = this.onAddPlaylist.bind(this);
 		this.editPlaylist = this.editPlaylist.bind(this);
+		this.exportPlaylist = this.exportPlaylist.bind(this);
+		this.importPlaylist = this.importPlaylist.bind(this);
 		this.deletePlaylist = this.deletePlaylist.bind(this);
 		this.onEditPlaylist = this.onEditPlaylist.bind(this);
 		this.onDeletePlaylist = this.onDeletePlaylist.bind(this);
+		this.onImportPlaylist = this.onImportPlaylist.bind(this);
 		this.onCloseStreamModal = this.onCloseStreamModal.bind(this);
 		this.onSavePlaylist = this.onSavePlaylist.bind(this);
 		this.getMediaCovers = this.getMediaCovers.bind(this);
@@ -72,6 +77,7 @@ class BrowsePlaylist extends Component {
 			isAdmin: StateStore.getState().profile.isAdmin,
 			shownPlaylist: {},
 			addPlaylistShow: false,
+			importPlaylistShow: false,
 			modalEditShow: false,
 			modalDeleteShow: false,
 			editStreamShow: false,
@@ -365,6 +371,49 @@ class BrowsePlaylist extends Component {
 		}
 	}
 	
+	exportPlaylist(playlist) {
+		if (this._ismounted) {
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(playlist.name) + "/export" + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:""))
+			.then((result) => {
+				var fileData = 'data:application/octet-stream;base64,' + window.btoa(unescape(encodeURIComponent( JSON.stringify(result) )));
+				var downloadAnchor = document.getElementById('downloadAnchor');
+				downloadAnchor.setAttribute('href', fileData);
+				downloadAnchor.setAttribute('download', playlist.name + ".json");
+				downloadAnchor.click();
+			})
+			.fail((err) => {
+        console.log(err);
+				StateStore.getState().NotificationManager.addNotification({
+					message: i18n.t("playlist.message_error_export_playlist"),
+					level: 'error'
+				});
+			});
+		}
+	}
+	
+	importPlaylist(playlist) {
+		if (this._ismounted) {
+			this.setState({importPlaylistShow: true, curPlaylist: playlist});
+		}
+	}
+	
+	onImportPlaylist(result, data) {
+		this.setState({importPlaylistShow: false}, () => {
+			if (result && this._ismounted) {
+				StateStore.getState().APIManager.taliesinApiRequest("PUT", "/playlist/" + encodeURIComponent(this.state.curPlaylist.name) + "/add_media" + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:""), JSON.parse(data))
+				.then(() => {
+					this.refreshPlaylists();
+				})
+				.fail(() => {
+					StateStore.getState().NotificationManager.addNotification({
+						message: i18n.t("playlist.message_error_import_playlist"),
+						level: 'error'
+					});
+				});
+			}
+		});
+	}
+	
 	onCloseStreamModal(player) {
 		if (this._ismounted) {
 			if (player) {
@@ -519,6 +568,12 @@ class BrowsePlaylist extends Component {
 								<Button title={i18n.t("common.edit")} onClick={() => this.editPlaylist(aPlaylist)} disabled={!this.canUpdate(aPlaylist)}>
 									<FontAwesome name={"pencil"} />
 								</Button>
+								<Button title={i18n.t("common.save")} onClick={() => this.exportPlaylist(aPlaylist)}>
+									<FontAwesome name={"save"} />
+								</Button>
+								<Button title={i18n.t("common.import")} onClick={() => this.importPlaylist(aPlaylist)}>
+									<FontAwesome name={"upload"} />
+								</Button>
 								<DropdownButton id={"add-playlist"} pullRight title={
 									<span><i className="fa fa-plus"></i></span>
 								}>
@@ -553,6 +608,14 @@ class BrowsePlaylist extends Component {
 									<FontAwesome name={"pencil"} />&nbsp;
 									{i18n.t("common.edit")}
 								</MenuItem>
+								<MenuItem onClick={() => this.exportPlaylist(aPlaylist)}>
+									<FontAwesome name={"save"} />&nbsp;
+									{i18n.t("common.save")}
+								</MenuItem>
+								<MenuItem onClick={() => this.importPlaylist(aPlaylist)}>
+									<FontAwesome name={"upload"} />&nbsp;
+									{i18n.t("common.import")}
+								</MenuItem>
 								<MenuItem>
 									<FontAwesome name={"plus"} />&nbsp;
 									{i18n.t("common.add_to_stream")}
@@ -575,6 +638,7 @@ class BrowsePlaylist extends Component {
 			});
 			return (
 				<div>
+					<a href="exportPlaylist" name="downloadAnchor" id="downloadAnchor" className="hidden">#</a>
 					<ButtonGroup>
 						<Button title={i18n.t("playlist.add_playlist")} onClick={() => this.addPlaylist()}>
 							<FontAwesome name={"plus"} />
@@ -611,6 +675,7 @@ class BrowsePlaylist extends Component {
 					</Table>
 					<ModalConfirm show={this.state.modalDeleteShow} title={i18n.t("playlist.delete_playlist")} message={this.state.modalDeleteMessage} onCloseCb={this.onDeletePlaylist}/>
 					<ModalEditPlaylist show={this.state.addPlaylistShow} onCloseCb={this.onSavePlaylist} add={this.state.add} playlist={this.state.curPlaylist} />
+					<ModalImportPlaylist show={this.state.importPlaylistShow} onCloseCb={this.onImportPlaylist} />
 					<ModalEditStream 
 						show={this.state.editStreamShow} 
 						playlist={this.state.curPlaylist} 

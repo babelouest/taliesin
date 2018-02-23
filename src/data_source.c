@@ -152,7 +152,7 @@ json_t * data_source_get_by_id(struct config_elements * config, json_int_t tds_i
   json_t * j_query, * j_result, * j_return;
   int res;
   
-  j_query = json_pack("{sss[ssssss]s{ss}}",
+  j_query = json_pack("{sss[ssssss]s{sI}}",
                       "table",
                       TALIESIN_TABLE_DATA_SOURCE,
                       "columns",
@@ -173,6 +173,7 @@ json_t * data_source_get_by_id(struct config_elements * config, json_int_t tds_i
     } else {
       j_return = json_pack("{si}", "result", T_ERROR_NOT_FOUND);
     }
+    json_decref(j_result);
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "data_source_get_by_id - Error executing j_query");
     j_return = json_pack("{si}", "result", T_ERROR_DB);

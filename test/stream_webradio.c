@@ -794,6 +794,21 @@ START_TEST(test_webradio_get_playlist_saved_ok)
 }
 END_TEST
 
+START_TEST(test_webradio_cover_ok)
+  if (get_stream_name()) {
+    char * url = msprintf(TALIESIN_SERVER_URI "/stream/%s/cover", valid_stream_name);
+    
+    int res = run_simple_authenticated_test(&user_req, "GET", url, NULL, NULL, 200, NULL, NULL, NULL);
+    free(url);
+    ck_assert_int_eq(res, 1);
+    
+    url = msprintf(TALIESIN_SERVER_URI "/stream/%s/cover?thumbnail", valid_stream_name);
+    res = run_simple_authenticated_test(&user_req, "GET", url, NULL, NULL, 200, NULL, NULL, NULL);
+    free(url);
+    ck_assert_int_eq(res, 1);
+  }
+END_TEST
+
 START_TEST(test_webradio_delete_playlist_saved_ok)
 {
   if (get_stream_name()) {
@@ -849,6 +864,7 @@ static Suite *taliesin_suite(void)
   tcase_add_test(tc_core, test_webradio_play_not_found);
   tcase_add_test(tc_core, test_webradio_command_save_as_playlist_ok);
   tcase_add_test(tc_core, test_webradio_get_playlist_saved_ok);
+  tcase_add_test(tc_core, test_webradio_cover_ok);
   tcase_add_test(tc_core, test_webradio_delete_playlist_saved_ok);
   tcase_add_test(tc_core, test_create_db_playlist_ok);
   tcase_add_test(tc_core, test_webradio_command_attach_playlist_ok);

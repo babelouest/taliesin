@@ -2,8 +2,6 @@
 
 Lightweight audio media server with a REST API interface and a React JS client application.
 
-Copyright 2017-2018 - Nicolas Mora <mail@babelouest.org>
-
 ![example snapshot](https://github.com/babelouest/taliesin/raw/master/docs/images/dashboard.png)
 
 Can be used as a cloud application for a set of media files.
@@ -44,3 +42,5 @@ Screenshots examples are available in the [images](https://github.com/babelouest
 ## Problems, questions?
 
 Pull requests are welcome if you want to help, you can open an issue or send an e-mail (mail@babelouest.org) if you have questions or problems.
+
+Copyright 2017-2018 - Nicolas Mora <mail@babelouest.org>

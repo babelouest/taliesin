@@ -11,6 +11,8 @@
 		"album": "Album",
 		"year": "Année",
 		"genre": "Genre",
+		"nb_play": "Joué",
+		"times": "fois",
 		"playlist": "Playlist",
 		"select": "Selectionner",
 		"previous_page": "Page Précédente",

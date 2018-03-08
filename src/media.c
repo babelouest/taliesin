@@ -434,7 +434,7 @@ json_int_t folder_get_id(struct config_elements * config, json_t * j_data_source
 }
 
 json_t * media_get_by_id(struct config_elements * config, json_int_t tm_id) {
-  json_t * j_query, * j_result, * j_result_tag, * j_result_data_source, * j_return, * j_tag, * j_element;
+  json_t * j_query, * j_result, * j_result_tag, * j_result_data_source, * j_result_history, * j_return, * j_tag, * j_element;
   int res;
   size_t index_tag;
   
@@ -466,7 +466,7 @@ json_t * media_get_by_id(struct config_elements * config, json_int_t tm_id) {
                               "tmd_value",
                             "where",
                               "tm_id",
-                              json_integer_value(json_object_get(j_element, "tm_id")));
+                              tm_id);
         json_object_set_new(j_element, "tags", json_object());
         if (j_query != NULL) {
           res = h_select(config->conn, j_query, &j_result_tag, NULL);
@@ -476,30 +476,51 @@ json_t * media_get_by_id(struct config_elements * config, json_int_t tm_id) {
               json_object_set(json_object_get(j_element, "tags"), json_string_value(json_object_get(j_tag, "tmd_key")), json_object_get(j_tag, "tmd_value"));
             }
             json_decref(j_result_tag);
+            j_query = json_pack("{sss[s]s{sI}}",
+                                "table",
+                                TALIESIN_TABLE_DATA_SOURCE,
+                                "columns",
+                                  "tds_name",
+                                "where",
+                                  "tds_id",
+                                  json_integer_value(json_object_get(j_element, "tds_id")));
+            res = h_select(config->conn, j_query, &j_result_data_source, NULL);
+            json_decref(j_query);
+            json_object_del(j_element, "tds_id");
+            if (res == H_OK) {
+              json_object_set(j_element, "data_source", json_object_get(json_array_get(j_result_data_source, 0), "tds_name"));
+              
+              json_decref(j_result_data_source);
+              j_query = json_pack("{sss[s]s{sI}}",
+                                  "table",
+                                  TALIESIN_TABLE_MEDIA_HISTORY,
+                                  "columns",
+                                    "COUNT(`tmh_id`) AS nb_play",
+                                   "where",
+                                     "tm_id",
+                                     tm_id);
+              res = h_select(config->conn, j_query, &j_result_history, NULL);
+              json_decref(j_query);
+              if (res == H_OK) {
+                json_object_set(j_element, "nb_play", json_object_get(json_array_get(j_result_history, 0), "nb_play"));
+                json_decref(j_result_history);
+                j_return = json_pack("{sisO}", "result", T_OK, "media", j_element);
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "media_get_by_id - Error executing j_query for history");
+                j_return = json_pack("{si}", "result", T_ERROR_DB);
+              }
+            } else {
+              y_log_message(Y_LOG_LEVEL_ERROR, "media_get_by_id - Error executing j_query for data_source");
+              j_return = json_pack("{si}", "result", T_ERROR_DB);
+            }
           } else {
             y_log_message(Y_LOG_LEVEL_ERROR, "media_get_by_id - Error executing j_query (tag)");
+            j_return = json_pack("{si}", "result", T_ERROR_DB);
           }
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "media_get_by_id - Error allocating resources for j_query (tag)");
+          j_return = json_pack("{si}", "result", T_ERROR_MEMORY);
         }
-        j_query = json_pack("{sss[s]s{sI}}",
-                            "table",
-                            TALIESIN_TABLE_DATA_SOURCE,
-                            "columns",
-                              "tds_name",
-                            "where",
-                              "tds_id",
-                              json_integer_value(json_object_get(j_element, "tds_id")));
-        res = h_select(config->conn, j_query, &j_result_data_source, NULL);
-        json_decref(j_query);
-        if (res == H_OK) {
-          json_object_set(j_element, "data_source", json_object_get(json_array_get(j_result_data_source, 0), "tds_name"));
-          json_decref(j_result_data_source);
-        } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "media_get_by_id - Error executing j_query for data_source");
-        }
-        json_object_del(j_element, "tds_id");
-        j_return = json_pack("{sisO}", "result", T_OK, "media", j_element);
       } else {
         j_return = json_pack("{si}", "result", T_ERROR_NOT_FOUND);
       }
@@ -516,7 +537,7 @@ json_t * media_get_by_id(struct config_elements * config, json_int_t tm_id) {
 }
 
 json_t * media_get_file(struct config_elements * config, json_t * j_data_source, json_int_t tf_id, const char * file, int get_id) {
-  json_t * j_query, * j_result, * j_result_tag, * j_return, * j_tag, * j_element;
+  json_t * j_query, * j_result, * j_result_tag, * j_result_history, * j_return, * j_tag, * j_element;
   int res;
   size_t index_tag;
   
@@ -555,9 +576,6 @@ json_t * media_get_file(struct config_elements * config, json_t * j_data_source,
                               "tm_id",
                               json_integer_value(json_object_get(j_element, "tm_id")));
         json_object_set_new(j_element, "tags", json_object());
-        if (!get_id) {
-          json_object_del(j_element, "tm_id");
-        }
         if (j_query != NULL) {
           res = h_select(config->conn, j_query, &j_result_tag, NULL);
           json_decref(j_query);
@@ -566,13 +584,35 @@ json_t * media_get_file(struct config_elements * config, json_t * j_data_source,
               json_object_set(json_object_get(j_element, "tags"), json_string_value(json_object_get(j_tag, "tmd_key")), json_object_get(j_tag, "tmd_value"));
             }
             json_decref(j_result_tag);
+            j_query = json_pack("{sss[s]s{sI}}",
+                                "table",
+                                TALIESIN_TABLE_MEDIA_HISTORY,
+                                "columns",
+                                  "COUNT(`tmh_id`) AS nb_play",
+                                 "where",
+                                   "tm_id",
+                                   json_integer_value(json_object_get(j_element, "tm_id")));
+            res = h_select(config->conn, j_query, &j_result_history, NULL);
+            json_decref(j_query);
+            if (res == H_OK) {
+              json_object_set(j_element, "nb_play", json_object_get(json_array_get(j_result_history, 0), "nb_play"));
+              json_decref(j_result_history);
+              j_return = json_pack("{sisO}", "result", T_OK, "media", j_element);
+              if (!get_id) {
+                json_object_del(j_element, "tm_id");
+              }
+            } else {
+              y_log_message(Y_LOG_LEVEL_ERROR, "media_get_file - Error executing j_query for history");
+              j_return = json_pack("{si}", "result", T_ERROR_DB);
+            }
           } else {
             y_log_message(Y_LOG_LEVEL_ERROR, "media_get_file - Error executing j_query (tag)");
+            j_return = json_pack("{si}", "result", T_ERROR_DB);
           }
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "media_get_file - Error allocating resources for j_query (tag)");
+          j_return = json_pack("{si}", "result", T_ERROR_MEMORY);
         }
-        j_return = json_pack("{sisO}", "result", T_OK, "media", j_element);
       } else {
         j_return = json_pack("{si}", "result", T_ERROR_NOT_FOUND);
       }
@@ -589,7 +629,7 @@ json_t * media_get_file(struct config_elements * config, json_t * j_data_source,
 }
 
 json_t * media_list_folder(struct config_elements * config, json_t * j_data_source, json_int_t tf_id, int get_id) {
-  json_t * j_query, * j_result, * j_result_tag, * j_return, * j_element, * j_tag;
+  json_t * j_query, * j_result, * j_result_tag, * j_result_history, * j_return, * j_element, * j_tag;
   int res;
   size_t index, index_tag;
   
@@ -625,9 +665,6 @@ json_t * media_list_folder(struct config_elements * config, json_t * j_data_sour
                               "tm_id",
                               json_integer_value(json_object_get(j_element, "tm_id")));
         json_object_set_new(j_element, "tags", json_object());
-        if (!get_id) {
-          json_object_del(j_element, "tm_id");
-        }
         if (j_query != NULL) {
           res = h_select(config->conn, j_query, &j_result_tag, NULL);
           json_decref(j_query);
@@ -641,6 +678,26 @@ json_t * media_list_folder(struct config_elements * config, json_t * j_data_sour
           }
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "media_list_folder - Error allocating resources for j_query (tag)");
+        }
+        j_query = json_pack("{sss[s]s{sI}}",
+                            "table",
+                            TALIESIN_TABLE_MEDIA_HISTORY,
+                            "columns",
+                              "COUNT(`tmh_id`) AS nb_play",
+                             "where",
+                               "tm_id",
+                               json_integer_value(json_object_get(j_element, "tm_id")));
+        res = h_select(config->conn, j_query, &j_result_history, NULL);
+        json_decref(j_query);
+        if (res == H_OK) {
+          json_object_set(j_element, "nb_play", json_object_get(json_array_get(j_result_history, 0), "nb_play"));
+          json_decref(j_result_history);
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "media_list_folder - Error executing j_query for history");
+          j_return = json_pack("{si}", "result", T_ERROR_DB);
+        }
+        if (!get_id) {
+          json_object_del(j_element, "tm_id");
         }
       }
       j_return = json_pack("{siso}", "result", T_OK, "media", j_result);
@@ -1008,24 +1065,26 @@ int media_update(struct config_elements * config, json_int_t tm_id, json_t * j_m
         res = h_delete(config->conn, j_query, NULL);
         json_decref(j_query);
         if (res == H_OK) {
-          // Insert media metadata
-          j_query = json_pack("{sss[]}",
-                              "table",
-                              TALIESIN_TABLE_META_DATA,
-                              "values");
-          if (j_query != NULL) {
-            json_object_foreach(json_object_get(json_object_get(j_media, "metadata"), "tags"), key, j_tag) {
-              json_array_append_new(json_object_get(j_query, "values"), json_pack("{sIssss}", "tm_id", tm_id, "tmd_key", key, "tmd_value", json_string_value(j_tag)));
+          // Insert media metadata (if any)
+          if (json_array_size(json_object_get(json_object_get(j_media, "metadata"), "tags")) > 0) {
+            j_query = json_pack("{sss[]}",
+                                "table",
+                                TALIESIN_TABLE_META_DATA,
+                                "values");
+            if (j_query != NULL) {
+              json_object_foreach(json_object_get(json_object_get(j_media, "metadata"), "tags"), key, j_tag) {
+                json_array_append_new(json_object_get(j_query, "values"), json_pack("{sIssss}", "tm_id", tm_id, "tmd_key", key, "tmd_value", json_string_value(j_tag)));
+              }
+              res = h_insert(config->conn, j_query, NULL);
+              json_decref(j_query);
+              if (res != H_OK) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "media_update - error insert media metadata in database");
+                ret = T_ERROR_DB;
+              }
+            } else {
+              y_log_message(Y_LOG_LEVEL_ERROR, "media_update - error allocating resources for j_query (2)");
+              ret = T_ERROR_MEMORY;
             }
-            res = h_insert(config->conn, j_query, NULL);
-            json_decref(j_query);
-            if (res != H_OK) {
-              y_log_message(Y_LOG_LEVEL_ERROR, "media_update - error insert media metadata in database");
-              ret = T_ERROR_DB;
-            }
-          } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "media_update - error allocating resources for j_query (2)");
-            ret = T_ERROR_MEMORY;
           }
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "media_update - error delete media metadata in database");

@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import ReactAudioPlayer from 'react-audio-player';
+//import VideoPlayer from 'video-react';
 import FontAwesome from 'react-fontawesome';
 import { ButtonGroup, Button, DropdownButton, MenuItem } from 'react-bootstrap';
 

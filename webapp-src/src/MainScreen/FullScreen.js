@@ -30,6 +30,13 @@ class FullScreen extends Component {
 					this.setState({jukeboxIndex: StateStore.getState().profile.jukeboxIndex}, () => {this.loadMedia();});
 				} else if (StateStore.getState().lastAction === "setMediaNow") {
 					this.setState({media: StateStore.getState().profile.mediaNow}, () => {this.loadMedia();});
+				} else if (StateStore.getState().lastAction === "setCurrentPlayerStatus") {
+					this.setState({
+						status: StateStore.getState().profile.currentPlayerStatus,
+						repeat: StateStore.getState().profile.currentPlayerRepeat,
+						random: StateStore.getState().profile.currentPlayerRandom,
+						volume: StateStore.getState().profile.currentPlayerVolume
+					});
 				} else if (StateStore.getState().lastAction === "showFullScreen") {
 					this.setState({
 						stream: StateStore.getState().profile.stream,
@@ -42,7 +49,10 @@ class FullScreen extends Component {
 						repeat: StateStore.getState().profile.currentPlayerRepeat,
 						random: StateStore.getState().profile.currentPlayerRandom,
 						volume: StateStore.getState().profile.currentPlayerVolume
-					}, () => {this.loadMedia();});
+					}, () => {
+						this.loadMedia();
+						this.getMediaFolder();
+					});
 				} else if (StateStore.getState().lastAction === "loadStream" || StateStore.getState().lastAction === "loadStreamAndPlay") {
 					this.setState({stream: StateStore.getState().profile.stream}, () => {this.loadMedia();});
 				} else if (StateStore.getState().lastAction === "setCurrentPlayerStatus") {
@@ -66,8 +76,11 @@ class FullScreen extends Component {
 		this.handleSelectGenre = this.handleSelectGenre.bind(this);
 		this.handlePlayerAction = this.handlePlayerAction.bind(this);
 		this.handleChangeVolume = this.handleChangeVolume.bind(this);
+		this.handleSelectFolder = this.handleSelectFolder.bind(this);
+		this.getMediaFolder = this.getMediaFolder.bind(this);
 		
 		this.loadMedia();
+		this.getMediaFolder();
 	}
 
 	componentWillReceiveProps(nextProps) {
@@ -84,6 +97,7 @@ class FullScreen extends Component {
 			volume: StateStore.getState().profile.currentPlayerVolume
 		}, () => {
 			this.loadMedia();
+			this.getMediaFolder();
 		});
 	}
 	
@@ -128,6 +142,23 @@ class FullScreen extends Component {
 		StateStore.dispatch({type: "setCurrentCategory", category: "artist", categoryValue: value});
 	}
 	
+	getMediaFolder() {
+		var media = this.state.media;
+		if (media) {
+			if (media.path) {
+				if (media.path.lastIndexOf("/") > -1) {
+					media.folder = media.path.substring(0, media.path.lastIndexOf("/"));
+				} else {
+					media.folder = "";
+				}
+				this.setState({media: media});
+			} else {
+				media.folder = "";
+				this.setState({media: media});
+			}
+		}
+	}
+	
 	handleSelectAlbum(value) {
 		StateStore.dispatch({type: "showFullScreen", show: false});
 		StateStore.dispatch({type: "setCurrentBrowse", browse: "category"});
@@ -159,6 +190,13 @@ class FullScreen extends Component {
 				StateStore.dispatch({type: "setPlayerAction", action: "volume", parameter: (volume)});
 			});
 		}
+	}
+	
+	handleSelectFolder(value) {
+		StateStore.dispatch({type: "showFullScreen", show: false});
+		StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: StateStore.getState().dataSourceList.find((ds) => {return ds.name === this.state.media.data_source})});
+		StateStore.dispatch({type: "setCurrentBrowse", browse: "path"});
+		StateStore.dispatch({type: "setCurrentPath", path: value});
 	}
 	
 	getMediaCover() {
@@ -274,6 +312,16 @@ class FullScreen extends Component {
 						</Col>
 					</Row>);
 			}
+			metadata.push(
+				<Row key={6}>
+					<Col xs={6} className="text-right">
+						<label className="text-fullscreen">{i18n.t("common.open_folder")}</label>
+					</Col>
+					<Col xs={6}>
+						<span><a role="button" className="anchor-fullscreen" onClick={() => {this.handleSelectFolder(this.state.media.folder)}}>{this.state.media.folder || "/"}</a></span>
+					</Col>
+				</Row>
+			);
 		}
 		return (
 			<div className={"fullscreen" + (!this.state.show?" hidden":"")} >

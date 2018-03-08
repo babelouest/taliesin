@@ -408,6 +408,14 @@ class ModalMedia extends Component {
 							</Row>
 							<Row>
 								<Col xs={6}>
+									<label>{i18n.t("common.nb_play")}</label>
+								</Col>
+								<Col xs={6}>
+									<span>{this.state.media.nb_play}&nbsp;{i18n.t("common.times")}</span>
+								</Col>
+							</Row>
+							<Row>
+								<Col xs={6}>
 									<label>{i18n.t("common.path")}</label>
 								</Col>
 								<Col xs={6}>

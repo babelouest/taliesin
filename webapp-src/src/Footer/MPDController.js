@@ -150,10 +150,9 @@ class MPDController extends Component {
 		StateStore.getState().APIManager.angharadApiRequest("GET", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/status")
 		.then((status) => {
 			this.setState({jukeboxRepeat: status.repeat, jukeboxRandom: status.random, volume: status.volume, jukeboxIndex: status.song_pos, play: (status.state==="play")}, () => {
-				StateStore.dispatch({ type: "setCurrentPlayerStatus", volume: status.volume });
+				StateStore.dispatch({ type: "setCurrentPlayerStatus", volume: status.volume, repeat: status.repeat, random: status.random, status: status.state });
 				if (status.song_pos !== StateStore.getState().profile.jukeboxIndex) {
 					StateStore.dispatch({ type: "setJukeboxIndex", index: status.song_pos });
-					StateStore.dispatch({ type: "setCurrentPlayerStatus", repeat: status.repeat, random: status.random, status: status.state});
 					this.loadMedia();
 				} else if (this.state.stream.webradio) {
 					this.loadMedia();

@@ -8,7 +8,7 @@ class WebradioNow extends Component {
 		super(props);
 		this.state = {
 			imgThumbBlob: false, 
-			media: StateStore.getState().profile.mediaNow,
+			media: props.media,
 		};
 
 		this.loadCover();

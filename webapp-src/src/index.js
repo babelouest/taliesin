@@ -4,6 +4,7 @@ import './index.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap/dist/css/bootstrap-theme.css';
 import 'font-awesome/css/font-awesome.min.css';
+//import 'node_modules/video-react/dist/video-react.css';
 
 import App from './App';
 import config from './lib/ConfigManager';

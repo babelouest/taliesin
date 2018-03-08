@@ -599,6 +599,11 @@ class AdvancedSearch extends Component {
 					</td>
 					<td>
 						<a role="button" onClick={() => {this.openMedia(result)}}>
+							{result.nb_play}&nbsp;{i18n.t("common.times")}
+						</a>
+					</td>
+					<td>
+						<a role="button" onClick={() => {this.openMedia(result)}}>
 							{cover}
 						</a>
 					</td>
@@ -644,6 +649,9 @@ class AdvancedSearch extends Component {
 									</th>
 									<th>
 										{i18n.t("common.path")}
+									</th>
+									<th>
+										{i18n.t("common.nb_play")}
 									</th>
 									<th>
 										{i18n.t("common.cover")}

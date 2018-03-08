@@ -23,6 +23,7 @@ class PlayerSelector extends Component {
 	}
 	
 	handleSelectPlayer(player) {
+		StateStore.dispatch({type: "setMediaNow", media: false});
 		StateStore.dispatch({type: "loadStream", stream: {name: false, webradio: false}});
 		StateStore.dispatch({type: "setCurrentPlayer", currentPlayer: player});
 	}

@@ -101,7 +101,12 @@
 		"message_play_stream_ok": "Lire un nouveaux flux",
 		"message_error_delete_stream": "Erreur lors de la suppression du flux",
 		"message_folder_refreshing": "Rafraîchissement du répertoire",
-		"message_error_refreshing_folder": "Erreur lors du rafraîchissement du répertoire"
+		"message_error_refreshing_folder": "Erreur lors du rafraîchissement du répertoire",
+		"message_error_loading_player_list": "Erreur lors du chargement de la liste lecteurs externes",
+		"message_error_loading_stream_list": "Erreur lors du chargement de la liste des flux",
+		"message_error_loading_data_source": "Erreur lors du chargement de la liste des sources de données",
+		"message_error_loading_playlist": "Erreur lors du chargement de la liste des playlists",
+		"message_error_loading_server_config": "Erreur lors du chargement de la configuration du serveur"
 	},
 	"topmenu": {
 		"searching": "Recherche...",

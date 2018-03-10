@@ -101,7 +101,12 @@
 		"message_play_stream_ok": "Play new stream",
 		"message_error_delete_stream": "Error delete stream",
 		"message_folder_refreshing": "Folder refreshing",
-		"message_error_refreshing_folder": "Error refreshing folder"
+		"message_error_refreshing_folder": "Error refreshing folder",
+		"message_error_loading_player_list": "Error loading external player list",
+		"message_error_loading_stream_list": "Error loading stream list",
+		"message_error_loading_data_source": "Error loading data source list",
+		"message_error_loading_playlist": "Error loading playlists",
+		"message_error_loading_server_config": "Error loading server configuration"
 	},
 	"topmenu": {
 		"searching": "Searching...",

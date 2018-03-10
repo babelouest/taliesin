@@ -242,6 +242,14 @@ class TopMenu extends Component {
 	}
 	
 	render() {
+		var languages = [];
+		["en","fr"].forEach((lang, index) => {
+			if (lang === i18n.language) {
+				languages.push(<MenuItem key={index} className="bg-success">{lang}</MenuItem>);
+			} else {
+				languages.push(<MenuItem key={index} onClick={() => {this.handlechangeLanguage(lang)}}>{lang}</MenuItem>);
+			}
+		});
 		if (StateStore.getState().status === "connected" || StateStore.getState().status === "noauth") {
 			var searchOverlay = 
 				<Popover id="searchResult">
@@ -385,14 +393,6 @@ class TopMenu extends Component {
 							{mediaResult}
 					</Popover>;
 			}
-			var languages = [];
-			["en","fr"].forEach((lang, index) => {
-				if (lang === i18n.language) {
-					languages.push(<MenuItem key={index} className="bg-success">{lang}</MenuItem>);
-				} else {
-					languages.push(<MenuItem key={index} onClick={() => {this.handlechangeLanguage(lang)}}>{lang}</MenuItem>);
-				}
-			});
 			var userDropdown;
 			if (StateStore.getState().profile.isAdmin) {
 				if (StateStore.getState().status === "noauth") {

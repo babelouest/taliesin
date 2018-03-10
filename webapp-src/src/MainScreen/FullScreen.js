@@ -49,10 +49,7 @@ class FullScreen extends Component {
 						repeat: StateStore.getState().profile.currentPlayerRepeat,
 						random: StateStore.getState().profile.currentPlayerRandom,
 						volume: StateStore.getState().profile.currentPlayerVolume
-					}, () => {
-						this.loadMedia();
-						this.getMediaFolder();
-					});
+					}, () => {this.loadMedia();});
 				} else if (StateStore.getState().lastAction === "loadStream" || StateStore.getState().lastAction === "loadStreamAndPlay") {
 					this.setState({stream: StateStore.getState().profile.stream}, () => {this.loadMedia();});
 				} else if (StateStore.getState().lastAction === "setCurrentPlayerStatus") {
@@ -80,7 +77,6 @@ class FullScreen extends Component {
 		this.getMediaFolder = this.getMediaFolder.bind(this);
 		
 		this.loadMedia();
-		this.getMediaFolder();
 	}
 
 	componentWillReceiveProps(nextProps) {
@@ -97,7 +93,6 @@ class FullScreen extends Component {
 			volume: StateStore.getState().profile.currentPlayerVolume
 		}, () => {
 			this.loadMedia();
-			this.getMediaFolder();
 		});
 	}
 	
@@ -113,6 +108,7 @@ class FullScreen extends Component {
 		if (this._ismounted) {
 			this.setState({title: this.buildTitle()});
 			this.getMediaCover();
+			this.getMediaFolder();
 		}
 	}
 	

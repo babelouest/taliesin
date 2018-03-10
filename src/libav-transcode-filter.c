@@ -409,22 +409,11 @@ int webradio_open_output_buffer(struct _audio_stream * audio_stream) {
   AVAudioFifo * fifo              = NULL;
   AVIOContext * output_io_context = NULL;
   AVStream * stream               = NULL;
-  int error = 0;
-  int codec_id;
+  int error                       = 0;
+  int codec_id                    = AV_CODEC_ID_MP3;
   uint8_t * avio_ctx_buffer       = NULL;
   size_t avio_ctx_buffer_size     = 4096;
-  char format[8]                  = {0};
-  
-  if (0 == o_strcasecmp("vorbis", audio_stream->stream_format)) {
-    codec_id = AV_CODEC_ID_VORBIS;
-    o_strcpy(format, "ogg");
-  } else if (0 == o_strcasecmp("flac", audio_stream->stream_format)) {
-    codec_id = AV_CODEC_ID_FLAC;
-    o_strcpy(format, "flac");
-  } else {
-    codec_id = AV_CODEC_ID_MP3;
-    o_strcpy(format, "mp3");
-  }
+  char * format                   = "mp3";
   
   if ((audio_stream->output_format_context = avformat_alloc_context()) == NULL) {
     y_log_message(Y_LOG_LEVEL_ERROR, "Could not allocate output format context");
@@ -615,8 +604,8 @@ int open_output_buffer_jukebox(struct _jukebox_audio_buffer * jukebox_audio_buff
   AVCodec * output_codec          = NULL;
   AVIOContext * output_io_context = NULL;
   AVStream * stream               = NULL;
-  int error = 0;
-  int codec_id;
+  int error                       = 0;
+  int codec_id                    = 0;
   uint8_t * avio_ctx_buffer       = NULL;
   size_t avio_ctx_buffer_size     = 4096;
   char format[8]                  = {0};
@@ -627,9 +616,18 @@ int open_output_buffer_jukebox(struct _jukebox_audio_buffer * jukebox_audio_buff
   } else if (0 == o_strcasecmp("flac", jukebox_audio_buffer->jukebox->stream_format)) {
     codec_id = AV_CODEC_ID_FLAC;
     o_strcpy(format, "flac");
-  } else {
+  } else if (0 == o_strcasecmp("mp3", jukebox_audio_buffer->jukebox->stream_format)) {
     codec_id = AV_CODEC_ID_MP3;
     o_strcpy(format, "mp3");
+  } else if (0 == o_strcasecmp("h264", jukebox_audio_buffer->jukebox->stream_format)) {
+    codec_id = AV_CODEC_ID_H264;
+    o_strcpy(format, "mp4");
+  } else if (0 == o_strcasecmp("vp8", jukebox_audio_buffer->jukebox->stream_format)) {
+    codec_id = AV_CODEC_ID_VP8;
+    o_strcpy(format, "webm");
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "Error unsupported format: %s", jukebox_audio_buffer->jukebox->stream_format);
+    error = AVERROR(ENOMEM);
   }
   
   if (((*output_format_context) = avformat_alloc_context()) == NULL) {

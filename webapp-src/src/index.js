@@ -35,6 +35,7 @@ config.fetchConfig()
 					curConfig.stream = false;
 				}
 				StateStore.dispatch({ type: 'setStoredValues', config: curConfig });
+				StateStore.dispatch({type: "showFullScreen", show: curConfig.fullScreen});
 				StateStore.dispatch({ type: 'setUseWebsocket', useWebsocket: config.getConfigValue("useWebsocket") });
 				if (newStatus === "connected") {
 					StateStore.dispatch({ type: 'connection', status: newStatus, token: token, expiration: expiration, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), angharadApiUrl: config.getConfigValue("angharadApiUrl"), oauth2: true});
@@ -56,6 +57,9 @@ config.fetchConfig()
 		ReactDOM.render(<App/>, document.getElementById('root'));
 	}
 	ReactDOM.render(<App/>, document.getElementById('root'));
+})
+.fail((error) => {
+	ReactDOM.render(<h2>&nbsp;&nbsp;Error loading web configuration</h2>, document.getElementById('root'));
 });
 
 StateStore.subscribe(() => {
@@ -65,6 +69,14 @@ StateStore.subscribe(() => {
 			StateStore.getState().APIManager.taliesinApiRequest("GET", "/users")
 			.then((users) => {
 				StateStore.dispatch({ type: 'setUserList', userList: users, isAdmin: true });
+			})
+			.fail((error) => {
+				if (error.status !== 401 && error.status !== 403) {
+					StateStore.getState().NotificationManager.addNotification({
+						message: i18n.t("common.message_error_loading_user_list"),
+						level: 'error'
+					});
+				}
 			});
 			
 			// Get external players list
@@ -73,6 +85,12 @@ StateStore.subscribe(() => {
 				var parsedList = [];
 				externalPlayerList.forEach((strPlayer) => {parsedList.push(JSON.parse(strPlayer))});
 				StateStore.dispatch({ type: "setExternalPlayerList", externalPlayerList: parsedList });
+			})
+			.fail((error) => {
+				StateStore.getState().NotificationManager.addNotification({
+					message: i18n.t("common.message_error_loading_player_list"),
+					level: 'error'
+				});
 			});
 			
 			// Get current stream list
@@ -81,6 +99,10 @@ StateStore.subscribe(() => {
 				StateStore.dispatch({type: "setStreamList", streamList: result});
 			})
 			.fail((result) => {
+				StateStore.getState().NotificationManager.addNotification({
+					message: i18n.t("common.message_error_loading_stream_list"),
+					level: 'error'
+				});
 				StateStore.dispatch({type: "setStreamList", streamList: []});
 			});
 			
@@ -94,6 +116,10 @@ StateStore.subscribe(() => {
 				StateStore.dispatch({type: "setDataSourceList", dataSourceList: result, currentDataSource: currentDataSource, loaded: true});
 			})
 			.fail((result) => {
+				StateStore.getState().NotificationManager.addNotification({
+					message: i18n.t("common.message_error_loading_data_source"),
+					level: 'error'
+				});
 				StateStore.dispatch({type: "setDataSourceList", dataSourceList: [], currentDataSource: false, loaded: true});
 			});
 			
@@ -103,6 +129,10 @@ StateStore.subscribe(() => {
 				StateStore.dispatch({type: "setPlaylists", playlists: result});
 			})
 			.fail((result) => {
+				StateStore.getState().NotificationManager.addNotification({
+					message: i18n.t("common.message_error_loading_playlist"),
+					level: 'error'
+				});
 				StateStore.dispatch({type: "setPlaylists", playlists: []});
 			});
 			
@@ -112,6 +142,10 @@ StateStore.subscribe(() => {
 				StateStore.dispatch({type: "setServerConfig", config: result});
 			})
 			.fail((result) => {
+				StateStore.getState().NotificationManager.addNotification({
+					message: i18n.t("common.message_error_loading_server_config"),
+					level: 'error'
+				});
 				StateStore.dispatch({type: "setServerConfig", config: {}});
 			});
 		}

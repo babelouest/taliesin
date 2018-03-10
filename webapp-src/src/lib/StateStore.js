@@ -187,6 +187,7 @@ function stateStoreManager(state = defaultState, action) {
 			break;
 		case "showFullScreen":
 			state.showFullScreen = action.show;
+			config.setLocalConfigValue("fullScreen", action.show);
 			break;
 		case "setPlayerAction":
 			state.profile.playerAction = action.action;

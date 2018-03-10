@@ -26,6 +26,8 @@ class DataSourceList extends Component {
 		if (event.name !== this.state.currentDataSource.name) {
 			StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: event});
 		}
+		StateStore.dispatch({type: "setCurrentBrowse", browse: "path"});
+		StateStore.dispatch({type: "setCurrentPath", path: "/"});
 	}
 	
 	render () {

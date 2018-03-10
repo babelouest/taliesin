@@ -1,7 +1,9 @@
 # Taliesin changelog
 
-## 1.1
+## 1.0.13
 
+- Move db and config files to docs/, update CMake script accordingly
+- Fix UI bug in Chrom[e|ium]
 - Various UI bugfixes and improvements
 - Import/Export playlists
 - Do not store large cover image in database, instead re-reead it from the file each time it's asked

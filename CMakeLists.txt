@@ -250,7 +250,7 @@ endif ()
 
 install(TARGETS taliesin
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(FILES taliesin.conf.sample 
+install(FILES docs/taliesin.conf.sample 
         DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/taliesin RENAME taliesin.conf COMPONENT config)
 install(DIRECTORY webapp/
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/taliesin/webapp/ COMPONENT runtime)
@@ -262,13 +262,13 @@ install(FILES docs/INSTALL.md
         DESTINATION ${CMAKE_INSTALL_DOCDIR}/ COMPONENT runtime)
 install(FILES docs/API.md
         DESTINATION ${CMAKE_INSTALL_DOCDIR}/ COMPONENT runtime)
-install(FILES taliesin-init
+install(FILES docs/taliesin-init
         DESTINATION ${CMAKE_INSTALL_DOCDIR}/ COMPONENT runtime)
-install(FILES taliesin.service
+install(FILES docs/taliesin.service
         DESTINATION ${CMAKE_INSTALL_DOCDIR}/ COMPONENT runtime)
-install(FILES taliesin.mariadb.sql
+install(FILES docs/taliesin.mariadb.sql
         DESTINATION ${CMAKE_INSTALL_DOCDIR}/ COMPONENT runtime)
-install(FILES taliesin.sqlite3.sql
+install(FILES docs/taliesin.sqlite3.sql
         DESTINATION ${CMAKE_INSTALL_DOCDIR}/ COMPONENT runtime)
 
 set(TARGETS taliesin)

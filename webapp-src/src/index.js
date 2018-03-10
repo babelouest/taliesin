@@ -27,7 +27,7 @@ config.fetchConfig()
 			scope: curOauth2Config.scope,
 			profileUrl: curOauth2Config.profileUrl,
 			changeStatusCb: function (newStatus, token, expiration) {
-				var curConfig = config.getLocalConfig();
+				var curConfig = config.getLocalConfig() || {};
 				if ((curConfig.currentPlayer && curConfig.currentPlayer.type === "external" && !StateStore.getState().externalPlayerList.find((pl) => {return pl.name === curConfig.currentPlayer.name;})) || !curConfig.currentPlayer) {
 					curConfig.currentPlayer = {type: "internal", name: i18n.t("player.internal")}
 				}

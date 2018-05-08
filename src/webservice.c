@@ -25,6 +25,7 @@
   #define _GNU_SOURCE
 #endif
 #include <string.h>
+#include <pthread.h>
 
 #include "taliesin.h"
 
@@ -88,7 +89,7 @@ int callback_taliesin_options (const struct _u_request * request, struct _u_resp
  * send the location of prefixes
  */
 int callback_taliesin_server_configuration (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  set_response_json_body_and_clean(response, 200, json_pack("{sssssssssisisi}", 
+  set_response_json_body_and_clean(response, 200, json_pack("{sssssssssisisiso}", 
                         "api_prefix", 
                         ((struct config_elements *)user_data)->api_prefix,
                         "oauth_scope_user",
@@ -102,7 +103,14 @@ int callback_taliesin_server_configuration (const struct _u_request * request, s
                         "default_stream_sample_rate",
                         ((struct config_elements *)user_data)->stream_sample_rate,
                         "default_stream_bitrate",
-                        ((struct config_elements *)user_data)->stream_bitrate));
+                        ((struct config_elements *)user_data)->stream_bitrate,
+                        "use_websockets",
+#ifdef U_DISABLE_WEBSOCKET
+                        json_false()
+#else
+                        json_true()
+#endif
+                        ));
   return U_CALLBACK_COMPLETE;
 };
 
@@ -1131,6 +1139,8 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
               client_data_webradio->buffer_offset = 0;
             }
             if (ulfius_set_stream_response(response, 200, u_webradio_stream, u_webradio_stream_free, U_STREAM_SIZE_UNKOWN, client_data_webradio->audio_stream->stream_bitrate / 8, client_data_webradio) == U_OK) {
+              y_log_message(Y_LOG_LEVEL_INFO, "Open webradio stream %s", request->http_url);
+              pthread_setname_np(pthread_self(), request->http_url);
               if (0 == o_strcmp(client_data_webradio->audio_stream->stream_format, "vorbis")) {
                 u_map_put(response->map_header, "Content-Type", "application/ogg");
               } else if (0 == o_strcmp(client_data_webradio->audio_stream->stream_format, "flac")) {
@@ -1390,6 +1400,8 @@ int callback_taliesin_stream_manage_ws (const struct _u_request * request, struc
       ws_stream->jukebox = current_playlist;
       ws_stream->status = TALIESIN_WEBSOCKET_PLAYLIST_STATUS_OPEN;
       if (ulfius_set_websocket_response(response, NULL, NULL, &callback_websocket_stream_manager, ws_stream, &callback_websocket_stream_incoming_message, ws_stream, &callback_websocket_stream_onclose, ws_stream) == U_OK) {
+        y_log_message(Y_LOG_LEVEL_DEBUG, "Open websocket %s", request->http_url);
+        pthread_setname_np(pthread_self(), request->http_url);
         ret = U_CALLBACK_COMPLETE;
       } else {
         y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_manage_ws - Error ulfius_set_websocket_response");
@@ -1534,6 +1546,7 @@ void callback_websocket_stream_onclose (const struct _u_request * request, struc
     pthread_cond_broadcast(&ws_stream->webradio->websocket_cond);
     pthread_mutex_unlock(&ws_stream->webradio->websocket_lock);
   }
+  y_log_message(Y_LOG_LEVEL_DEBUG, "Close websocket %s", ws_stream->webradio->name);
   o_free(ws_stream->username);
   o_free(ws_stream);
 }

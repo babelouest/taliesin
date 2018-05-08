@@ -55,7 +55,7 @@ You must map a volume to store the SQLite3 database on the docker host and anoth
 Example:
 
 ```shell
-docker run -it -p 8576:8576 -v /tmp/taliesin/:/var/cache/taliesin -v /media/Music/:/media babelouest/taliesin_x86_64_sqlite_noauth_quickstart
+docker run --rm -it -p 8576:8576 -v /tmp/taliesin/:/var/cache/taliesin -v /media/Music/:/media babelouest/taliesin_x86_64_sqlite_noauth_quickstart
 ```
 
 ### Quickstart with your own configuration file

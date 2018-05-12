@@ -1007,27 +1007,39 @@ int audio_stream_enqueue_buffer(struct _t_webradio * webradio, size_t max_size, 
 }
 
 int audio_buffer_init(struct _audio_buffer * audio_buffer) {
+  pthread_mutexattr_t mutexattr;
+  int ret;
+  
   if (audio_buffer != NULL) {
-    audio_buffer->title         = NULL;
-    audio_buffer->size          = 0;
-    audio_buffer->nb_client     = 0;
-    audio_buffer->max_size      = 0;
-    audio_buffer->complete      = 0;
-    audio_buffer->skip          = 0;
-    audio_buffer->read          = 0;
-    audio_buffer->next          = NULL;
-    audio_buffer->file          = NULL;
-    audio_buffer->data          = NULL;
-    audio_buffer->offset_list   = NULL;
-    audio_buffer->nb_offset     = 0;
-    audio_buffer->index         = 0;
-    audio_buffer->last_offset   = 0;
-    audio_buffer->start.tv_sec  = 0;
-    audio_buffer->start.tv_nsec = 0;
-    return T_OK;
+    pthread_mutexattr_init ( &mutexattr );
+    pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_RECURSIVE );
+    if (pthread_mutex_init(&(audio_buffer->buffer_lock), &mutexattr) != 0) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "Impossible to initialize Mutex Lock for audio buffer");
+      ret = T_ERROR;
+    } else {
+      audio_buffer->title         = NULL;
+      audio_buffer->size          = 0;
+      audio_buffer->nb_client     = 0;
+      audio_buffer->max_size      = 0;
+      audio_buffer->complete      = 0;
+      audio_buffer->skip          = 0;
+      audio_buffer->read          = 0;
+      audio_buffer->next          = NULL;
+      audio_buffer->file          = NULL;
+      audio_buffer->data          = NULL;
+      audio_buffer->offset_list   = NULL;
+      audio_buffer->nb_offset     = 0;
+      audio_buffer->index         = 0;
+      audio_buffer->last_offset   = 0;
+      audio_buffer->start.tv_sec  = 0;
+      audio_buffer->start.tv_nsec = 0;
+      ret = T_OK;
+    }
+    pthread_mutexattr_destroy( &mutexattr );
   } else {
-    return T_ERROR_PARAM;
+    ret = T_ERROR_PARAM;
   }
+  return ret;
 }
 
 void audio_buffer_clean(struct _audio_buffer * audio_buffer, int recursive) {
@@ -1035,6 +1047,7 @@ void audio_buffer_clean(struct _audio_buffer * audio_buffer, int recursive) {
     if (recursive) {
       audio_buffer_clean(audio_buffer->next, recursive);
     }
+    pthread_mutex_destroy(&(audio_buffer->buffer_lock));
     o_free(audio_buffer->data);
     o_free(audio_buffer->title);
     o_free(audio_buffer->offset_list);
@@ -1089,15 +1102,27 @@ int stream_get_next_buffer(struct _client_data_webradio * client_data) {
     }
   }
   if (client_data->current_buffer != NULL) {
-    client_data->current_buffer->nb_client++;
-    if (!client_data->current_buffer->start.tv_sec) {
-      //client_data->current_buffer->read = 1;
-      clock_gettime(CLOCK_MONOTONIC_RAW, &client_data->current_buffer->start);
+    if (pthread_mutex_lock(&client_data->current_buffer->buffer_lock)) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "stream_get_next_buffer - Error getting current_buffer->buffer_lock");
+      return T_ERROR;
+    } else {
+      client_data->current_buffer->nb_client++;
+      if (!client_data->current_buffer->start.tv_sec) {
+        //client_data->current_buffer->read = 1;
+        clock_gettime(CLOCK_MONOTONIC_RAW, &client_data->current_buffer->start);
+      }
+      pthread_mutex_unlock(&client_data->current_buffer->buffer_lock);
     }
   }
   if (previous_buffer != NULL) {
-    previous_buffer->nb_client--;
-    previous_buffer->read = (!previous_buffer->nb_client);
+    if (pthread_mutex_lock(&previous_buffer->buffer_lock)) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "stream_get_next_buffer - Error getting current_buffer->buffer_lock");
+      return T_ERROR;
+    } else {
+      previous_buffer->nb_client--;
+      previous_buffer->read = (!previous_buffer->nb_client);
+      pthread_mutex_unlock(&previous_buffer->buffer_lock);
+    }
     pthread_mutex_lock(&client_data->audio_stream->buffer_lock);
     pthread_cond_signal(&client_data->audio_stream->buffer_cond);
     pthread_mutex_unlock(&client_data->audio_stream->buffer_lock);
@@ -1875,7 +1900,12 @@ void u_webradio_stream_free(void * cls) {
   client_data_webradio->audio_stream->nb_client_connected--;
   client_data_webradio->audio_stream->first_buffer->last_offset = client_data_webradio->buffer_offset;
   if (client_data_webradio->audio_stream->status != TALIESIN_STREAM_STATUS_STOPPED && client_data_webradio->current_buffer != NULL) {
-    client_data_webradio->current_buffer->nb_client--;
+    if (pthread_mutex_lock(&client_data_webradio->current_buffer->buffer_lock)) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "stream_get_next_buffer - Error getting current_buffer->buffer_lock");
+    } else {
+      client_data_webradio->current_buffer->nb_client--;
+      pthread_mutex_unlock(&client_data_webradio->current_buffer->buffer_lock);
+    }
   }
   pthread_mutex_lock(&client_data_webradio->audio_stream->client_lock);
   pthread_cond_signal(&client_data_webradio->audio_stream->client_cond);
@@ -1883,7 +1913,6 @@ void u_webradio_stream_free(void * cls) {
   pthread_mutex_lock(&client_data_webradio->audio_stream->buffer_lock);
   pthread_cond_signal(&client_data_webradio->audio_stream->buffer_cond);
   pthread_mutex_unlock(&client_data_webradio->audio_stream->buffer_lock);
-  y_log_message(Y_LOG_LEVEL_INFO, "Close webradio stream %s", client_data_webradio->stream_name);
   client_data_webradio_clean(client_data_webradio);
 }
 

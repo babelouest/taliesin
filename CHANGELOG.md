@@ -1,5 +1,10 @@
 # Taliesin changelog
 
+## 1.0.14
+
+- Minor UI bugfixes and improvements
+- Add mutex lock on audio buffer for some multi-client tasks
+
 ## 1.0.13
 
 - Move db and config files to docs/, update CMake script accordingly

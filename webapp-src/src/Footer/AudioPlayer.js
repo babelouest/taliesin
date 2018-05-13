@@ -218,7 +218,10 @@ class AudioPlayer extends Component {
 				break;
 			case "now":
 				if (response.result !== "not_found" && response.result !== "invalid_param") {
-					if (response.result.data_source && response.result.path && (StateStore.getState().profile.mediaNow.data_source !== response.result.data_source || StateStore.getState().profile.mediaNow.path !== response.result.path)) {
+					if (response.result.data_source && 
+							response.result.path && 
+								(StateStore.getState().profile.mediaNow.data_source !== response.result.data_source || 
+								StateStore.getState().profile.mediaNow.path !== response.result.path)) {
 						this.setState({media: response.result}, () => {
 								this.sendStreamComand("next");
 								StateStore.dispatch({type: "setMediaNow", media: response.result});
@@ -246,7 +249,7 @@ class AudioPlayer extends Component {
 				});
 				break;
 			case "list":
-				if (response.result[0].data_source && response.result[0].path && (response.result[0].data_source !== StateStore.getState().profile.mediaNow.data_source || response.result[0].path !== StateStore.getState().profile.mediaNow.path)) {
+				if (response.result && response.result[0] && response.result[0].data_source && response.result[0].path && (response.result[0].data_source !== StateStore.getState().profile.mediaNow.data_source || response.result[0].path !== StateStore.getState().profile.mediaNow.path)) {
 					StateStore.dispatch({type: "setMediaNow", media: response.result[0]});
 				}
 				break;
@@ -344,7 +347,7 @@ class AudioPlayer extends Component {
 	}
 	
 	handlePlay() {
-		this.setState({preload: (this.state.stream.webradio?"none":"auto")}, () => {
+		this.setState({preload: (this.state.stream.webradio?"none":"auto"), currentTime: 0}, () => {
 			if (this.state.stream.name && this.state.taliesinApiUrl) {
 				this.handleStop();
 				var randStr = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);

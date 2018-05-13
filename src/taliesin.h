@@ -24,7 +24,7 @@
 #ifndef __TALIESIN_H_
 #define __TALIESIN_H_
 
-#define _TALIESIN_VERSION_ "1.0.13"
+#define _TALIESIN_VERSION_ "1.0.14"
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
@@ -209,6 +209,7 @@ struct _t_file_list {
 };
 
 struct _audio_buffer {
+  pthread_mutex_t        buffer_lock;
   size_t                 size;
   size_t                 max_size;
   short int              complete;

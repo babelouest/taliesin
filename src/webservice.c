@@ -26,6 +26,7 @@
 #endif
 #include <string.h>
 #include <pthread.h>
+#include <sys/time.h>
 
 #include "taliesin.h"
 
@@ -1139,7 +1140,6 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
               client_data_webradio->buffer_offset = 0;
             }
             if (ulfius_set_stream_response(response, 200, u_webradio_stream, u_webradio_stream_free, U_STREAM_SIZE_UNKOWN, client_data_webradio->audio_stream->stream_bitrate / 8, client_data_webradio) == U_OK) {
-              y_log_message(Y_LOG_LEVEL_INFO, "Open webradio stream %s", request->http_url);
               pthread_setname_np(pthread_self(), request->http_url);
               if (0 == o_strcmp(client_data_webradio->audio_stream->stream_format, "vorbis")) {
                 u_map_put(response->map_header, "Content-Type", "application/ogg");
@@ -1399,8 +1399,7 @@ int callback_taliesin_stream_manage_ws (const struct _u_request * request, struc
       ws_stream->webradio = current_webradio;
       ws_stream->jukebox = current_playlist;
       ws_stream->status = TALIESIN_WEBSOCKET_PLAYLIST_STATUS_OPEN;
-      if (ulfius_set_websocket_response(response, NULL, NULL, &callback_websocket_stream_manager, ws_stream, &callback_websocket_stream_incoming_message, ws_stream, &callback_websocket_stream_onclose, ws_stream) == U_OK) {
-        y_log_message(Y_LOG_LEVEL_DEBUG, "Open websocket %s", request->http_url);
+      if (ulfius_set_websocket_response(response, "taliesin", "permessage-deflate", &callback_websocket_stream_manager, ws_stream, &callback_websocket_stream_incoming_message, ws_stream, &callback_websocket_stream_onclose, ws_stream) == U_OK) {
         pthread_setname_np(pthread_self(), request->http_url);
         ret = U_CALLBACK_COMPLETE;
       } else {
@@ -1426,17 +1425,23 @@ void callback_websocket_stream_manager (const struct _u_request * request, struc
   char * message;
   json_t * j_result, * j_message;
   time_t now;
+  struct timespec wait;
+  struct timeval tv_now;
+  int ret_wait;
   
   if (ws_stream->webradio != NULL) {
     ws_stream->webradio->nb_websocket++;
     // Loop until websocket is closed by the server or the client
     while (websocket_manager->connected && ws_stream->status == TALIESIN_WEBSOCKET_PLAYLIST_STATUS_OPEN && ws_stream->webradio->audio_stream->status != TALIESIN_STREAM_STATUS_STOPPED) {
+      gettimeofday(&tv_now, NULL);
+      wait.tv_sec = tv_now.tv_sec + 5;
+      wait.tv_nsec = tv_now.tv_usec * 1000;
       pthread_mutex_lock(&ws_stream->webradio->message_lock);
-      pthread_cond_wait(&ws_stream->webradio->message_cond, &ws_stream->webradio->message_lock);
+      ret_wait = pthread_cond_timedwait(&ws_stream->webradio->message_cond, &ws_stream->webradio->message_lock, &wait);
       pthread_mutex_unlock(&ws_stream->webradio->message_lock);
       
       time(&now);
-      if (websocket_manager->connected && ((ws_stream->is_authenticated && ws_stream->expiration && ws_stream->expiration > now) || !ws_stream->config->use_oauth2_authentication)) {
+      if (ret_wait != ETIMEDOUT && websocket_manager->connected && ((ws_stream->is_authenticated && ws_stream->expiration && ws_stream->expiration > now) || !ws_stream->config->use_oauth2_authentication)) {
         if (ws_stream->webradio->message_type == TALIESIN_PLAYLIST_MESSAGE_TYPE_NEW_MEDIA) {
           j_result = media_get_by_id(ws_stream->config, ws_stream->webradio->audio_stream->first_buffer->file->tm_id);
           if (check_result_value(j_result, T_OK)) {
@@ -1546,7 +1551,6 @@ void callback_websocket_stream_onclose (const struct _u_request * request, struc
     pthread_cond_broadcast(&ws_stream->webradio->websocket_cond);
     pthread_mutex_unlock(&ws_stream->webradio->websocket_lock);
   }
-  y_log_message(Y_LOG_LEVEL_DEBUG, "Close websocket %s", ws_stream->webradio->name);
   o_free(ws_stream->username);
   o_free(ws_stream);
 }

@@ -8,7 +8,7 @@ class APIManager {
 		if (parameters) {
 			this.taliesinApiUrl = parameters.taliesinApiUrl || "";
 			this.angharadApiUrl = parameters.angharadApiUrl || "";
-      this.oauth2 = !!parameters.oauth2;
+			this.oauth2 = !!parameters.oauth2;
 		}
 	}
 	
@@ -32,11 +32,11 @@ class APIManager {
 					});
 				} else {
 					this.counter--;
-					return Promise.reject(new Error("error oauth2Connector"));
+					return $.Deferred(new Error("error oauth2Connector"));
 				}
 			}
 		} else {
-			return Promise.reject(new Error("error too busy"));
+			return $.Deferred(new Error("error too busy"));
 		}
 	}
 	
@@ -54,7 +54,7 @@ class APIManager {
 		if (this.angharadApiUrl) {
 			return this.APIRequest(method, this.angharadApiUrl + url, data);
 		} else {
-			return Promise.reject("no angharad API");
+			return $.Deferred("no angharad API");
 		}
 	}
 	
@@ -62,7 +62,7 @@ class APIManager {
 		if (this.taliesinApiUrl) {
 			return this.APIRequest(method, this.taliesinApiUrl + url, data);
 		} else {
-			return Promise.reject("no taliesin API");
+			return $.Deferred("no taliesin API");
 		}
 	}
 }

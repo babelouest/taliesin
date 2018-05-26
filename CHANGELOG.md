@@ -1,5 +1,9 @@
 # Taliesin changelog
 
+## 1.0.15
+
+- Make Chrome more happy on command `next`
+
 ## 1.0.14
 
 - Minor UI bugfixes and improvements

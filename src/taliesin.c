@@ -296,9 +296,9 @@ int main (int argc, char ** argv) {
     for (i=0; i<config->nb_webradio; i++) {
       config->webradio_set[i]->audio_stream->status = TALIESIN_STREAM_STATUS_STOPPED;
       if (config->webradio_set[i]->audio_stream->first_buffer != NULL) {
-        pthread_mutex_lock(&config->webradio_set[i]->audio_stream->buffer_lock);
-        pthread_cond_signal(&config->webradio_set[i]->audio_stream->buffer_cond);
-        pthread_mutex_unlock(&config->webradio_set[i]->audio_stream->buffer_lock);
+        pthread_mutex_lock(&config->webradio_set[i]->audio_stream->stream_lock);
+        pthread_cond_signal(&config->webradio_set[i]->audio_stream->stream_cond);
+        pthread_mutex_unlock(&config->webradio_set[i]->audio_stream->stream_lock);
       }
       pthread_mutex_lock(&config->stream_stop_lock);
       pthread_cond_wait(&config->stream_stop_cond, &config->stream_stop_lock);

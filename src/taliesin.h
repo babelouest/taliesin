@@ -216,7 +216,7 @@ struct _audio_buffer {
   uint8_t              * data;
   size_t               * offset_list;
   unsigned int           nb_offset;
-  size_t                 last_offset;
+  unsigned int           last_offset;
   
   unsigned int           nb_client;
   struct timespec        start;
@@ -244,8 +244,8 @@ struct _audio_stream {
   
   short                            status;
   
-  pthread_mutex_t                  buffer_lock;
-  pthread_cond_t                   buffer_cond;
+  pthread_mutex_t                  stream_lock;
+  pthread_cond_t                   stream_cond;
 
   unsigned int                     nb_client_connected;
   struct _client_data_webradio  ** client_list;
@@ -342,8 +342,8 @@ struct _jukebox_audio_buffer {
   uint64_t             duration;
   
   short                status;
-  pthread_mutex_t      buffer_lock;
-  pthread_cond_t       buffer_cond;
+  pthread_mutex_t      stream_lock;
+  pthread_cond_t       stream_cond;
   
   pthread_mutex_t      write_lock;
   

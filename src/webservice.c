@@ -1065,8 +1065,7 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
   struct _client_data_jukebox * client_data_jukebox;
   struct _t_file * file;
   char metaint[17] = {0}, * m3u_data = NULL, * content_disposition, * escaped_filename;
-  struct timespec now;
-  uint64_t time_delta, time_offset;
+  uint64_t time_offset;
   int ret_thread_jukebox = 0, detach_thread_jukebox = 0;
   pthread_t thread_jukebox;
   
@@ -1117,15 +1116,7 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
               client_data_webradio->first_buffer_counter = 0;
             }
             if (client_data_webradio->audio_stream->first_buffer != NULL) {
-              if (client_data_webradio->audio_stream->nb_client_connected == 1) {
-                // First client to connect, jump to last_offset
-                time_offset = client_data_webradio->audio_stream->first_buffer->last_offset;
-              } else {
-                // Not the first client to connect, calculate offset to jump to
-                clock_gettime(CLOCK_MONOTONIC_RAW, &now);
-                time_delta = (((uint64_t)now.tv_sec * 1000000000 + (uint64_t)now.tv_nsec) - ((uint64_t)client_data_webradio->audio_stream->first_buffer->start.tv_sec * 1000000000 + (uint64_t)client_data_webradio->audio_stream->first_buffer->start.tv_nsec));
-                time_offset = ((time_delta * (client_data_webradio->audio_stream->stream_bitrate / 8)) / 1000000000);
-              }
+              time_offset = client_data_webradio->audio_stream->first_buffer->offset_list[client_data_webradio->audio_stream->first_buffer->last_offset];
               i=0;
               while (i < client_data_webradio->audio_stream->first_buffer->nb_offset && client_data_webradio->audio_stream->first_buffer->offset_list[i] < time_offset) {
                 i++;

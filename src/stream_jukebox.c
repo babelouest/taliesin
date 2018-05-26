@@ -54,7 +54,7 @@ int jukebox_init(struct _t_jukebox * jukebox, const char * format, unsigned shor
             !pthread_cond_init(&jukebox->message_cond, NULL)) {
           res = T_OK;
         } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_init - Error init pthread_mutex or client_lock or client_cond of buffer_lock or buffer_cond");
+          y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_init - Error init pthread_mutex or client_lock or client_cond of stream_lock or stream_cond");
           o_free(jukebox->file_list);
           res = T_ERROR_MEMORY;
         }
@@ -102,8 +102,8 @@ int jukebox_audio_buffer_init (struct _jukebox_audio_buffer * jukebox_audio_buff
     jukebox_audio_buffer->jukebox = NULL;
     jukebox_audio_buffer->client_address = NULL;
     jukebox_audio_buffer->user_agent = NULL;
-    if (!pthread_mutex_init(&jukebox_audio_buffer->buffer_lock, NULL) &&
-        !pthread_cond_init(&jukebox_audio_buffer->buffer_cond, NULL)) {
+    if (!pthread_mutex_init(&jukebox_audio_buffer->stream_lock, NULL) &&
+        !pthread_cond_init(&jukebox_audio_buffer->stream_cond, NULL)) {
         pthread_mutexattr_init ( &mutexattr );
         pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_RECURSIVE );
         if (!pthread_mutex_init(&jukebox_audio_buffer->write_lock, &mutexattr)) {
@@ -845,9 +845,9 @@ int jukebox_close(struct config_elements * config, struct _t_jukebox * jukebox) 
   if (jukebox != NULL) {
     for (i=0; i<jukebox->nb_jukebox_audio_buffer; i++) {
       jukebox->jukebox_audio_buffer[i]->status = TALIESIN_STREAM_STATUS_STOPPED;
-      pthread_mutex_lock(&jukebox->jukebox_audio_buffer[i]->buffer_lock);
-      pthread_cond_signal(&jukebox->jukebox_audio_buffer[i]->buffer_cond);
-      pthread_mutex_unlock(&jukebox->jukebox_audio_buffer[i]->buffer_lock);
+      pthread_mutex_lock(&jukebox->jukebox_audio_buffer[i]->stream_lock);
+      pthread_cond_signal(&jukebox->jukebox_audio_buffer[i]->stream_cond);
+      pthread_mutex_unlock(&jukebox->jukebox_audio_buffer[i]->stream_lock);
     }
     while (jukebox->nb_websocket) {
       jukebox->message_type = TALIESIN_PLAYLIST_MESSAGE_TYPE_CLOSING;
@@ -1455,9 +1455,9 @@ void * jukebox_run_thread(void * args) {
       avformat_free_context(output_format_context);
     }
     av_audio_fifo_free(fifo);
-    pthread_mutex_lock(&client_data_jukebox->audio_buffer->buffer_lock);
-    pthread_cond_wait(&client_data_jukebox->audio_buffer->buffer_cond, &client_data_jukebox->audio_buffer->buffer_lock);
-    pthread_mutex_unlock(&client_data_jukebox->audio_buffer->buffer_lock);
+    pthread_mutex_lock(&client_data_jukebox->audio_buffer->stream_lock);
+    pthread_cond_wait(&client_data_jukebox->audio_buffer->stream_cond, &client_data_jukebox->audio_buffer->stream_lock);
+    pthread_mutex_unlock(&client_data_jukebox->audio_buffer->stream_lock);
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_run_thread - Error opening output buffer");
   }
@@ -1509,7 +1509,7 @@ void u_jukebox_stream_free(void * cls) {
   if (client_data_jukebox->audio_buffer->status == TALIESIN_STREAM_STATUS_STARTED) {
     client_data_jukebox->audio_buffer->status = TALIESIN_STREAM_STATUS_STOPPED;
   }
-  pthread_mutex_lock(&client_data_jukebox->audio_buffer->buffer_lock);
-  pthread_cond_signal(&client_data_jukebox->audio_buffer->buffer_cond);
-  pthread_mutex_unlock(&client_data_jukebox->audio_buffer->buffer_lock);
+  pthread_mutex_lock(&client_data_jukebox->audio_buffer->stream_lock);
+  pthread_cond_signal(&client_data_jukebox->audio_buffer->stream_cond);
+  pthread_mutex_unlock(&client_data_jukebox->audio_buffer->stream_lock);
 }

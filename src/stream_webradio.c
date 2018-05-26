@@ -1794,7 +1794,7 @@ void * webradio_run_thread(void * args) {
 ssize_t u_webradio_stream (void * cls, uint64_t pos, char * buf, size_t max) {
   struct _client_data_webradio * client_data_webradio = (struct _client_data_webradio *)cls;
   struct _audio_stream * stream = client_data_webradio->audio_stream;
-  ssize_t len;
+  ssize_t len, tmp_len;
   size_t current_offset;
   struct timespec now, nsleep;
   uint64_t time_delta, time_should, diff;
@@ -1810,18 +1810,27 @@ ssize_t u_webradio_stream (void * cls, uint64_t pos, char * buf, size_t max) {
     switch (client_data_webradio->command) {
       case TALIESIN_STREAM_COMMAND_PREVIOUS:
         client_data_webradio->buffer_offset = 0;
+        if (pthread_mutex_lock(&client_data_webradio->current_buffer->buffer_lock)) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "Impossible to initialize Mutex Lock for current_buffer");
+        } else {
+          client_data_webradio->current_buffer->last_offset = 0;
+          pthread_mutex_unlock(&client_data_webradio->current_buffer->buffer_lock);
+        }
+        client_data_webradio->command = TALIESIN_STREAM_COMMAND_NONE;
         break;
       case TALIESIN_STREAM_COMMAND_NEXT:
-        if ((res = stream_get_next_buffer(client_data_webradio)) == T_ERROR_NOT_FOUND) {
-          return U_STREAM_END;
-        } else if (res != T_OK) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "Error getting next buffer");
-          return U_STREAM_END;
+        if (client_data_webradio->buffer_offset == client_data_webradio->current_buffer->size || client_data_webradio->current_buffer->offset_list[client_data_webradio->current_buffer->last_offset] == client_data_webradio->buffer_offset) {
+          if ((res = stream_get_next_buffer(client_data_webradio)) == T_ERROR_NOT_FOUND) {
+            return U_STREAM_END;
+          } else if (res != T_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "Error getting next buffer");
+            return U_STREAM_END;
+          }
+          client_data_webradio->buffer_offset = 0;
+          client_data_webradio->command = TALIESIN_STREAM_COMMAND_NONE;
         }
-        client_data_webradio->buffer_offset = 0;
         break;
     }
-    client_data_webradio->command = TALIESIN_STREAM_COMMAND_NONE;
   }
   
   if (client_data_webradio->metadata_send != -1 && client_data_webradio->metadata_send) {
@@ -1852,6 +1861,15 @@ ssize_t u_webradio_stream (void * cls, uint64_t pos, char * buf, size_t max) {
       current_offset = client_data_webradio->buffer_offset;
     }
     len = max<(client_data_webradio->current_buffer->size - current_offset) ? max : (client_data_webradio->current_buffer->size - current_offset);
+    if (client_data_webradio->command == TALIESIN_STREAM_COMMAND_NEXT) {
+    }
+    if (client_data_webradio->command == TALIESIN_STREAM_COMMAND_NEXT &&
+        !client_data_webradio->send_header &&
+        client_data_webradio->current_buffer->last_offset < client_data_webradio->current_buffer->nb_offset &&
+        client_data_webradio->buffer_offset + len > client_data_webradio->current_buffer->offset_list[client_data_webradio->current_buffer->last_offset + 1]) {
+      tmp_len = (client_data_webradio->current_buffer->offset_list[client_data_webradio->current_buffer->last_offset + 1] - client_data_webradio->buffer_offset);
+      len = max < tmp_len ? max : tmp_len;
+    }
     while (len < max && !client_data_webradio->current_buffer->complete) {
       // Wait until current_buffer is full or len is equal to max
       usleep(50000);
@@ -1885,10 +1903,8 @@ ssize_t u_webradio_stream (void * cls, uint64_t pos, char * buf, size_t max) {
         if (pthread_mutex_lock(&client_data_webradio->current_buffer->buffer_lock)) {
           y_log_message(Y_LOG_LEVEL_ERROR, "Impossible to initialize Mutex Lock for current_buffer");
         } else {
-          for (i = client_data_webradio->current_buffer->last_offset + 1; i < client_data_webradio->current_buffer->nb_offset; i++) {
-            if (client_data_webradio->current_buffer->offset_list[i] < client_data_webradio->buffer_offset) {
-              client_data_webradio->current_buffer->last_offset = i;
-            }
+          for (i = client_data_webradio->current_buffer->last_offset + 1; i < client_data_webradio->current_buffer->nb_offset && client_data_webradio->current_buffer->offset_list[i] <= client_data_webradio->buffer_offset; i++) {
+            client_data_webradio->current_buffer->last_offset = i;
           }
           pthread_mutex_unlock(&client_data_webradio->current_buffer->buffer_lock);
         }

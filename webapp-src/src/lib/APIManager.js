@@ -32,11 +32,11 @@ class APIManager {
 					});
 				} else {
 					this.counter--;
-					return $.Deferred(new Error("error oauth2Connector"));
+					return $.Deferred().reject("error oauth2Connector").promise();
 				}
 			}
 		} else {
-			return $.Deferred(new Error("error too busy"));
+			return $.Deferred().reject("error too busy").promise();
 		}
 	}
 	
@@ -54,7 +54,7 @@ class APIManager {
 		if (this.angharadApiUrl) {
 			return this.APIRequest(method, this.angharadApiUrl + url, data);
 		} else {
-			return $.Deferred("no angharad API");
+			return $.Deferred().reject("no angharad API").promise();
 		}
 	}
 	
@@ -62,7 +62,7 @@ class APIManager {
 		if (this.taliesinApiUrl) {
 			return this.APIRequest(method, this.taliesinApiUrl + url, data);
 		} else {
-			return $.Deferred("no taliesin API");
+			return $.Deferred().reject("no taliesin API").promise();
 		}
 	}
 }

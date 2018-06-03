@@ -116,10 +116,15 @@ user_can_create_data_source = false # default false, only administrator can crea
 use_oauth2_authentication   = false # default false, on false, no authentication is required and all users have all the scopes, on true, an OAuth2 service is required for authentication, see https://github.com/babelouest/glewlwyd
 
 # streaming default parameters
-stream_format      = "mp3"   # use values 'mp3', 'vorbis' or 'flac'
-stream_channels    = 2       # use values 1 or 2
-stream_sample_rate = 44100   # use values 8000, 11025, 22050, 32000, 44100 or 48000
-stream_bitrate     = 128000  # use values 32000, 96000, 128000, 192000, 256000 or 320000
+audio_format      = "mp3"   # use values 'mp3', 'vorbis' or 'flac'
+audio_channels    = 2       # use values 1 or 2
+audio_sample_rate = 44100   # use values 8000, 11025, 22050, 32000, 44100 or 48000
+audio_bitrate     = 128000  # use values 32000, 96000, 128000, 192000, 256000 or 320000
+
+video_format      = "webm"  # use values 'webm', 'h264'
+video_bitrate     = 500000
+video_width       = 0       # force video width, 0 means keep original width
+video_height      = 0       # force video height, 0 means keep original height
 
 # jwt parameters, these parameters correspond to the JWT configuration of the OAuth2 server you rely on, if necessary
 jwt =

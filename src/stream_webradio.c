@@ -75,10 +75,10 @@ int webradio_init(struct _t_webradio * webradio, const char * format, unsigned s
           webradio->audio_stream->transcode_status = TALIESIN_STREAM_TRANSCODE_STATUS_NOT_STARTED;
           webradio->audio_stream->nb_buffer = 0;
           webradio->audio_stream->status = TALIESIN_STREAM_STATUS_NOT_STARTED;
-          webradio->audio_stream->stream_format = o_strdup(format);
-          webradio->audio_stream->stream_channels = channels;
-          webradio->audio_stream->stream_sample_rate = sample_rate;
-          webradio->audio_stream->stream_bitrate = bit_rate;
+          webradio->audio_stream->audio_format = o_strdup(format);
+          webradio->audio_stream->audio_channels = channels;
+          webradio->audio_stream->audio_sample_rate = sample_rate;
+          webradio->audio_stream->audio_bitrate = bit_rate;
           webradio->audio_stream->output_format_context = NULL;
           webradio->audio_stream->is_header = 0;
           webradio->audio_stream->header_buffer = o_malloc(sizeof(struct _audio_buffer));
@@ -367,13 +367,13 @@ static int webradio_add_db_stream(struct config_elements * config, struct _t_web
                         "ts_index",
                         webradio->current_index,
                         "ts_format",
-                        webradio->audio_stream->stream_format,
+                        webradio->audio_stream->audio_format,
                         "ts_channels",
-                        webradio->audio_stream->stream_channels,
+                        webradio->audio_stream->audio_channels,
                         "ts_sample_rate",
-                        webradio->audio_stream->stream_sample_rate,
+                        webradio->audio_stream->audio_sample_rate,
                         "ts_bitrate",
-                        webradio->audio_stream->stream_bitrate);
+                        webradio->audio_stream->audio_bitrate);
   res = h_insert(config->conn, j_query, NULL);
   json_decref(j_query);
   if (res == H_OK) {
@@ -777,13 +777,13 @@ json_t * webradio_get_info(struct _t_webradio * webradio) {
                             "elements",
                             webradio->file_list->nb_files,
                             "format",
-                            webradio->audio_stream->stream_format,
+                            webradio->audio_stream->audio_format,
                             "stereo",
-                            webradio->audio_stream->stream_channels==2?json_true():json_false(),
+                            webradio->audio_stream->audio_channels==2?json_true():json_false(),
                             "sample_rate",
-                            webradio->audio_stream->stream_sample_rate,
+                            webradio->audio_stream->audio_sample_rate,
                             "bitrate",
-                            webradio->audio_stream->stream_bitrate);
+                            webradio->audio_stream->audio_bitrate);
     j_client = webradio_get_clients(webradio);
     if (check_result_value(j_client, T_OK)) {
       json_object_set(json_object_get(j_stream, "webradio"), "clients", json_object_get(j_client, "clients"));
@@ -1075,7 +1075,7 @@ void audio_stream_clean (struct _audio_stream * audio_stream) {
     av_free(audio_stream->output_format_context->pb);
     avformat_free_context(audio_stream->output_format_context);
   }
-  o_free(audio_stream->stream_format);
+  o_free(audio_stream->audio_format);
 }
 
 int stream_get_next_buffer(struct _client_data_webradio * client_data) {
@@ -1676,8 +1676,8 @@ void * webradio_run_thread(void * args) {
         title = o_strdup(webradio->display_name);
       }
       json_decref(j_media);
-      if (audio_stream_enqueue_buffer(webradio, ((duration + 1) * webradio->audio_stream->stream_bitrate / 8), title, current_file, current_index) != T_OK) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "Error enqueing buffer_stream of size %u", ((duration + 1) * webradio->audio_stream->stream_bitrate / 8));
+      if (audio_stream_enqueue_buffer(webradio, ((duration + 1) * webradio->audio_stream->audio_bitrate / 8), title, current_file, current_index) != T_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "Error enqueing buffer_stream of size %u", ((duration + 1) * webradio->audio_stream->audio_bitrate / 8));
       } else {
         current_buffer = webradio->audio_stream->last_buffer;
         if (webradio->audio_stream->status != TALIESIN_STREAM_STATUS_STOPPED &&
@@ -1798,7 +1798,7 @@ ssize_t u_webradio_stream (void * cls, uint64_t pos, char * buf, size_t max) {
   size_t current_offset;
   struct timespec now, nsleep;
   uint64_t time_delta, time_should, diff;
-  unsigned int stream_bitrate = stream->stream_bitrate;
+  unsigned int audio_bitrate = stream->audio_bitrate;
   short int next_buffer;
   int res, i;
   
@@ -1841,8 +1841,8 @@ ssize_t u_webradio_stream (void * cls, uint64_t pos, char * buf, size_t max) {
   } else {
     // Calculate sleep time
     clock_gettime(CLOCK_MONOTONIC_RAW, &now);
-    time_delta = (((uint64_t)now.tv_sec * 1000000000 + (uint64_t)now.tv_nsec) - ((uint64_t)client_data_webradio->start.tv_sec * 1000000000 + (uint64_t)client_data_webradio->start.tv_nsec)) + ((stream_bitrate / 8) * TALIESIN_STREAM_INITIAL_CLIENT_BUFFER_LENGTH);
-    time_should = ((uint64_t)client_data_webradio->global_offset * 1000000000) / (stream_bitrate / 8);
+    time_delta = (((uint64_t)now.tv_sec * 1000000000 + (uint64_t)now.tv_nsec) - ((uint64_t)client_data_webradio->start.tv_sec * 1000000000 + (uint64_t)client_data_webradio->start.tv_nsec)) + ((audio_bitrate / 8) * TALIESIN_STREAM_INITIAL_CLIENT_BUFFER_LENGTH);
+    time_should = ((uint64_t)client_data_webradio->global_offset * 1000000000) / (audio_bitrate / 8);
     if (time_should > time_delta) {
       diff = time_should - time_delta;
       nsleep.tv_sec = diff / 1000000000;
@@ -1877,9 +1877,9 @@ ssize_t u_webradio_stream (void * cls, uint64_t pos, char * buf, size_t max) {
     }
     
     // Calculate if we're supposed to send metadata
-    if (client_data_webradio->metadata_send == 0 && client_data_webradio->metadata_offset + len >= (stream_bitrate / 8 * TALIESIN_STREAM_METADATA_INTERVAL)) {
+    if (client_data_webradio->metadata_send == 0 && client_data_webradio->metadata_offset + len >= (audio_bitrate / 8 * TALIESIN_STREAM_METADATA_INTERVAL)) {
       // Send metadata in next round
-      len = (stream_bitrate / 8 * TALIESIN_STREAM_METADATA_INTERVAL) - client_data_webradio->metadata_offset;
+      len = (audio_bitrate / 8 * TALIESIN_STREAM_METADATA_INTERVAL) - client_data_webradio->metadata_offset;
       client_data_webradio->metadata_send = 1;
     } else {
       client_data_webradio->metadata_offset += len;

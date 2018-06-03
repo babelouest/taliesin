@@ -97,14 +97,14 @@ int callback_taliesin_server_configuration (const struct _u_request * request, s
                         ((struct config_elements *)user_data)->oauth_scope_user,
                         "oauth_scope_admin",
                         ((struct config_elements *)user_data)->oauth_scope_admin,
-                        "default_stream_format",
-                        ((struct config_elements *)user_data)->stream_format,
-                        "default_stream_channels",
-                        ((struct config_elements *)user_data)->stream_channels,
-                        "default_stream_sample_rate",
-                        ((struct config_elements *)user_data)->stream_sample_rate,
-                        "default_stream_bitrate",
-                        ((struct config_elements *)user_data)->stream_bitrate,
+                        "default_audio_format",
+                        ((struct config_elements *)user_data)->audio_format,
+                        "default_audio_channels",
+                        ((struct config_elements *)user_data)->audio_channels,
+                        "default_audio_sample_rate",
+                        ((struct config_elements *)user_data)->audio_sample_rate,
+                        "default_audio_bitrate",
+                        ((struct config_elements *)user_data)->audio_bitrate,
                         "use_websockets",
 #ifdef U_DISABLE_WEBSOCKET
                         json_false()
@@ -517,25 +517,25 @@ int callback_taliesin_media_get_path (const struct _u_request * request, struct 
         if (check_result_value(j_result, T_OK)) {
           if (u_map_get(request->map_url, "webradio") != NULL || u_map_get(request->map_url, "jukebox") != NULL) {
             format = u_map_get(request->map_url, "format");
-            channels = u_map_get(request->map_url, "channels")!=NULL?strtol(u_map_get(request->map_url, "channels"), NULL, 10):TALIESIN_STREAM_DEFAULT_CHANNELS;
-            sample_rate = u_map_get(request->map_url, "samplerate")!=NULL?strtol(u_map_get(request->map_url, "samplerate"), NULL, 10):TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
+            channels = u_map_get(request->map_url, "channels")!=NULL?strtol(u_map_get(request->map_url, "channels"), NULL, 10):TALIESIN_AUDIO_STREAM_DEFAULT_CHANNELS;
+            sample_rate = u_map_get(request->map_url, "samplerate")!=NULL?strtol(u_map_get(request->map_url, "samplerate"), NULL, 10):TALIESIN_AUDIO_STREAM_DEFAULT_SAMPLE_RATE;
             if (0 == o_strcmp(format, "flac")) {
-              bit_rate = TALIESIN_STREAM_FLAC_BIT_RATE;
+              bit_rate = TALIESIN_AUDIO_STREAM_FLAC_BIT_RATE;
             } else {
-              bit_rate = u_map_get(request->map_url, "bitrate")!=NULL?strtol(u_map_get(request->map_url, "bitrate"), NULL, 10):TALIESIN_STREAM_DEFAULT_BIT_RATE;
+              bit_rate = u_map_get(request->map_url, "bitrate")!=NULL?strtol(u_map_get(request->map_url, "bitrate"), NULL, 10):TALIESIN_AUDIO_STREAM_DEFAULT_BIT_RATE;
             }
             
             if (format == NULL) {
-              format = TALIESIN_STREAM_DEFAULT_FORMAT;
+              format = TALIESIN_AUDIO_STREAM_DEFAULT_FORMAT;
             }
             if (!channels) {
-              sample_rate = TALIESIN_STREAM_DEFAULT_CHANNELS;
+              sample_rate = TALIESIN_AUDIO_STREAM_DEFAULT_CHANNELS;
             }
             if (!sample_rate) {
-              channels = TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
+              channels = TALIESIN_AUDIO_STREAM_DEFAULT_SAMPLE_RATE;
             }
             if (!bit_rate) {
-              bit_rate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
+              bit_rate = TALIESIN_AUDIO_STREAM_DEFAULT_BIT_RATE;
             }
             j_valid = is_stream_parameters_valid((u_map_get(request->map_url, "webradio") != NULL), format, channels, sample_rate, bit_rate);
             if (j_valid != NULL && json_array_size(j_valid) == 0) {
@@ -800,24 +800,24 @@ int callback_taliesin_category_list (const struct _u_request * request, struct _
         if (check_result_value(j_result, T_OK)) {
           if (u_map_get(request->map_url, "webradio") != NULL || u_map_get(request->map_url, "jukebox") != NULL) {
             format = u_map_get(request->map_url, "format");
-            channels = u_map_get(request->map_url, "channels")!=NULL?strtol(u_map_get(request->map_url, "channels"), NULL, 10):TALIESIN_STREAM_DEFAULT_CHANNELS;
-            sample_rate = u_map_get(request->map_url, "samplerate")!=NULL?strtol(u_map_get(request->map_url, "samplerate"), NULL, 10):TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
+            channels = u_map_get(request->map_url, "channels")!=NULL?strtol(u_map_get(request->map_url, "channels"), NULL, 10):TALIESIN_AUDIO_STREAM_DEFAULT_CHANNELS;
+            sample_rate = u_map_get(request->map_url, "samplerate")!=NULL?strtol(u_map_get(request->map_url, "samplerate"), NULL, 10):TALIESIN_AUDIO_STREAM_DEFAULT_SAMPLE_RATE;
             if (0 == o_strcmp(format, "flac")) {
-              bit_rate = TALIESIN_STREAM_FLAC_BIT_RATE;
+              bit_rate = TALIESIN_AUDIO_STREAM_FLAC_BIT_RATE;
             } else {
-              bit_rate = u_map_get(request->map_url, "bitrate")!=NULL?strtol(u_map_get(request->map_url, "bitrate"), NULL, 10):TALIESIN_STREAM_DEFAULT_BIT_RATE;
+              bit_rate = u_map_get(request->map_url, "bitrate")!=NULL?strtol(u_map_get(request->map_url, "bitrate"), NULL, 10):TALIESIN_AUDIO_STREAM_DEFAULT_BIT_RATE;
             }
             if (format == NULL) {
-              format = TALIESIN_STREAM_DEFAULT_FORMAT;
+              format = TALIESIN_AUDIO_STREAM_DEFAULT_FORMAT;
             }
             if (!channels) {
-              sample_rate = TALIESIN_STREAM_DEFAULT_CHANNELS;
+              sample_rate = TALIESIN_AUDIO_STREAM_DEFAULT_CHANNELS;
             }
             if (!sample_rate) {
-              channels = TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
+              channels = TALIESIN_AUDIO_STREAM_DEFAULT_SAMPLE_RATE;
             }
             if (!bit_rate) {
-              bit_rate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
+              bit_rate = TALIESIN_AUDIO_STREAM_DEFAULT_BIT_RATE;
             }
             j_valid = is_stream_parameters_valid((u_map_get(request->map_url, "webradio") != NULL), format, channels, sample_rate, bit_rate);
             if (j_valid != NULL && json_array_size(j_valid) == 0) {
@@ -961,24 +961,24 @@ int callback_taliesin_subcategory_list (const struct _u_request * request, struc
           if (check_result_value(j_result, T_OK)) {
             if (u_map_get(request->map_url, "webradio") != NULL || u_map_get(request->map_url, "jukebox") != NULL) {
               format = u_map_get(request->map_url, "format");
-              channels = u_map_get(request->map_url, "channels")!=NULL?strtol(u_map_get(request->map_url, "channels"), NULL, 10):TALIESIN_STREAM_DEFAULT_CHANNELS;
-              sample_rate = u_map_get(request->map_url, "samplerate")!=NULL?strtol(u_map_get(request->map_url, "samplerate"), NULL, 10):TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
+              channels = u_map_get(request->map_url, "channels")!=NULL?strtol(u_map_get(request->map_url, "channels"), NULL, 10):TALIESIN_AUDIO_STREAM_DEFAULT_CHANNELS;
+              sample_rate = u_map_get(request->map_url, "samplerate")!=NULL?strtol(u_map_get(request->map_url, "samplerate"), NULL, 10):TALIESIN_AUDIO_STREAM_DEFAULT_SAMPLE_RATE;
               if (0 == o_strcmp(format, "flac")) {
-                bit_rate = TALIESIN_STREAM_FLAC_BIT_RATE;
+                bit_rate = TALIESIN_AUDIO_STREAM_FLAC_BIT_RATE;
               } else {
-                bit_rate = u_map_get(request->map_url, "bitrate")!=NULL?strtol(u_map_get(request->map_url, "bitrate"), NULL, 10):TALIESIN_STREAM_DEFAULT_BIT_RATE;
+                bit_rate = u_map_get(request->map_url, "bitrate")!=NULL?strtol(u_map_get(request->map_url, "bitrate"), NULL, 10):TALIESIN_AUDIO_STREAM_DEFAULT_BIT_RATE;
               }
               if (format == NULL) {
-                format = TALIESIN_STREAM_DEFAULT_FORMAT;
+                format = TALIESIN_AUDIO_STREAM_DEFAULT_FORMAT;
               }
               if (!channels) {
-                sample_rate = TALIESIN_STREAM_DEFAULT_CHANNELS;
+                sample_rate = TALIESIN_AUDIO_STREAM_DEFAULT_CHANNELS;
               }
               if (!sample_rate) {
-                channels = TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
+                channels = TALIESIN_AUDIO_STREAM_DEFAULT_SAMPLE_RATE;
               }
               if (!bit_rate) {
-                bit_rate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
+                bit_rate = TALIESIN_AUDIO_STREAM_DEFAULT_BIT_RATE;
               }
               j_valid = is_stream_parameters_valid((u_map_get(request->map_url, "webradio") != NULL), format, channels, sample_rate, bit_rate);
               if (j_valid != NULL && json_array_size(j_valid) == 0) {
@@ -1064,6 +1064,7 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
   struct _client_data_webradio * client_data_webradio = NULL;
   struct _client_data_jukebox * client_data_jukebox;
   struct _t_file * file;
+  json_t * j_media;
   char metaint[17] = {0}, * m3u_data = NULL, * content_disposition, * escaped_filename;
   uint64_t time_offset;
   int ret_thread_jukebox = 0, detach_thread_jukebox = 0;
@@ -1098,7 +1099,7 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
         client_data_webradio->api_prefix = config->api_prefix;
         client_data_webradio->audio_stream = current_webradio->audio_stream;
         client_data_webradio->current_buffer = client_data_webradio->audio_stream->header_buffer;
-        client_data_webradio->metadata_send = (0 == o_strcmp(client_data_webradio->audio_stream->stream_format, "mp3") && o_strcasecmp("1", u_map_get_case(request->map_header, "Icy-MetaData")))?-1:0;
+        client_data_webradio->metadata_send = (0 == o_strcmp(client_data_webradio->audio_stream->audio_format, "mp3") && o_strcasecmp("1", u_map_get_case(request->map_header, "Icy-MetaData")))?-1:0;
         client_data_webradio->client_address = get_ip_source(request);
         client_data_webradio->user_agent = o_strdup(u_map_get_case(request->map_header, "User-Agent"));
         if (client_data_webradio->audio_stream->nb_client_connected >= TALIESIN_PLAYLIST_CLIENT_MAX) {
@@ -1130,17 +1131,17 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
             } else {
               client_data_webradio->buffer_offset = 0;
             }
-            if (ulfius_set_stream_response(response, 200, u_webradio_stream, u_webradio_stream_free, U_STREAM_SIZE_UNKOWN, client_data_webradio->audio_stream->stream_bitrate / 8, client_data_webradio) == U_OK) {
+            if (ulfius_set_stream_response(response, 200, u_webradio_stream, u_webradio_stream_free, U_STREAM_SIZE_UNKOWN, client_data_webradio->audio_stream->audio_bitrate / 8, client_data_webradio) == U_OK) {
               pthread_setname_np(pthread_self(), request->http_url);
-              if (0 == o_strcmp(client_data_webradio->audio_stream->stream_format, "vorbis")) {
+              if (0 == o_strcmp(client_data_webradio->audio_stream->audio_format, "vorbis")) {
                 u_map_put(response->map_header, "Content-Type", "application/ogg");
-              } else if (0 == o_strcmp(client_data_webradio->audio_stream->stream_format, "flac")) {
+              } else if (0 == o_strcmp(client_data_webradio->audio_stream->audio_format, "flac")) {
                 u_map_put(response->map_header, "Content-Type", "audio/flac");
               } else {
                 u_map_put(response->map_header, "Content-Type", "audio/mpeg");
               }
               if (!client_data_webradio->metadata_send) {
-                snprintf(metaint, 16, "%d", client_data_webradio->audio_stream->stream_bitrate / 8 * TALIESIN_STREAM_METADATA_INTERVAL);
+                snprintf(metaint, 16, "%d", client_data_webradio->audio_stream->audio_bitrate / 8 * TALIESIN_STREAM_METADATA_INTERVAL);
                 u_map_put(response->map_header, "icy-metaint", metaint);
               }
             } else {
@@ -1167,53 +1168,119 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
     if (u_map_get_case(request->map_url, "index") != NULL) {
       file = file_list_get_file(current_jukebox->file_list, jukebox_index);
       if (file != NULL) {
-        client_data_jukebox = o_malloc(sizeof(struct _client_data_jukebox));
-        if (client_data_jukebox != NULL) {
-          if (init_client_data_jukebox(client_data_jukebox) == T_OK) {
-            client_data_jukebox->jukebox = current_jukebox;
-            o_strcpy(client_data_jukebox->stream_name, u_map_get(request->map_url, "stream_name"));
-            client_data_jukebox->server_remote_address = config->server_remote_address;
-            client_data_jukebox->api_prefix = config->api_prefix;
-            client_data_jukebox->audio_buffer = o_malloc(sizeof(struct _jukebox_audio_buffer));
-            if (client_data_jukebox->audio_buffer != NULL && jukebox_audio_buffer_init(client_data_jukebox->audio_buffer) == T_OK) {
-              client_data_jukebox->audio_buffer->client_address = get_ip_source(request);
-              client_data_jukebox->audio_buffer->user_agent = o_strdup(u_map_get_case(request->map_header, "User-Agent"));
-              client_data_jukebox->audio_buffer->file = file;
-              client_data_jukebox->audio_buffer->jukebox = current_jukebox;
-              ret_thread_jukebox = pthread_create(&thread_jukebox, NULL, jukebox_run_thread, (void *)client_data_jukebox);
-              detach_thread_jukebox = pthread_detach(thread_jukebox);
-              if (ret_thread_jukebox || detach_thread_jukebox) {
-                y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread jukebox");
-                response->status = 500;
-              } else {
-                client_data_jukebox->client_present = 1;
-                client_data_jukebox->audio_buffer->status = TALIESIN_STREAM_TRANSCODE_STATUS_STARTED;
-                if (ulfius_set_stream_response(response, 200, u_jukebox_stream, u_jukebox_stream_free, U_STREAM_SIZE_UNKOWN, current_jukebox->stream_bitrate / 8, client_data_jukebox) == U_OK) {
-                  current_jukebox->nb_client++;
-                  time(&current_jukebox->last_seen);
-                  if (0 == o_strcmp(current_jukebox->stream_format, "vorbis")) {
-                    u_map_put(response->map_header, "Content-Type", "application/ogg");
-                  } else if (0 == o_strcmp(current_jukebox->stream_format, "flac")) {
-                    u_map_put(response->map_header, "Content-Type", "audio/flac");
+        j_media = media_get_by_id(config, file->tm_id);
+        if (check_result_value(j_media, T_OK)) {
+          if (o_strcmp(json_string_value(json_object_get(json_object_get(j_media, "media"), "type")), "video") == 0) {
+            // Stream video file
+            y_log_message(Y_LOG_LEVEL_DEBUG, "This is a video file");
+            client_data_jukebox = o_malloc(sizeof(struct _client_data_jukebox));
+            if (client_data_jukebox != NULL) {
+              if (init_client_data_jukebox(client_data_jukebox) == T_OK) {
+                client_data_jukebox->jukebox = current_jukebox;
+                o_strcpy(client_data_jukebox->stream_name, u_map_get(request->map_url, "stream_name"));
+                client_data_jukebox->server_remote_address = config->server_remote_address;
+                client_data_jukebox->api_prefix = config->api_prefix;
+                client_data_jukebox->audio_buffer = NULL;
+                client_data_jukebox->video_buffer = o_malloc(sizeof(struct _jukebox_audio_buffer));
+                if (client_data_jukebox->video_buffer != NULL && jukebox_video_buffer_init(client_data_jukebox->video_buffer) == T_OK) {
+                  client_data_jukebox->video_buffer->client_address = get_ip_source(request);
+                  client_data_jukebox->video_buffer->user_agent = o_strdup(u_map_get_case(request->map_header, "User-Agent"));
+                  client_data_jukebox->video_buffer->file = file;
+                  client_data_jukebox->video_buffer->jukebox = current_jukebox;
+                  ret_thread_jukebox = pthread_create(&thread_jukebox, NULL, jukebox_run_thread, (void *)client_data_jukebox);
+                  detach_thread_jukebox = pthread_detach(thread_jukebox);
+                  if (ret_thread_jukebox || detach_thread_jukebox) {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread jukebox");
+                    response->status = 500;
                   } else {
-                    u_map_put(response->map_header, "Content-Type", "audio/mpeg");
+                    client_data_jukebox->client_present = 1;
+                    client_data_jukebox->video_buffer->status = TALIESIN_STREAM_TRANSCODE_STATUS_STARTED;
+                    if (ulfius_set_stream_response(response, 200, u_jukebox_stream, u_jukebox_stream_free, U_STREAM_SIZE_UNKOWN, current_jukebox->audio_bitrate / 8, client_data_jukebox) == U_OK) {
+                      current_jukebox->nb_client++;
+                      time(&current_jukebox->last_seen);
+                      /*if (0 == o_strcmp(current_jukebox->audio_format, "vorbis")) {
+                        u_map_put(response->map_header, "Content-Type", "application/ogg");
+                      } else if (0 == o_strcmp(current_jukebox->audio_format, "flac")) {
+                        u_map_put(response->map_header, "Content-Type", "audio/flac");
+                      } else {
+                        u_map_put(response->map_header, "Content-Type", "audio/mpeg");
+                      }*/
+                    } else {
+                      client_data_jukebox->client_present = 0;
+                      y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error ulfius_set_stream_response");
+                      response->status = 500;
+                    }
                   }
                 } else {
-                  client_data_jukebox->client_present = 0;
-                  y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error ulfius_set_stream_response");
+                  y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error initializing client_data_jukebox->video_buffer");
                   response->status = 500;
                 }
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error initializing client_data_jukebox");
+                response->status = 500;
               }
             } else {
-              y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error initializing client_data_jukebox->audio_buffer");
+              y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error allocating resources for client_data_jukebox");
+              response->status = 500;
+            }
+          } else if (o_strcmp(json_string_value(json_object_get(json_object_get(j_media, "media"), "type")), "audio") == 0) {
+            // Stream audio file
+            client_data_jukebox = o_malloc(sizeof(struct _client_data_jukebox));
+            if (client_data_jukebox != NULL) {
+              if (init_client_data_jukebox(client_data_jukebox) == T_OK) {
+                client_data_jukebox->jukebox = current_jukebox;
+                o_strcpy(client_data_jukebox->stream_name, u_map_get(request->map_url, "stream_name"));
+                client_data_jukebox->server_remote_address = config->server_remote_address;
+                client_data_jukebox->api_prefix = config->api_prefix;
+                client_data_jukebox->audio_buffer = o_malloc(sizeof(struct _jukebox_audio_buffer));
+                client_data_jukebox->video_buffer = NULL;
+                if (client_data_jukebox->audio_buffer != NULL && jukebox_audio_buffer_init(client_data_jukebox->audio_buffer) == T_OK) {
+                  client_data_jukebox->audio_buffer->client_address = get_ip_source(request);
+                  client_data_jukebox->audio_buffer->user_agent = o_strdup(u_map_get_case(request->map_header, "User-Agent"));
+                  client_data_jukebox->audio_buffer->file = file;
+                  client_data_jukebox->audio_buffer->jukebox = current_jukebox;
+                  ret_thread_jukebox = pthread_create(&thread_jukebox, NULL, jukebox_run_thread, (void *)client_data_jukebox);
+                  detach_thread_jukebox = pthread_detach(thread_jukebox);
+                  if (ret_thread_jukebox || detach_thread_jukebox) {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread jukebox");
+                    response->status = 500;
+                  } else {
+                    client_data_jukebox->client_present = 1;
+                    client_data_jukebox->audio_buffer->status = TALIESIN_STREAM_TRANSCODE_STATUS_STARTED;
+                    if (ulfius_set_stream_response(response, 200, u_jukebox_stream, u_jukebox_stream_free, U_STREAM_SIZE_UNKOWN, current_jukebox->audio_bitrate / 8, client_data_jukebox) == U_OK) {
+                      current_jukebox->nb_client++;
+                      time(&current_jukebox->last_seen);
+                      if (0 == o_strcmp(current_jukebox->audio_format, "vorbis")) {
+                        u_map_put(response->map_header, "Content-Type", "application/ogg");
+                      } else if (0 == o_strcmp(current_jukebox->audio_format, "flac")) {
+                        u_map_put(response->map_header, "Content-Type", "audio/flac");
+                      } else {
+                        u_map_put(response->map_header, "Content-Type", "audio/mpeg");
+                      }
+                    } else {
+                      client_data_jukebox->client_present = 0;
+                      y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error ulfius_set_stream_response");
+                      response->status = 500;
+                    }
+                  }
+                } else {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error initializing client_data_jukebox->audio_buffer");
+                  response->status = 500;
+                }
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error initializing client_data_jukebox");
+                response->status = 500;
+              }
+            } else {
+              y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error allocating resources for client_data_jukebox");
               response->status = 500;
             }
           } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error initializing client_data_jukebox");
+            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Unable to stream media type '%s'", json_string_value(json_object_get(json_object_get(j_media, "media"), "type")));
             response->status = 500;
           }
         } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error allocating resources for client_data_jukebox");
+          y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error media_get_by_id for id %"JSON_INTEGER_FORMAT, file->tm_id);
           response->status = 500;
         }
       } else {
@@ -2179,25 +2246,25 @@ int callback_taliesin_playlist_load (const struct _u_request * request, struct _
   if (check_result_value(j_playlist, T_OK)) {
     if (json_array_size(json_object_get(json_object_get(j_playlist, "playlist"), "media"))) {
       format = u_map_get(request->map_url, "format");
-      channels = u_map_get(request->map_url, "channels")!=NULL?strtol(u_map_get(request->map_url, "channels"), NULL, 10):TALIESIN_STREAM_DEFAULT_CHANNELS;
-      sample_rate = u_map_get(request->map_url, "samplerate")!=NULL?strtol(u_map_get(request->map_url, "samplerate"), NULL, 10):TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
+      channels = u_map_get(request->map_url, "channels")!=NULL?strtol(u_map_get(request->map_url, "channels"), NULL, 10):TALIESIN_AUDIO_STREAM_DEFAULT_CHANNELS;
+      sample_rate = u_map_get(request->map_url, "samplerate")!=NULL?strtol(u_map_get(request->map_url, "samplerate"), NULL, 10):TALIESIN_AUDIO_STREAM_DEFAULT_SAMPLE_RATE;
       if (0 == o_strcmp(format, "flac")) {
-        bit_rate = TALIESIN_STREAM_FLAC_BIT_RATE;
+        bit_rate = TALIESIN_AUDIO_STREAM_FLAC_BIT_RATE;
       } else {
-        bit_rate = u_map_get(request->map_url, "bitrate")!=NULL?strtol(u_map_get(request->map_url, "bitrate"), NULL, 10):TALIESIN_STREAM_DEFAULT_BIT_RATE;
+        bit_rate = u_map_get(request->map_url, "bitrate")!=NULL?strtol(u_map_get(request->map_url, "bitrate"), NULL, 10):TALIESIN_AUDIO_STREAM_DEFAULT_BIT_RATE;
       }
       
       if (format == NULL) {
-        format = TALIESIN_STREAM_DEFAULT_FORMAT;
+        format = TALIESIN_AUDIO_STREAM_DEFAULT_FORMAT;
       }
       if (!channels) {
-        sample_rate = TALIESIN_STREAM_DEFAULT_CHANNELS;
+        sample_rate = TALIESIN_AUDIO_STREAM_DEFAULT_CHANNELS;
       }
       if (!sample_rate) {
-        channels = TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
+        channels = TALIESIN_AUDIO_STREAM_DEFAULT_SAMPLE_RATE;
       }
       if (!bit_rate) {
-        bit_rate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
+        bit_rate = TALIESIN_AUDIO_STREAM_DEFAULT_BIT_RATE;
       }
       j_valid = is_stream_parameters_valid((u_map_get(request->map_url, "webradio") != NULL), format, channels, sample_rate, bit_rate);
       if (j_valid != NULL && json_array_size(j_valid) == 0) {

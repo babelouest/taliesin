@@ -23,7 +23,7 @@
 
 #include "taliesin.h"
 
-int jukebox_init(struct _t_jukebox * jukebox, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate) {
+int jukebox_init(struct _t_jukebox * jukebox, const char * audio_format, unsigned short audio_channels, unsigned int audio_sample_rate, unsigned int audio_bitrate, const char * video_format, unsigned int video_bitrate, unsigned int video_width, unsigned int video_height) {
   pthread_mutexattr_t mutexattr;
   int res;
   
@@ -32,10 +32,14 @@ int jukebox_init(struct _t_jukebox * jukebox, const char * format, unsigned shor
     rand_string(jukebox->name, TALIESIN_PLAYLIST_NAME_LENGTH);
     jukebox->nb_jukebox_audio_buffer = 0;
     jukebox->jukebox_audio_buffer = NULL;
-    jukebox->stream_format = o_strdup(format);
-    jukebox->stream_channels = channels;
-    jukebox->stream_sample_rate = sample_rate;
-    jukebox->stream_bitrate = bit_rate;
+    jukebox->audio_format = o_strdup(audio_format);
+    jukebox->audio_channels = audio_channels;
+    jukebox->audio_sample_rate = audio_sample_rate;
+    jukebox->audio_bitrate = audio_bitrate;
+    jukebox->video_format = o_strdup(video_format);
+    jukebox->video_bitrate = video_bitrate;
+    jukebox->video_width = video_width;
+    jukebox->video_height = video_height;
     jukebox->playlist_name = NULL;
     jukebox->tpl_id = 0;
     jukebox->nb_client = 0;
@@ -85,7 +89,8 @@ void jukebox_clean(struct _t_jukebox * jukebox) {
     }
     o_free(jukebox->username);
     o_free(jukebox->display_name);
-    o_free(jukebox->stream_format);
+    o_free(jukebox->audio_format);
+    o_free(jukebox->video_format);
     o_free(jukebox->playlist_name);
     o_free(jukebox);
   }
@@ -121,12 +126,53 @@ int jukebox_audio_buffer_init (struct _jukebox_audio_buffer * jukebox_audio_buff
   }
 }
 
+int jukebox_video_buffer_init (struct _jukebox_video_buffer * jukebox_video_buffer) {
+  pthread_mutexattr_t mutexattr;
+  if (jukebox_video_buffer != NULL) {
+    jukebox_video_buffer->size = 0;
+    jukebox_video_buffer->max_size = 0;
+    jukebox_video_buffer->complete = 0;
+    jukebox_video_buffer->data = NULL;
+    jukebox_video_buffer->file = NULL;
+    jukebox_video_buffer->jukebox = NULL;
+    jukebox_video_buffer->client_address = NULL;
+    jukebox_video_buffer->user_agent = NULL;
+    if (!pthread_mutex_init(&jukebox_video_buffer->stream_lock, NULL) &&
+        !pthread_cond_init(&jukebox_video_buffer->stream_cond, NULL) &&
+        !pthread_mutex_init(&jukebox_video_buffer->wait_lock, NULL) &&
+        !pthread_cond_init(&jukebox_video_buffer->wait_cond, NULL)) {
+        pthread_mutexattr_init ( &mutexattr );
+        pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_RECURSIVE );
+        if (!pthread_mutex_init(&jukebox_video_buffer->write_lock, &mutexattr)) {
+          return T_OK;
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_audio_buffer_init - Error init write_lock");
+          return T_ERROR;
+        }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_audio_buffer_init - Error init mutex");
+      return T_ERROR;
+    }
+  } else {
+    return T_ERROR_PARAM;
+  }
+}
+
 void jukebox_audio_buffer_clean (struct _jukebox_audio_buffer * jukebox_audio_buffer) {
   if (jukebox_audio_buffer != NULL) {
     o_free(jukebox_audio_buffer->data);
     o_free(jukebox_audio_buffer->client_address);
     o_free(jukebox_audio_buffer->user_agent);
     o_free(jukebox_audio_buffer);
+  }
+}
+
+void jukebox_video_buffer_clean (struct _jukebox_video_buffer * jukebox_video_buffer) {
+  if (jukebox_video_buffer != NULL) {
+    o_free(jukebox_video_buffer->data);
+    o_free(jukebox_video_buffer->client_address);
+    o_free(jukebox_video_buffer->user_agent);
+    o_free(jukebox_video_buffer);
   }
 }
 
@@ -295,13 +341,13 @@ static int jukebox_add_db_stream(struct config_elements * config, struct _t_juke
                         "ts_webradio",
                         json_false(),
                         "ts_format",
-                        jukebox->stream_format,
+                        jukebox->audio_format,
                         "ts_channels",
-                        jukebox->stream_channels,
+                        jukebox->audio_channels,
                         "ts_sample_rate",
-                        jukebox->stream_sample_rate,
+                        jukebox->audio_sample_rate,
                         "ts_bitrate",
-                        jukebox->stream_bitrate);
+                        jukebox->audio_bitrate);
   res = h_insert(config->conn, j_query, NULL);
   json_decref(j_query);
   if (res == H_OK) {
@@ -446,7 +492,7 @@ json_t * add_jukebox_from_path(struct config_elements * config, json_t * j_data_
         config->nb_jukebox++;
         config->jukebox_set[jukebox_index] = o_malloc(sizeof(struct _t_jukebox));
         if (config->jukebox_set[jukebox_index] != NULL) {
-          if (jukebox_init(config->jukebox_set[jukebox_index], format, channels, sample_rate, bit_rate) == T_OK) {
+          if (jukebox_init(config->jukebox_set[jukebox_index], format, channels, sample_rate, bit_rate, NULL, 0, 0, 0) == T_OK) {
             if (name == NULL) {
               display_name = strrchr(path, '/')!=NULL?(strrchr(path, '/') + 1):path;
             } else {
@@ -530,7 +576,7 @@ json_t * add_jukebox_from_playlist(struct config_elements * config, json_t * j_p
       config->nb_jukebox++;
       config->jukebox_set[jukebox_index] = o_malloc(sizeof(struct _t_jukebox));
       if (config->jukebox_set[jukebox_index] != NULL) {
-        if (jukebox_init(config->jukebox_set[jukebox_index], format, channels, sample_rate, bit_rate) == T_OK) {
+        if (jukebox_init(config->jukebox_set[jukebox_index], format, channels, sample_rate, bit_rate, NULL, 0, 0, 0) == T_OK) {
           config->jukebox_set[jukebox_index]->config = config;
           config->jukebox_set[jukebox_index]->username = o_strdup(username);
           if (name == NULL) {
@@ -607,7 +653,7 @@ int add_jukebox_from_db_stream(struct config_elements * config, json_t * j_strea
       config->nb_jukebox++;
       config->jukebox_set[jukebox_index] = o_malloc(sizeof(struct _t_jukebox));
       if (config->jukebox_set[jukebox_index] != NULL) {
-        if (jukebox_init(config->jukebox_set[jukebox_index], json_string_value(json_object_get(j_stream, "format")), json_integer_value(json_object_get(j_stream, "channels")), json_integer_value(json_object_get(j_stream, "sample_rate")), json_integer_value(json_object_get(j_stream, "bitrate"))) == T_OK) {
+        if (jukebox_init(config->jukebox_set[jukebox_index], json_string_value(json_object_get(j_stream, "format")), json_integer_value(json_object_get(j_stream, "channels")), json_integer_value(json_object_get(j_stream, "sample_rate")), json_integer_value(json_object_get(j_stream, "bitrate")), NULL, 0, 0, 0) == T_OK) {
           config->jukebox_set[jukebox_index]->config = config;
           config->jukebox_set[jukebox_index]->username = json_object_get(j_stream, "username")!=json_null()?o_strdup(json_string_value(json_object_get(j_stream, "username"))):NULL;
           o_strcpy(config->jukebox_set[jukebox_index]->name, json_string_value(json_object_get(j_stream, "name")));
@@ -747,13 +793,13 @@ json_t * jukebox_get_info(struct _t_jukebox * jukebox) {
                             "elements",
                             jukebox->file_list->nb_files,
                             "format",
-                            jukebox->stream_format,
+                            jukebox->audio_format,
                             "stereo",
-                            jukebox->stream_channels==2?json_true():json_false(),
+                            jukebox->audio_channels==2?json_true():json_false(),
                             "sample_rate",
-                            jukebox->stream_sample_rate,
+                            jukebox->audio_sample_rate,
                             "bitrate",
-                            jukebox->stream_bitrate,
+                            jukebox->audio_bitrate,
                             "nb_client",
                             jukebox->nb_client,
                             "last_seen",

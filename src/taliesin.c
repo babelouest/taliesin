@@ -96,10 +96,14 @@ int main (int argc, char ** argv) {
     fprintf(stderr, "Error setting playlist_lock\n");
     return 1;
   }
-  config->stream_format = o_strdup(TALIESIN_STREAM_DEFAULT_FORMAT);
-  config->stream_channels = TALIESIN_STREAM_DEFAULT_CHANNELS;
-  config->stream_sample_rate = TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
-  config->stream_bitrate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
+  config->audio_format = o_strdup(TALIESIN_AUDIO_STREAM_DEFAULT_FORMAT);
+  config->audio_channels = TALIESIN_AUDIO_STREAM_DEFAULT_CHANNELS;
+  config->audio_sample_rate = TALIESIN_AUDIO_STREAM_DEFAULT_SAMPLE_RATE;
+  config->audio_bitrate = TALIESIN_AUDIO_STREAM_DEFAULT_BIT_RATE;
+  config->video_format = o_strdup(TALIESIN_VIDEO_STREAM_DEFAULT_FORMAT);
+  config->video_bitrate = TALIESIN_VIDEO_STREAM_DEFAULT_BIT_RATE;
+  config->video_width = TALIESIN_VIDEO_STREAM_DEFAULT_WIDTH;
+  config->video_height = TALIESIN_VIDEO_STREAM_DEFAULT_HEIGHT;
 #ifndef DISABLE_OAUTH2
   if (config->instance == NULL || config->glewlwyd_resource_config == NULL || config->static_file_config == NULL) {
 #else
@@ -357,7 +361,8 @@ void exit_server(struct config_elements ** config, int exit_value) {
     o_free((*config)->glewlwyd_resource_config->jwt_decode_key);
     o_free((*config)->glewlwyd_resource_config);
 #endif
-    o_free((*config)->stream_format);
+    o_free((*config)->audio_format);
+    o_free((*config)->video_format);
     free_string_array((*config)->audio_file_extension);
     free_string_array((*config)->video_file_extension);
     free_string_array((*config)->subtitle_file_extension);
@@ -577,8 +582,9 @@ int build_config_from_file(struct config_elements * config) {
   const char * cur_server_remote_address, * cur_prefix, * cur_log_mode, * cur_log_level, * cur_log_file = NULL, * one_log_mode, * cur_allow_origin,
              * db_type, * db_sqlite_path, * db_mariadb_host = NULL, * db_mariadb_user = NULL,
              * db_mariadb_password = NULL, * db_mariadb_dbname = NULL, * cur_static_files_path = NULL,
-             * cur_oauth_scope_user = NULL, * cur_oauth_scope_admin = NULL, * extension = NULL, * mime_type_value = NULL, * cur_stream_format = NULL;
-  int db_mariadb_port = 0, cur_stream_channels = 0, cur_stream_sample_rate = 0, cur_stream_bit_rate = 0, cur_use_oauth2_authentication = 1, cur_user_can_create_data_source = 0, i = 0;
+             * cur_oauth_scope_user = NULL, * cur_oauth_scope_admin = NULL, * extension = NULL, * mime_type_value = NULL, * cur_audio_format = NULL, * cur_video_format = NULL;
+  int db_mariadb_port = 0, cur_audio_channels = 0, cur_audio_sample_rate = 0, cur_audio_bitrate = 0, cur_video_bitrate = 0, cur_video_width = 0, cur_video_height = 0,
+      cur_use_oauth2_authentication = 1, cur_user_can_create_data_source = 0, i = 0;
 #ifndef DISABLE_OAUTH2
   config_setting_t * jwt;
   const char * cur_rsa_pub_file = NULL, * cur_ecdsa_pub_file = NULL, * cur_sha_secret = NULL;
@@ -884,50 +890,78 @@ int build_config_from_file(struct config_elements * config) {
   }
 #endif
   
-  if (config_lookup_string(&cfg, "stream_format", &cur_stream_format)) {
-    if (0 == o_strcasecmp(cur_stream_format, "mp3") || 0 == o_strcasecmp(cur_stream_format, "vorbis") || 0 == o_strcasecmp(cur_stream_format, "flac")) {
-      o_free(config->stream_format);
-      config->stream_format = o_strdup(cur_stream_format);
-      if (config->stream_format == NULL) {
-        fprintf(stderr, "Error allocating resources for stream_format, exiting\n");
+  if (config_lookup_string(&cfg, "audio_format", &cur_audio_format)) {
+    if (0 == o_strcasecmp(cur_audio_format, "mp3") || 0 == o_strcasecmp(cur_audio_format, "vorbis") || 0 == o_strcasecmp(cur_audio_format, "flac")) {
+      o_free(config->audio_format);
+      config->audio_format = o_strdup(cur_audio_format);
+      if (config->audio_format == NULL) {
+        fprintf(stderr, "Error allocating resources for audio_format, exiting\n");
         config_destroy(&cfg);
         return 0;
       }
     } else {
-      fprintf(stderr, "Error stream_format unknown, use values 'mp3', 'vorbis' or 'flac'\n");
+      fprintf(stderr, "Error audio_format unknown, use values 'mp3', 'vorbis' or 'flac'\n");
       config_destroy(&cfg);
       return 0;
     }
   }
   
-  if (config_lookup_int(&cfg, "stream_channels", &cur_stream_channels) == CONFIG_TRUE) {
-    if (cur_stream_channels == 1 || cur_stream_channels == 2) {
-      config->stream_channels = cur_stream_channels;
+  if (config_lookup_int(&cfg, "audio_channels", &cur_audio_channels) == CONFIG_TRUE) {
+    if (cur_audio_channels == 1 || cur_audio_channels == 2) {
+      config->audio_channels = cur_audio_channels;
     } else {
-      fprintf(stderr, "Error stream_channels, use values 1 or 2\n");
+      fprintf(stderr, "Error audio_channels, use values 1 or 2\n");
       config_destroy(&cfg);
       return 0;
     }
   }
   
-  if (config_lookup_int(&cfg, "stream_sample_rate", &cur_stream_sample_rate) == CONFIG_TRUE) {
-    if (cur_stream_sample_rate != 8000 && cur_stream_sample_rate != 11025 && cur_stream_sample_rate != 22050 && cur_stream_sample_rate != 32000 && cur_stream_sample_rate != 44100 && cur_stream_sample_rate != 48000) {
-      fprintf(stderr, "Error stream_sample_rate, use values 8000, 11025, 22050, 32000, 44100 or 48000\n");
+  if (config_lookup_int(&cfg, "audio_sample_rate", &cur_audio_sample_rate) == CONFIG_TRUE) {
+    if (cur_audio_sample_rate != 8000 && cur_audio_sample_rate != 11025 && cur_audio_sample_rate != 22050 && cur_audio_sample_rate != 32000 && cur_audio_sample_rate != 44100 && cur_audio_sample_rate != 48000) {
+      fprintf(stderr, "Error audio_sample_rate, use values 8000, 11025, 22050, 32000, 44100 or 48000\n");
       config_destroy(&cfg);
       return 0;
     } else {
-      config->stream_sample_rate = cur_stream_sample_rate;
+      config->audio_sample_rate = cur_audio_sample_rate;
     }
   }
   
-  if (config_lookup_int(&cfg, "stream_bitrate", &cur_stream_bit_rate) == CONFIG_TRUE) {
-    if (0 != o_strcasecmp("flac", config->stream_format) && cur_stream_bit_rate != 32000 && cur_stream_bit_rate != 96000 && cur_stream_bit_rate != 128000 && cur_stream_bit_rate != 192000 && cur_stream_bit_rate != 256000 && cur_stream_bit_rate != 320000) {
-      fprintf(stderr, "Error stream_bitrate, use values 32000, 96000, 128000, 192000, 256000 or 320000\n");
+  if (config_lookup_int(&cfg, "audio_bitrate", &cur_audio_bitrate) == CONFIG_TRUE) {
+    if (0 != o_strcasecmp("flac", config->audio_format) && cur_audio_bitrate != 32000 && cur_audio_bitrate != 96000 && cur_audio_bitrate != 128000 && cur_audio_bitrate != 192000 && cur_audio_bitrate != 256000 && cur_audio_bitrate != 320000) {
+      fprintf(stderr, "Error audio_bitrate, use values 32000, 96000, 128000, 192000, 256000 or 320000\n");
       config_destroy(&cfg);
       return 0;
     } else {
-      config->stream_bitrate = cur_stream_bit_rate;
+      config->audio_bitrate = cur_audio_bitrate;
     }
+  }
+  
+  if (config_lookup_string(&cfg, "video_format", &cur_video_format)) {
+    if (0 == o_strcasecmp(cur_video_format, "webm") || 0 == o_strcasecmp(cur_video_format, "h264")) {
+      o_free(config->video_format);
+      config->video_format = o_strdup(cur_video_format);
+      if (config->video_format == NULL) {
+        fprintf(stderr, "Error allocating resources for video_format, exiting\n");
+        config_destroy(&cfg);
+        return 0;
+      }
+    } else {
+      fprintf(stderr, "Error video_format unknown, use values 'webm' or 'h264'\n");
+      config_destroy(&cfg);
+      return 0;
+    }
+  }
+  
+  if (config_lookup_int(&cfg, "video_bitrate", &cur_video_bitrate) == CONFIG_TRUE) {
+    config->video_bitrate = cur_video_bitrate;
+  }
+  
+  if (config_lookup_int(&cfg, "video_width", &cur_video_width) == CONFIG_TRUE) {
+    config->video_width = cur_video_width;
+  }
+  
+  if (config_lookup_int(&cfg, "video_height", &cur_video_height) == CONFIG_TRUE) {
+    config->video_height = cur_video_height;
   }
   
   if (config_lookup_bool(&cfg, "user_can_create_data_source", &cur_user_can_create_data_source) == CONFIG_TRUE) {

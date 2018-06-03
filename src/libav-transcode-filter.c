@@ -439,15 +439,15 @@ int webradio_open_output_buffer(struct _audio_stream * audio_stream) {
         y_log_message(Y_LOG_LEVEL_ERROR, "Could not find output format '%s'", format);
         error = AVERROR(ENOMEM);
       } else {
-        avctx->channels       = audio_stream->stream_channels;
-        avctx->channel_layout = av_get_default_channel_layout(audio_stream->stream_channels);
-        avctx->sample_rate    = audio_stream->stream_sample_rate;
+        avctx->channels       = audio_stream->audio_channels;
+        avctx->channel_layout = av_get_default_channel_layout(audio_stream->audio_channels);
+        avctx->sample_rate    = audio_stream->audio_sample_rate;
         avctx->sample_fmt     = output_codec->sample_fmts[0];
-        if (0 != o_strcasecmp("flac", audio_stream->stream_format)) {
-          avctx->bit_rate     = audio_stream->stream_bitrate;
+        if (0 != o_strcasecmp("flac", audio_stream->audio_format)) {
+          avctx->bit_rate     = audio_stream->audio_bitrate;
         }
         avctx->strict_std_compliance = FF_COMPLIANCE_NORMAL;
-        stream->time_base.den = audio_stream->stream_sample_rate;
+        stream->time_base.den = audio_stream->audio_sample_rate;
         stream->time_base.num = 1;
 
         if ((error = avcodec_open2(avctx, output_codec, NULL)) < 0) {
@@ -610,23 +610,23 @@ int open_output_buffer_jukebox(struct _jukebox_audio_buffer * jukebox_audio_buff
   size_t avio_ctx_buffer_size     = 4096;
   char format[8]                  = {0};
   
-  if (0 == o_strcasecmp("vorbis", jukebox_audio_buffer->jukebox->stream_format)) {
+  if (0 == o_strcasecmp("vorbis", jukebox_audio_buffer->jukebox->audio_format)) {
     codec_id = AV_CODEC_ID_VORBIS;
     o_strcpy(format, "ogg");
-  } else if (0 == o_strcasecmp("flac", jukebox_audio_buffer->jukebox->stream_format)) {
+  } else if (0 == o_strcasecmp("flac", jukebox_audio_buffer->jukebox->audio_format)) {
     codec_id = AV_CODEC_ID_FLAC;
     o_strcpy(format, "flac");
-  } else if (0 == o_strcasecmp("mp3", jukebox_audio_buffer->jukebox->stream_format)) {
+  } else if (0 == o_strcasecmp("mp3", jukebox_audio_buffer->jukebox->audio_format)) {
     codec_id = AV_CODEC_ID_MP3;
     o_strcpy(format, "mp3");
-  } else if (0 == o_strcasecmp("h264", jukebox_audio_buffer->jukebox->stream_format)) {
+  } else if (0 == o_strcasecmp("h264", jukebox_audio_buffer->jukebox->audio_format)) {
     codec_id = AV_CODEC_ID_H264;
     o_strcpy(format, "mp4");
-  } else if (0 == o_strcasecmp("vp8", jukebox_audio_buffer->jukebox->stream_format)) {
+  } else if (0 == o_strcasecmp("vp8", jukebox_audio_buffer->jukebox->audio_format)) {
     codec_id = AV_CODEC_ID_VP8;
     o_strcpy(format, "webm");
   } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "Error unsupported format: %s", jukebox_audio_buffer->jukebox->stream_format);
+    y_log_message(Y_LOG_LEVEL_ERROR, "Error unsupported format: %s", jukebox_audio_buffer->jukebox->audio_format);
     error = AVERROR(ENOMEM);
   }
   
@@ -654,15 +654,15 @@ int open_output_buffer_jukebox(struct _jukebox_audio_buffer * jukebox_audio_buff
         y_log_message(Y_LOG_LEVEL_ERROR, "Could not find output format '%s'", format);
         error = AVERROR(ENOMEM);
       } else {
-        avctx->channels       = jukebox_audio_buffer->jukebox->stream_channels;
-        avctx->channel_layout = av_get_default_channel_layout(jukebox_audio_buffer->jukebox->stream_channels);
-        avctx->sample_rate    = jukebox_audio_buffer->jukebox->stream_sample_rate;
+        avctx->channels       = jukebox_audio_buffer->jukebox->audio_channels;
+        avctx->channel_layout = av_get_default_channel_layout(jukebox_audio_buffer->jukebox->audio_channels);
+        avctx->sample_rate    = jukebox_audio_buffer->jukebox->audio_sample_rate;
         avctx->sample_fmt     = output_codec->sample_fmts[0];
-        if (0 != o_strcasecmp("flac", jukebox_audio_buffer->jukebox->stream_format)) {
-          avctx->bit_rate     = jukebox_audio_buffer->jukebox->stream_bitrate;
+        if (0 != o_strcasecmp("flac", jukebox_audio_buffer->jukebox->audio_format)) {
+          avctx->bit_rate     = jukebox_audio_buffer->jukebox->audio_bitrate;
         }
         avctx->strict_std_compliance = FF_COMPLIANCE_NORMAL;
-        stream->time_base.den = jukebox_audio_buffer->jukebox->stream_sample_rate;
+        stream->time_base.den = jukebox_audio_buffer->jukebox->audio_sample_rate;
         stream->time_base.num = 1;
 
         if ((error = avcodec_open2(avctx, output_codec, NULL)) < 0) {

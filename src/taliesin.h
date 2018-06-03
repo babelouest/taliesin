@@ -96,11 +96,17 @@
 #define TALIESIN_TAG_KEY_LENGTH       128
 #define TALIESIN_TAG_VALUE_LENGTH     1024
 
-#define TALIESIN_STREAM_DEFAULT_FORMAT               "mp3"
-#define TALIESIN_STREAM_DEFAULT_CHANNELS             2
-#define TALIESIN_STREAM_DEFAULT_SAMPLE_RATE          44100
-#define TALIESIN_STREAM_DEFAULT_BIT_RATE             128000
-#define TALIESIN_STREAM_FLAC_BIT_RATE                1411000
+#define TALIESIN_AUDIO_STREAM_DEFAULT_FORMAT      "mp3"
+#define TALIESIN_AUDIO_STREAM_DEFAULT_CHANNELS    2
+#define TALIESIN_AUDIO_STREAM_DEFAULT_SAMPLE_RATE 44100
+#define TALIESIN_AUDIO_STREAM_DEFAULT_BIT_RATE    128000
+#define TALIESIN_AUDIO_STREAM_FLAC_BIT_RATE       1411000
+
+#define TALIESIN_VIDEO_STREAM_DEFAULT_FORMAT   "webm"
+#define TALIESIN_VIDEO_STREAM_DEFAULT_BIT_RATE 500000
+#define TALIESIN_VIDEO_STREAM_DEFAULT_WIDTH    0
+#define TALIESIN_VIDEO_STREAM_DEFAULT_HEIGHT   0
+
 #define TALIESIN_STREAM_BUFFER_MAX                   3
 #define TALIESIN_PLAYLIST_CLIENT_MAX                 3
 #define TALIESIN_STREAM_METADATA_INTERVAL            5
@@ -257,10 +263,10 @@ struct _audio_stream {
   AVAudioFifo                    * fifo;
   int64_t                          pts;
 
-  char                           * stream_format;
-  unsigned short int               stream_channels;
-  unsigned int                     stream_sample_rate;
-  unsigned int                     stream_bitrate;
+  char                           * audio_format;
+  unsigned short int               audio_channels;
+  unsigned int                     audio_sample_rate;
+  unsigned int                     audio_bitrate;
 };
 
 struct _t_webradio {
@@ -319,6 +325,7 @@ struct _client_data_webradio {
 
 struct _client_data_jukebox {
   struct _jukebox_audio_buffer  * audio_buffer;
+  struct _jukebox_video_buffer  * video_buffer;
   struct _t_jukebox             * jukebox;
   size_t                          buffer_offset;
   
@@ -350,6 +357,29 @@ struct _jukebox_audio_buffer {
   struct _t_jukebox * jukebox;
 };
 
+struct _jukebox_video_buffer {
+  size_t               size;
+  size_t               max_size;
+  short int            complete;
+  uint8_t            * data;
+  
+  struct _t_file     * file;
+  char               * client_address;
+  char               * user_agent;
+  uint64_t             duration;
+  
+  short                status;
+  pthread_mutex_t      stream_lock;
+  pthread_cond_t       stream_cond;
+	
+  pthread_mutex_t      wait_lock;
+  pthread_cond_t       wait_cond;
+  
+  pthread_mutex_t      write_lock;
+  
+  struct _t_jukebox * jukebox;
+};
+
 struct _t_jukebox {
   char                             name[TALIESIN_PLAYLIST_NAME_LENGTH + 1];
   char                           * display_name;
@@ -362,7 +392,7 @@ struct _t_jukebox {
   unsigned int                     nb_jukebox_audio_buffer;
   
   struct _t_file_list            * file_list;
-
+	
   pthread_mutex_t                  message_lock;
   pthread_cond_t                   message_cond;
   short int                        message_type;
@@ -372,11 +402,16 @@ struct _t_jukebox {
   unsigned int                     nb_websocket;
   
   struct config_elements         * config;
-
-  char                           * stream_format;
-  unsigned short int               stream_channels;
-  unsigned int                     stream_sample_rate;
-  unsigned int                     stream_bitrate;
+	
+  char                           * audio_format;
+  unsigned short int               audio_channels;
+  unsigned int                     audio_sample_rate;
+  unsigned int                     audio_bitrate;
+  
+  char                           * video_format;
+  unsigned int                     video_bitrate;
+  unsigned int                     video_width;
+  unsigned int                     video_height;
   
   unsigned int                     nb_client;
   time_t                           last_seen;
@@ -432,10 +467,14 @@ struct config_elements {
   struct _t_webradio              ** webradio_set;
   unsigned int                       nb_jukebox;
   struct _t_jukebox               ** jukebox_set;
-  char                             * stream_format;
-  unsigned short int                 stream_channels;
-  unsigned int                       stream_sample_rate;
-  unsigned int                       stream_bitrate;
+  char                             * audio_format;
+  unsigned short int                 audio_channels;
+  unsigned int                       audio_sample_rate;
+  unsigned int                       audio_bitrate;
+  char                             * video_format;
+  unsigned int                       video_bitrate;
+  unsigned int                       video_width;
+  unsigned int                       video_height;
   pthread_mutex_t                    stream_stop_lock;
   pthread_cond_t                     stream_stop_cond;
   uint                               nb_refresh_status;
@@ -520,7 +559,9 @@ int              file_list_empty_nolock(struct _t_file_list * file_list);
 json_t * is_stream_parameters_valid(int webradio, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate);
 void     audio_stream_clean (struct _audio_stream * audio_stream);
 int      jukebox_audio_buffer_init (struct _jukebox_audio_buffer * jukebox_audio_buffer);
+int      jukebox_video_buffer_init (struct _jukebox_video_buffer * jukebox_video_buffer);
 void     jukebox_audio_buffer_clean (struct _jukebox_audio_buffer * jukebox_audio_buffer);
+void     jukebox_video_buffer_clean (struct _jukebox_video_buffer * jukebox_video_buffer);
 int      audio_stream_add_data(struct _audio_stream * stream, uint8_t *buf, int buf_size);
 
 // Common stream functions
@@ -574,7 +615,7 @@ void    clean_client_data_jukebox(struct _client_data_jukebox * client_data_juke
 ssize_t u_jukebox_stream (void * cls, uint64_t pos, char * buf, size_t max);
 void    u_jukebox_stream_free(void * cls);
 
-int      jukebox_init(struct _t_jukebox * jukebox, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate);
+int      jukebox_init(struct _t_jukebox * jukebox, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, const char * video_format, unsigned int video_bitrate, unsigned int video_width, unsigned int video_height);
 void     jukebox_clean(struct _t_jukebox * jukebox);
 json_t * jukebox_get_info(struct _t_jukebox * jukebox);
 json_t * jukebox_get_clients(struct _t_jukebox * jukebox);

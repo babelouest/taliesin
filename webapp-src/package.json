@@ -5,6 +5,9 @@
   "dependencies": {
     "bootstrap": "^3.3.7",
     "font-awesome": "^4.7.0",
+    "i18next": "^11.3.2",
+    "i18next-browser-languagedetector": "^2.2.0",
+    "i18next-xhr-backend": "^1.5.1",
     "jquery": "^3.2.1",
     "js-cookie": "~2.1.4",
     "moment": "^2.19.3",
@@ -14,6 +17,7 @@
     "react-datetime": "^2.11.1",
     "react-dom": "^15.6.1",
     "react-fontawesome": "^1.6.1",
+    "react-i18next": "^7.7.0",
     "react-lazyload": "^2.3.0",
     "react-notification-system": "^0.2.16",
     "react-redux": "^5.0.6",

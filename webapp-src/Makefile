@@ -20,14 +20,17 @@
 #
 
 WEBAPP_DEST=../webapp
+JSC=npm
 
 install-dev:
-	npm install
+	$(JSC) install
 
 dev:
-	npm start
+	$(JSC) start
 
 build-webapp:
-	npm run build
+	$(JSC) run build
+	rm -f build/static/**/*.map
+	find build/ -name config.json -delete
 	find $(WEBAPP_DEST) ! -name config.json ! -name webapp -delete
 	cp -R build/* $(WEBAPP_DEST)

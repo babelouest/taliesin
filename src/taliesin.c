@@ -129,6 +129,7 @@ int main (int argc, char ** argv) {
 
   config->static_file_config->files_path = NULL;
   config->static_file_config->url_prefix = NULL;
+  config->static_file_config->redirect_on_404 = "/";
   config->static_file_config->mime_types = o_malloc(sizeof(struct _u_map));
   if (config->static_file_config->mime_types == NULL) {
     fprintf(stderr, "init - Error allocating resources for config->static_file_config->mime_types, aborting");

@@ -127,6 +127,21 @@ int file_list_insert_file_at(struct _t_file_list * file_list, struct _t_file * f
   }
 }
 
+struct _t_file * copy_file(struct _t_file * file) {
+  struct _t_file * new_file = NULL;
+  if (file != NULL) {
+    new_file = malloc(sizeof(struct _t_file));
+    if (new_file != NULL) {
+      new_file->path = o_strdup(file->path);
+      new_file->tm_id = file->tm_id;
+      new_file->next = NULL;
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "copy_file - Error allocating resources for new_file");
+    }
+  }
+  return new_file;
+}
+
 struct _t_file * file_list_dequeue_file(struct _t_file_list * file_list, unsigned long index) {
   struct _t_file * file, * previous;
   unsigned long i;

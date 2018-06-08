@@ -1,29 +1,12 @@
 /**
  *
- * Static file server Ulfius callback
+ * Version 20180607
  *
- * Copyright 2017-2018 Nicolas Mora <mail@babelouest.org>
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public License
- * License as published by the Free Software Foundation;
- * version 3 of the License.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU GENERAL PUBLIC LICENSE for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- */
-
-/**
  * struct static_file_config must be initialized with proper values
  * files_path: path (relative or absolute) to the DocumentRoot folder
  * url_prefix: prefix used to access the callback function
  * mime_types: a struct _u_map filled with all the mime-types needed for a static file server
+ * redirect_on_404: redirct uri on error 404, if NULL, send 404
  * 
  * example of mime-types used in Hutch:
  * {
@@ -82,6 +65,7 @@ struct _static_file_config {
   char          * files_path;
   char          * url_prefix;
   struct _u_map * mime_types;
+  char          * redirect_on_404;
 };
 
 int callback_static_file (const struct _u_request * request, struct _u_response * response, void * user_data);

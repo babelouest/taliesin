@@ -4,6 +4,8 @@
  *
  * Copyright 2016-2018 Nicolas Mora <mail@babelouest.org>
  *
+ * Version 20180607
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * License as published by the Free Software Foundation;

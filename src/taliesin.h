@@ -287,6 +287,7 @@ struct _t_webradio {
   short int                 random;
   
   struct config_elements  * config;
+  short int                 busy;
 };
 
 struct _client_data_webradio {
@@ -380,6 +381,7 @@ struct _t_jukebox {
   
   unsigned int                     nb_client;
   time_t                           last_seen;
+  short int                        busy;
 };
 
 struct _refresh_config {
@@ -508,6 +510,7 @@ int              file_list_enqueue_file_nolock(struct _t_file_list * file_list, 
 int              file_list_insert_file_at(struct _t_file_list * file_list, struct _t_file * file, unsigned long index);
 struct _t_file * file_list_dequeue_file(struct _t_file_list * file_list, unsigned long index);
 struct _t_file * file_list_get_file(struct _t_file_list * file_list, unsigned long index);
+struct _t_file * copy_file(struct _t_file * file);
 int              file_list_init(struct _t_file_list * file_list);
 void             file_list_clean(struct _t_file_list * file_list);
 void             file_list_clean_file(struct _t_file * file);

@@ -1300,6 +1300,8 @@ int callback_taliesin_stream_manage (const struct _u_request * request, struct _
           }
         } else if (check_result_value(j_result_command, T_ERROR_NOT_FOUND)) {
           response->status = 404;
+        } else if (check_result_value(j_result_command, T_ERROR_PARAM)) {
+          response->status = 400;
         }
         json_decref(j_result_command);
       } else {
@@ -1686,6 +1688,22 @@ void callback_websocket_stream_incoming_message (const struct _u_request * reque
             json_decref(j_out_message);
           } else if (check_result_value(j_result_command, T_ERROR_NOT_FOUND)) {
             j_out_message = json_pack("{ssss}", "command", json_string_value(json_object_get(j_message, "command")), "result", "not_found");
+            message = json_dumps(j_out_message, JSON_COMPACT);
+            if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
+            }
+            o_free(message);
+            json_decref(j_out_message);
+          } else if (check_result_value(j_result_command, T_ERROR_PARAM)) {
+            j_out_message = json_pack("{ssss}", "command", json_string_value(json_object_get(j_message, "command")), "result", "error_param");
+            message = json_dumps(j_out_message, JSON_COMPACT);
+            if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
+            }
+            o_free(message);
+            json_decref(j_out_message);
+          } else {
+            j_out_message = json_pack("{ssss}", "command", json_string_value(json_object_get(j_message, "command")), "result", "error");
             message = json_dumps(j_out_message, JSON_COMPACT);
             if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
               y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");

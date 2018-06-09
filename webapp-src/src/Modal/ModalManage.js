@@ -5,7 +5,7 @@ import FontAwesome from 'react-fontawesome';
 import i18n from '../lib/i18n';
 import StateStore from '../lib/StateStore';
 
-class ModalRemove extends Component {
+class ModalManage extends Component {
 	constructor(props) {
 		super(props);
 		
@@ -29,7 +29,9 @@ class ModalRemove extends Component {
 		this.loadStreams = this.loadStreams.bind(this);
 		this.loadPlaylists = this.loadPlaylists.bind(this);
 		this.handleRemoveFromStream = this.handleRemoveFromStream.bind(this);
+		this.handleAddToStream = this.handleAddToStream.bind(this);
 		this.handleRemoveFromPlaylist = this.handleRemoveFromPlaylist.bind(this);
+		this.handleAddToPlaylist = this.handleAddToPlaylist.bind(this);
 		
 		if (this.state.show) {
 			this.loadStreams();
@@ -108,7 +110,7 @@ class ModalRemove extends Component {
 						</Col>
 						<Col md={2} sm={2} xs={2}>
 							<Button onClick={() => this.handleRemoveFromStream(stream.name, index)}>
-								<FontAwesome name="trash" />
+								<FontAwesome name="minus" />
 							</Button>
 						</Col>
 					</Row>
@@ -116,7 +118,75 @@ class ModalRemove extends Component {
 				this.setState({streamList: streamList, streamToLoad: false});
 			})
 			.fail(() => {
-				this.setState({streamToLoad: false});
+				streamList.push(
+					<Row key={index}>
+						<Col md={10} sm={10} xs={10}>
+							<Label>
+								{stream.display_name}
+							</Label>
+						</Col>
+						<Col md={2} sm={2} xs={2}>
+							<Button onClick={() => this.handleAddToStream(stream.name, index)}>
+								<FontAwesome name="plus" />
+							</Button>
+						</Col>
+					</Row>
+				);
+				this.setState({streamList: streamList, streamToLoad: false});
+			});
+		});
+	}
+	
+	handleAddToStream(stream, index) {
+		var command = {command: "append_list", parameters: {media: []}}, media;
+		if (this.state.path) {
+			media = {
+				data_source: this.state.dataSource,
+				path: this.state.path,
+				recursive: true
+			}
+			command.parameters.media.push(media);
+		} else if (this.state.subCategory) {
+			media = {
+				data_source: this.state.dataSource,
+				category: this.state.category,
+				category_value: this.state.categoryValue,
+				subCategory: this.state.subCategory,
+				subCategory_value: this.state.subCategoryValue
+			}
+			command.parameters.media.push(media);
+		} else {
+			media = {
+				data_source: this.state.dataSource,
+				category: this.state.category,
+				category_value: this.state.categoryValue
+			}
+			command.parameters.media.push(media);
+		}
+		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(stream) + "/manage/", command)
+		.then((result) => {
+			StateStore.getState().NotificationManager.addNotification({
+				message: i18n.t("modal.message_add_to_stream_success"),
+				level: 'info'
+			});
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/stream")
+			.then((result) => {
+				StateStore.dispatch({type: "setStreamList", streamList: result});
+				var streamList = this.state.streamList;
+				streamList.splice(index, 1);
+				this.setState({streamList: streamList, streamToLoad: true});
+			})
+			.fail((result) => {
+				StateStore.getState().NotificationManager.addNotification({
+					message: i18n.t("stream.message_stream_list_reload_error"),
+					level: 'error'
+				});
+			});
+		})
+		.fail(() => {
+			StateStore.getState().NotificationManager.addNotification({
+				message: i18n.t("modal.message_add_to_stream_error"),
+				level: 'error'
 			});
 		});
 	}
@@ -153,7 +223,7 @@ class ModalRemove extends Component {
 				message: i18n.t("modal.message_delete_from_stream_success"),
 				level: 'info'
 			});
-			StateStore.getState().APIManager.taliesinApiRequest("GET", "/stream" + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:""))
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/stream")
 			.then((result) => {
 				StateStore.dispatch({type: "setStreamList", streamList: result});
 				var streamList = this.state.streamList;
@@ -211,7 +281,7 @@ class ModalRemove extends Component {
 						</Col>
 						<Col md={2} sm={2} xs={2}>
 							<Button onClick={() => this.handleRemoveFromPlaylist(playlist.name, index)}>
-								<FontAwesome name="trash" />
+								<FontAwesome name="minus" />
 							</Button>
 						</Col>
 					</Row>
@@ -219,7 +289,21 @@ class ModalRemove extends Component {
 				this.setState({playlists: playlists, playlistToLoad: false});
 			})
 			.fail(() => {
-				this.setState({playlistToLoad: false});
+				playlists.push(
+					<Row key={index}>
+						<Col md={10} sm={10} xs={10}>
+							<Label>
+								{playlist.name}
+							</Label>
+						</Col>
+						<Col md={2} sm={2} xs={2}>
+							<Button onClick={() => this.handleAddToPlaylist(playlist.name, index)}>
+								<FontAwesome name="plus" />
+							</Button>
+						</Col>
+					</Row>
+				);
+				this.setState({playlists: playlists, playlistToLoad: false});
 			});
 		});
 	}
@@ -252,7 +336,7 @@ class ModalRemove extends Component {
 		}
 		StateStore.getState().APIManager.taliesinApiRequest("DELETE", "/playlist/" + encodeURIComponent(playlist) + "/delete_media/", command)
 		.then((result) => {
-			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist" + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:""))
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist")
 			.then((result) => {
 				StateStore.dispatch({type: "setPlaylists", playlists: result});
 				var playlists = this.state.playlists;
@@ -274,6 +358,61 @@ class ModalRemove extends Component {
 		.fail(() => {
 			StateStore.getState().NotificationManager.addNotification({
 				message: i18n.t("modal.message_delete_from_playlist_error"),
+				level: 'error'
+			});
+		});
+	}
+	
+	handleAddToPlaylist(playlist, index) {
+		var command = [], media;
+		if (this.state.path) {
+			media = {
+				data_source: this.state.dataSource,
+				path: this.state.path,
+				recursive: true
+			}
+			command.push(media);
+		} else if (this.state.subCategory) {
+			media = {
+				data_source: this.state.dataSource,
+				category: this.state.category,
+				category_value: this.state.categoryValue,
+				subCategory: this.state.subCategory,
+				subCategory_value: this.state.subCategoryValue
+			}
+			command.push(media);
+		} else {
+			media = {
+				data_source: this.state.dataSource,
+				category: this.state.category,
+				category_value: this.state.categoryValue
+			}
+			command.push(media);
+		}
+		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/playlist/" + encodeURIComponent(playlist) + "/add_media/", command)
+		.then((result) => {
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist")
+			.then((result) => {
+				StateStore.dispatch({type: "setPlaylists", playlists: result});
+				var playlists = this.state.playlists;
+				playlists.splice(index, 1);
+				this.setState({playlists: playlists, playlistToLoad: true});
+				StateStore.getState().NotificationManager.addNotification({
+					message: i18n.t("modal.message_add_to_playlist_success"),
+					level: 'info'
+				});
+			})
+			.fail((result) => {
+				StateStore.dispatch({type: "setPlaylists", playlists: []});
+				StateStore.getState().NotificationManager.addNotification({
+					message: i18n.t("playlist.message_error_refreshing_playlists"),
+					level: 'error'
+				});
+			});
+		})
+		.fail(() => {
+			StateStore.getState().NotificationManager.addNotification({
+				message: i18n.t("modal.message_add_to_playlist_error"),
 				level: 'error'
 			});
 		});
@@ -314,4 +453,4 @@ class ModalRemove extends Component {
 	}
 }
 
-export default ModalRemove;
+export default ModalManage;

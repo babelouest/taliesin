@@ -388,7 +388,7 @@ void exit_server(struct config_elements ** config, int exit_value) {
  */
 int build_config_from_args(int argc, char ** argv, struct config_elements * config) {
   int next_option;
-  const char * short_options = "c::p::u::m::l::f::h::";
+  const char * short_options = "c::p::u::m::l::f::h::v::";
   char * tmp = NULL, * to_free = NULL, * one_log_mode = NULL;
   static const struct option long_options[]= {
     {"config-file", optional_argument, NULL, 'c'},
@@ -398,6 +398,7 @@ int build_config_from_args(int argc, char ** argv, struct config_elements * conf
     {"log-level", optional_argument, NULL, 'l'},
     {"log-file", optional_argument, NULL, 'f'},
     {"help", optional_argument, NULL, 'h'},
+    {"version", optional_argument, NULL, 'v'},
     {NULL, 0, NULL, 0}
   };
   
@@ -455,6 +456,8 @@ int build_config_from_args(int argc, char ** argv, struct config_elements * conf
                 config->log_mode |= Y_LOG_MODE_CONSOLE;
               } else if (0 == o_strncmp("syslog", one_log_mode, o_strlen("syslog"))) {
                 config->log_mode |= Y_LOG_MODE_SYSLOG;
+              } else if (0 == strncmp("journald", one_log_mode, strlen("journald"))) {
+                config->log_mode += Y_LOG_MODE_JOURNALD;
               } else if (0 == o_strncmp("file", one_log_mode, o_strlen("file"))) {
                 config->log_mode |= Y_LOG_MODE_FILE;
               }
@@ -500,6 +503,14 @@ int build_config_from_args(int argc, char ** argv, struct config_elements * conf
           print_help(stdout);
           exit_server(&config, TALIESIN_STOP);
           break;
+        case 'v':
+          fprintf(stdout, "\nTaliesin - Streaming server\n");
+          fprintf(stdout, "\n");
+          fprintf(stdout, "Version %s\n", _TALIESIN_VERSION_);
+          fprintf(stdout, "\n");
+          fprintf(stdout, "Copyright 2017-2018 Nicolas Mora <mail@babelouest.org>\n");
+          exit_server(&config, TALIESIN_STOP);
+          break;
       }
       
     } while (next_option != -1);
@@ -542,7 +553,7 @@ void print_help(FILE * output) {
   fprintf(output, "\tAPI URL prefix\n");
   fprintf(output, "-m --log-mode=MODE\n");
   fprintf(output, "\tLog Mode\n");
-  fprintf(output, "\tconsole, syslog or file\n");
+  fprintf(output, "\tconsole, syslog, journald or file\n");
   fprintf(output, "\tIf you want multiple modes, separate them with a comma \",\"\n");
   fprintf(output, "\tdefault: console\n");
   fprintf(output, "-l --log-level=LEVEL\n");
@@ -647,6 +658,8 @@ int build_config_from_file(struct config_elements * config) {
           config->log_mode |= Y_LOG_MODE_CONSOLE;
         } else if (0 == o_strncmp("syslog", one_log_mode, o_strlen("syslog"))) {
           config->log_mode |= Y_LOG_MODE_SYSLOG;
+        } else if (0 == strncmp("journald", one_log_mode, strlen("journald"))) {
+          config->log_mode += Y_LOG_MODE_JOURNALD;
         } else if (0 == o_strncmp("file", one_log_mode, o_strlen("file"))) {
           config->log_mode |= Y_LOG_MODE_FILE;
           // Get log file path

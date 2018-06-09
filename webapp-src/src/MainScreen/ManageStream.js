@@ -237,7 +237,7 @@ class ManageStream extends Component {
 	}
 	
 	reloadStreamList() {
-		StateStore.getState().APIManager.taliesinApiRequest("GET", "/stream" + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:""))
+		StateStore.getState().APIManager.taliesinApiRequest("GET", "/stream")
 		.then((result) => {
 			StateStore.dispatch({type: "setStreamList", streamList: result});
 			this.setState({streamList: result});
@@ -292,7 +292,7 @@ class ManageStream extends Component {
 							{stream.format + " - " + (stream.stereo?i18n.t("common.stereo"):i18n.t("common.mono")) + " - " + stream.sample_rate + " " + i18n.t("common.khz") + " - " + (stream.bitrate/1000) + " " + i18n.t("common.bps")}
 						</a>
 					</td>
-					<td className="hidden-xs">
+					<td>
 						<a role="button" onClick={() => this.detailsStream(stream)}>
 							{(stream.clients&&stream.clients.length)||0}
 						</a>
@@ -366,12 +366,12 @@ class ManageStream extends Component {
 				<Table striped bordered condensed hover>
 					<thead>
 						<tr>
-							<td>{i18n.t("common.name")}</td>
-							<td>{i18n.t("common.type")}</td>
-							<td className="hidden-xs">{i18n.t("common.elements")}</td>
-							<td className="hidden-xs">{i18n.t("stream.format")}</td>
-							<td className="hidden-xs">{i18n.t("stream.clients")}</td>
-							<td></td>
+							<th>{i18n.t("common.name")}</th>
+							<th>{i18n.t("common.type")}</th>
+							<th className="hidden-xs">{i18n.t("common.elements")}</th>
+							<th className="hidden-xs">{i18n.t("stream.format")}</th>
+							<th>{i18n.t("stream.clients")}</th>
+							<th></th>
 						</tr>
 					</thead>
 					<tbody>

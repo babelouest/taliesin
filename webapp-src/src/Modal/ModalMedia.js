@@ -3,7 +3,7 @@ import { Modal, Row, Col, Image, Button, ButtonGroup, DropdownButton, MenuItem }
 import FontAwesome from 'react-fontawesome';
 import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
-import ModalRemove from '../Modal/ModalRemove';
+import ModalManage from '../Modal/ModalManage';
 
 class ModalMedia extends Component {
 	constructor(props) {
@@ -446,7 +446,7 @@ class ModalMedia extends Component {
 								</Col>
 							</Row>
 						</Modal.Body>
-						<ModalRemove
+						<ModalManage
 							show={this.state.removeModalShow}
 							onCloseCb={() => {this.setState({removeModalShow: false});}}
 							dataSource={this.state.media.data_source} 

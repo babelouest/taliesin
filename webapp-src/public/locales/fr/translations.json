@@ -93,8 +93,10 @@
 		"sample_rate_khz": "{{khz}} kHz",
 		"new_playlist": "Nouvelle playlist",
 		"manage_streams": "Gérer les flux",
-		"message_error_adding_stream": "Erreur lors de la création du flux",
-		"message_adding_stream_ok": "Flux créé",
+		"message_error_adding_stream": "Erreur lors de l'ajout au flux",
+		"message_adding_stream_ok": "Ajouté au flux",
+		"message_error_add_playlist": "Erreur lors de l'ajout à la playlist",
+		"message_add_playlist_ok": "Ajouté à la playlist",
 		"message_error_delete_media": "Erreur lors de la suppression du media",
 		"message_error_play_stream": "Erreur lors de la lecture du flux",
 		"message_error_play": "Erreur de lecture",
@@ -106,7 +108,8 @@
 		"message_error_loading_stream_list": "Erreur lors du chargement de la liste des flux",
 		"message_error_loading_data_source": "Erreur lors du chargement de la liste des sources de données",
 		"message_error_loading_playlist": "Erreur lors du chargement de la liste des playlists",
-		"message_error_loading_server_config": "Erreur lors du chargement de la configuration du serveur"
+		"message_error_loading_server_config": "Erreur lors du chargement de la configuration du serveur",
+		"manage_in_stream_playlist": "Gérer"
 	},
 	"topmenu": {
 		"searching": "Recherche...",
@@ -344,7 +347,7 @@
 		"create_stream": "Créer un flux",
 		"play_as": "Lire comme",
 		"play_now_current_player": "Lire maintenant",
-		"remove_title": "Supprimer d'un flux ou d'une playlist",
+		"remove_title": "Gérer dans les flux et les playlists",
 		"add_player": "Ajouter un lecteur",
 		"edit_player": "Modifier un lecteur",
 		"mpd_host": "Machine hôte",
@@ -354,7 +357,11 @@
 		"message_delete_from_stream_success": "Supprimé dans le flux",
 		"message_delete_from_stream_error": "Erreur lors de la suppression dans le flux",
 		"message_delete_from_playlist_success": "Supprimé dans la playlist",
-		"message_delete_from_playlist_error": "Erreur lors de la suppression dans la playlist"
+		"message_delete_from_playlist_error": "Erreur lors de la suppression dans la playlist",
+		"message_add_to_stream_success": "Ajouté dans le flux",
+		"message_add_to_stream_error": "Erreur lors de l'ajout dans le flux",
+		"message_add_to_playlist_success": "Ajouté dans la playlist",
+		"message_add_to_playlist_error": "Erreur lors de l'ajout dans la playlist"
 	},
 	"config": {
 		"audioExtensions": "Extensions pour fichiers audio",

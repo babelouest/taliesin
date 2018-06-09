@@ -95,6 +95,8 @@
 		"manage_streams": "Manage streams",
 		"message_error_adding_stream": "Error adding to stream",
 		"message_adding_stream_ok": "Add to stream ok",
+		"message_error_add_playlist": "Error adding to playlist",
+		"message_add_playlist_ok": "Add to playlist ok",
 		"message_error_delete_media": "Error deleting media",
 		"message_error_play_stream": "Error Play stream",
 		"message_error_play": "Error Play",
@@ -106,7 +108,8 @@
 		"message_error_loading_stream_list": "Error loading stream list",
 		"message_error_loading_data_source": "Error loading data source list",
 		"message_error_loading_playlist": "Error loading playlists",
-		"message_error_loading_server_config": "Error loading server configuration"
+		"message_error_loading_server_config": "Error loading server configuration",
+		"manage_in_stream_playlist": "Manage"
 	},
 	"topmenu": {
 		"searching": "Searching...",
@@ -344,7 +347,7 @@
 		"create_stream": "Create stream",
 		"play_as": "Play as",
 		"play_now_current_player": "Play now",
-		"remove_title": "Remove from a stream or a playlist",
+		"remove_title": "Manage on streams and playlist",
 		"add_player": "Add a player",
 		"edit_player": "Edit a player",
 		"mpd_host": "Host",
@@ -354,7 +357,11 @@
 		"message_delete_from_stream_success": "Removed from stream",
 		"message_delete_from_stream_error": "Error removing from stream",
 		"message_delete_from_playlist_success": "Removed from playlist",
-		"message_delete_from_playlist_error": "Error removing from playlist"
+		"message_delete_from_playlist_error": "Error removing from playlist",
+		"message_add_to_stream_success": "Added in stream",
+		"message_add_to_stream_error": "Error adding in stream",
+		"message_add_to_playlist_success": "Added in playlist",
+		"message_add_to_playlist_error": "Error adding in playlist"
 	},
 	"config": {
 		"audioExtensions": "Audio files extensions",

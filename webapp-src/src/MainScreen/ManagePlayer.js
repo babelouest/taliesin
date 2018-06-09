@@ -192,13 +192,13 @@ class ManagePlayer extends Component {
 			var enabledSwitch, switches = [<MenuItem key="0" eventKey="0" onClick={() => this.handleSelectSwitch(player)} className={!player.switch?"bg-success":""}>{i18n.t("common.none")}</MenuItem>];
 			if (player.enabled) {
 				enabledSwitch = 
-					<ToggleButtonGroup type="checkbox" defaultValue={["1"]}>
-						<ToggleButton value="1" onChange={() => {this.handleChangeEnabled(index)}}>{i18n.t("common.enabled")}</ToggleButton>
+					<ToggleButtonGroup type="checkbox" defaultValue={["1"]} onChange={() => {this.handleChangeEnabled(index)}}>
+						<ToggleButton value="1">{i18n.t("common.enabled")}</ToggleButton>
 					</ToggleButtonGroup>
 			} else {
 				enabledSwitch = 
-					<ToggleButtonGroup type="checkbox">
-						<ToggleButton value="1" onChange={() => {this.handleChangeEnabled(index)}}>{i18n.t("common.disabled")}</ToggleButton>
+					<ToggleButtonGroup type="checkbox" onChange={() => {this.handleChangeEnabled(index)}}>
+						<ToggleButton value="1">{i18n.t("common.disabled")}</ToggleButton>
 					</ToggleButtonGroup>
 			}
 			

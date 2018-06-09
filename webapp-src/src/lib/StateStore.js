@@ -27,6 +27,7 @@ var defaultState = {
 		oauth2Profile: false,
 		useWebsocket: true,
 		currentUser: false,
+		connectedUser: false,
 		dataSource: false, 
 		path: "",
 		category: false,
@@ -70,6 +71,7 @@ function stateStoreManager(state = defaultState, action) {
 		case "setProfile":
 			state.profile.oauth2Profile = action.profile;
 			state.profile.currentUser = action.profile.login;
+			state.profile.connectedUser = action.profile.login;
 			break;
 		case "newApiToken":
 			state.token = action.token;

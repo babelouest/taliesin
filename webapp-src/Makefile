@@ -29,8 +29,7 @@ dev:
 	$(JSC) start
 
 build-webapp:
-	$(JSC) run build
-	rm -f build/static/**/*.map
+	GENERATE_SOURCEMAP=false $(JSC) run build
 	find build/ -name config.json -delete
 	find $(WEBAPP_DEST) ! -name config.json ! -name webapp -delete
 	cp -R build/* $(WEBAPP_DEST)

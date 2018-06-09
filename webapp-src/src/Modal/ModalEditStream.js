@@ -152,11 +152,15 @@ class ModalEditStream extends Component {
 							<Label>Recursive</Label>
 						</Col>
 						<Col md={8}>
-							<ToggleButtonGroup type="checkbox">
-								<ToggleButton
-									value={this.state.recursive}
-									onChange={this.handleChangeRecursive}>
-										{this.state.recursive?i18n.t("modal.recursive"):i18n.t("modal.non_recursive")}
+							<ToggleButtonGroup
+								type="checkbox"
+								value={this.state.recursive}
+								onChange={this.handleChangeRecursive}>
+								<ToggleButton value={true}>
+										{i18n.t("modal.recursive")}
+								</ToggleButton>
+								<ToggleButton value={false}>
+										{i18n.t("modal.non_recursive")}
 								</ToggleButton>
 							</ToggleButtonGroup>
 						</Col>
@@ -232,11 +236,15 @@ class ModalEditStream extends Component {
 						<Label>{i18n.t("common.random")}</Label>
 					</Col>
 					<Col md={8}>
-						<ToggleButtonGroup type="checkbox">
-							<ToggleButton
-								value={this.state.random}
-								onChange={this.handleChangeRandom}>
-									{this.state.random?i18n.t("common.random"):i18n.t("common.non_random")}
+						<ToggleButtonGroup
+							type="checkbox"
+							value={this.state.random}
+							onChange={this.handleChangeRandom}>
+							<ToggleButton value={true}>
+									{i18n.t("common.random")}
+							</ToggleButton>
+							<ToggleButton value={false}>
+									{i18n.t("common.non_random")}
 							</ToggleButton>
 						</ToggleButtonGroup>
 					</Col>
@@ -351,11 +359,15 @@ class ModalEditStream extends Component {
 								<Label>{i18n.t("modal.play_now_current_player")}</Label>
 							</Col>
 							<Col md={8}>
-								<ToggleButtonGroup type="checkbox">
-									<ToggleButton
-										value={this.state.playNow}
-										onChange={this.handleChangePlayNow}>
-											{this.state.playNow?i18n.t("common.yes"):i18n.t("common.no")}
+								<ToggleButtonGroup
+									type="checkbox"
+									value={this.state.playNow}
+									onChange={this.handleChangePlayNow}>
+									<ToggleButton value={true}>
+											{i18n.t("common.yes")}
+									</ToggleButton>
+									<ToggleButton value={false}>
+											{i18n.t("common.no")}
 									</ToggleButton>
 								</ToggleButtonGroup>
 							</Col>

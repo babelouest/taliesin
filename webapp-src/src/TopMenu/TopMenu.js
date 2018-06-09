@@ -22,6 +22,7 @@ class TopMenu extends Component {
 			dataSource: StateStore.getState().profile.dataSource,
 			userList: StateStore.getState().userList,
 			currentUser: StateStore.getState().profile.currentUser,
+			connectedUser: StateStore.getState().profile.connectedUser,
 			searchPattern: "",
 			searchTimeout: false,
 			searching: true,
@@ -63,7 +64,7 @@ class TopMenu extends Component {
 			} else if (reduxState.lastAction === "setUserList") {
 				this.setState({userList: reduxState.userList});
 			} else if (reduxState.lastAction === "setCurrentUser" || reduxState.lastAction === "setProfile") {
-				this.setState({currentUser: reduxState.profile.currentUser});
+				this.setState({currentUser: reduxState.profile.currentUser, connectedUser: reduxState.profile.connectedUser});
 			} else if (reduxState.lastAction === "setStoredValues") {
 				this.setState({view: StateStore.getState().profile.view});
 			}
@@ -218,8 +219,21 @@ class TopMenu extends Component {
 	handlechangeUser(user) {
 		StateStore.dispatch({type: "setCurrentUser", currentUser: user});
 		
+		// Get current data source list
+		StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source")
+		.then((result) => {
+			var currentDataSource = false;
+			if (result.length > 0 && !result.find((ds) => {return ds.name === StateStore.getState().profile.dataSource.name})) {
+				currentDataSource = result[0];
+			}
+			StateStore.dispatch({type: "setDataSourceList", dataSourceList: result, currentDataSource: currentDataSource});
+		})
+		.fail((result) => {
+			StateStore.dispatch({type: "setDataSourceList", dataSourceList: [], currentDataSource: false});
+		});
+		
 		// Get current stream list
-		StateStore.getState().APIManager.taliesinApiRequest("GET", "/stream?username="+user)
+		StateStore.getState().APIManager.taliesinApiRequest("GET", "/stream")
 		.then((result) => {
 			StateStore.dispatch({type: "setStreamList", streamList: result});
 		})
@@ -228,7 +242,7 @@ class TopMenu extends Component {
 		});
 		
 		// Get playlist list
-		StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist?username="+user)
+		StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist")
 		.then((result) => {
 			StateStore.dispatch({type: "setPlaylists", playlists: result});
 		})
@@ -402,18 +416,25 @@ class TopMenu extends Component {
 						</NavDropdown>;
 				} else {
 					var userList = [];
-					var foundMe = false;
+					var foundMe = false, selected = false;
 					this.state.userList.forEach((user, index) => {
-						if (this.state.currentUser === user.username) {
+						if (user.username === this.state.connectedUser) {
 							foundMe = true;
+						}
+						if (this.state.currentUser === user.username) {
+							selected = true;
 							userList.push(<MenuItem key={index} className="bg-success">{user.username}{StateStore.getState().profile.oauth2Profile.login===user.username?" ("+i18n.t("topmenu.me")+")":""}</MenuItem>);
 						} else {
 							userList.push(<MenuItem key={index} onClick={() => {this.handlechangeUser(user.username)}}>{user.username}{StateStore.getState().profile.oauth2Profile.login===user.username?" ("+i18n.t("topmenu.me")+")":""}</MenuItem>);
 						}
-						if (!foundMe) {
-							userList.push(<MenuItem key={this.state.userList.length} className="bg-success">{this.state.currentUser}{" ("+i18n.t("topmenu.me")+")"}</MenuItem>);
-						}
 					});
+					if (!foundMe) {
+						if (!selected) {
+							userList.push(<MenuItem key={this.state.userList.length} className="bg-success">{this.state.connectedUser}{" ("+i18n.t("topmenu.me")+")"}</MenuItem>);
+						} else {
+							userList.push(<MenuItem key={this.state.userList.length} onClick={() => {this.handlechangeUser(this.state.connectedUser)}}>{this.state.connectedUser}{" ("+i18n.t("topmenu.me")+")"}</MenuItem>);
+						}
+					}
 					userDropdown = 
 						<NavDropdown title={<span><i className="fa fa-cog"></i></span>} id="nav-view">
 							<MenuItem onClick={() => this.handleManageConfig()} className={this.state.browse==="file"?"bg-success":""}>{i18n.t("topmenu.config")}</MenuItem>

@@ -69,7 +69,7 @@ class ManageDataSource extends Component {
 	
 	getRefreshStatus(dataSource) {
 		if (!this.state.modalShow && !this.state.modalDeleteShow) {
-			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(dataSource.name) + "/refresh/" + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:""))
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(dataSource.name) + "/refresh/")
 			.then((result) => {
 				var refreshStatus = this.state.refreshStatus;
 				refreshStatus[dataSource.name] = result;
@@ -108,7 +108,7 @@ class ManageDataSource extends Component {
 	}
 	
 	refreshDataSourceList() {
-		StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source" + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:""))
+		StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source")
 		.then((result) => {
 			StateStore.dispatch({type: "setDataSourceList", dataSourceList: result, loaded: true});
 			this.getRefreshStatusList();
@@ -143,7 +143,7 @@ class ManageDataSource extends Component {
 					});
 				});
 			} else {
-				StateStore.getState().APIManager.taliesinApiRequest("PUT", "/data_source/" + encodeURIComponent(dataSource.name) + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:""), dataSource)
+				StateStore.getState().APIManager.taliesinApiRequest("PUT", "/data_source/" + encodeURIComponent(dataSource.name), dataSource)
 				.then(() => {
 					StateStore.getState().NotificationManager.addNotification({
 						message: i18n.t("data_source.message_updated_ok"),
@@ -171,7 +171,7 @@ class ManageDataSource extends Component {
 	}
 	
 	refreshDataSource(dataSource) {
-		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/data_source/" + encodeURIComponent(dataSource.name) + "/refresh/" + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:""))
+		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/data_source/" + encodeURIComponent(dataSource.name) + "/refresh/")
 		.then(() => {
 			StateStore.getState().NotificationManager.addNotification({
 				message: i18n.t("data_source.message_refresh_started"),
@@ -188,7 +188,7 @@ class ManageDataSource extends Component {
 	}
 	
 	stopRefreshDataSource(dataSource) {
-		StateStore.getState().APIManager.taliesinApiRequest("DELETE", "/data_source/" + encodeURIComponent(dataSource.name) + "/refresh/" + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:""))
+		StateStore.getState().APIManager.taliesinApiRequest("DELETE", "/data_source/" + encodeURIComponent(dataSource.name) + "/refresh/")
 		.then(() => {
 			StateStore.getState().NotificationManager.addNotification({
 				message: i18n.t("data_source.message_refresh_stopped"),
@@ -205,7 +205,7 @@ class ManageDataSource extends Component {
 	}
 	
 	cleanDataSource(dataSource) {
-		StateStore.getState().APIManager.taliesinApiRequest("POST", "/data_source/" + encodeURIComponent(dataSource.name) + "/clean/" + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:""))
+		StateStore.getState().APIManager.taliesinApiRequest("POST", "/data_source/" + encodeURIComponent(dataSource.name) + "/clean/")
 		.then(() => {
 			StateStore.getState().NotificationManager.addNotification({
 				message: i18n.t("data_source.message_clean_started"),
@@ -237,7 +237,7 @@ class ManageDataSource extends Component {
 	confirmDeleteDataSource(result) {
 		this.setState({modalDeleteShow: false}, () => {
 			if (result) {
-				StateStore.getState().APIManager.taliesinApiRequest("DELETE", "/data_source/" + encodeURIComponent(this.state.dataSourceToDelete.name) + (StateStore.getState().profile.oauth2Profile.login&&(StateStore.getState().profile.oauth2Profile.login!==StateStore.getState().profile.currentUser)?"?username="+StateStore.getState().profile.currentUser:""))
+				StateStore.getState().APIManager.taliesinApiRequest("DELETE", "/data_source/" + encodeURIComponent(this.state.dataSourceToDelete.name))
 				.then(() => {
 					StateStore.getState().NotificationManager.addNotification({
 						message: i18n.t("data_source.message_delete_ok"),

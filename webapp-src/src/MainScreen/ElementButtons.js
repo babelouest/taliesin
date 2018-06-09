@@ -5,7 +5,7 @@ import StateStore from '../lib/StateStore';
 import ModalEditStream from '../Modal/ModalEditStream';
 import ModalEditPlaylist from '../Modal/ModalEditPlaylist';
 import ModalEditCategory from '../Modal/ModalEditCategory';
-import ModalRemove from '../Modal/ModalRemove';
+import ModalManage from '../Modal/ModalManage';
 import i18n from '../lib/i18n';
 
 class ElementButtons extends Component {
@@ -25,7 +25,7 @@ class ElementButtons extends Component {
 			editCategoryShow: false,
 			onEditCategory: props.onEditCategory,
 			hideRefresh: props.hideRefresh,
-			removeModalShow: false
+			manageModalShow: false
 		};
 
 		this.playElement = this.playElement.bind(this);
@@ -40,6 +40,7 @@ class ElementButtons extends Component {
 		this.viewCategory = this.viewCategory.bind(this);
 		this.onCloseCategory = this.onCloseCategory.bind(this);
 		this.handleSelectRemove = this.handleSelectRemove.bind(this);
+		this.limitStrLenghth = this.limitStrLenghth.bind(this);
 		
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
@@ -66,7 +67,7 @@ class ElementButtons extends Component {
 			editCategoryShow: false,
 			onEditCategory: nextProps.onEditCategory,
 			hideRefresh: nextProps.hideRefresh,
-			removeModalShow: false
+			manageModalShow: false
 		});
 	}
 	
@@ -202,14 +203,14 @@ class ElementButtons extends Component {
 			.then((newPlaylist) => {
 				StateStore.dispatch({type: "setPlaylist", playlist: newPlaylist});
 				StateStore.getState().NotificationManager.addNotification({
-					message: i18n.t("common.message_adding_stream_ok"),
+					message: i18n.t("common.message_add_playlist_ok"),
 					level: 'info'
 				});
 			});
 		})
 		.fail(() => {
 			StateStore.getState().NotificationManager.addNotification({
-				message: i18n.t("common.message_error_adding_stream"),
+				message: i18n.t("common.message_error_add_playlist"),
 				level: 'error'
 			});
 		});
@@ -282,19 +283,29 @@ class ElementButtons extends Component {
 		this.setState({removeDropdown: !this.state.removeDropdown});
 	}
 	
+	limitStrLenghth(str, length) {
+		if (str.length > length) {
+			return str.substring(0, length) + "...";
+		} else {
+			return str;
+		}
+	}
+	
 	render() {
 		var streamList = [], playlist = [<MenuItem key={0} onClick={() => this.addToNewPlaylist()}>New playlist</MenuItem>], refreshButton, refreshButtonMenu, categoryButton, categoryButtonMenu, modalCategory;
 		this.state.streamList.forEach((stream, index) => {
 			streamList.push(
 				<MenuItem key={index} onClick={() => this.addToStream(stream.name)}>
-					- {stream.display_name||i18n.t("common.no_name")}
+					<span className="visible-xs">v- {stream.display_name?this.limitStrLenghth(stream.display_name, 20):i18n.t("common.no_name")}</span>
+					<span className="hidden-xs">s- {stream.display_name||i18n.t("common.no_name")}</span>
 				</MenuItem>
 			);
 		});
 		this.state.playlist.forEach((pl, index) => {
 			playlist.push(
 				<MenuItem key={index+1} onClick={() => this.addToPlaylist(pl.name)}>
-					- {pl.name}
+					<span className="visible-xs">- {this.limitStrLenghth(pl.name, 20)}</span>
+					<span className="hidden-xs">- {pl.name}</span>
 				</MenuItem>
 			);
 		});
@@ -334,7 +345,7 @@ class ElementButtons extends Component {
 					</Button>
 					{refreshButton}
 					{categoryButton}
-					<DropdownButton id={"add"-this.state.element.name} pullRight title={
+					<DropdownButton id={"add"-this.state.element.name} title={
 						<span><i className="fa fa-plus"></i></span>
 					}>
 						<MenuItem>
@@ -347,12 +358,12 @@ class ElementButtons extends Component {
 						</MenuItem>
 						{playlist}
 						<MenuItem divider />
-						<MenuItem onClick={() => {this.setState({removeModalShow: true});}}>
-							{i18n.t("common.remove")}
+						<MenuItem onClick={() => {this.setState({manageModalShow: true});}}>
+							{i18n.t("common.manage_in_stream_playlist")}
 						</MenuItem>
 					</DropdownButton>
 				</ButtonGroup>
-				<DropdownButton className="visible-xs" pullRight id={"xs-manage"-this.state.element.name} title={
+				<DropdownButton className="visible-xs" id={"xs-manage"-this.state.element.name} title={
 					<span><i className="fa fa-cog"></i></span>
 				}>
 					<MenuItem onClick={this.playElement}>
@@ -380,8 +391,8 @@ class ElementButtons extends Component {
 					</MenuItem>
 					{playlist}
 					<MenuItem divider />
-					<MenuItem onClick={() => {this.setState({removeModalShow: true});}}>
-						{i18n.t("common.remove")}
+					<MenuItem onClick={() => {this.setState({manageModalShow: true});}}>
+						{i18n.t("common.manage_in_stream_playlist")}
 					</MenuItem>
 				</DropdownButton>
 				<ModalEditStream 
@@ -396,9 +407,9 @@ class ElementButtons extends Component {
 					onCloseCb={this.runPlayElementAdvanced} 
 				/>
 				<ModalEditPlaylist show={this.state.addPlaylistShow} onCloseCb={this.onSavePlaylist} add={true} playlist={false} />
-				<ModalRemove
-					show={this.state.removeModalShow}
-					onCloseCb={() => {this.setState({removeModalShow: false});}}
+				<ModalManage
+					show={this.state.manageModalShow}
+					onCloseCb={() => {this.setState({manageModalShow: false});}}
 					dataSource={this.state.dataSource} 
 					element={this.state.element} 
 					path={this.state.path} 

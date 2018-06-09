@@ -60,6 +60,13 @@ class APIManager {
 	
 	taliesinApiRequest(method, url, data) {
 		if (this.taliesinApiUrl) {
+			if (StateStore.getState().profile.currentUser && StateStore.getState().profile.currentUser !== StateStore.getState().profile.connectedUser) {
+				if (url.indexOf("?") >= 0) {
+					url += "&username=" + StateStore.getState().profile.currentUser;
+				} else {
+					url += "?username=" + StateStore.getState().profile.currentUser;
+				}
+			}
 			return this.APIRequest(method, this.taliesinApiUrl + url, data);
 		} else {
 			return $.Deferred().reject("no taliesin API").promise();

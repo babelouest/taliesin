@@ -29,7 +29,7 @@ set(PROJECT_DESCRIPTION "Lightweight audio streaming server")
 set(PROJECT_BUGREPORT_PATH "https://github.com/babelouest/taliesin/issues")
 set(ORCANIA_VERSION_DOWNLOAD "1.2.3")
 set(YDER_VERSION_DOWNLOAD "1.3.3")
-set(ULFIUS_VERSION_DOWNLOAD "2.3.5")
+set(ULFIUS_VERSION_DOWNLOAD "2.3.6")
 set(HOEL_VERSION_DOWNLOAD "1.4.2")
 
 include(GNUInstallDirs)

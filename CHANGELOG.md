@@ -3,6 +3,8 @@
 ## 1.0.15
 
 - Make Chrome more happy on command `next`
+- Improve UI in several ways
+- Improve backend reaction on reload streams
 
 ## 1.0.14
 

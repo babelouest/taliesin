@@ -15,7 +15,7 @@ import i18n from './lib/i18n';
 config.fetchConfig()
 .then(function () {
 	var curOauth2Config = config.getConfigValue("oauth2Config");
-	if (curOauth2Config) {
+	if (curOauth2Config && curOauth2Config.enabled) {
 		var oauth2Connector = new OAuth2Connector({
 			storageType: curOauth2Config.storageType, 
 			responseType: curOauth2Config.responseType, 

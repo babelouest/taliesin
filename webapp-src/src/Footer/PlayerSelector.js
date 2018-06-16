@@ -49,7 +49,7 @@ class PlayerSelector extends Component {
 		if (playerName.length > 10) {
 			playerName = playerName.substring(0, 10) + "...";
 		}
-		if (this.state.isAdmin) {
+		if (this.state.isAdmin && StateStore.getState().angharadApiUrl) {
 			separator = <MenuItem divider />;
 			manager = <MenuItem onClick={this.handleManagePlayers}>{i18n.t("player.manage")}</MenuItem>;
 		}

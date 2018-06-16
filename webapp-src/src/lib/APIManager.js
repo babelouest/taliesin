@@ -54,7 +54,7 @@ class APIManager {
 	
 	angharadApiRequest(method, url, data) {
 		if (this.angharadApiUrl) {
-			return this.APIRequest(method, this.angharadApiUrl + url, data);
+			return this.APIRequest(method, this.angharadApiUrl + "/" + url, data);
 		} else {
 			return $.Deferred().reject("no angharad API").promise();
 		}

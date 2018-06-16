@@ -1,5 +1,11 @@
 # Taliesin changelog
 
+## 1.0.16
+
+- Don't show player manager if no angharad api
+- Add oauth2Config.enabled
+- Add benoicPrefix and carleonPrefix to be able to use other prefix on angharad if necessary
+
 ## 1.0.15
 
 - Make Chrome more happy on command `next`

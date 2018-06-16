@@ -133,7 +133,7 @@ class MPDController extends Component {
 				playlist.push(StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name + "?index=" + i);
 			}
 		}
-		StateStore.getState().APIManager.angharadApiRequest("POST", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/playlist", playlist)
+		StateStore.getState().APIManager.carleonApiRequest("POST", "/service-mpd/" + encodeURIComponent(this.state.player.name) + "/playlist", playlist)
 		.then((status) => {
 			this.loadMedia();
 			if (playNow) {
@@ -147,7 +147,7 @@ class MPDController extends Component {
 	}
 	
 	MPDStatus() {
-		StateStore.getState().APIManager.angharadApiRequest("GET", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/status")
+		StateStore.getState().APIManager.carleonApiRequest("GET", "/service-mpd/" + encodeURIComponent(this.state.player.name) + "/status")
 		.then((status) => {
 			this.setState({jukeboxRepeat: status.repeat, jukeboxRandom: status.random, volume: status.volume, jukeboxIndex: status.song_pos, play: (status.state==="play")}, () => {
 				StateStore.dispatch({ type: "setCurrentPlayerStatus", volume: status.volume, repeat: status.repeat, random: status.random, status: status.state });
@@ -160,7 +160,7 @@ class MPDController extends Component {
 			});
 		});
 		if (this.state.player.switch) {
-			StateStore.getState().APIManager.angharadApiRequest("GET", "/benoic/device/" + encodeURIComponent(this.state.player.switch.device) + "/switch/" + encodeURIComponent(this.state.player.switch.name))
+			StateStore.getState().APIManager.benoicApiRequest("GET", "/device/" + encodeURIComponent(this.state.player.switch.device) + "/switch/" + encodeURIComponent(this.state.player.switch.name))
 			.then((status) => {
 				this.setState({switchOn: !!status.value});
 			});
@@ -169,10 +169,10 @@ class MPDController extends Component {
 	
 	MPDConnect() {
 		if (this.state.player.name) {
-			StateStore.getState().APIManager.angharadApiRequest("GET", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/status")
+			StateStore.getState().APIManager.carleonApiRequest("GET", "/service-mpd/" + encodeURIComponent(this.state.player.name) + "/status")
 			.then((status) => {
 				this.setState({jukeboxRepeat: status.repeat, jukeboxRandom: status.random, volume: status.volume, jukeboxIndex: status.song_pos, play: (status.state==="play")}, () => {
-					StateStore.getState().APIManager.angharadApiRequest("GET", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/playlist/0")
+					StateStore.getState().APIManager.carleonApiRequest("GET", "/service-mpd/" + encodeURIComponent(this.state.player.name) + "/playlist/0")
 					.then((result) => {
 						// Parse result to check if it's a taliesin stream
 						if (result.uri && result.uri.startsWith(StateStore.getState().taliesinApiUrl + "/stream")) {
@@ -202,7 +202,7 @@ class MPDController extends Component {
 				});
 			});
 			if (this.state.player.switch) {
-				StateStore.getState().APIManager.angharadApiRequest("GET", "/benoic/device/" + encodeURIComponent(this.state.player.switch.device) + "/switch/" + encodeURIComponent(this.state.player.switch.name))
+				StateStore.getState().APIManager.benoicApiRequest("GET", "/device/" + encodeURIComponent(this.state.player.switch.device) + "/switch/" + encodeURIComponent(this.state.player.switch.name))
 				.then((status) => {
 					this.setState({switchOn: !!status.value});
 				});
@@ -238,7 +238,7 @@ class MPDController extends Component {
 	
 	handlePrevious() {
 		if (!this.state.stream.webradio) {
-			StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/previous/")
+			StateStore.getState().APIManager.carleonApiRequest("PUT", "/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/previous/")
 			.then(() => {
 				StateStore.getState().NotificationManager.addNotification({
 					message: i18n.t("player.previous"),
@@ -260,7 +260,7 @@ class MPDController extends Component {
 				this.MPDStatus();
 			});
 		} else {
-			StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/next/")
+			StateStore.getState().APIManager.carleonApiRequest("PUT", "/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/next/")
 			.then(() => {
 				StateStore.getState().NotificationManager.addNotification({
 					message: i18n.t("player.next"),
@@ -273,13 +273,13 @@ class MPDController extends Component {
 	
 	handleStop() {
 		if (this.state.player.switch && this.state.switchOn) {
-			StateStore.getState().APIManager.angharadApiRequest("GET", "/benoic/device/" + encodeURIComponent(this.state.player.switch.device) + "/switch/" + encodeURIComponent(this.state.player.switch.name) + "/0")
+			StateStore.getState().APIManager.benoicApiRequest("GET", "/device/" + encodeURIComponent(this.state.player.switch.device) + "/switch/" + encodeURIComponent(this.state.player.switch.name) + "/0")
 			.then(() => {
 				this.setState({switchOn: !this.state.switchOn});
 			});
 		}
 		this.setState({play: false});
-		StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/stop/")
+		StateStore.getState().APIManager.carleonApiRequest("PUT", "/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/stop/")
 		.then(() => {
 			StateStore.dispatch({ type: "setCurrentPlayerStatus", status: "stop"});
 			StateStore.getState().NotificationManager.addNotification({
@@ -292,7 +292,7 @@ class MPDController extends Component {
 	
 	handlePause() {
 		this.setState({play: false});
-		StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/pause/")
+		StateStore.getState().APIManager.carleonApiRequest("PUT", "/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/pause/")
 		.then(() => {
 			StateStore.dispatch({ type: "setCurrentPlayerStatus", status: "pause"});
 			StateStore.getState().NotificationManager.addNotification({
@@ -304,18 +304,18 @@ class MPDController extends Component {
 	
 	handlePlay() {
 		if (this.state.player.switch && !this.state.switchOn) {
-			StateStore.getState().APIManager.angharadApiRequest("GET", "/benoic/device/" + encodeURIComponent(this.state.player.switch.device) + "/switch/" + encodeURIComponent(this.state.player.switch.name) + "/1")
+			StateStore.getState().APIManager.benoicApiRequest("GET", "/device/" + encodeURIComponent(this.state.player.switch.device) + "/switch/" + encodeURIComponent(this.state.player.switch.name) + "/1")
 			.then(() => {
 				this.setState({switchOn: !this.state.switchOn});
 			});
 		}
 		var url;
 		if (this.state.jukeboxIndex > -1) {
-			url = "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/playpos/" + this.state.jukeboxIndex;
+			url = "/service-mpd/" + encodeURIComponent(this.state.player.name) + "/playpos/" + this.state.jukeboxIndex;
 		} else {
-			url = "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/play/";
+			url = "/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/play/";
 		}
-		StateStore.getState().APIManager.angharadApiRequest("PUT", url)
+		StateStore.getState().APIManager.carleonApiRequest("PUT", url)
 		.then(() => {
 			StateStore.dispatch({ type: "setCurrentPlayerStatus", status: "play"});
 			StateStore.getState().NotificationManager.addNotification({
@@ -327,7 +327,7 @@ class MPDController extends Component {
 	}
 	
 	handleRepeat() {
-		StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/repeat/" + (this.state.jukeboxRepeat?"0":"1"))
+		StateStore.getState().APIManager.carleonApiRequest("PUT", "/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/repeat/" + (this.state.jukeboxRepeat?"0":"1"))
 		.then(() => {
 			this.setState({jukeboxRepeat: !this.state.jukeboxRepeat}, () => {
 				StateStore.dispatch({type: "setCurrentPlayerStatus", repeat: this.state.jukeboxRepeat});
@@ -336,7 +336,7 @@ class MPDController extends Component {
 	}
 	
 	handleRandom() {
-		StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/random/" + (this.state.jukeboxRandom?"0":"1"))
+		StateStore.getState().APIManager.carleonApiRequest("PUT", "/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/random/" + (this.state.jukeboxRandom?"0":"1"))
 		.then(() => {
 			this.setState({jukeboxRandom: !this.state.jukeboxRandom}, () => {
 				StateStore.dispatch({type: "setCurrentPlayerStatus", random: this.state.jukeboxRandom});
@@ -346,7 +346,7 @@ class MPDController extends Component {
 	
 	handlePlayerSwitch() {
 		if (this.state.player.switch) {
-			StateStore.getState().APIManager.angharadApiRequest("GET", "/benoic/device/" + encodeURIComponent(this.state.player.switch.device) + "/switch/" + encodeURIComponent(this.state.player.switch.name) + "/" + (this.state.switchOn?"0":"1"))
+			StateStore.getState().APIManager.benoicApiRequest("GET", "/device/" + encodeURIComponent(this.state.player.switch.device) + "/switch/" + encodeURIComponent(this.state.player.switch.name) + "/" + (this.state.switchOn?"0":"1"))
 			.then(() => {
 				this.setState({switchOn: !this.state.switchOn});
 			});
@@ -354,7 +354,7 @@ class MPDController extends Component {
 	}
 	
 	handleChangeVolume(volume) {
-		StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(this.state.player.name) + "/volume/" + (this.state.volume+volume))
+		StateStore.getState().APIManager.carleonApiRequest("PUT", "/service-mpd/" + encodeURIComponent(this.state.player.name) + "/volume/" + (this.state.volume+volume))
 		.then(() => {
 			this.setState({volume: (this.state.volume+volume)});
 		});

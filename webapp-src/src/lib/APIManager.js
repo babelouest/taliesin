@@ -8,6 +8,8 @@ class APIManager {
 		if (parameters) {
 			this.taliesinApiUrl = parameters.taliesinApiUrl || "";
 			this.angharadApiUrl = parameters.angharadApiUrl || "";
+			this.benoicPrefix = parameters.benoicPrefix || "";
+			this.carleonPrefix = parameters.carleonPrefix || "";
 			this.oauth2 = !!parameters.oauth2;
 		}
 	}
@@ -55,6 +57,22 @@ class APIManager {
 			return this.APIRequest(method, this.angharadApiUrl + url, data);
 		} else {
 			return $.Deferred().reject("no angharad API").promise();
+		}
+	}
+	
+	benoicApiRequest(method, url, data) {
+    if (this.benoicPrefix) {
+      return this.angharadApiRequest(method, this.benoicPrefix + "/" + url, data);
+		} else {
+			return $.Deferred().reject("no benoic prefix").promise();
+		}
+	}
+	
+	carleonApiRequest(method, url, data) {
+    if (this.carleonPrefix) {
+      return this.angharadApiRequest(method, this.carleonPrefix + "/" + url, data);
+		} else {
+			return $.Deferred().reject("no carleon prefix").promise();
 		}
 	}
 	

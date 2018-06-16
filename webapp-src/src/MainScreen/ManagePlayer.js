@@ -34,10 +34,10 @@ class ManagePlayer extends Component {
 	}
 	
 	getInitialList() {
-		StateStore.getState().APIManager.angharadApiRequest("GET", "/benoic/device")
+		StateStore.getState().APIManager.benoicApiRequest("GET", "/device")
 		.then((devices) => {
 			return devices.forEach((device) => {
-				return StateStore.getState().APIManager.angharadApiRequest("GET", "/benoic/device/" + encodeURIComponent(device.name) + "/overview")
+				return StateStore.getState().APIManager.benoicApiRequest("GET", "/device/" + encodeURIComponent(device.name) + "/overview")
 				.then((overview) => {
 					if (overview.switches) {
 						var switchList = this.state.switchList;
@@ -52,7 +52,7 @@ class ManagePlayer extends Component {
 			});
 		});
 		
-		StateStore.getState().APIManager.angharadApiRequest("GET", "/carleon/service")
+		StateStore.getState().APIManager.carleonApiRequest("GET", "/service")
 		.then((services) => {
 			services.forEach((service) => {
 				if (service.name === "service-mpd") {
@@ -129,7 +129,7 @@ class ManagePlayer extends Component {
 		this.setState({showModal: false}, () => {
 			if (result) {
 				if (add) {
-					StateStore.getState().APIManager.angharadApiRequest("POST", "/carleon/service-mpd/", {name: player.name, description: player.description||undefined, host: player.host||undefined, port: player.port||undefined, password: player.password||undefined})
+					StateStore.getState().APIManager.carleonApiRequest("POST", "/service-mpd/", {name: player.name, description: player.description||undefined, host: player.host||undefined, port: player.port||undefined, password: player.password||undefined})
 					.then((services) => {
 						StateStore.getState().NotificationManager.addNotification({
 							message: i18n.t("player.message_saved"),
@@ -144,7 +144,7 @@ class ManagePlayer extends Component {
 						});
 					});
 				} else {
-					StateStore.getState().APIManager.angharadApiRequest("PUT", "/carleon/service-mpd/" + encodeURIComponent(player.name), {description: player.description||undefined, host: player.host||undefined, port: player.port||undefined, password: player.password||undefined})
+					StateStore.getState().APIManager.carleonApiRequest("PUT", "/service-mpd/" + encodeURIComponent(player.name), {description: player.description||undefined, host: player.host||undefined, port: player.port||undefined, password: player.password||undefined})
 					.then((services) => {
 						StateStore.getState().NotificationManager.addNotification({
 							message: i18n.t("player.message_saved"),
@@ -166,7 +166,7 @@ class ManagePlayer extends Component {
 	confirmDeletePlayer(result) {
 		this.setState({modalDeleteShow: false}, () => {
 			if (result) {
-				StateStore.getState().APIManager.angharadApiRequest("DELETE", "/carleon/service-mpd/" + encodeURIComponent(this.state.currentPlayer.name))
+				StateStore.getState().APIManager.carleonApiRequest("DELETE", "/service-mpd/" + encodeURIComponent(this.state.currentPlayer.name))
 				.then((services) => {
 					StateStore.getState().NotificationManager.addNotification({
 						message: i18n.t("player.message_deleted"),

@@ -4,6 +4,7 @@
 	"storageType": "local", 
 	"useWebsocket": true,
 	"oauth2Config": {
+    "enabled": true,
 		"storageType": "local", 
 		"responseType": "code", 
 		"serverUrl": "http://localhost:4593/api", 

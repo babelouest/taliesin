@@ -222,7 +222,7 @@ json_t * get_format(struct config_elements * config, AVFormatContext *fmt_ctx, c
           json_object_set_new(j_format, "media", json_string("other"));
         }
       } else {
-        json_object_set_new(j_format, "media", json_string("unkown"));
+        json_object_set_new(j_format, "media", json_string("unknown"));
       }
       json_object_set_new(j_format, "name", json_string(fmt_ctx->iformat->name));
       json_object_set_new(j_format, "longname", json_string(fmt_ctx->iformat->long_name));

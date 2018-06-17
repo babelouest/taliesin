@@ -296,8 +296,8 @@ class ElementButtons extends Component {
 		this.state.streamList.forEach((stream, index) => {
 			streamList.push(
 				<MenuItem key={index} onClick={() => this.addToStream(stream.name)}>
-					<span className="visible-xs">v- {stream.display_name?this.limitStrLenghth(stream.display_name, 20):i18n.t("common.no_name")}</span>
-					<span className="hidden-xs">s- {stream.display_name||i18n.t("common.no_name")}</span>
+					<span className="visible-xs">- {stream.display_name?this.limitStrLenghth(stream.display_name, 20):i18n.t("common.no_name")}</span>
+					<span className="hidden-xs">- {stream.display_name||i18n.t("common.no_name")}</span>
 				</MenuItem>
 			);
 		});

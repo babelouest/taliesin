@@ -118,6 +118,10 @@ $ make
 $ sudo make install
 ```
 
+The available options for cmake are:
+- `-DWITH_JOURNALD=[on|off]` (default `on`): Build with journald (SystemD) support for logging
+- `-DCMAKE_BUILD_TYPE=[Debug|Release]` (default `Release`): Compile with debugging symbols or not
+
 ### Good ol' Makefile
 
 Download Taliesin and its dependencies hosted on github, compile and install.

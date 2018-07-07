@@ -173,7 +173,6 @@ include(FindUlfius)
 find_package(Ulfius 2.2 QUIET)
 if (NOT ULFIUS_FOUND)
     include(DownloadProject)
-    option(WITH_WEBSOCKET "specific param" off)
     option(INSTALL_HEADER "specific param" off)
     option(CHECK_YDER "specific param" off)
     download_project(PROJ ulfius

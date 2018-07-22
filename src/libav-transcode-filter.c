@@ -45,7 +45,7 @@
 #include <libavutil/avstring.h>
 #include <libavutil/frame.h>
 #include <libavutil/opt.h>
-#include <libavresample/avresample.h>
+#include <libswresample/swresample.h>
 #include <libavutil/imgutils.h>
 #include <libswscale/swscale.h>
 
@@ -130,29 +130,25 @@ int init_input_frame(AVFrame **frame) {
 
 int init_resampler(AVCodecContext *input_codec_context,
                    AVCodecContext *output_codec_context,
-                   AVAudioResampleContext **resample_context) {
+                   SwrContext **resample_context) {
   int error;
   /* Create a resampler context for the conversion. */
-  if (!(*resample_context = avresample_alloc_context())) {
+  if (!(*resample_context = swr_alloc_set_opts(NULL,
+                                               av_get_default_channel_layout(output_codec_context->channels),
+                                               output_codec_context->sample_fmt,
+                                               output_codec_context->sample_rate,
+                                               av_get_default_channel_layout(input_codec_context->channels),
+                                               input_codec_context->sample_fmt,
+                                               input_codec_context->sample_rate,
+                                               0, NULL))) {
     y_log_message(Y_LOG_LEVEL_ERROR, "Could not allocate resample context");
     return AVERROR(ENOMEM);
   }
-  av_opt_set_int(*resample_context, "in_channel_layout",
-                 av_get_default_channel_layout(input_codec_context->channels), 0);
-  av_opt_set_int(*resample_context, "out_channel_layout",
-                 av_get_default_channel_layout(output_codec_context->channels), 0);
-  av_opt_set_int(*resample_context, "in_sample_rate",
-                 input_codec_context->sample_rate, 0);
-  av_opt_set_int(*resample_context, "out_sample_rate",
-                 output_codec_context->sample_rate, 0);
-  av_opt_set_int(*resample_context, "in_sample_fmt",
-                 input_codec_context->sample_fmt, 0);
-  av_opt_set_int(*resample_context, "out_sample_fmt",
-                 output_codec_context->sample_fmt, 0);
+  
   /* Open the resampler with the specified parameters. */
-  if ((error = avresample_open(*resample_context)) < 0) {
+  if ((error = swr_init(*resample_context)) < 0) {
     y_log_message(Y_LOG_LEVEL_ERROR, "Could not open resample context");
-    avresample_free(resample_context);
+    swr_free(resample_context);
     return error;
   }
   return 0;
@@ -237,7 +233,7 @@ int read_decode_convert_and_store(AVAudioFifo *fifo,
                                   AVFormatContext *input_format_context,
                                   AVCodecContext *input_codec_context,
                                   AVCodecContext *output_codec_context,
-                                  AVAudioResampleContext *resample_context,
+                                  SwrContext *resample_context,
                                   int *finished) {
   AVFrame *input_frame = NULL;
   uint8_t ** converted_input_samples = NULL;
@@ -251,14 +247,14 @@ int read_decode_convert_and_store(AVAudioFifo *fifo,
       } else {
         /* If there is decoded data, convert and store it. */
         if (data_present) {
-          out_samples = avresample_available(resample_context) + av_rescale_rnd(avresample_get_delay(resample_context) + input_frame->nb_samples, input_codec_context->sample_rate, output_codec_context->sample_rate, AV_ROUND_UP);
+          out_samples = av_rescale_rnd(swr_get_delay(resample_context, output_codec_context->sample_rate) + input_frame->nb_samples, input_codec_context->sample_rate, output_codec_context->sample_rate, AV_ROUND_UP);
           if (!(converted_input_samples = calloc(output_codec_context->channels, sizeof(uint8_t *)))) {
             y_log_message(Y_LOG_LEVEL_ERROR, "Could not allocate converted input sample pointers");
             ret = AVERROR(ENOMEM);
           } else {
             av_samples_alloc(converted_input_samples, &out_linesize, 2, out_samples, output_codec_context->sample_fmt, 0);
             if (*converted_input_samples != NULL) {
-              out_samples = avresample_convert(resample_context, converted_input_samples, out_linesize, out_samples, input_frame->extended_data, *input_frame->linesize, input_frame->nb_samples);
+              out_samples = swr_convert(resample_context, converted_input_samples, out_samples, (const uint8_t **) input_frame->extended_data, input_frame->nb_samples);
               if (out_samples) {
                 if ((ret = av_audio_fifo_realloc(fifo, av_audio_fifo_size(fifo) + out_samples)) < 0) {
                   y_log_message(Y_LOG_LEVEL_ERROR, "Could not reallocate FIFO");

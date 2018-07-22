@@ -1701,7 +1701,7 @@ void * webradio_run_thread(void * args) {
   struct _audio_buffer   * current_buffer       = NULL;
   AVFormatContext        * input_format_context = NULL;
   AVCodecContext         * input_codec_context  = NULL;
-  AVAudioResampleContext * resample_context     = NULL;
+  SwrContext * resample_context     = NULL;
   struct _t_file         * current_file         = NULL;
   int data_present, i, send_signal = 0;
   int64_t duration;
@@ -1795,8 +1795,8 @@ void * webradio_run_thread(void * args) {
       y_log_message(Y_LOG_LEVEL_ERROR, "Error opening file %s", current_file->path);
     }
     if (resample_context) {
-      avresample_close(resample_context);
-      avresample_free(&resample_context);
+      swr_close(resample_context);
+      swr_free(&resample_context);
       resample_context = NULL;
     }
     if (input_codec_context) {

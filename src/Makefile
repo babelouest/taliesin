@@ -29,7 +29,7 @@ endif
 CC=gcc
 #CC=clang
 CFLAGS=-c -Wall $(ADDITIONALFLAGS)
-LIBS=-lc -lulfius -lyder -ljansson -lorcania -lhoel -lconfig -lpthread -lavcodec -lavutil -lavresample -lavformat -lswscale -lz $(INITIAL_LIBS)
+LIBS=-lc -lulfius -lyder -ljansson -lorcania -lhoel -lconfig -lpthread -lavcodec -lavutil -lswresample -lavformat -lswscale -lz $(INITIAL_LIBS)
 OBJECTS=$(OAUTH2_OBJECTS) static_file_callback.o misc.o libav-transcode-filter.o config.o file_list.o filesystem.o data_source.o media.o playlist.o stream.o stream_jukebox.o stream_webradio.o search.o webservice.o taliesin.o
 PREFIX=/usr/local
 CONFIG_FILE=../taliesin.conf

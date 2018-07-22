@@ -1422,7 +1422,7 @@ void * jukebox_run_thread(void * args) {
   struct config_elements      * config               = client_data_jukebox->jukebox->config;
   AVFormatContext             * input_format_context = NULL, * output_format_context = NULL;
   AVCodecContext              * input_codec_context  = NULL, * output_codec_context  = NULL;
-  AVAudioResampleContext      * resample_context     = NULL;
+  SwrContext      * resample_context     = NULL;
   AVAudioFifo                 * fifo                 = NULL;
   int64_t pts = 0;
   int output_frame_size, finished = 0, error, data_present = 0, data_written = 0;
@@ -1470,8 +1470,8 @@ void * jukebox_run_thread(void * args) {
       y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_run_thread - Error opening input file or resample context");
     }
     if (resample_context) {
-      avresample_close(resample_context);
-      avresample_free(&resample_context);
+      swr_close(resample_context);
+      swr_free(&resample_context);
       resample_context = NULL;
     }
     if (input_codec_context) {

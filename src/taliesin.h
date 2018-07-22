@@ -24,14 +24,14 @@
 #ifndef __TALIESIN_H_
 #define __TALIESIN_H_
 
-#define _TALIESIN_VERSION_ "1.0.16"
+#define _TALIESIN_VERSION_ "1.0.17"
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
 #include <libavformat/avformat.h>
 #include <libavutil/audio_fifo.h>
-#include <libavresample/avresample.h>
+#include <libswresample/swresample.h>
 
 /** Angharad libraries **/
 #define U_DISABLE_CURL
@@ -646,12 +646,12 @@ json_t *   playlist_has_media(struct config_elements * config, json_int_t tpl_id
 int open_input_file(const char *filename, AVFormatContext **input_format_context, AVCodecContext **input_codec_context, int type);
 int init_resampler(AVCodecContext *input_codec_context,
                    AVCodecContext *output_codec_context,
-                   AVAudioResampleContext **resample_context);
+                   SwrContext **resample_context);
 int read_decode_convert_and_store(AVAudioFifo *fifo,
                                   AVFormatContext *input_format_context,
                                   AVCodecContext *input_codec_context,
                                   AVCodecContext *output_codec_context,
-                                  AVAudioResampleContext *resample_context,
+                                  SwrContext *resample_context,
                                   int *finished);
 int load_encode_and_return(AVAudioFifo *fifo,
                            AVCodecContext *output_codec_context,

@@ -261,7 +261,7 @@ class BrowsePlaylist extends Component {
 	
 	runPlaylistAdvanced(player) {
 		if (player) {
-			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(this.state.curPlaylist.name) + "/load?" + player.type + (player.recursive?"&recursive":"") + "&format=" + player.format + "&channels=" + player.channels + "&bitrate=" + player.bitrate + "&sample_rate=" + player.sampleRate + (player.random?"&random":"") + "&name=" + this.state.curPlaylist.name)
+			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(this.state.curPlaylist.name) + "/load?" + player.type + (player.recursive?"&recursive":"") + "&format=" + player.format + "&channels=" + player.channels + "&bitrate=" + player.bitrate + "&samplerate=" + player.sampleRate + (player.random?"&random":"") + "&name=" + this.state.curPlaylist.name)
 			.then((result) => {
 				var streamList = StateStore.getState().streamList;
 				streamList.push(result);

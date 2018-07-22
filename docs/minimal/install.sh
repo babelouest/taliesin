@@ -2,18 +2,18 @@
 set -e
 USER=pi
 GROUP=pi
-ORCANIA_VERSION=1.1.1
-YDER_VERSION=1.1.1
-ULFIUS_VERSION=2.2.4
-HOEL_VERSION=1.3.1
-CARLEON_VERSION=1.1.0
+ORCANIA_VERSION=1.2.3
+YDER_VERSION=1.3.3
+ULFIUS_VERSION=2.3.7
+HOEL_VERSION=1.4.2
+CARLEON_VERSION=1.2.0
 
 echo "###############"
 echo "Install dependencies packages"
 echo "###############"
 apt update
 apt upgrade -y
-apt install -y libjansson-dev libavfilter-dev libavcodec-dev libavformat-dev libavresample-dev libavutil-dev libcurl4-gnutls-dev libsqlite3-dev libconfig8-dev libmpdclient-dev libgnutls28-dev libgcrypt11-dev wget sqlite3
+apt install -y libjansson-dev libavfilter-dev libavcodec-dev libavformat-dev libswresample-dev libavutil-dev libcurl4-gnutls-dev libsqlite3-dev libconfig8-dev libmpdclient-dev libgnutls28-dev libgcrypt11-dev wget sqlite3
 
 echo "###############"
 echo "Install libmicrohttpd"

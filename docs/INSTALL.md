@@ -13,7 +13,7 @@ libjansson
 libavfilter
 libavcodec
 libavformat
-libavresample
+libswresample
 libavutil
 libcurl-gnutls
 libgnutls
@@ -26,7 +26,7 @@ libconfig
 For example, to install Taliesin with the `taliesin-full_1.0.12_Debian_stretch_x86_64.tar.gz` package downloaded on the `releases` page, you must execute the following commands:
 
 ```shell
-$ sudo apt install -y autoconf libjansson-dev libssl-dev libavfilter libavcodec libavformat libavresample libavutil libcurl-gnutls libgnutls libgcrypt libsqlite3 libmariadbclient libconfig
+$ sudo apt install -y autoconf libjansson-dev libssl-dev libavfilter libavcodec libavformat libswresample libavutil libcurl-gnutls libgnutls libgcrypt libsqlite3 libmariadbclient libconfig
 $ wget https://github.com/benmcollins/libjwt/archive/v1.9.tar.gz
 $ tar -zxvf v1.9.tar.gz
 $ cd libjwt-1.9
@@ -97,7 +97,7 @@ Taliesin requires [libav](https://libav.org/) version 11, or equivalent ffmpeg, 
 
 ```shell
 $ # Install libraries
-$ apt install -y libjansson-dev libavfilter-dev libavcodec-dev libavformat-dev libavresample-dev libavutil-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libsqlite3-dev libmariadbclient-dev libconfig8-dev
+$ apt install -y libjansson-dev libavfilter-dev libavcodec-dev libavformat-dev libswresample-dev libavutil-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libsqlite3-dev libmariadbclient-dev libconfig8-dev
 $ git clone https://github.com/benmcollins/libjwt.git
 $ cd libjwt
 $ autoreconf -a && ./configure --without-openssl && make && sudo make install

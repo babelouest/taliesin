@@ -1,5 +1,9 @@
 # Taliesin changelog
 
+## 1.0.17
+
+- Since AVResample library is deprecated, switch to SWResample (thanks to SIPWise for the example)
+
 ## 1.0.16
 
 - Don't show player manager if no angharad api

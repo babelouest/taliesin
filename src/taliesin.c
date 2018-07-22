@@ -48,7 +48,9 @@ int main (int argc, char ** argv) {
   pthread_t thread_webradio;
   struct _t_webradio * webradio;
   
+#if LIBAVFORMAT_VERSION_INT < AV_VERSION_INT(58, 9, 100)
   av_register_all();
+#endif
   
   srand(time(NULL));
   if (config == NULL) {

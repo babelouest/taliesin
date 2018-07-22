@@ -41,7 +41,8 @@ config.fetchConfig()
 					StateStore.dispatch({ type: 'connection', status: newStatus, token: token, expiration: expiration, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), benoicPrefix: config.getConfigValue("benoicPrefix"), carleonPrefix: config.getConfigValue("carleonPrefix"), angharadApiUrl: config.getConfigValue("angharadApiUrl"), oauth2: true});
 					ReactDOM.render(<App/>, document.getElementById('root'));
 				} else if (newStatus === "disconnected") {
-					StateStore.dispatch({ type: 'connection', status: newStatus, token: false, expiration: 0, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), benoicPrefix: config.getConfigValue("benoicPrefix"), carleonPrefix: config.getConfigValue("carleonPrefix"), angharadApiUrl: config.getConfigValue("angharadApiUrl"), oauth2: true });
+					StateStore.dispatch({ type: "connection", status: newStatus, token: false, expiration: 0, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), benoicPrefix: config.getConfigValue("benoicPrefix"), carleonPrefix: config.getConfigValue("carleonPrefix"), angharadApiUrl: config.getConfigValue("angharadApiUrl"), oauth2: true });
+          StateStore.dispatch({ type: "showFullScreen", show: false });
 					ReactDOM.render(<App/>, document.getElementById('root'));
 				} else if (newStatus === "refresh") {
 					StateStore.dispatch({ type: "newApiToken", token: token, expiration: expiration});

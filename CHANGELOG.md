@@ -3,6 +3,8 @@
 ## 1.0.17
 
 - Since AVResample library is deprecated, switch to SWResample (thanks to SIPWise for the example)
+- av_register_all is deprecated since 58.9.100
+- Fix small bugs in UI
 
 ## 1.0.16
 

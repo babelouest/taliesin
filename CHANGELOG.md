@@ -1,5 +1,10 @@
 # Taliesin changelog
 
+## 1.0.18
+
+- Update front-end libraries and adapt code to it
+- Use instance->timeout to automatically disconnect streams after a long inactivity
+
 ## 1.0.17
 
 - Since AVResample library is deprecated, switch to SWResample (thanks to SIPWise for the example)

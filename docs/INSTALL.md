@@ -27,9 +27,9 @@ For example, to install Taliesin with the `taliesin-full_1.0.12_Debian_stretch_x
 
 ```shell
 $ sudo apt install -y autoconf libjansson-dev libssl-dev libavfilter libavcodec libavformat libswresample libavutil libcurl-gnutls libgnutls libgcrypt libsqlite3 libmariadbclient libconfig
-$ wget https://github.com/benmcollins/libjwt/archive/v1.9.tar.gz
-$ tar -zxvf v1.9.tar.gz
-$ cd libjwt-1.9
+$ wget https://github.com/benmcollins/libjwt/archive/v1.9.0.tar.gz
+$ tar -zxvf v1.9.0.tar.gz
+$ cd libjwt-1.9.0
 $ autoreconf -i
 $ ./configure
 $ make && sudo make install

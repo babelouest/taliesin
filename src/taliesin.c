@@ -121,6 +121,8 @@ int main (int argc, char ** argv) {
     return 1;
   }
   ulfius_init_instance(config->instance, TALIESIN_DEFAULT_PORT, NULL, NULL);
+  // TODO remove timeout when MHD will support a timeout on a streaming response
+  config->instance->timeout = 20;
 #ifndef DISABLE_OAUTH2
   config->glewlwyd_resource_config->method = G_METHOD_HEADER;
   config->glewlwyd_resource_config->realm = NULL;

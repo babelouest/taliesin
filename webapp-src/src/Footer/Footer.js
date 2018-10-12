@@ -208,7 +208,7 @@ class Footer extends Component {
 			}
 			return (
 				<div className="navbar-fixed-bottom footer">
-					<a href={this.state.stream_external} style={{display: "none"}} id={"play-external-anchor-footer"} download={(this.state.stream.display_name||i18n.t("common.no_name"))+".m3u"}>{i18n.t("common.external")}</a>
+					<a href={(this.state.stream_external||"")} style={{display: "none"}} id={"play-external-anchor-footer"} download={(this.state.stream.display_name||i18n.t("common.no_name"))+".m3u"}>{i18n.t("common.external")}</a>
 					<Row>
 						{streamSelector}
 						{audioPlayer}

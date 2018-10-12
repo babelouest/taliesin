@@ -550,7 +550,7 @@ class BrowsePlaylist extends Component {
 									<FontAwesome name={"trash"} />
 								</Button>
 							</ButtonGroup>
-							<DropdownButton className="visible-xs" id={"xs-manage"-aPlaylist.name} pullRight title={
+							<DropdownButton className="visible-xs" id={"xs-manage-"+aPlaylist.name} pullRight title={
 								<span><i className="fa fa-cog"></i></span>
 							}>
 								<MenuItem onClick={() => {this.playNow(aPlaylist)}}>

@@ -368,8 +368,8 @@ class AudioPlayer extends Component {
 					} else {
 						this.sendStreamComand("list", {offset: this.state.jukeboxIndex, limit: 1});
 					}
+          this.rap.audioEl.play();
 				});
-				this.rap.audioEl.play();
 			}
 		})
 	}

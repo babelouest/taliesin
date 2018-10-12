@@ -526,7 +526,7 @@ class StreamDetails extends Component {
 								</Label>
 							</Col>
 							<Col md={6} sm={6} xs={6}>
-								<a target="_blank" href={StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name}>direct link</a>
+								<a target="_blank" rel="noopener noreferrer" href={StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name}>direct link</a>
 							</Col>
 						</Row>
 						{playlistAttached}

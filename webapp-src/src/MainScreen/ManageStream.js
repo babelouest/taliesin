@@ -322,7 +322,7 @@ class ManageStream extends Component {
 								<FontAwesome name={"trash"} />
 							</Button>
 						</ButtonGroup>
-						<DropdownButton className="visible-xs visible-sm" id={"xs-manage"-stream.name} pullRight title={
+						<DropdownButton className="visible-xs visible-sm" id={"xs-manage-"+stream.name} pullRight title={
 							<span><i className="fa fa-cog"></i></span>
 						}>
 							<MenuItem onClick={() => this.playStream(stream)}>

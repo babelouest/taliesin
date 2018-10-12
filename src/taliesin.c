@@ -121,8 +121,7 @@ int main (int argc, char ** argv) {
     return 1;
   }
   ulfius_init_instance(config->instance, TALIESIN_DEFAULT_PORT, NULL, NULL);
-  // TODO remove timeout when MHD will support a timeout on a streaming response
-  config->instance->timeout = 20;
+  config->timeout = TALIESIN_DEFAULT_HTTP_TIMEOUT;
 #ifndef DISABLE_OAUTH2
   config->glewlwyd_resource_config->method = G_METHOD_HEADER;
   config->glewlwyd_resource_config->realm = NULL;
@@ -176,6 +175,9 @@ int main (int argc, char ** argv) {
     fprintf(stderr, "Error load_config_values\n");
     exit_server(&config, TALIESIN_ERROR);
   }
+
+  // TODO remove instance timeout when MHD will support a timeout on a streaming response
+  config->instance->timeout = config->timeout;
   
   //av_log_set_callback(&redirect_libav_logs);
   
@@ -594,7 +596,7 @@ int build_config_from_file(struct config_elements * config) {
              * db_type, * db_sqlite_path, * db_mariadb_host = NULL, * db_mariadb_user = NULL,
              * db_mariadb_password = NULL, * db_mariadb_dbname = NULL, * cur_static_files_path = NULL,
              * cur_oauth_scope_user = NULL, * cur_oauth_scope_admin = NULL, * extension = NULL, * mime_type_value = NULL, * cur_stream_format = NULL;
-  int db_mariadb_port = 0, cur_stream_channels = 0, cur_stream_sample_rate = 0, cur_stream_bit_rate = 0, cur_use_oauth2_authentication = 1, cur_user_can_create_data_source = 0, i = 0;
+  int db_mariadb_port = 0, cur_stream_channels = 0, cur_stream_sample_rate = 0, cur_stream_bit_rate = 0, cur_use_oauth2_authentication = 1, cur_user_can_create_data_source = 0, cur_timeout = 0, i = 0;
 #ifndef DISABLE_OAUTH2
   config_setting_t * jwt;
   const char * cur_rsa_pub_file = NULL, * cur_ecdsa_pub_file = NULL, * cur_sha_secret = NULL;
@@ -948,6 +950,16 @@ int build_config_from_file(struct config_elements * config) {
     }
   }
   
+  if (config_lookup_int(&cfg, "timeout", &cur_timeout)) {
+    if (cur_timeout >= 0) {
+      config->timeout = cur_timeout;
+    } else {
+      fprintf(stderr, "Error timeout must be positive or null\n");
+      config_destroy(&cfg);
+      return 0;
+    }
+  }
+
   if (config_lookup_bool(&cfg, "user_can_create_data_source", &cur_user_can_create_data_source) == CONFIG_TRUE) {
     config->user_can_create_data_source = cur_user_can_create_data_source;
   }

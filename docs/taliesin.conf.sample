@@ -120,6 +120,7 @@ stream_format      = "mp3"   # use values 'mp3', 'vorbis' or 'flac'
 stream_channels    = 2       # use values 1 or 2
 stream_sample_rate = 44100   # use values 8000, 11025, 22050, 32000, 44100 or 48000
 stream_bitrate     = 128000  # use values 32000, 96000, 128000, 192000, 256000 or 320000
+timeout            = 20      # timeout in seconds to automatically disconnect idle streams
 
 # jwt parameters, these parameters correspond to the JWT configuration of the OAuth2 server you rely on, if necessary
 jwt =

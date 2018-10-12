@@ -51,9 +51,10 @@
 /**
  * Application constant definitions
  */
-#define TALIESIN_LOG_NAME       "Taliesin"
-#define TALIESIN_DEFAULT_PORT   8576
-#define TALIESIN_DEFAULT_PREFIX "api"
+#define TALIESIN_LOG_NAME             "Taliesin"
+#define TALIESIN_DEFAULT_PORT         8576
+#define TALIESIN_DEFAULT_PREFIX       "api"
+#define TALIESIN_DEFAULT_HTTP_TIMEOUT 0
 
 #define TALIESIN_RUNNING  0
 #define TALIESIN_STOP     1
@@ -424,6 +425,7 @@ struct config_elements {
   char                             * secure_connection_pem_file;
   struct _h_connection             * conn;
   struct _u_instance               * instance;
+  int                                timeout;
   unsigned short                     use_oauth2_authentication;
   struct _glewlwyd_resource_config * glewlwyd_resource_config;
   struct _static_file_config       * static_file_config;

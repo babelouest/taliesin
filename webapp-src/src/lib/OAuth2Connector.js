@@ -1,4 +1,4 @@
-import Cookies from 'js-cookie';
+import Cookies from '../js/js.cookie';
 
 class OAuth2Connector {
 	

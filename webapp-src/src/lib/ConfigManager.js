@@ -1,5 +1,4 @@
-import $ from 'jquery';
-import Cookies from 'js-cookie';
+import Cookies from '../js/js.cookie.js';
 
 class ConfigManager {
 	constructor() {

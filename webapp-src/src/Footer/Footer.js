@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { Row, Col, Button, ButtonGroup, DropdownButton, MenuItem } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
-import $ from 'jquery';
 import StateStore from '../lib/StateStore';
 import StreamSelector from './StreamSelector';
 import PlayerSelector from './PlayerSelector';

@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { Table, DropdownButton, Button, ButtonGroup, MenuItem } from 'react-bootstrap';
-import $ from 'jquery';
 import FontAwesome from 'react-fontawesome';
 import StateStore from '../lib/StateStore';
 import ModalConfirm from '../Modal/ModalConfirm';

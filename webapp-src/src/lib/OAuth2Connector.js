@@ -1,5 +1,4 @@
 import Cookies from 'js-cookie';
-import $ from 'jquery';
 
 class OAuth2Connector {
 	

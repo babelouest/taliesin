@@ -1,4 +1,3 @@
-import $ from 'jquery';
 import StateStore from './StateStore';
 
 class APIManager {

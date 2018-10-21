@@ -31,5 +31,5 @@ dev:
 build-webapp:
 	$(JSC) run build
 	find $(WEBAPP_DEST) ! -name config.json ! -name webapp -delete
-	cp -R index.html css/ fonts/ images/ js/ locales/ $(WEBAPP_DEST)
+	cp -R index.html favicon.ico css/ fonts/ images/ js/ locales/ $(WEBAPP_DEST)
 	cp output/bundle.min.js $(WEBAPP_DEST)/bundle.js

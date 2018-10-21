@@ -80,7 +80,7 @@ class ElementCategoryIcon extends Component {
 			icon = 
 				<div>
 					<a role="button" onClick={() => this.handleChangePath(this.state.element.name)} title={this.state.element.name}>
-						<Image src="/images/unknown-128.png" alt={this.state.element.name} className="elementImage" responsive>
+						<Image src="images/unknown-128.png" alt={this.state.element.name} className="elementImage" responsive>
 						</Image>
 						<FontAwesome name="spinner" spin />
 						<div className="hideOverflow">

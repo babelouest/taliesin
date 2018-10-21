@@ -186,7 +186,7 @@ class MediaRow extends Component {
 		if (this.state.imgThumbBlob) {
 			cover = <Image src={"data:image/jpeg;base64," + this.state.imgThumbBlob} thumbnail responsive className="cover-image-thumb"/>
 		} else {
-			cover = <Image src="/images/album-128.png" alt={this.state.media.name} className="cover-image-thumb" responsive />
+			cover = <Image src="images/album-128.png" alt={this.state.media.name} className="cover-image-thumb" responsive />
 		}
 		return (
 			<div>

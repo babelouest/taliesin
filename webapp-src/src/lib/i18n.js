@@ -20,7 +20,11 @@ i18n
 
 		react: {
 			wait: true
-		}
+		},
+    
+    backend: {
+      loadPath: 'locales/{{lng}}/{{ns}}.json'
+    }
 	});
 
 

@@ -101,7 +101,7 @@ class BrowseRecent extends Component {
 							<ToggleButton value={4}>{i18n.t("common.date")}</ToggleButton>
 						</ToggleButtonGroup>
 					</ButtonToolbar>
-					<DropdownButton className="visible-xs" id={"grouypBy"} title={
+					<DropdownButton className="visible-xs" id="grouypBy" title={
 						<span>Group by</span>
 					}>
 						<MenuItem onClick={() => this.handleChangeGroupBy(0)} className={this.state.groupBy===0?"bg-success":""}>

@@ -345,7 +345,7 @@ class ElementButtons extends Component {
 					</Button>
 					{refreshButton}
 					{categoryButton}
-					<DropdownButton id={"add"-this.state.element.name} title={
+					<DropdownButton id={"add-"+this.state.element.name} title={
 						<span><i className="fa fa-plus"></i></span>
 					}>
 						<MenuItem>
@@ -363,7 +363,7 @@ class ElementButtons extends Component {
 						</MenuItem>
 					</DropdownButton>
 				</ButtonGroup>
-				<DropdownButton className="visible-xs" id={"xs-manage"-this.state.element.name} title={
+				<DropdownButton className="visible-xs" id={"xs-manage-"+this.state.element.name} title={
 					<span><i className="fa fa-cog"></i></span>
 				}>
 					<MenuItem onClick={this.playElement}>

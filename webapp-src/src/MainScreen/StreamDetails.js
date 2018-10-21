@@ -380,7 +380,7 @@ class StreamDetails extends Component {
 		}
 		if (this.state.stream.webradio) {
 			history =
-				<Panel collapsible onClick={this.handleSelectHistory} defaultExpanded>
+				<Panel onToggle={this.handleSelectHistory} defaultExpanded>
           <Panel.Heading>
             <Panel.Title toggle>
               {i18n.t("stream.history")}
@@ -463,7 +463,7 @@ class StreamDetails extends Component {
 								<FontAwesome name={"refresh"} />
 							</Button>
 						</ButtonGroup>
-						<DropdownButton className="visible-xs" id={"xs-manage"-this.state.stream.name} title={
+						<DropdownButton className="visible-xs" id={"xs-manage-"+this.state.stream.name} title={
 							<span><i className="fa fa-cog"></i></span>
 						}>
 							<MenuItem onClick={this.playStream}>
@@ -499,7 +499,7 @@ class StreamDetails extends Component {
 				</Row>
 				<PanelGroup id="myPanel">
 					{history}
-					<Panel collapsible onClick={this.handleSelectMediaList}>
+					<Panel onToggle={this.handleSelectMediaList}>
             <Panel.Heading>
               <Panel.Title toggle>
                 {i18n.t("stream.media_list")}
@@ -511,7 +511,7 @@ class StreamDetails extends Component {
               </Panel.Body>
             </Panel.Collapse>
 					</Panel>
-					<Panel collapsible>
+					<Panel>
             <Panel.Heading>
               <Panel.Title toggle>
                 {i18n.t("stream.info")}

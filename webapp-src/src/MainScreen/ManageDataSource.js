@@ -335,7 +335,7 @@ class ManageDataSource extends Component {
 								<FontAwesome name={"trash"} />
 							</Button>
 						</ButtonGroup>
-						<DropdownButton className="visible-xs" id={"xs-manage"-dataSource.name} pullRight title={
+						<DropdownButton className="visible-xs" id={"xs-manage-"+dataSource.name} pullRight title={
 							<span><i className="fa fa-cog"></i></span>
 						}>
 							<MenuItem onClick={() => this.editDataSource(dataSource)} disabled={!this.canUpdate(dataSource)}>

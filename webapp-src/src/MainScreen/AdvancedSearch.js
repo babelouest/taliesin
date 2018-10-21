@@ -33,7 +33,6 @@ class AdvancedSearch extends Component {
 			modalTitle: ""
 		};
 		
-		this.handleSelectPanel = this.handleSelectPanel.bind(this);
 		this.changeSelectDataSource = this.changeSelectDataSource.bind(this);
 		this.handleChangeQuery = this.handleChangeQuery.bind(this);
 		this.handleChangeType = this.handleChangeType.bind(this);
@@ -60,6 +59,7 @@ class AdvancedSearch extends Component {
 		this.openMedia = this.openMedia.bind(this);
 		this.closeMedia = this.closeMedia.bind(this);
 		this.navigate = this.navigate.bind(this);
+		this.handleToggle = this.handleToggle.bind(this);
 	}
 	
 	componentWillReceiveProps(nextProps) {
@@ -88,10 +88,6 @@ class AdvancedSearch extends Component {
 	
 	getValidationState() {
 		return "success";
-	}
-	
-	handleSelectPanel() {
-		this.setState({searchPanel: !this.state.searchPanel})
 	}
 	
 	handleChangeType(e) {
@@ -316,7 +312,8 @@ class AdvancedSearch extends Component {
 		this.setState({modalShow: false});
 	}
   
-  handleNothing() {
+  handleToggle() {
+    this.setState({searchPanel: !this.state.searchPanel});
   }
 
 	render() {
@@ -698,96 +695,98 @@ class AdvancedSearch extends Component {
 						controlId="formBasicText"
 						validationState={this.getValidationState()}
 					>
-						<Panel onClick={this.handleSelectPanel} expanded={this.state.searchPanel} onToggle={this.handleNothing}>
-              <Panel.Heading>
-                <Panel.Title toggle>
-                  {i18n.t("advanced_search.search_query")}
-                </Panel.Title>
-              </Panel.Heading>
-              <Panel.Collapse>
-                <Panel.Body>
-                  <Row>
-                    <ControlLabel>{i18n.t("advanced_search.search_query")}</ControlLabel>
-                    <FormControl
-                      type="text"
-                      value={this.state.criteria.query}
-                      placeholder={i18n.t("advanced_search.text_to_search")}
-                      onChange={this.handleChangeQuery}
-                    />
-                  </Row>
-                  <Row>
-                    <ControlLabel>{i18n.t("advanced_search.media_type")}</ControlLabel>
-                    <FormControl componentClass="select" placeholder={i18n.t("advanced_search.select")} value={this.state.criteria.type} onChange={this.handleChangeType}>
-                      <option value="">{i18n.t("advanced_search.type_all")}</option>
-                      <option value="audio">{i18n.t("advanced_search.type_audio")}</option>
-                      <option value="video">{i18n.t("advanced_search.type_video")}</option>
-                      <option value="image">{i18n.t("advanced_search.type_image")}</option>
-                      <option value="subtitle">{i18n.t("advanced_search.type_subtitle")}</option>
-                      <option value="unknown">{i18n.t("advanced_search.type_unknown")}</option>
-                    </FormControl>
-                  </Row>
-                  <Row>
-                    <hr/>
-                  </Row>
-                  <Row>
-                    <h3>{i18n.t("common.data_source")}</h3>
-                  </Row>
-                  <Row>
-                    {dataSourceList}
-                  </Row>
-                  <Row>
-                    <hr/>
-                  </Row>
-                  <Row>
-                    <h3>{i18n.t("common.tags")}</h3>
-                  </Row>
-                  <Row>
-                    {tagList}
-                  </Row>
-                  <Row style={{paddingTop: "10px"}}>
-                    <Button title="Add tag" onClick={this.handleAddTag}>
-                      <FontAwesome name="plus" />
-                    </Button>
-                  </Row>
-                  <Row>
-                    <hr/>
-                  </Row>
-                  <Row>
-                    <h3>{i18n.t("advanced_search.metrics")}</h3>
-                  </Row>
-                  {metricsList}
-                  {addMetrics}
-                  <Row style={{paddingTop: "10px"}}>
-                    <Button title={i18n.t("advanced_search.add_tag")} onClick={this.handleAddMetrics}>
-                      <FontAwesome name="plus" />
-                    </Button>
-                  </Row>
-                  <Row>
-                    <hr/>
-                  </Row>
-                  <Row>
-                    <h3>{i18n.t("advanced_search.sort")}</h3>
-                  </Row>
-                  <Row style={{paddingTop: "10px"}}>
-                    <FormControl componentClass="select" placeholder={i18n.t("advanced_search.sort_by")} value={this.state.criteria.sort} onChange={this.handleChangeSort}>
-                      <option value="path">{i18n.t("common.path")}</option>
-                      <option value="name">{i18n.t("common.name")}</option>
-                      <option value="last_updated">{i18n.t("advanced_search.last_updated")}</option>
-                      <option value="last_played">{i18n.t("advanced_search.last_seen")}</option>
-                      <option value="nb_play">{i18n.t("advanced_search.nb_play")}</option>
-                      <option value="random">{i18n.t("advanced_search.random")}</option>
-                    </FormControl>
-                    <FormControl componentClass="select" placeholder={i18n.t("advanced_search.sort_direction")} value={this.state.criteria.sort_direction} onChange={this.handleChangeSortDirection}>
-                      <option value="asc">{i18n.t("advanced_search.asc")}</option>
-                      <option value="desc">{i18n.t("advanced_search.desc")}</option>
-                    </FormControl>
-                  </Row>
-                  <Row>
-                    <hr/>
-                  </Row>
-                </Panel.Body>
-              </Panel.Collapse>
-						</Panel>
+            <PanelGroup id="myPanel">
+              <Panel expanded={this.state.searchPanel} onToggle={this.handleToggle}>
+                <Panel.Heading>
+                  <Panel.Title toggle>
+                    {i18n.t("advanced_search.search_query")}
+                  </Panel.Title>
+                </Panel.Heading>
+                <Panel.Collapse>
+                  <Panel.Body>
+                    <Row>
+                      <ControlLabel>{i18n.t("advanced_search.search_query")}</ControlLabel>
+                      <FormControl
+                        type="text"
+                        value={this.state.criteria.query}
+                        placeholder={i18n.t("advanced_search.text_to_search")}
+                        onChange={this.handleChangeQuery}
+                      />
+                    </Row>
+                    <Row>
+                      <ControlLabel>{i18n.t("advanced_search.media_type")}</ControlLabel>
+                      <FormControl componentClass="select" placeholder={i18n.t("advanced_search.select")} value={this.state.criteria.type} onChange={this.handleChangeType}>
+                        <option value="">{i18n.t("advanced_search.type_all")}</option>
+                        <option value="audio">{i18n.t("advanced_search.type_audio")}</option>
+                        <option value="video">{i18n.t("advanced_search.type_video")}</option>
+                        <option value="image">{i18n.t("advanced_search.type_image")}</option>
+                        <option value="subtitle">{i18n.t("advanced_search.type_subtitle")}</option>
+                        <option value="unknown">{i18n.t("advanced_search.type_unknown")}</option>
+                      </FormControl>
+                    </Row>
+                    <Row>
+                      <hr/>
+                    </Row>
+                    <Row>
+                      <h3>{i18n.t("common.data_source")}</h3>
+                    </Row>
+                    <Row>
+                      {dataSourceList}
+                    </Row>
+                    <Row>
+                      <hr/>
+                    </Row>
+                    <Row>
+                      <h3>{i18n.t("common.tags")}</h3>
+                    </Row>
+                    <Row>
+                      {tagList}
+                    </Row>
+                    <Row style={{paddingTop: "10px"}}>
+                      <Button title="Add tag" onClick={this.handleAddTag}>
+                        <FontAwesome name="plus" />
+                      </Button>
+                    </Row>
+                    <Row>
+                      <hr/>
+                    </Row>
+                    <Row>
+                      <h3>{i18n.t("advanced_search.metrics")}</h3>
+                    </Row>
+                    {metricsList}
+                    {addMetrics}
+                    <Row style={{paddingTop: "10px"}}>
+                      <Button title={i18n.t("advanced_search.add_tag")} onClick={this.handleAddMetrics}>
+                        <FontAwesome name="plus" />
+                      </Button>
+                    </Row>
+                    <Row>
+                      <hr/>
+                    </Row>
+                    <Row>
+                      <h3>{i18n.t("advanced_search.sort")}</h3>
+                    </Row>
+                    <Row style={{paddingTop: "10px"}}>
+                      <FormControl componentClass="select" placeholder={i18n.t("advanced_search.sort_by")} value={this.state.criteria.sort} onChange={this.handleChangeSort}>
+                        <option value="path">{i18n.t("common.path")}</option>
+                        <option value="name">{i18n.t("common.name")}</option>
+                        <option value="last_updated">{i18n.t("advanced_search.last_updated")}</option>
+                        <option value="last_played">{i18n.t("advanced_search.last_seen")}</option>
+                        <option value="nb_play">{i18n.t("advanced_search.nb_play")}</option>
+                        <option value="random">{i18n.t("advanced_search.random")}</option>
+                      </FormControl>
+                      <FormControl componentClass="select" placeholder={i18n.t("advanced_search.sort_direction")} value={this.state.criteria.sort_direction} onChange={this.handleChangeSortDirection}>
+                        <option value="asc">{i18n.t("advanced_search.asc")}</option>
+                        <option value="desc">{i18n.t("advanced_search.desc")}</option>
+                      </FormControl>
+                    </Row>
+                    <Row>
+                      <hr/>
+                    </Row>
+                  </Panel.Body>
+                </Panel.Collapse>
+              </Panel>
+            </PanelGroup>
 						<Row>
 							<Button title={i18n.t("advanced_search.search")} onClick={this.runSearch}>
 								{i18n.t("advanced_search.search")} <FontAwesome name="search" />

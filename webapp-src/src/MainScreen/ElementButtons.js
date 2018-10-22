@@ -347,22 +347,20 @@ class ElementButtons extends Component {
 					{categoryButton}
 					<DropdownButton id={"add-"+this.state.element.name} title={
 						<span><i className="fa fa-plus"></i></span>
-					}>
-                                        	<DropdownButton.Menu className="dropdown-menu-center">
-							<MenuItem>
-								{i18n.t("common.add_to_stream")}
-							</MenuItem>
-							{streamList}
-							<MenuItem divider />
-							<MenuItem>
-								{i18n.t("common.add_to_playlist")}
-							</MenuItem>
-							{playlist}
-							<MenuItem divider />
-							<MenuItem onClick={() => {this.setState({manageModalShow: true});}}>
-								{i18n.t("common.manage_in_stream_playlist")}
-							</MenuItem>
-                                                </DropdownButton.Menu>
+					} className="dropdown-menu-center">
+						<MenuItem>
+							{i18n.t("common.add_to_stream")}
+						</MenuItem>
+						{streamList}
+						<MenuItem divider />
+						<MenuItem>
+							{i18n.t("common.add_to_playlist")}
+						</MenuItem>
+						{playlist}
+						<MenuItem divider />
+						<MenuItem onClick={() => {this.setState({manageModalShow: true});}}>
+							{i18n.t("common.manage_in_stream_playlist")}
+						</MenuItem>
 					</DropdownButton>
 				</ButtonGroup>
 				<DropdownButton className="visible-xs" id={"xs-manage-"+this.state.element.name} title={

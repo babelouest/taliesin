@@ -189,6 +189,15 @@ body {
 	margin-left: 5px;
 }
 
+.dropdown-menu-center
+{
+	right: auto;
+	left: 50%;
+	-webkit-transform: translate(-50%, 0);
+	-o-transform: translate(-50%, 0);
+	transform: translate(-50%, 0);
+}
+
 /* Styles for React Tags*/
 div.ReactTags__tags {
 		position: relative;

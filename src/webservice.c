@@ -1099,8 +1099,6 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
       if (client_data_webradio_init(client_data_webradio) == T_OK) {
         clock_gettime(CLOCK_MONOTONIC_RAW, &client_data_webradio->start);
         o_strcpy(client_data_webradio->stream_name, u_map_get(request->map_url, "stream_name"));
-        client_data_webradio->server_remote_address = config->server_remote_address;
-        client_data_webradio->api_prefix = config->api_prefix;
         client_data_webradio->audio_stream = current_webradio->audio_stream;
         client_data_webradio->current_buffer = client_data_webradio->audio_stream->header_buffer;
         client_data_webradio->metadata_send = (0 == o_strcmp(client_data_webradio->audio_stream->stream_format, "mp3") && o_strcasecmp("1", u_map_get_case(request->map_header, "Icy-MetaData")))?-1:0;
@@ -1177,8 +1175,6 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
           if (init_client_data_jukebox(client_data_jukebox) == T_OK) {
             client_data_jukebox->jukebox = current_jukebox;
             o_strcpy(client_data_jukebox->stream_name, u_map_get(request->map_url, "stream_name"));
-            client_data_jukebox->server_remote_address = config->server_remote_address;
-            client_data_jukebox->api_prefix = config->api_prefix;
             client_data_jukebox->audio_buffer = o_malloc(sizeof(struct _jukebox_audio_buffer));
             if (client_data_jukebox->audio_buffer != NULL && jukebox_audio_buffer_init(client_data_jukebox->audio_buffer) == T_OK) {
               client_data_jukebox->audio_buffer->client_address = get_ip_source(request);
@@ -1226,7 +1222,7 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
       }
     } else {
       // Build m3u jukebox
-      if (jukebox_build_m3u(config, current_jukebox, &m3u_data) == T_OK) {
+      if (jukebox_build_m3u(config, current_jukebox, u_map_get(request->map_url, "url_prefix"), &m3u_data) == T_OK) {
         escaped_filename = url_encode(current_jukebox->display_name);
         content_disposition = msprintf("attachment; filename=%s.m3u", escaped_filename);
         u_map_put(response->map_header, "Content-Type", "audio/mpegurl");

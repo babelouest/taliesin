@@ -154,8 +154,6 @@ int client_data_webradio_init(struct _client_data_webradio * client_data) {
     client_data->send_header = 1;
     client_data->header_offset = 0;
     client_data->command = TALIESIN_STREAM_COMMAND_NONE;
-    client_data->server_remote_address = NULL;
-    client_data->api_prefix = NULL;
     return T_OK;
   } else {
     return T_ERROR_PARAM;
@@ -2009,7 +2007,7 @@ ssize_t webradio_buffer_metadata(char * buf, size_t max, struct _client_data_web
   
   if (buf != NULL && client_data != NULL) {
     if (client_data->metadata_buffer == NULL) {
-      str_metadata = msprintf("StreamTitle='%s';StreamUrl='%s/%s/stream/%s/cover';", client_data->current_buffer->title, client_data->server_remote_address, client_data->api_prefix, client_data->stream_name);
+      str_metadata = msprintf("StreamTitle='%s';", client_data->current_buffer->title);
       block_len = o_strlen(str_metadata);
       if (block_len % 16) {
         block_len += (16 - (block_len % 16));

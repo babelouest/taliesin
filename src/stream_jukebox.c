@@ -678,7 +678,7 @@ int add_jukebox_from_db_stream(struct config_elements * config, json_t * j_strea
   return ret;
 }
 
-int jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukebox, char ** m3u_data) {
+int jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukebox, const char * url_prefix, char ** m3u_data) {
   json_t * j_media;
   char * icy_title, * tmp, * m3u_song;
   struct _t_file * file;
@@ -694,13 +694,13 @@ int jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukeb
           m3u_song = msprintf("#EXTINF:%"JSON_INTEGER_FORMAT",%s\n%s/%s/stream/%s?index=%d\n",
                               (json_integer_value(json_object_get(json_object_get(j_media, "media"), "duration"))/1000),
                               icy_title,
-                              config->server_remote_address,
+                              url_prefix==NULL?config->server_remote_address:url_prefix,
                               config->api_prefix,
                               jukebox->name,
                               i);
         } else {
           m3u_song = msprintf("%s/%s/stream/%s?index=%d\n",
-                              config->server_remote_address,
+                              url_prefix==NULL?config->server_remote_address:url_prefix,
                               config->api_prefix,
                               jukebox->name,
                               i);
@@ -1400,8 +1400,6 @@ int init_client_data_jukebox(struct _client_data_jukebox * client_data_jukebox) 
   if (client_data_jukebox != NULL) {
     client_data_jukebox->audio_buffer = NULL;
     client_data_jukebox->buffer_offset = 0;
-    client_data_jukebox->server_remote_address = NULL;
-    client_data_jukebox->api_prefix = NULL;
     client_data_jukebox->command = TALIESIN_PLAYLIST_MESSAGE_TYPE_NONE;
     client_data_jukebox->client_present = 0;
     client_data_jukebox->stream_name[0] = '\0';

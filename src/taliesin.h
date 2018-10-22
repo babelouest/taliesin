@@ -314,9 +314,6 @@ struct _client_data_webradio {
   char                 * client_address;
   char                 * user_agent;
   short unsigned int     command;
-  
-  char                 * server_remote_address;
-  char                 * api_prefix;
 };
 
 struct _client_data_jukebox {
@@ -327,9 +324,6 @@ struct _client_data_jukebox {
   char                            stream_name[TALIESIN_PLAYLIST_NAME_LENGTH + 1];
   short unsigned int              command;
   short unsigned int              client_present;
-  
-  char                          * server_remote_address;
-  char                          * api_prefix;
 };
 
 struct _jukebox_audio_buffer {
@@ -565,7 +559,7 @@ json_t * is_jukebox_command_valid(struct config_elements * config, struct _t_juk
 json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * jukebox, const char * username, json_t * j_command);
 int      jukebox_close(struct config_elements * config, struct _t_jukebox * jukebox);
 int      jukebox_audio_buffer_add_data(struct _jukebox_audio_buffer * jukebox_audio_buffer, uint8_t *buf, int buf_size);
-int      jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukebox, char ** m3u_data);
+int      jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukebox, const char * url_prefix, char ** m3u_data);
 int      is_valid_path_element_parameter(struct config_elements * config, json_t * jukebox_element, const char * username, int is_admin);
 int      is_valid_category_element_parameter(struct config_elements * config, json_t * category_element, const char * username, int is_admin);
 int      is_valid_playlist_element_parameter(struct config_elements * config, json_t * j_playlist, const char * username);

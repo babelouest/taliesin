@@ -599,7 +599,7 @@ class AdvancedSearch extends Component {
 					</td>
 					<td>
 						<a role="button" onClick={() => {this.openMedia(result)}}>
-							{result.nb_play}&nbsp;{i18n.t("common.times")}
+							<span className="space-after">{result.nb_play}</span>{i18n.t("common.times")}
 						</a>
 					</td>
 					<td>

@@ -316,7 +316,7 @@ class ElementButtons extends Component {
 				</Button>
 			refreshButtonMenu =
 				<MenuItem>
-					<FontAwesome name={"refresh"} />&nbsp;
+					<FontAwesome name={"refresh"} className="space-after"/>
 					{i18n.t("common.refresh_folder")}
 				</MenuItem>
 		}
@@ -329,7 +329,7 @@ class ElementButtons extends Component {
 				</Button>
 			categoryButtonMenu =
 				<MenuItem>
-					<FontAwesome name={"eye"} />&nbsp;
+					<FontAwesome name={"eye"} className="space-after"/>
 					{i18n.t("common.view_category")}
 				</MenuItem>
 		}
@@ -340,7 +340,7 @@ class ElementButtons extends Component {
 						<FontAwesome name={"play"} />
 					</Button>
 					<Button title={i18n.t("common.create_stream")} onClick={this.playElementAdvanced}>
-						<FontAwesome name={"play"} />&nbsp;
+						<FontAwesome name={"play"} className="space-after"/>
 						<FontAwesome name={"cog"} />
 					</Button>
 					{refreshButton}
@@ -367,26 +367,26 @@ class ElementButtons extends Component {
 					<span><i className="fa fa-cog"></i></span>
 				}>
 					<MenuItem onClick={this.playElement}>
-						<FontAwesome name={"play"} />&nbsp;
+						<FontAwesome name={"play"} className="space-after"/>
 						{i18n.t("common.play_now")}
 					</MenuItem>
 					<MenuItem divider />
 					<MenuItem onClick={this.playElementAdvanced}>
 						<FontAwesome name={"play"} />
-						<FontAwesome name={"cog"} />&nbsp;
+						<FontAwesome name={"cog"} className="space-after"/>
 						{i18n.t("common.create_stream")}
 					</MenuItem>
 					{refreshButtonMenu}
 					{categoryButtonMenu}
 					<MenuItem divider />
 					<MenuItem>
-						<FontAwesome name={"plus"} />&nbsp;
+						<FontAwesome name={"plus"} className="space-after"/>
 						{i18n.t("common.add_to_stream")}
 					</MenuItem>
 					{streamList}
 					<MenuItem divider />
 					<MenuItem>
-						<FontAwesome name={"plus"} />&nbsp;
+						<FontAwesome name={"plus"} className="space-after"/>
 						{i18n.t("common.add_to_playlist")}
 					</MenuItem>
 					{playlist}

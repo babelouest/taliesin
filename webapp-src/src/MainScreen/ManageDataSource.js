@@ -279,7 +279,7 @@ class ManageDataSource extends Component {
 					}
 					refresh = 
 					<div>
-						<FontAwesome name="spinner" spin />&nbsp;
+						<FontAwesome name="spinner" spin className="space-after"/>
 						<span>{percent}</span>
 					</div>;
 				} else if (this.state.refreshStatus[dataSource.name].status === "pending") {
@@ -287,7 +287,7 @@ class ManageDataSource extends Component {
 				} else if (this.state.refreshStatus[dataSource.name].status === "prepare") {
 					refresh = 
 					<div>
-						<FontAwesome name="spinner" spin />&nbsp;
+						<FontAwesome name="spinner" spin className="space-after"/>
 						<span>{i18n.t("data_source.refresh_prepare")}</span>
 					</div>;
 				} else if (this.state.refreshStatus[dataSource.name].status === "error") {
@@ -339,23 +339,23 @@ class ManageDataSource extends Component {
 							<span><i className="fa fa-cog"></i></span>
 						}>
 							<MenuItem onClick={() => this.editDataSource(dataSource)} disabled={!this.canUpdate(dataSource)}>
-								<FontAwesome name={"pencil"} />&nbsp;
+								<FontAwesome name={"pencil"} className="space-after"/>
 								{i18n.t("common.edit")}
 							</MenuItem>
 							<MenuItem onClick={() => this.refreshDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) !== "not running"}>
-								<FontAwesome name={"refresh"} />&nbsp;
+								<FontAwesome name={"refresh"} className="space-after"/>
 								{i18n.t("data_source.refresh")}
 							</MenuItem>
 							<MenuItem onClick={() => this.stopRefreshDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) === "not running"}>
-								<FontAwesome name={"stop"} />&nbsp;
+								<FontAwesome name={"stop"} className="space-after"/>
 								{i18n.t("data_source.stop_refresh")}
 							</MenuItem>
 							<MenuItem onClick={() => this.cleanDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) !== "not running"}>
-								<FontAwesome name={"eraser"} />&nbsp;
+								<FontAwesome name={"eraser"} className="space-after"/>
 								{i18n.t("data_source.clean")}
 							</MenuItem>
 							<MenuItem onClick={() => this.deleteDataSource(dataSource)} disabled={!this.canUpdate(dataSource) || this.getRefreshStatusValue(dataSource) !== "not running"}>
-								<FontAwesome name={"trash"} />&nbsp;
+								<FontAwesome name={"trash"} className="space-after"/>
 								{i18n.t("common.delete")}
 							</MenuItem>
 						</DropdownButton>

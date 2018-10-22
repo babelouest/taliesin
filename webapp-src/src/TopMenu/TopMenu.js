@@ -398,7 +398,7 @@ class TopMenu extends Component {
 				searchOverlay =
 					<Popover id="searchResult">
 							{i18n.t("topmenu.search_result")} <strong>{this.state.searchPattern}</strong>
-							&nbsp;<Button title={i18n.t("topmenu.close")} onClick={this.closeSearch}>
+							<Button title={i18n.t("topmenu.close")} onClick={this.closeSearch} className="space-before">
 								<FontAwesome name={"close"} />
 							</Button>
 							{playlistResult}

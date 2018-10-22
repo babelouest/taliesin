@@ -354,7 +354,7 @@ class ModalMedia extends Component {
 					<Modal show={this.state.show} onHide={this.onCloseModal}>
 						<Modal.Header closeButton>
 							<Modal.Title>
-								<ButtonGroup>
+								<ButtonGroup className="space-after">
 									<Button onClick={this.onPlayNow} className="btn" title={i18n.t("common.play_now")}>
 										<FontAwesome name={"play"} />
 									</Button>
@@ -375,7 +375,7 @@ class ModalMedia extends Component {
 											{i18n.t("common.remove")}
 										</MenuItem>
 									</DropdownButton>
-								</ButtonGroup>&nbsp;
+								</ButtonGroup>
 								{this.state.title}
 							</Modal.Title>
 						</Modal.Header>
@@ -411,7 +411,7 @@ class ModalMedia extends Component {
 									<label>{i18n.t("common.nb_play")}</label>
 								</Col>
 								<Col xs={6}>
-									<span>{this.state.media.nb_play}&nbsp;{i18n.t("common.times")}</span>
+									<span>{this.state.media.nb_play}</span><span className="space-before">{i18n.t("common.times")}</span>
 								</Col>
 							</Row>
 							<Row>

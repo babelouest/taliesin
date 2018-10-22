@@ -467,31 +467,31 @@ class StreamDetails extends Component {
 							<span><i className="fa fa-cog"></i></span>
 						}>
 							<MenuItem onClick={this.playStream}>
-								<FontAwesome name={"play"} />&nbsp;
+								<FontAwesome name={"play"} className="space-after"/>
 								{i18n.t("common.play")}
 							</MenuItem>
 							<MenuItem onClick={this.playStreamExternal}>
-								<FontAwesome name={"external-link"} />&nbsp;
+								<FontAwesome name={"external-link"} className="space-after"/>
 								{i18n.t("common.external")}
 							</MenuItem>
 							<MenuItem onClick={this.renameStream}>
-								<FontAwesome name={"pencil"} />&nbsp;
+								<FontAwesome name={"pencil"} className="space-after"/>
 								{i18n.t("common.rename")}
 							</MenuItem>
 							<MenuItem onClick={this.saveStream}>
-								<FontAwesome name={"floppy-o"} />&nbsp;
+								<FontAwesome name={"floppy-o"} className="space-after"/>
 								{i18n.t("stream.save_as_playlist")}
 							</MenuItem>
 							<MenuItem onClick={this.reloadStream}>
-								<FontAwesome name={"exchange"} />&nbsp;
+								<FontAwesome name={"exchange"} className="space-after"/>
 								{i18n.t("stream.reload")}
 							</MenuItem>
 							<MenuItem onClick={this.resetStream}>
-								<FontAwesome name={"unlock-alt"} />&nbsp;
+								<FontAwesome name={"unlock-alt"} className="space-after"/>
 								{i18n.t("stream.reset_url")}
 							</MenuItem>
 							<MenuItem onClick={this.deleteStream}>
-								<FontAwesome name={"trash"} />&nbsp;
+								<FontAwesome name={"trash"} className="space-after"/>
 								{i18n.t("stream.delete")}
 							</MenuItem>
 						</DropdownButton>

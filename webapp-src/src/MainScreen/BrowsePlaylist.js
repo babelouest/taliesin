@@ -521,7 +521,7 @@ class BrowsePlaylist extends Component {
 									<FontAwesome name={"play"} />
 								</Button>
 								<Button title={i18n.t("common.create_stream")} onClick={() => {this.playAdvanced(aPlaylist)}}>
-									<FontAwesome name={"play"} />&nbsp;
+									<FontAwesome name={"play"} className="space-after"/>
 									<FontAwesome name={"cog"} />
 								</Button>
 								<Button title={i18n.t("common.edit")} onClick={() => this.editPlaylist(aPlaylist)} disabled={!this.canUpdate(aPlaylist)}>
@@ -554,40 +554,40 @@ class BrowsePlaylist extends Component {
 								<span><i className="fa fa-cog"></i></span>
 							}>
 								<MenuItem onClick={() => {this.playNow(aPlaylist)}}>
-									<FontAwesome name={"play"} />&nbsp;
+									<FontAwesome name={"play"} className="space-after"/>
 									{i18n.t("common.play_now")}
 								</MenuItem>
 								<MenuItem divider />
 								<MenuItem onClick={() => {this.playAdvanced(aPlaylist)}}>
 									<FontAwesome name={"play"} />
-									<FontAwesome name={"cog"} />&nbsp;
+									<FontAwesome name={"cog"} className="space-after"/>
 									{i18n.t("common.create_stream")}
 								</MenuItem>
 								<MenuItem onClick={() => this.editPlaylist(aPlaylist)} disabled={!this.canUpdate(aPlaylist)}>
-									<FontAwesome name={"pencil"} />&nbsp;
+									<FontAwesome name={"pencil"} className="space-after"/>
 									{i18n.t("common.edit")}
 								</MenuItem>
 								<MenuItem onClick={() => this.exportPlaylist(aPlaylist)}>
-									<FontAwesome name={"save"} />&nbsp;
+									<FontAwesome name={"save"} className="space-after"/>
 									{i18n.t("common.save")}
 								</MenuItem>
 								<MenuItem onClick={() => this.importPlaylist(aPlaylist)}>
-									<FontAwesome name={"upload"} />&nbsp;
+									<FontAwesome name={"upload"} className="space-after"/>
 									{i18n.t("common.import")}
 								</MenuItem>
 								<MenuItem>
-									<FontAwesome name={"plus"} />&nbsp;
+									<FontAwesome name={"plus"} className="space-after"/>
 									{i18n.t("common.add_to_stream")}
 								</MenuItem>
 								{streamList}
 								<MenuItem divider />
 								<MenuItem>
-									<FontAwesome name={"plus"} />&nbsp;
+									<FontAwesome name={"plus"} className="space-after"/>
 									{i18n.t("common.add_to_playlist")}
 								</MenuItem>
 								{playlist}
 								<MenuItem onClick={() => this.deletePlaylist(aPlaylist)} disabled={!this.canUpdate(aPlaylist)}>
-									<FontAwesome name={"trash"} />&nbsp;
+									<FontAwesome name={"trash"} className="space-after"/>
 									{i18n.t("common.delete")}
 								</MenuItem>
 							</DropdownButton>

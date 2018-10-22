@@ -56,7 +56,7 @@ config.fetchConfig()
 	ReactDOM.render(<App/>, document.getElementById('root'));
 })
 .fail((error) => {
-	ReactDOM.render(<h2>&nbsp;&nbsp;Error loading web configuration</h2>, document.getElementById('root'));
+	ReactDOM.render(<h2>Error loading web configuration</h2>, document.getElementById('root'));
 });
 
 StateStore.subscribe(() => {

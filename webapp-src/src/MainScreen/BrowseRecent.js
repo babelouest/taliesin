@@ -122,7 +122,7 @@ class BrowseRecent extends Component {
 					</DropdownButton>
 				</Col>
 				<Col md={6} sm={6} xs={6} className="text-right">
-					<span className="hidden-xs">{i18n.t("common.navigation")} - </span>{i18n.t("common.page", {page: ((this.state.offset/100)+1)})}&nbsp;<br className="hidden-xs"/>
+					<span className="hidden-xs">{i18n.t("common.navigation")} - </span><span className="space-after">{i18n.t("common.page", {page: ((this.state.offset/100)+1)})}</span><br className="hidden-xs"/>
 					<ButtonGroup>
 						<Button onClick={this.handleNavigationPrevious} disabled={!this.state.offset}>
 							<span className="hidden-xs">{i18n.t("common.previous_page")}</span>

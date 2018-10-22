@@ -165,7 +165,7 @@ class MediaRow extends Component {
 			if (this.state.stream && !this.state.stream.webradio) {
 				firstCol =
 					<Col md={2} sm={12} xs={12}>
-						<ButtonGroup>
+						<ButtonGroup className="space-after">
 							<Button title={i18n.t("common.play_now")} onClick={this.handlePlayNow}>
 								<FontAwesome name="play" />
 							</Button>
@@ -173,8 +173,8 @@ class MediaRow extends Component {
 								<FontAwesome name="trash" />
 							</Button>
 						</ButtonGroup>
-						&nbsp;&nbsp;{(this.state.elements>=10&&this.state.index<9?"0":"") + (this.state.index + 1) + "/" + this.state.elements}
-						&nbsp;{this.state.highlight?<FontAwesome name="music" />:""}
+						<span className="space-before">{(this.state.elements>=10&&this.state.index<9?"0":"") + (this.state.index + 1) + "/" + this.state.elements}</span>
+						<span className="space-before">{this.state.highlight?<FontAwesome name="music" />:""}</span>
 					</Col>;
 			} else if (this.state.stream && this.state.stream.webradio) {
 				firstCol =

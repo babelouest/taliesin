@@ -401,7 +401,7 @@ class MPDController extends Component {
 		return (
 			<div>
 				<div>
-					<ButtonGroup>
+					<ButtonGroup className="space-after">
 						<Button title={i18n.t("player.previous")} onClick={this.handlePrevious}>
 							<FontAwesome name={"fast-backward"} />
 						</Button>
@@ -413,7 +413,6 @@ class MPDController extends Component {
 							<FontAwesome name={"fast-forward"} />
 						</Button>
 					</ButtonGroup>
-					&nbsp;
 					<ButtonGroup>
 						<Button title={i18n.t("common.repeat")} onClick={this.handleRepeat} className={(this.state.jukeboxRepeat&&!this.state.stream.webradio)?"btn-primary":""}>
 							<FontAwesome name={"repeat"} />
@@ -432,8 +431,8 @@ class MPDController extends Component {
 					</ButtonGroup>
 				</div>
 				<div>
-					<label className="hidden-xs">
-						{i18n.t("player.current_stream")}&nbsp;
+					<label className="hidden-xs space-after">
+						{i18n.t("player.current_stream")}
 					</label>
 					<span>
 						{streamName}

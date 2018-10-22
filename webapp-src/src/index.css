@@ -178,7 +178,18 @@ body {
 {
 	margin-top: 0px !important;
 }
-/* Example Styles for React Tags*/
+
+.space-after
+{
+	margin-right: 5px;
+}
+
+.space-before
+{
+	margin-left: 5px;
+}
+
+/* Styles for React Tags*/
 div.ReactTags__tags {
 		position: relative;
 }

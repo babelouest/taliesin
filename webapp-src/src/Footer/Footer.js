@@ -195,12 +195,12 @@ class Footer extends Component {
 						</ButtonGroup>
 						<DropdownButton id={"center-dropdown"} title="" pullRight className="visible-xs visible-sm">
 							<MenuItem onClick={ ()=> this.showFullScreen()}>
-								<FontAwesome name={"arrows-alt"} />
-								&nbsp;Full-screen
+								<FontAwesome name={"arrows-alt"} className="space-after" />
+								Full-screen
 							</MenuItem>
 							<MenuItem onClick={ ()=> this.showMediaList()}>
-								<FontAwesome name={"list"} />
-								&nbsp;List media
+								<FontAwesome name={"list"} className="space-after" />
+								List media
 							</MenuItem>
 						</DropdownButton>
 					</Col>;

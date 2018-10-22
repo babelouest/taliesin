@@ -482,8 +482,8 @@ class AudioPlayer extends Component {
 		}
 		metadata = 
 			<div>
-				<label className="hidden-xs">{i18n.t("player.current_stream")}&nbsp;</label>
-				<span>{streamName}</span>
+				<label className="hidden-xs">{i18n.t("player.current_stream")}</label>
+				<span className="space-before">{streamName}</span>
 			</div>;
 		if (this.state.play) {
 			if (this.state.stream.webradio) {
@@ -519,7 +519,7 @@ class AudioPlayer extends Component {
 		return (
 			<div>
 				<div>
-					<ButtonGroup>
+					<ButtonGroup className="space-after">
 						<Button title={i18n.t("player.previous")} onClick={this.handlePrevious}>
 							<FontAwesome name={"fast-backward"} />
 						</Button>
@@ -531,7 +531,6 @@ class AudioPlayer extends Component {
 							<FontAwesome name={"fast-forward"} />
 						</Button>
 					</ButtonGroup>
-					&nbsp;
 					<ButtonGroup>
 						<Button title={i18n.t("common.repeat")} onClick={this.handleRepeat} disabled={this.state.stream.webradio} className={(this.state.jukeboxRepeat&&!this.state.stream.webradio)?"btn-primary":""}>
 							<FontAwesome name={"repeat"} />

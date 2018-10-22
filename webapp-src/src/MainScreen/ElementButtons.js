@@ -347,7 +347,7 @@ class ElementButtons extends Component {
 					{categoryButton}
 					<DropdownButton id={"add-"+this.state.element.name} title={
 						<span><i className="fa fa-plus"></i></span>
-					} className="dropdown-menu-center">
+					}>
 						<MenuItem>
 							{i18n.t("common.add_to_stream")}
 						</MenuItem>

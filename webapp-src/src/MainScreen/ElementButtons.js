@@ -363,7 +363,7 @@ class ElementButtons extends Component {
 						</MenuItem>
 					</DropdownButton>
 				</ButtonGroup>
-        <div className="visible-xs" className="dropdown-menu-center">
+        <div className="visible-xs dropdown-menu-center">
           <DropdownButton id={"xs-manage-"+this.state.element.name} title={
             <span><i className="fa fa-cog"></i></span>
           }>

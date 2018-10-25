@@ -37,9 +37,11 @@ class ElementCategoryList extends Component {
 			this.setState({modal: <ModalMedia show={true} media={this.state.element} title={this.state.element.tags.title||this.state.element.name} />});
 		} else {
 			if (this.state.subCategory) {
-				StateStore.dispatch({type: "setCurrentCategory", category: this.state.category, categoryValue: this.state.categoryValue, subCategory: this.state.subCategory, subCategoryValue: name});
+                            StateStore.dispatch({type: "setCurrentBrowse", browse: "category"});
+			    StateStore.dispatch({type: "setCurrentCategory", category: this.state.category, categoryValue: this.state.categoryValue, subCategory: this.state.subCategory, subCategoryValue: name});
 			} else {
-				StateStore.dispatch({type: "setCurrentCategory", category: this.state.category, categoryValue: name});
+                            StateStore.dispatch({type: "setCurrentBrowse", browse: "category"});
+			    StateStore.dispatch({type: "setCurrentCategory", category: this.state.category, categoryValue: name});
 			}
 		}
 	}

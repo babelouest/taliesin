@@ -47,9 +47,9 @@ class Footer extends Component {
 			} else if (reduxState.lastAction === "setStream") {
 				if (StateStore.getState().profile.stream.name === this.state.stream.name) {
 					this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, play: false}, () => {
-					this.buildExternal();
-					this.setWindowTitle();
-				});
+						this.buildExternal();
+						this.setWindowTitle();
+					});
 				}
 			} else if (reduxState.lastAction === "loadStreamAndPlay") {
 				this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, jukeboxIndex: StateStore.getState().profile.jukeboxIndex, play: true}, () => {
@@ -132,7 +132,7 @@ class Footer extends Component {
 			if (this.state.stream.webradio) {
 				stream_external = "data:application/mpegurl;base64," + btoa("#EXTM3U\n\n#EXTINF:0," + (this.state.stream.display_name||"no name") + "\n" + StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name + "\n");
 			} else {
-				stream_external = StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name;
+				stream_external = StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name + "?url_prefix=" + StateStore.getState().taliesinApiUrl;
 			}
 			this.setState({stream_external: stream_external}, () => {
 				$("#play-external-anchor-footer")[0].click();

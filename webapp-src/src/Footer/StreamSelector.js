@@ -25,7 +25,7 @@ class StreamSelector extends Component {
 		StateStore.dispatch({type: "loadStream", stream: this.state.selectedStream});
 		StateStore.dispatch({type: "setCurrentBrowse", browse: "streamDetails"});
 	}
-	
+
 	handleLoadStream() {
 		StateStore.dispatch({type: "loadStreamAndPlay", stream: this.state.selectedStream, index: 0});
 	}
@@ -39,6 +39,7 @@ class StreamSelector extends Component {
 		if (newStream) {
 			this.setState({selectedStream: newStream}, () => {
 				config.setLocalConfigValue("stream", newStream);
+				StateStore.dispatch({type: "loadStream", stream: this.state.selectedStream});
 			});
 		}
 	}

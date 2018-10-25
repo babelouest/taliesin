@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
-import { Row, Col, ButtonToolbar, ToggleButton, ToggleButtonGroup, ButtonGroup, Button, DropdownButton, MenuItem } from 'react-bootstrap';
+import { Row, Col, ButtonGroup, Button, DropdownButton, MenuItem } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
 import StateStore from '../lib/StateStore';
 import ElementPathIcon from './ElementPathIcon';
 import ElementPathList from './ElementPathList';
+import ElementCategoryIcon from './ElementCategoryIcon';
+import ElementCategoryList from './ElementCategoryList';
 import i18n from '../lib/i18n';
 
 class BrowseRecent extends Component {
@@ -68,6 +70,48 @@ class BrowseRecent extends Component {
 						});
 						this.setState({loaded: true, elementListInitial: list, elementList: list});
 						break;
+                                        case 2: // Artist
+						var list = [];
+						result.forEach((element) => {
+                                                	if ((element.type === "audio" || element.type === "video") && element.tags && element.tags.artist) {
+								if (!list.find((elt) => {
+									return elt.tags.artist === element.tags.artist;
+								})) {
+									var newElt = {data_source: element.data_source, path: element.path, name: element.name, tags: element.tags};
+		   	 						list.push(newElt);
+								}
+                                                        }
+						});
+						this.setState({loaded: true, elementListInitial: list, elementList: list});
+                                                break;
+                                        case 3: // Album
+						var list = [];
+						result.forEach((element) => {
+                                                	if ((element.type === "audio" || element.type === "video") && element.tags && element.tags.album) {
+								if (!list.find((elt) => {
+									return elt.tags.album === element.tags.album;
+								})) {
+									var newElt = {data_source: element.data_source, path: element.path, name: element.name, tags: element.tags};
+		   	 						list.push(newElt);
+								}
+                                                        }
+						});
+						this.setState({loaded: true, elementListInitial: list, elementList: list});
+                                                break;
+                                        case 4: // Date
+						var list = [];
+						result.forEach((element) => {
+                                                	if ((element.type === "audio" || element.type === "video") && element.tags && element.tags.date) {
+								if (!list.find((elt) => {
+									return elt.tags.date === element.tags.date;
+								})) {
+									var newElt = {data_source: element.data_source, path: element.path, name: element.name, tags: element.tags};
+		   	 						list.push(newElt);
+								}
+                                                        }
+						});
+						this.setState({loaded: true, elementListInitial: list, elementList: list});
+                                                break;
 					default: // Nope
 						this.setState({loaded: true, elementListInitial: [], elementList: []});
 						break;
@@ -91,18 +135,26 @@ class BrowseRecent extends Component {
 		var header =
 			<Row>
 				<Col md={6} sm={6} xs={6}>
-					<span className="hidden-xs">Group by</span>
-					<ButtonToolbar className="hidden-xs">
-						<ToggleButtonGroup type="radio" name="groupBy" value={this.state.groupBy} onChange={this.handleChangeGroupBy}>
-							<ToggleButton value={0}>{i18n.t("common.file")}</ToggleButton>
-							<ToggleButton value={1}>{i18n.t("common.folder")}</ToggleButton>
-							<ToggleButton value={2}>{i18n.t("common.artist")}</ToggleButton>
-							<ToggleButton value={3}>{i18n.t("common.album")}</ToggleButton>
-							<ToggleButton value={4}>{i18n.t("common.date")}</ToggleButton>
-						</ToggleButtonGroup>
-					</ButtonToolbar>
+					<span className="hidden-xs space-after">{i18n.t("common.group_by")}</span>
+                                        <ButtonGroup className="hidden-xs">
+                                        	<Button onClick={() => this.handleChangeGroupBy(0)} title={i18n.t("common.file")} bsStyle={this.state.groupBy===0?"primary":"default"}>
+                                                	{i18n.t("common.file")}
+                                                </Button>
+                                        	<Button onClick={() => this.handleChangeGroupBy(1)} title={i18n.t("common.folder")} bsStyle={this.state.groupBy===1?"primary":"default"}>
+                                                	{i18n.t("common.folder")}
+                                                </Button>
+                                        	<Button onClick={() => this.handleChangeGroupBy(2)} title={i18n.t("common.artist")} bsStyle={this.state.groupBy===2?"primary":"default"}>
+                                                	{i18n.t("common.artist")}
+                                                </Button>
+                                        	<Button onClick={() => this.handleChangeGroupBy(3)} title={i18n.t("common.album")} bsStyle={this.state.groupBy===3?"primary":"default"}>
+                                                	{i18n.t("common.album")}
+                                                </Button>
+                                        	<Button onClick={() => this.handleChangeGroupBy(4)} title={i18n.t("common.date")} bsStyle={this.state.groupBy===4?"primary":"default"}>
+                                                	{i18n.t("common.date")}
+                                                </Button>
+                                        </ButtonGroup>
 					<DropdownButton className="visible-xs" id="grouypBy" title={
-						<span>Group by</span>
+						<span>{i18n.t("common.group_by")}</span>
 					}>
 						<MenuItem onClick={() => this.handleChangeGroupBy(0)} className={this.state.groupBy===0?"bg-success":""}>
 							{i18n.t("common.file")}
@@ -138,11 +190,27 @@ class BrowseRecent extends Component {
 		if (this.state.loaded) {
 			if (this.state.view === "icon") {
 				currentElementList.forEach((element, index) => {
-					currentList.push(
-						<ElementPathIcon key={index} dataSource={element.data_source} path={element.path} element={element} />
-					);
+                                	if (this.state.groupBy === 0 || this.state.groupBy === 1) {
+						currentList.push(
+							<ElementPathIcon key={index} dataSource={element.data_source} path={element.path||"/"} element={element} />
+						);
+                                        } else if (this.state.groupBy === 2) {
+                                                var artistElt = {name: element.tags.artist, type: "artist"};
+                                        	currentList.push(
+                                                	<ElementCategoryIcon key={index} dataSource={element.dataSource} category="artist" categoryValue={element.tags.artist} element={artistElt} />
+                                                );
+                                        } else if (this.state.groupBy === 3) {
+                                                var artistElt = {name: element.tags.album, type: "album"};
+                                        	currentList.push(
+                                                	<ElementCategoryIcon key={index} dataSource={element.dataSource} category="album" categoryValue={element.tags.album} element={artistElt} />
+                                                );
+                                        } else if (this.state.groupBy === 4) {
+                                                var artistElt = {name: element.tags.date, type: "year"};
+                                        	currentList.push(
+                                                	<ElementCategoryIcon key={index} dataSource={element.dataSource} category="year" categoryValue={element.tags.date} element={artistElt} />
+                                                );
+                                        }
 				});
-				
 				return (
 					<div>
 						{header}
@@ -156,9 +224,26 @@ class BrowseRecent extends Component {
 				);
 			} else {
 				currentElementList.forEach((element, index) => {
-					currentList.push(
-						<ElementPathList key={index} dataSource={element.data_source} path={element.path} element={element} />
-					);
+                                	if (this.state.groupBy === 0 || this.state.groupBy === 1) {
+						currentList.push(
+							<ElementPathList key={index} dataSource={element.data_source} path={element.path||"/"} element={element} />
+						);
+                                        } else if (this.state.groupBy === 2) {
+                                                var artistElt = {name: element.tags.artist, type: "artist"};
+                                        	currentList.push(
+                                                	<ElementCategoryList key={index} dataSource={element.dataSource} category="artist" categoryValue={element.tags.artist} subCategory={false} subCategoryValue={false} element={artistElt} />
+                                                );
+                                        } else if (this.state.groupBy === 3) {
+                                                var artistElt = {name: element.tags.album, type: "album"};
+                                        	currentList.push(
+                                                	<ElementCategoryList key={index} dataSource={element.dataSource} category="album" categoryValue={element.tags.album} subCategory={false} subCategoryValue={false} element={artistElt} />
+                                                );
+                                        } else if (this.state.groupBy === 4) {
+                                                var artistElt = {name: element.tags.date, type: "year"};
+                                        	currentList.push(
+                                                	<ElementCategoryList key={index} dataSource={element.dataSource} category="year" categoryValue={element.tags.date} subCategory={false} subCategoryValue={false} element={artistElt} />
+                                                );
+                                        }
 				});
 				
 				return (

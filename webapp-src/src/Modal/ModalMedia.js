@@ -307,7 +307,7 @@ class ModalMedia extends Component {
 							<label>{i18n.t("common.date")}</label>
 						</Col>
 						<Col xs={6}>
-							<span><a role="button" onClick={() => {this.handleSelectYear(this.state.media.tags.date)}}>{this.state.media.tags.date}</a></span>
+							<span><a role="button" onClick={() => {this.handleSelectYear(this.state.media.tags.date)}}>{this.state.media.tags.date.substring(0, 4)}</a></span>
 						</Col>
 					</Row>);
 			}

@@ -149,7 +149,7 @@ class AdvancedSearch extends Component {
 	}
 	
 	handleAddMetrics() {
-		var metricsList = [<option key="0" value="">Select new metrics</option>], addMetrics;
+		var metricsList = [<option key="0" value="">{i18n.t("advanced_search.select_new_metrics")}</option>], addMetrics;
 		if (!this.state.criteria.metrics.nb_play) {
 			metricsList.push(
 				<option key="1" value="nb_play">{i18n.t("advanced_search.number_times_played")}</option>
@@ -335,7 +335,7 @@ class AdvancedSearch extends Component {
 					<Col xs={2}>
 						<ControlLabel>Key</ControlLabel>
 						<InputGroup>
-							<DropdownButton title={keyName||"Select key"} id="keyList" className="form-control">
+							<DropdownButton title={keyName||i18n.t("advanced_search.select_key")} id="keyList" className="form-control">
 								<MenuItem onClick={() => this.handleSetTagKey(index, "title")}>{i18n.t("common.title")}</MenuItem>
 								<MenuItem onClick={() => this.handleSetTagKey(index, "artist")}>{i18n.t("common.artist")}</MenuItem>
 								<MenuItem onClick={() => this.handleSetTagKey(index, "album")}>{i18n.t("common.album")}</MenuItem>

@@ -81,7 +81,7 @@ class ManageStream extends Component {
 			if (stream.webradio) {
 				return "data:application/mpegurl;base64," + btoa("#EXTM3U\n\n#EXTINF:0," + (stream.display_name||"no name") + "\n" + StateStore.getState().taliesinApiUrl + "/stream/" + stream.name + "\n");
 			} else {
-				return StateStore.getState().taliesinApiUrl + "/stream/" + stream.name;
+				return StateStore.getState().taliesinApiUrl + "/stream/" + stream.name + "?url_prefix=" + StateStore.getState().taliesinApiUrl;
 			}
 		} else {
 			return "";

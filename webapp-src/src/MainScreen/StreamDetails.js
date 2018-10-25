@@ -235,7 +235,7 @@ class StreamDetails extends Component {
 			if (stream.webradio) {
 				return "data:application/mpegurl;base64," + btoa("#EXTM3U\n\n#EXTINF:0," + (stream.display_name||i18n.t("common.no_name")) + "\n" + StateStore.getState().taliesinApiUrl + "/stream/" + stream.name + "\n");
 			} else {
-				return StateStore.getState().taliesinApiUrl + "/stream/" + stream.name;
+				return StateStore.getState().taliesinApiUrl + "/stream/" + stream.name + "?url_prefix=" + StateStore.getState().taliesinApiUrl;
 			}
 		} else {
 			return "";
@@ -550,7 +550,7 @@ class StreamDetails extends Component {
                     </Label>
                   </Col>
                   <Col md={6} sm={6} xs={6}>
-                    <a target="_blank" rel="noopener noreferrer" href={StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name}>direct link</a>
+                    <a target="_blank" rel="noopener noreferrer" href={StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name + (this.state.stream.webradio?"":("?url_prefix=" + StateStore.getState().taliesinApiUrl))}>direct link</a>
                   </Col>
                 </Row>
                 {playlistAttached}

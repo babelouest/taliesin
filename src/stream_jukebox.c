@@ -695,13 +695,13 @@ int jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukeb
                               (json_integer_value(json_object_get(json_object_get(j_media, "media"), "duration"))/1000),
                               icy_title,
                               url_prefix==NULL?config->server_remote_address:url_prefix,
-                              config->api_prefix,
+                              url_prefix==NULL?config->api_prefix:"",
                               jukebox->name,
                               i);
         } else {
           m3u_song = msprintf("%s/%s/stream/%s?index=%d\n",
                               url_prefix==NULL?config->server_remote_address:url_prefix,
-                              config->api_prefix,
+                              url_prefix==NULL?config->api_prefix:"",
                               jukebox->name,
                               i);
         }

@@ -40,7 +40,7 @@ class ElementButtons extends Component {
 		this.viewCategory = this.viewCategory.bind(this);
 		this.onCloseCategory = this.onCloseCategory.bind(this);
 		this.handleSelectRemove = this.handleSelectRemove.bind(this);
-		this.limitStrLenghth = this.limitStrLenghth.bind(this);
+		this.limitStrLength = this.limitStrLength.bind(this);
 		
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
@@ -283,7 +283,7 @@ class ElementButtons extends Component {
 		this.setState({removeDropdown: !this.state.removeDropdown});
 	}
 	
-	limitStrLenghth(str, length) {
+	limitStrLength(str, length) {
 		if (str.length > length) {
 			return str.substring(0, length) + "...";
 		} else {
@@ -296,7 +296,7 @@ class ElementButtons extends Component {
 		this.state.streamList.forEach((stream, index) => {
 			streamList.push(
 				<MenuItem key={index} onClick={() => this.addToStream(stream.name)}>
-					<span className="visible-xs">- {stream.display_name?this.limitStrLenghth(stream.display_name, 20):i18n.t("common.no_name")}</span>
+					<span className="visible-xs">- {stream.display_name?this.limitStrLength(stream.display_name, 20):i18n.t("common.no_name")}</span>
 					<span className="hidden-xs">- {stream.display_name||i18n.t("common.no_name")}</span>
 				</MenuItem>
 			);
@@ -304,7 +304,7 @@ class ElementButtons extends Component {
 		this.state.playlist.forEach((pl, index) => {
 			playlist.push(
 				<MenuItem key={index+1} onClick={() => this.addToPlaylist(pl.name)}>
-					<span className="visible-xs">- {this.limitStrLenghth(pl.name, 20)}</span>
+					<span className="visible-xs">- {this.limitStrLength(pl.name, 20)}</span>
 					<span className="hidden-xs">- {pl.name}</span>
 				</MenuItem>
 			);

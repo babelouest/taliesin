@@ -1093,7 +1093,6 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
     //if (config->timeout) {
       //response->timeout = config->timeout;
     //}
-    y_log_message(Y_LOG_LEVEL_DEBUG, "Start stream");
     client_data_webradio = o_malloc(sizeof (struct _client_data_webradio));
     if (client_data_webradio != NULL) {
       if (client_data_webradio_init(client_data_webradio) == T_OK) {

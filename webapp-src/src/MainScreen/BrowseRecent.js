@@ -53,7 +53,13 @@ class BrowseRecent extends Component {
 			.then((result) => {
 				switch (this.state.groupBy) {
 					case 0: // File
-						this.setState({loaded: true, elementListInitial: result, elementList: result});
+                                        	var list = [];
+                                                result.forEach((element) => {
+							var path = element.path.substring(0, element.path.lastIndexOf("/"));
+							var newElt = {data_source: element.data_source, type: element.type, path: path, name: element.name};
+							list.push(newElt);
+                                                });
+						this.setState({loaded: true, elementListInitial: list, elementList: list});
 						break;
 					case 1: // Folder
 						var list = [];
@@ -77,7 +83,10 @@ class BrowseRecent extends Component {
 								if (!list.find((elt) => {
 									return elt.tags.artist === element.tags.artist;
 								})) {
-									var newElt = {data_source: element.data_source, path: element.path, name: element.name, tags: element.tags};
+									var pathParent = element.path.substring(0, element.path.lastIndexOf("/"));
+									var path = pathParent.substring(0, pathParent.lastIndexOf("/"));
+									var name = pathParent.substring(pathParent.lastIndexOf("/") + 1);
+									var newElt = {data_source: element.data_source, path: path, name: name, pathParent: pathParent, tags: element.tags};
 		   	 						list.push(newElt);
 								}
                                                         }
@@ -91,7 +100,10 @@ class BrowseRecent extends Component {
 								if (!list.find((elt) => {
 									return elt.tags.album === element.tags.album;
 								})) {
-									var newElt = {data_source: element.data_source, path: element.path, name: element.name, tags: element.tags};
+									var pathParent = element.path.substring(0, element.path.lastIndexOf("/"));
+									var path = pathParent.substring(0, pathParent.lastIndexOf("/"));
+									var name = pathParent.substring(pathParent.lastIndexOf("/") + 1);
+									var newElt = {data_source: element.data_source, path: path, name: name, pathParent: pathParent, tags: element.tags};
 		   	 						list.push(newElt);
 								}
                                                         }
@@ -105,7 +117,10 @@ class BrowseRecent extends Component {
 								if (!list.find((elt) => {
 									return elt.tags.date === element.tags.date;
 								})) {
-									var newElt = {data_source: element.data_source, path: element.path, name: element.name, tags: element.tags};
+									var pathParent = element.path.substring(0, element.path.lastIndexOf("/"));
+									var path = pathParent.substring(0, pathParent.lastIndexOf("/"));
+									var name = pathParent.substring(pathParent.lastIndexOf("/") + 1);
+									var newElt = {data_source: element.data_source, path: path, name: name, pathParent: pathParent, tags: element.tags};
 		   	 						list.push(newElt);
 								}
                                                         }
@@ -197,17 +212,17 @@ class BrowseRecent extends Component {
                                         } else if (this.state.groupBy === 2) {
                                                 var artistElt = {name: element.tags.artist, type: "artist"};
                                         	currentList.push(
-                                                	<ElementCategoryIcon key={index} dataSource={element.dataSource} category="artist" categoryValue={element.tags.artist} element={artistElt} />
+                                                	<ElementCategoryIcon key={index} dataSource={element.data_source} category="artist" categoryValue={element.tags.artist} element={artistElt} />
                                                 );
                                         } else if (this.state.groupBy === 3) {
                                                 var artistElt = {name: element.tags.album, type: "album"};
                                         	currentList.push(
-                                                	<ElementCategoryIcon key={index} dataSource={element.dataSource} category="album" categoryValue={element.tags.album} element={artistElt} />
+                                                	<ElementCategoryIcon key={index} dataSource={element.data_source} category="album" categoryValue={element.tags.album} element={artistElt} />
                                                 );
                                         } else if (this.state.groupBy === 4) {
                                                 var artistElt = {name: element.tags.date, type: "year"};
                                         	currentList.push(
-                                                	<ElementCategoryIcon key={index} dataSource={element.dataSource} category="year" categoryValue={element.tags.date} element={artistElt} />
+                                                	<ElementCategoryIcon key={index} dataSource={element.data_source} category="year" categoryValue={element.tags.date} element={artistElt} />
                                                 );
                                         }
 				});
@@ -231,17 +246,17 @@ class BrowseRecent extends Component {
                                         } else if (this.state.groupBy === 2) {
                                                 var artistElt = {name: element.tags.artist, type: "artist"};
                                         	currentList.push(
-                                                	<ElementCategoryList key={index} dataSource={element.dataSource} category="artist" categoryValue={element.tags.artist} subCategory={false} subCategoryValue={false} element={artistElt} />
+                                                	<ElementCategoryList key={index} dataSource={element.data_source} category="artist" categoryValue={element.tags.artist} element={artistElt} />
                                                 );
                                         } else if (this.state.groupBy === 3) {
                                                 var artistElt = {name: element.tags.album, type: "album"};
                                         	currentList.push(
-                                                	<ElementCategoryList key={index} dataSource={element.dataSource} category="album" categoryValue={element.tags.album} subCategory={false} subCategoryValue={false} element={artistElt} />
+                                                	<ElementCategoryList key={index} dataSource={element.data_source} category="album" categoryValue={element.tags.album} element={artistElt} />
                                                 );
                                         } else if (this.state.groupBy === 4) {
                                                 var artistElt = {name: element.tags.date, type: "year"};
                                         	currentList.push(
-                                                	<ElementCategoryList key={index} dataSource={element.dataSource} category="year" categoryValue={element.tags.date} subCategory={false} subCategoryValue={false} element={artistElt} />
+                                                	<ElementCategoryList key={index} dataSource={element.data_source} category="year" categoryValue={element.tags.date} element={artistElt} />
                                                 );
                                         }
 				});

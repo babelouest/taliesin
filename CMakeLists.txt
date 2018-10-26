@@ -253,7 +253,7 @@ install(FILES docs/taliesin.conf.sample
         DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/taliesin RENAME taliesin.conf COMPONENT config)
 install(DIRECTORY webapp/
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/taliesin/webapp/ COMPONENT runtime)
-install(FILES webapp-src/public/config.json.sample 
+install(FILES webapp-src/config.json.sample 
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/taliesin/webapp/ RENAME config.json COMPONENT config)
 install(FILES README.md
         DESTINATION ${CMAKE_INSTALL_DOCDIR}/ COMPONENT runtime)

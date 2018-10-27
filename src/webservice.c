@@ -1103,7 +1103,7 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
         client_data_webradio->metadata_send = (0 == o_strcmp(client_data_webradio->audio_stream->stream_format, "mp3") && o_strcasecmp("1", u_map_get_case(request->map_header, "Icy-MetaData")))?-1:0;
         client_data_webradio->client_address = get_ip_source(request);
         client_data_webradio->user_agent = o_strdup(u_map_get_case(request->map_header, "User-Agent"));
-        if (client_data_webradio->audio_stream->nb_client_connected >= TALIESIN_PLAYLIST_CLIENT_MAX) {
+        if (client_data_webradio->audio_stream->nb_client_connected >= TALIESIN_STREAM_CLIENT_MAX) {
           response->status = 503;
         } else if (jukebox_index >= current_webradio->file_list->nb_files) {
           response->status = 404;
@@ -1171,6 +1171,7 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
       if (file != NULL) {
         client_data_jukebox = o_malloc(sizeof(struct _client_data_jukebox));
         if (client_data_jukebox != NULL) {
+          client_data_jukebox->audio_buffer = NULL;
           if (init_client_data_jukebox(client_data_jukebox) == T_OK) {
             client_data_jukebox->jukebox = current_jukebox;
             o_strcpy(client_data_jukebox->stream_name, u_map_get(request->map_url, "stream_name"));
@@ -1237,6 +1238,10 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
         y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error jukebox_build_m3u");
         response->status = 500;
       }
+    }
+    if (response->status != 200) {
+      jukebox_audio_buffer_clean(client_data_jukebox->audio_buffer);
+      clean_client_data_jukebox(client_data_jukebox);
     }
   } else {
     response->status = 404;

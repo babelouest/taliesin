@@ -352,7 +352,7 @@ class ModalMedia extends Component {
 			}
 			return (
 					<Modal show={this.state.show} onHide={this.onCloseModal}>
-						<Modal.Header closeButton>
+						<Modal.Header>
 							<Modal.Title>
 								<ButtonGroup className="space-after">
 									<Button onClick={this.onPlayNow} className="btn" title={i18n.t("common.play_now")}>

@@ -417,10 +417,13 @@ class AudioPlayer extends Component {
 		}
 	}
 	
-	handleChangeVolume(volume) {
-		this.rap.audioEl.volume = ((this.state.volume+volume) / 100);
-		this.setState({volume: this.state.volume+volume}, () => {
-			this.dispatchPlayerStatus({volume: (this.state.volume+volume)});
+	handleChangeVolume(deltaVolume) {
+		var volume = this.state.volume + deltaVolume;
+                if (volume < 0) volume = 0;
+                if (volume > 100) volume = 100;
+		this.rap.audioEl.volume = volume / 100;
+		this.setState({volume: volume}, () => {
+			this.dispatchPlayerStatus({volume: volume});
 		});
 	}
 	

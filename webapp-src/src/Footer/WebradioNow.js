@@ -47,9 +47,11 @@ class WebradioNow extends Component {
 		if (this.state.media && !StateStore.getState().showFullScreen) {
 			StateStore.getState().APIManager.taliesinApiRequest("GET", "/stream/" + encodeURIComponent(StateStore.getState().profile.stream.name) + "/cover?base64&thumbnail")
 			.then((result) => {
+				StateStore.dispatch({type: "setMediaThumb", imgThumbBlob: result});
 				this.setState({imgThumbBlob: result});
 			})
 			.fail(() => {
+				StateStore.dispatch({type: "setMediaThumb", imgThumbBlob: false});
 				this.setState({imgThumbBlob: false});
 			});
 		}

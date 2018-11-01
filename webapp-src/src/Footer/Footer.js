@@ -26,7 +26,8 @@ class Footer extends Component {
 			fullScreen: false,
 			currentPlayer: StateStore.getState().profile.currentPlayer,
 			play: false,
-			stream_external: false
+			stream_external: false,
+                        imgBlob: false
 		};
 		
 		StateStore.subscribe(() => {
@@ -66,6 +67,8 @@ class Footer extends Component {
 				this.setState({mediaNext: StateStore.getState().profile.mediaNext, play: false});
 			} else if (reduxState.lastAction === "setStoredValues") {
 				this.setState({currentPlayer: StateStore.getState().profile.currentPlayer, stream: StateStore.getState().profile.stream, mediaNow: false, play: false}, () => {this.buildExternal()});
+			} else if (reduxState.lastAction === "setMediaThumb") {
+				this.setState({imgBlob: StateStore.getState().profile.imgThumbBlob});
 			}
 		});
 		
@@ -169,44 +172,35 @@ class Footer extends Component {
 				</Col>;
 			if (this.state.currentPlayer.type==="carleon") {
 				audioPlayer =
-					<Col md={3} sm={6} xs={6} className="player-box">
+					<Col md={3} sm={5} xs={5} className="player-box">
 						<MPDController player={this.state.currentPlayer} stream={this.state.stream} play={this.state.play} index={this.state.jukeboxIndex} />
 					</Col>;
 			} else if (this.state.currentPlayer.type==="internal") {
 				audioPlayer =
-					<Col md={3} sm={6} xs={6} className="player-box">
+					<Col md={3} sm={5} xs={5} className="player-box">
 						<AudioPlayer stream={this.state.stream} play={this.state.play} index={this.state.jukeboxIndex} duration={this.state.stream.webradio?0:(this.state.mediaNow.duration/1000)} />
 					</Col>;
 			} else { // External
 				audioPlayer =
-					<Col md={3} sm={6} xs={6} className="player-box">
+					<Col md={3} sm={5} xs={5} className="player-box">
 					</Col>;
 			}
 			if (this.state.stream.name) {
 				middleButtons =
-					<Col md={2} sm={2} xs={2} className="text-center">
-						<ButtonGroup className="hidden-xs hidden-sm">
-							<Button title={i18n.t("player.full_screen")} onClick={ ()=> this.showFullScreen()}>
-								<FontAwesome name={"arrows-alt"} />
-							</Button>
+					<Col md={2} sm={3} xs={3} className="text-center">
+						<ButtonGroup>
 							<Button title={i18n.t("player.list_media")} onClick={ ()=> this.showMediaList()}>
 								<FontAwesome name={"list"} />
 							</Button>
+							<Button title={i18n.t("player.full_screen")} onClick={ ()=> this.showFullScreen()}>
+								<FontAwesome name={"arrows-alt"} />
+							</Button>
 						</ButtonGroup>
-						<DropdownButton id={"center-dropdown"} title="" pullRight className="visible-xs visible-sm">
-							<MenuItem onClick={ ()=> this.showFullScreen()}>
-								<FontAwesome name={"arrows-alt"} className="space-after" />
-								Full-screen
-							</MenuItem>
-							<MenuItem onClick={ ()=> this.showMediaList()}>
-								<FontAwesome name={"list"} className="space-after" />
-								List media
-							</MenuItem>
-						</DropdownButton>
 					</Col>;
 			}
 			return (
 				<div className="navbar-fixed-bottom footer">
+					<div className="media-background-fullscreen hidden-md hidden-lg hidden-sm" style={{backgroundImage:this.state.imgBlob?"url(data:image/png;base64,"+this.state.imgBlob+")":"" }}></div>
 					<a href={(this.state.stream_external||"")} style={{display: "none"}} id={"play-external-anchor-footer"} download={(this.state.stream.display_name||i18n.t("common.no_name"))+".m3u"}>{i18n.t("common.external")}</a>
 					<Row>
 						{streamSelector}

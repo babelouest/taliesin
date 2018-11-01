@@ -39,6 +39,7 @@ var defaultState = {
 		playlist: false,
 		mediaNow: false,
 		mediaNext: false,
+		imgThumbBlob: false,
 		browse: "dashboard",
 		view: "list",
 		jukeboxIndex: 0,
@@ -178,6 +179,9 @@ function stateStoreManager(state = defaultState, action) {
 			break;
 		case "setMediaNow":
 			state.profile.mediaNow = action.media;
+			break;
+		case "setMediaThumb":
+			state.profile.imgThumbBlob = action.imgThumbBlob;
 			break;
 		case "setMediaNext":
 			state.profile.mediaNext = action.media;

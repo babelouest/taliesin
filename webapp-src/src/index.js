@@ -8,12 +8,27 @@ import OAuth2Connector from './lib/OAuth2Connector';
 import StateStore from './lib/StateStore';
 import i18n from './lib/i18n';
 
+function getBestStorageAvailable(storageType) {
+	if (storageType === "local") {
+		var testVal = "testLocalStorage";
+		try {
+			localStorage.setItem(testVal, testVal);
+			localStorage.removeItem(testVal);
+			return storageType;
+		} catch (e) {
+			return "cookie";
+		}
+	} else {
+		return storageType;
+	}
+}
+
 config.fetchConfig()
 .then(function () {
 	var curOauth2Config = config.getConfigValue("oauth2Config");
 	if (curOauth2Config && curOauth2Config.enabled) {
 		var oauth2Connector = new OAuth2Connector({
-			storageType: curOauth2Config.storageType, 
+			storageType: getBestStorageAvailable(curOauth2Config.storageType),
 			responseType: curOauth2Config.responseType, 
 			serverUrl: curOauth2Config.serverUrl, 
 			authUrl: curOauth2Config.authUrl, 

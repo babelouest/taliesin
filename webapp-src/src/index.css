@@ -155,7 +155,7 @@ body {
 	left:0;
 	width:100%;
 	height:100%;
-	z-index:10000;
+	z-index:9995;
 }
 
 .text-fullscreen
@@ -187,6 +187,11 @@ body {
 .space-before
 {
 	margin-left: 5px;
+}
+
+.pull-down
+{
+	padding-top: 10px;
 }
 
 .dropdown-menu-center ul

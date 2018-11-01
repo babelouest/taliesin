@@ -10,7 +10,7 @@ class OAuth2Connector {
 		this.changeStatusCb = [];
 		this.connected = false;
 		this.parameters = {};
-		this.localStorageKey = "taliesinOauth2/" + window.location.pathname;
+		this.localStorageKey = "taliesinOauth2-" + window.btoa(unescape(encodeURIComponent(window.location.pathname))).replace(/\=+$/m,'');
 		this.refreshTimeout = false;
 		
 		if (parameters) {

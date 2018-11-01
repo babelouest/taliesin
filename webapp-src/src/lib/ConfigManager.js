@@ -2,7 +2,7 @@ import Cookies from '../js/js.cookie.js';
 
 class ConfigManager {
 	constructor() {
-		this.localStorageKey = "taliesinConfig";
+		this.localStorageKey = "taliesinConfig-" + window.btoa(unescape(encodeURIComponent(window.location.pathname))).replace(/\=+$/m,'');
 		this.config = false;
 	}
 	

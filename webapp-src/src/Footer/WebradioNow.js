@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+
 import StateStore from '../lib/StateStore';
 import MediaInfo from './MediaInfo';
 import i18n from '../lib/i18n';

@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Row, Col } from 'react-bootstrap';
+
 import StateStore from '../lib/StateStore';
 import ElementButtons from './ElementButtons';
 import ModalMedia from '../Modal/ModalMedia';

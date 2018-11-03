@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import FontAwesome from 'react-fontawesome';
 import { Image, Col } from 'react-bootstrap';
 import VisibilitySensor from 'react-visibility-sensor';
+
 import ModalMedia from '../Modal/ModalMedia';
 import StateStore from '../lib/StateStore';
 import ElementButtons from './ElementButtons';

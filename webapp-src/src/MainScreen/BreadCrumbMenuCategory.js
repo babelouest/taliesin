@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Breadcrumb } from 'react-bootstrap';
+
 import StateStore from '../lib/StateStore';
 
 class BreadCrumbMenuCategory extends Component {

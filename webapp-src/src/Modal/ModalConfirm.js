@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Button, Modal } from 'react-bootstrap';
+
 import i18n from '../lib/i18n';
 
 class ModalConfirm extends Component {

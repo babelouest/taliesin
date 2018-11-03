@@ -1,4 +1,4 @@
-import { createStore } from '../js/redux.js'
+import { createStore } from 'redux'
 
 import APIManager from './APIManager'
 import config from '../lib/ConfigManager';

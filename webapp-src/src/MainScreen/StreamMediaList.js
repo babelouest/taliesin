@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Row, Col, Label, ButtonGroup, Button } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
+
 import StateStore from '../lib/StateStore';
 import MediaRow from './MediaRow';
 import i18n from '../lib/i18n';

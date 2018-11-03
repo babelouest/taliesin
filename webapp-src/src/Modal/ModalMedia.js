@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Modal, Row, Col, Image, Button, ButtonGroup, DropdownButton, MenuItem } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
+
 import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
 import ModalManage from '../Modal/ModalManage';

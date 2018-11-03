@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Row, Col, Button, ButtonGroup, FormGroup, ControlLabel, FormControl, Checkbox, DropdownButton, MenuItem, InputGroup, Image, Panel, PanelGroup } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
 import Datetime from 'react-datetime';
-import 'react-datetime/css/react-datetime.css';
+
 import StateStore from '../lib/StateStore';
 import ModalMedia from '../Modal/ModalMedia';
 import i18n from '../lib/i18n';

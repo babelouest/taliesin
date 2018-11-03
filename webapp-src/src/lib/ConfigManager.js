@@ -1,4 +1,4 @@
-import Cookies from '../js/js.cookie.js';
+import Cookies from 'js-cookie';
 
 class ConfigManager {
 	constructor() {

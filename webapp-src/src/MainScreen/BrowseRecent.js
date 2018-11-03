@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Row, Col, ButtonGroup, Button, DropdownButton, MenuItem } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
+
 import StateStore from '../lib/StateStore';
 import ElementPathIcon from './ElementPathIcon';
 import ElementPathList from './ElementPathList';

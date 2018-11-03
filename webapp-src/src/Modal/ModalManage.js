@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Button, Modal, Row, Col, Label } from 'react-bootstrap';
+
 import FontAwesome from 'react-fontawesome';
 
 import i18n from '../lib/i18n';

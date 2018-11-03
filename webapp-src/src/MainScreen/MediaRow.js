@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Row, Col, Image, Button, ButtonGroup, Label } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
+
 import VisibilitySensor from 'react-visibility-sensor';
 import StateStore from '../lib/StateStore';
 import ModalMedia from '../Modal/ModalMedia';

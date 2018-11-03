@@ -24,7 +24,6 @@
     "react-i18next": "^8.0.7",
     "react-lazyload": "^2.3.0",
     "react-notification-system": "^0.2.17",
-    "react-redux": "^5.0.7",
     "react-scripts": "2.0.4",
     "react-tag-input": "^5.2.3",
     "react-visibility-sensor": "^4.1.3",

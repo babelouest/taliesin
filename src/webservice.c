@@ -1062,7 +1062,7 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
   struct _t_jukebox * current_jukebox = NULL;
   unsigned int i, jukebox_index = 0;
   struct _client_data_webradio * client_data_webradio = NULL;
-  struct _client_data_jukebox * client_data_jukebox;
+  struct _client_data_jukebox * client_data_jukebox = NULL;
   struct _t_file * file;
   char metaint[17] = {0}, * m3u_data = NULL, * content_disposition, * escaped_filename;
   uint64_t time_offset;

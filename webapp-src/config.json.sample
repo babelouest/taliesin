@@ -1,12 +1,12 @@
 {
 	"taliesinApiUrl": "http://localhost:8576/api",
 	"angharadApiUrl": "http://localhost:2473/api",
-  "benoicPrefix": "benoic",
-  "carleonPrefix": "carleon",
+	"benoicPrefix": "benoic",
+	"carleonPrefix": "carleon",
 	"storageType": "local", 
 	"useWebsocket": true,
 	"oauth2Config": {
-    "enabled": true,
+		"enabled": true,
 		"storageType": "local", 
 		"responseType": "code", 
 		"serverUrl": "http://localhost:4593/api", 

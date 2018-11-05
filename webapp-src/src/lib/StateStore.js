@@ -60,8 +60,8 @@ function stateStoreManager(state = defaultState, action) {
 			state.APIManager = new APIManager({
 				taliesinApiUrl: action.taliesinApiUrl,
 				angharadApiUrl: action.angharadApiUrl,
-        benoicPrefix: action.benoicPrefix,
-        carleonPrefix: action.carleonPrefix,
+				benoicPrefix: action.benoicPrefix,
+				carleonPrefix: action.carleonPrefix,
 				oauth2: action.oauth2
 			});
 			state.taliesinApiUrl = action.taliesinApiUrl;

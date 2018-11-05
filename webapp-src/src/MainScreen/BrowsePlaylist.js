@@ -30,7 +30,8 @@ class BrowsePlaylist extends Component {
 			playlistToShow: props.playlist,
 			mediaList: [],
 			offset: 0,
-			limit: 100
+			limit: 100,
+                        serverConfig: StateStore.getState().serverConfig
 		};
 		
 		StateStore.subscribe(() => {
@@ -82,7 +83,8 @@ class BrowsePlaylist extends Component {
 			playlistToShow: nextProps.playlist,
 			mediaList: [],
 			offset: 0,
-			limit: 100
+			limit: 100,
+                        serverConfig: StateStore.getState().serverConfig
 		}, () => {
 			if (this.state.playlistToShow) {
 				var playlist = this.state.playlistToShow;
@@ -232,7 +234,7 @@ class BrowsePlaylist extends Component {
 	}
 	
 	runPlayElement(playlist) {
-		StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(playlist.name) + "/load?jukebox&name={" + (StateStore.getState().profile.currentPlayer.name) + "} - " + playlist.name)
+		StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(playlist.name) + "/load?jukebox&name={" + (StateStore.getState().profile.currentPlayer.name) + "} - " + playlist.name + "&format=" + this.state.serverConfig.default_stream_format + "&channels=" + this.state.serverConfig.default_stream_channels + "&samplerate=" + this.state.serverConfig.default_stream_sample_rate + "&bitrate=" + this.state.serverConfig.default_stream_bitrate)
 		.then((result) => {
 			var streamList = StateStore.getState().streamList;
 			streamList.push(result);

@@ -26,7 +26,8 @@ class ElementButtons extends Component {
 			editCategoryShow: false,
 			onEditCategory: props.onEditCategory,
 			hideRefresh: props.hideRefresh,
-			manageModalShow: false
+			manageModalShow: false,
+                        serverConfig: StateStore.getState().serverConfig
 		};
 
 		this.playElement = this.playElement.bind(this);
@@ -68,7 +69,8 @@ class ElementButtons extends Component {
 			editCategoryShow: false,
 			onEditCategory: nextProps.onEditCategory,
 			hideRefresh: nextProps.hideRefresh,
-			manageModalShow: false
+			manageModalShow: false,
+                        serverConfig: StateStore.getState().serverConfig
 		});
 	}
 	
@@ -114,7 +116,7 @@ class ElementButtons extends Component {
 				streamName += " - " + this.state.subCategoryValue;
 			}
 		}
-		StateStore.getState().APIManager.taliesinApiRequest("GET", url + "?jukebox&recursive&name=" + encodeURI("{") + (StateStore.getState().profile.currentPlayer.name) + encodeURI("} - ") + encodeURI(streamName))
+		StateStore.getState().APIManager.taliesinApiRequest("GET", url + "?jukebox&recursive&name=" + encodeURI("{") + (StateStore.getState().profile.currentPlayer.name) + encodeURI("} - ") + encodeURI(streamName)+ "&format=" + this.state.serverConfig.default_stream_format + "&channels=" + this.state.serverConfig.default_stream_channels + "&samplerate=" + this.state.serverConfig.default_stream_sample_rate + "&bitrate=" + this.state.serverConfig.default_stream_bitrate)
 		.then((result) => {
 			var streamList = StateStore.getState().streamList;
 			streamList.push(result);

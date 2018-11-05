@@ -148,17 +148,22 @@ StateStore.subscribe(() => {
 			});
 			
 			// Get server default config
-			StateStore.getState().APIManager.taliesinApiRequest("GET", "/../config")
-			.then((result) => {
-				StateStore.dispatch({type: "setServerConfig", config: result});
-			})
-			.fail((result) => {
-				StateStore.getState().NotificationManager.addNotification({
-					message: i18n.t("common.message_error_loading_server_config"),
-					level: 'error'
+                        if (config.getLocalConfigValue("serverConfig")) {
+                        	StateStore.dispatch({type: "setServerConfig", config: config.getLocalConfigValue("serverConfig")});
+                        } else {
+				StateStore.getState().APIManager.taliesinApiRequest("GET", "/../config")
+				.then((result) => {
+					StateStore.dispatch({type: "setServerConfig", config: result});
+                                        config.setLocalConfigValue("serverConfig", result);
+				})
+				.fail((result) => {
+					StateStore.getState().NotificationManager.addNotification({
+						message: i18n.t("common.message_error_loading_server_config"),
+						level: 'error'
+					});
+					StateStore.dispatch({type: "setServerConfig", config: {}});
 				});
-				StateStore.dispatch({type: "setServerConfig", config: {}});
-			});
+                        }
 		}
 	}
 });

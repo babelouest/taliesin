@@ -1,5 +1,6 @@
 var path = require('path');
 var webpack = require('webpack');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports = {
     entry: './src/index.js',
@@ -34,13 +35,20 @@ module.exports = {
                 NODE_ENV: JSON.stringify("production") 
             }
         }),
-        new webpack.optimize.UglifyJsPlugin({
+        new UglifyJsPlugin({
+          test: /\.js($|\?)/i,
+          sourceMap: true,
+          uglifyOptions: {
+            mangle: {
+              keep_fnames: true
+            },
             compress: {
-                warnings: false,
+              warnings: false
             },
             output: {
-                comments: false,
-            },
+              beautify: false
+            }
+          }
         })
     ]
 }

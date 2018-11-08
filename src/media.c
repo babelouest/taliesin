@@ -1556,15 +1556,15 @@ json_t * media_cover_get_by_id(struct config_elements * config, json_int_t tm_id
       if (res == H_OK) {
         if (json_array_size(j_result_folder) > 0) {
           if (!thumbnail) {
-            j_data_source = data_source_get_by_id(config, json_integer_value(json_object_get(json_array_get(j_result_media, 0), "tds_id")));
+            j_data_source = data_source_get_by_id(config, json_integer_value(json_object_get(json_array_get(j_result_folder, 0), "tds_id")));
             if (check_result_value(j_data_source, T_OK)) {
-              cover_path = msprintf("%s/%s", json_string_value(json_object_get(json_object_get(j_data_source, "data_source"), "path")), json_string_value(json_object_get(json_array_get(j_result_media, 0), "path")));
+              cover_path = msprintf("%s/%s", json_string_value(json_object_get(json_object_get(j_data_source, "data_source"), "path")), json_string_value(json_object_get(json_array_get(j_result_folder, 0), "path")));
               cover_full = media_get_cover_from_path(cover_path, &cover_size);
               if (cover_full != NULL) {
                 cover_full_b64 = o_malloc(2 * cover_size * sizeof(char));
                 if (cover_full_b64 != NULL) {
                   if (o_base64_encode(cover_full, cover_size, cover_full_b64, &cover_size_b64)) {
-                    json_object_set_new(json_array_get(j_result_media, 0), "full", json_stringn((const char *)cover_full_b64, cover_size_b64));
+                    json_object_set_new(json_array_get(j_result_folder, 0), "full", json_stringn((const char *)cover_full_b64, cover_size_b64));
                   } else {
                     y_log_message(Y_LOG_LEVEL_ERROR, "media_cover_get_by_id - Error o_base64_encode (2)");
                   }

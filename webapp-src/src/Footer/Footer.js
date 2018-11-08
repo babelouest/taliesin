@@ -78,6 +78,7 @@ class Footer extends Component {
 		this.buildExternal = this.buildExternal.bind(this);
 		this.setWindowTitle = this.setWindowTitle.bind(this);
 		this.buildTitle = this.buildTitle.bind(this);
+                this.showNotification = this.showNotification.bind(this);
 		
 		this.setWindowTitle();
 	}
@@ -85,10 +86,43 @@ class Footer extends Component {
 	setWindowTitle() {
 		if (this.state.mediaNow) {
 			document.title = this.buildTitle(this.state.mediaNow, (this.state.stream.webradio?-1:this.state.jukeboxIndex), this.state.stream.elements) + " - Taliesin";
+                        this.showNotification();
 		} else {
 			document.title = "Taliesin";
 		}
 	}
+
+        showNotification() {
+          if (("Notification" in window) && !!this.state.mediaNow) {
+            var title = this.buildTitle(this.state.mediaNow, (this.state.stream.webradio?-1:this.state.jukeboxIndex), this.state.stream.elements);
+            var icon = StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name + "/cover";
+            var body = "";
+            var timeout = 10000;
+            if (this.state.mediaNow.tags) {
+              body = (this.state.mediaNow.tags.title || this.state.mediaNow.name) + "\n" + (this.state.mediaNow.tags.artist || this.state.mediaNow.tags.album_artist || "") + "\n" + (this.state.mediaNow.tags.album || "") + "\n" + (this.state.mediaNow.tags.date || "");
+            } else {
+              body = this.state.mediaNow.name;
+            }
+            if (!this.state.stream.webradio) {
+              icon += "?index=" + this.state.jukeboxIndex;
+            }
+            if (Notification.permission === "granted") {
+              var notif = new Notification(title, {icon: icon, dir: "rtl", body: body});
+              setTimeout(notif.close.bind(notif), timeout);
+            } else if (Notification.permission !== 'denied') {
+              Notification.requestPermission(function (permission) {
+                if(!('permission' in Notification)) {
+                  Notification.permission = permission;
+                }
+
+                if (permission === "granted") {
+                  var notif = new Notification(title, {icon: icon, dir: "rtl", body: body});
+                  setTimeout(notif.close.bind(notif), timeout);
+                }
+              });
+            }
+          }
+        }
 	
 	buildTitle(media, index, total) {
 		var title = "";

@@ -31,7 +31,7 @@ class BrowsePlaylist extends Component {
 			mediaList: [],
 			offset: 0,
 			limit: 100,
-                        serverConfig: StateStore.getState().serverConfig
+			serverConfig: StateStore.getState().serverConfig
 		};
 		
 		StateStore.subscribe(() => {
@@ -84,7 +84,7 @@ class BrowsePlaylist extends Component {
 			mediaList: [],
 			offset: 0,
 			limit: 100,
-                        serverConfig: StateStore.getState().serverConfig
+			serverConfig: StateStore.getState().serverConfig
 		}, () => {
 			if (this.state.playlistToShow) {
 				var playlist = this.state.playlistToShow;

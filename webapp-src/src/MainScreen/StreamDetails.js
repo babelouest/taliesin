@@ -382,52 +382,52 @@ class StreamDetails extends Component {
 		if (this.state.stream.webradio) {
 			history =
 				<Panel onToggle={this.handleSelectHistory} defaultExpanded>
-          <Panel.Heading>
-            <Panel.Title toggle>
-              {i18n.t("stream.history")}
-            </Panel.Title>
-          </Panel.Heading>
-          <Panel.Collapse>
-            <Panel.Body>
-              <Row>
-                <Col md={12}>
-                  <ButtonGroup>
-                    <Button onClick={this.handleHistoryPrevious} disabled={!this.state.historyOffset}>
-                      {i18n.t("common.previous_page")}
-                    </Button>
-                    <Button onClick={this.handleHistoryNext}>
-                      {i18n.t("common.next_page")}
-                    </Button>
-                    <Button onClick={this.handleHistoryRefresh}>
-                      {i18n.t("common.refresh")}
-                    </Button>
-                  </ButtonGroup>
-                </Col>
-              </Row>
-              <Row className="hidden-xs">
-                <Col md={2}>
-                  <Label>{i18n.t("common.date")}</Label>
-                </Col>
-                <Col md={2}>
-                  <Label>{i18n.t("common.data_source")}</Label>
-                </Col>
-                <Col md={2}>
-                  <Label>{i18n.t("common.artist")}</Label>
-                </Col>
-                <Col md={2}>
-                  <Label>{i18n.t("common.album")}</Label>
-                </Col>
-                <Col md={2}>
-                  <Label>{i18n.t("common.title")}</Label>
-                </Col>
-                <Col md={2}>
-                  <Label>{i18n.t("common.cover")}</Label>
-                </Col>
-              </Row>
-              {this.state.historyList}
-              {this.state.historyLoaded?"":<FontAwesome name="spinner" spin />}
-            </Panel.Body>
-          </Panel.Collapse>
+					<Panel.Heading>
+						<Panel.Title toggle>
+							{i18n.t("stream.history")}
+						</Panel.Title>
+					</Panel.Heading>
+					<Panel.Collapse>
+						<Panel.Body>
+							<Row>
+								<Col md={12}>
+									<ButtonGroup>
+										<Button onClick={this.handleHistoryPrevious} disabled={!this.state.historyOffset}>
+											{i18n.t("common.previous_page")}
+										</Button>
+										<Button onClick={this.handleHistoryNext}>
+											{i18n.t("common.next_page")}
+										</Button>
+										<Button onClick={this.handleHistoryRefresh}>
+											{i18n.t("common.refresh")}
+										</Button>
+									</ButtonGroup>
+								</Col>
+							</Row>
+							<Row className="hidden-xs">
+								<Col md={2}>
+									<Label>{i18n.t("common.date")}</Label>
+								</Col>
+								<Col md={2}>
+									<Label>{i18n.t("common.data_source")}</Label>
+								</Col>
+								<Col md={2}>
+									<Label>{i18n.t("common.artist")}</Label>
+								</Col>
+								<Col md={2}>
+									<Label>{i18n.t("common.album")}</Label>
+								</Col>
+								<Col md={2}>
+									<Label>{i18n.t("common.title")}</Label>
+								</Col>
+								<Col md={2}>
+									<Label>{i18n.t("common.cover")}</Label>
+								</Col>
+							</Row>
+							{this.state.historyList}
+							{this.state.historyLoaded?"":<FontAwesome name="spinner" spin />}
+						</Panel.Body>
+					</Panel.Collapse>
 				</Panel>
 		}
 		if (this.state.mediaListExpanded) {
@@ -501,135 +501,135 @@ class StreamDetails extends Component {
 				<PanelGroup id="myPanel">
 					{history}
 					<Panel onToggle={this.handleSelectMediaList}>
-            <Panel.Heading>
-              <Panel.Title toggle>
-                {i18n.t("stream.media_list")}
-              </Panel.Title>
-            </Panel.Heading>
-            <Panel.Collapse>
-              <Panel.Body>
-                {mediaList}
-              </Panel.Body>
-            </Panel.Collapse>
+						<Panel.Heading>
+							<Panel.Title toggle>
+								{i18n.t("stream.media_list")}
+							</Panel.Title>
+						</Panel.Heading>
+						<Panel.Collapse>
+							<Panel.Body>
+								{mediaList}
+							</Panel.Body>
+						</Panel.Collapse>
 					</Panel>
 					<Panel>
-            <Panel.Heading>
-              <Panel.Title toggle>
-                {i18n.t("stream.info")}
-              </Panel.Title>
-            </Panel.Heading>
-            <Panel.Collapse>
-              <Panel.Body>
-                <Row>
-                  <Col md={6} sm={6} xs={6}>
-                    <Label>
-                      {i18n.t("common.name")}
-                    </Label>
-                  </Col>
-                  <Col md={6} sm={6} xs={6}>
-                    <span>
-                      {this.state.stream.display_name}
-                    </span>
-                  </Col>
-                </Row>
-                <Row>
-                  <Col md={6} sm={6} xs={6}>
-                    <Label>
-                      {i18n.t("stream.stream_name")}
-                    </Label>
-                  </Col>
-                  <Col md={6} sm={6} xs={6} className="large-label">
-                    <span>
-                      {this.state.stream.name}
-                    </span>
-                  </Col>
-                </Row>
-                <Row>
-                  <Col md={6} sm={6} xs={6}>
-                    <Label>
-                      {i18n.t("common.url")}
-                    </Label>
-                  </Col>
-                  <Col md={6} sm={6} xs={6}>
-                    <a target="_blank" rel="noopener noreferrer" href={StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name + (this.state.stream.webradio?"":("?url_prefix=" + StateStore.getState().taliesinApiUrl))}>direct link</a>
-                  </Col>
-                </Row>
-                {playlistAttached}
-                <Row>
-                  <Col md={6} sm={6} xs={6}>
-                    <Label>
-                      {i18n.t("common.type")}
-                    </Label>
-                  </Col>
-                  <Col md={6} sm={6} xs={6}>
-                    <span>
-                      {this.state.stream.webradio?i18n.t("common.webradio"):i18n.t("common.jukebox")}
-                    </span>
-                  </Col>
-                </Row>
-                {streamRandom}
-                <Row>
-                  <Col md={6} sm={6} xs={6}>
-                    <Label>
-                      {i18n.t("common.format")}
-                    </Label>
-                  </Col>
-                  <Col md={6} sm={6} xs={6}>
-                    <span>
-                      {this.state.stream.format}
-                    </span>
-                  </Col>
-                </Row>
-                <Row>
-                  <Col md={6} sm={6} xs={6}>
-                    <Label>
-                      {i18n.t("common.channels")}
-                    </Label>
-                  </Col>
-                  <Col md={6} sm={6} xs={6}>
-                    <span>
-                      {this.state.stream.stereo?i18n.t("common.stereo"):i18n.t("common.mono")}
-                    </span>
-                  </Col>
-                </Row>
-                <Row>
-                  <Col md={6} sm={6} xs={6}>
-                    <Label>
-                      {i18n.t("common.sample_rate")}
-                    </Label>
-                  </Col>
-                  <Col md={6} sm={6} xs={6}>
-                    <span>
-                      {this.state.stream.sample_rate} kHz
-                    </span>
-                  </Col>
-                </Row>
-                <Row>
-                  <Col md={6} sm={6} xs={6}>
-                    <Label>
-                      {i18n.t("common.bitrate")}
-                    </Label>
-                  </Col>
-                  <Col md={6} sm={6} xs={6}>
-                    <span>
-                      {(this.state.stream.bitrate/1000)} bps
-                    </span>
-                  </Col>
-                </Row>
-              </Panel.Body>
-            </Panel.Collapse>
+						<Panel.Heading>
+							<Panel.Title toggle>
+								{i18n.t("stream.info")}
+							</Panel.Title>
+						</Panel.Heading>
+						<Panel.Collapse>
+							<Panel.Body>
+								<Row>
+									<Col md={6} sm={6} xs={6}>
+										<Label>
+											{i18n.t("common.name")}
+										</Label>
+									</Col>
+									<Col md={6} sm={6} xs={6}>
+										<span>
+											{this.state.stream.display_name}
+										</span>
+									</Col>
+								</Row>
+								<Row>
+									<Col md={6} sm={6} xs={6}>
+										<Label>
+											{i18n.t("stream.stream_name")}
+										</Label>
+									</Col>
+									<Col md={6} sm={6} xs={6} className="large-label">
+										<span>
+											{this.state.stream.name}
+										</span>
+									</Col>
+								</Row>
+								<Row>
+									<Col md={6} sm={6} xs={6}>
+										<Label>
+											{i18n.t("common.url")}
+										</Label>
+									</Col>
+									<Col md={6} sm={6} xs={6}>
+										<a target="_blank" rel="noopener noreferrer" href={StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name + (this.state.stream.webradio?"":("?url_prefix=" + StateStore.getState().taliesinApiUrl))}>direct link</a>
+									</Col>
+								</Row>
+								{playlistAttached}
+								<Row>
+									<Col md={6} sm={6} xs={6}>
+										<Label>
+											{i18n.t("common.type")}
+										</Label>
+									</Col>
+									<Col md={6} sm={6} xs={6}>
+										<span>
+											{this.state.stream.webradio?i18n.t("common.webradio"):i18n.t("common.jukebox")}
+										</span>
+									</Col>
+								</Row>
+								{streamRandom}
+								<Row>
+									<Col md={6} sm={6} xs={6}>
+										<Label>
+											{i18n.t("common.format")}
+										</Label>
+									</Col>
+									<Col md={6} sm={6} xs={6}>
+										<span>
+											{this.state.stream.format}
+										</span>
+									</Col>
+								</Row>
+								<Row>
+									<Col md={6} sm={6} xs={6}>
+										<Label>
+											{i18n.t("common.channels")}
+										</Label>
+									</Col>
+									<Col md={6} sm={6} xs={6}>
+										<span>
+											{this.state.stream.stereo?i18n.t("common.stereo"):i18n.t("common.mono")}
+										</span>
+									</Col>
+								</Row>
+								<Row>
+									<Col md={6} sm={6} xs={6}>
+										<Label>
+											{i18n.t("common.sample_rate")}
+										</Label>
+									</Col>
+									<Col md={6} sm={6} xs={6}>
+										<span>
+											{this.state.stream.sample_rate} kHz
+										</span>
+									</Col>
+								</Row>
+								<Row>
+									<Col md={6} sm={6} xs={6}>
+										<Label>
+											{i18n.t("common.bitrate")}
+										</Label>
+									</Col>
+									<Col md={6} sm={6} xs={6}>
+										<span>
+											{(this.state.stream.bitrate/1000)} bps
+										</span>
+									</Col>
+								</Row>
+							</Panel.Body>
+						</Panel.Collapse>
 					</Panel>
 					<Panel>
-            <Panel.Heading>
-              <Panel.Title toggle>
-                {i18n.t("stream.clients")}
-              </Panel.Title>
-            </Panel.Heading>
-            <Panel.Collapse>
-              <Panel.Body>
-                {clientList}
-              </Panel.Body>
-            </Panel.Collapse>
+						<Panel.Heading>
+							<Panel.Title toggle>
+								{i18n.t("stream.clients")}
+							</Panel.Title>
+						</Panel.Heading>
+						<Panel.Collapse>
+							<Panel.Body>
+								{clientList}
+							</Panel.Body>
+						</Panel.Collapse>
 					</Panel>
 					<ModalConfirm show={this.state.modalConfirmShow} title={this.state.modalTitle} message={this.state.modalMessage} onCloseCb={this.confirmDelete} />
 					<ModalEdit show={this.state.modalRenameShow} title={this.state.modalTitle} message={this.state.modalMessage} onCloseCb={this.confirmRename} value={this.state.modalValue} />

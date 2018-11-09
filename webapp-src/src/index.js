@@ -52,7 +52,7 @@ config.fetchConfig()
 					ReactDOM.render(<App/>, document.getElementById('root'));
 				} else if (newStatus === "disconnected") {
 					StateStore.dispatch({ type: "connection", status: newStatus, token: false, expiration: 0, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), benoicPrefix: config.getConfigValue("benoicPrefix"), carleonPrefix: config.getConfigValue("carleonPrefix"), angharadApiUrl: config.getConfigValue("angharadApiUrl"), oauth2: true });
-          StateStore.dispatch({ type: "showFullScreen", show: false });
+					StateStore.dispatch({ type: "showFullScreen", show: false });
 					ReactDOM.render(<App/>, document.getElementById('root'));
 				} else if (newStatus === "refresh") {
 					StateStore.dispatch({ type: "newApiToken", token: token, expiration: expiration});
@@ -148,13 +148,13 @@ StateStore.subscribe(() => {
 			});
 			
 			// Get server default config
-                        if (config.getLocalConfigValue("serverConfig")) {
-                        	StateStore.dispatch({type: "setServerConfig", config: config.getLocalConfigValue("serverConfig")});
-                        } else {
+      if (config.getLocalConfigValue("serverConfig")) {
+        StateStore.dispatch({type: "setServerConfig", config: config.getLocalConfigValue("serverConfig")});
+      } else {
 				StateStore.getState().APIManager.taliesinApiRequest("GET", "/../config")
 				.then((result) => {
 					StateStore.dispatch({type: "setServerConfig", config: result});
-                                        config.setLocalConfigValue("serverConfig", result);
+																				config.setLocalConfigValue("serverConfig", result);
 				})
 				.fail((result) => {
 					StateStore.getState().NotificationManager.addNotification({
@@ -163,7 +163,7 @@ StateStore.subscribe(() => {
 					});
 					StateStore.dispatch({type: "setServerConfig", config: {}});
 				});
-                        }
+      }
 		}
 	}
 });

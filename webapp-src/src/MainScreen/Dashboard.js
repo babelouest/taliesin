@@ -134,72 +134,72 @@ class Dashboard extends Component {
 					{noDataSource}
 					<PanelGroup id="myPanel">
 						<Panel defaultExpanded>
-              <Panel.Heading>
-                <Panel.Title toggle>
-                  {i18n.t("dashboard.streams")}
-                </Panel.Title>
-              </Panel.Heading>
-              <Panel.Collapse>
-                <Panel.Body>
-                  <ManageStream />
-                </Panel.Body>
-              </Panel.Collapse>
+							<Panel.Heading>
+								<Panel.Title toggle>
+									{i18n.t("dashboard.streams")}
+								</Panel.Title>
+							</Panel.Heading>
+							<Panel.Collapse>
+								<Panel.Body>
+									<ManageStream />
+								</Panel.Body>
+							</Panel.Collapse>
 						</Panel>
 						<Panel>
-              <Panel.Heading>
-                <Panel.Title toggle>
-                  {i18n.t("dashboard.playlists")} 
-                </Panel.Title>
-              </Panel.Heading>
-              <Panel.Collapse>
-                <Panel.Body>
-                  <BrowsePlaylist />
-                </Panel.Body>
-              </Panel.Collapse>
+							<Panel.Heading>
+								<Panel.Title toggle>
+									{i18n.t("dashboard.playlists")} 
+								</Panel.Title>
+							</Panel.Heading>
+							<Panel.Collapse>
+								<Panel.Body>
+									<BrowsePlaylist />
+								</Panel.Body>
+							</Panel.Collapse>
 						</Panel>
 						<Panel>
-              <Panel.Heading>
-                <Panel.Title toggle onClick={this.handleSelectRecentMedia}>
-                  {i18n.t("dashboard.recent")}
-                </Panel.Title>
-              </Panel.Heading>
-              <Panel.Collapse>
-                <Panel.Body>
-                  <Row>
-                    <Col md={2} sm={2} xs={2}>
-                      <Button title={i18n.t("dashboard.refresh")} onClick={this.loadRecent}>
-                        <FontAwesome name={"refresh"} />
-                      </Button>
-                    </Col>
-                  </Row>
-                  {recentLoading}
-                  <Row>
-                    {this.state.recent}
-                  </Row>
-                </Panel.Body>
-              </Panel.Collapse>
+							<Panel.Heading>
+								<Panel.Title toggle onClick={this.handleSelectRecentMedia}>
+									{i18n.t("dashboard.recent")}
+								</Panel.Title>
+							</Panel.Heading>
+							<Panel.Collapse>
+								<Panel.Body>
+									<Row>
+										<Col md={2} sm={2} xs={2}>
+											<Button title={i18n.t("dashboard.refresh")} onClick={this.loadRecent}>
+												<FontAwesome name={"refresh"} />
+											</Button>
+										</Col>
+									</Row>
+									{recentLoading}
+									<Row>
+										{this.state.recent}
+									</Row>
+								</Panel.Body>
+							</Panel.Collapse>
 						</Panel>
 						<Panel>
-              <Panel.Heading>
-                <Panel.Title toggle onClick={this.handleSelectRandomMedia}>
-                  {i18n.t("dashboard.random")}
-                </Panel.Title>
-              </Panel.Heading>
-              <Panel.Collapse>
-                <Panel.Body>
-                  <Row>
-                    <Col md={2} sm={2} xs={2}>
-                      <Button title={i18n.t("dashboard.refresh")} onClick={this.loadRandom}>
-                        <FontAwesome name={"refresh"} />
-                      </Button>
-                    </Col>
-                  </Row>
-                  {randomLoading}
-                  <Row>
-                    {this.state.random}
-                  </Row>
-                </Panel.Body>
-              </Panel.Collapse>
+							<Panel.Heading>
+								<Panel.Title toggle onClick={this.handleSelectRandomMedia}>
+									{i18n.t("dashboard.random")}
+								</Panel.Title>
+							</Panel.Heading>
+							<Panel.Collapse>
+								<Panel.Body>
+									<Row>
+										<Col md={2} sm={2} xs={2}>
+											<Button title={i18n.t("dashboard.refresh")} onClick={this.loadRandom}>
+												<FontAwesome name={"refresh"} />
+											</Button>
+										</Col>
+									</Row>
+									{randomLoading}
+									<Row>
+										{this.state.random}
+									</Row>
+								</Panel.Body>
+							</Panel.Collapse>
 						</Panel>
 					</PanelGroup>
 				</div>

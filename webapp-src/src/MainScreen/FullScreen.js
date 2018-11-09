@@ -182,9 +182,9 @@ class FullScreen extends Component {
 	}
 	
 	handleChangeVolume(deltaVolume) {
-        	var volume = this.state.volume + deltaVolume;
-                if (volume < 0) volume = 0;
-                if (volume > 100) volume = 100;
+		var volume = this.state.volume + deltaVolume;
+		if (volume < 0) volume = 0;
+		if (volume > 100) volume = 100;
 		if (this._ismounted) {
 			this.setState({volume: (volume)}, () => {
 				StateStore.dispatch({type: "setPlayerAction", action: "volume", parameter: (deltaVolume)});

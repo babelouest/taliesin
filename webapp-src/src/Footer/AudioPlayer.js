@@ -367,7 +367,7 @@ class AudioPlayer extends Component {
 					} else {
 						this.sendStreamComand("list", {offset: this.state.jukeboxIndex, limit: 1});
 					}
-          this.rap.audioEl.play();
+					this.rap.audioEl.play();
 				});
 			}
 		})
@@ -419,8 +419,8 @@ class AudioPlayer extends Component {
 	
 	handleChangeVolume(deltaVolume) {
 		var volume = this.state.volume + deltaVolume;
-                if (volume < 0) volume = 0;
-                if (volume > 100) volume = 100;
+		if (volume < 0) volume = 0;
+		if (volume > 100) volume = 100;
 		this.rap.audioEl.volume = volume / 100;
 		this.setState({volume: volume}, () => {
 			this.dispatchPlayerStatus({volume: volume});

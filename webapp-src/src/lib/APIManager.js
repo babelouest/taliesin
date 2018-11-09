@@ -60,16 +60,16 @@ class APIManager {
 	}
 	
 	benoicApiRequest(method, url, data) {
-    if (this.benoicPrefix) {
-      return this.angharadApiRequest(method, this.benoicPrefix + "/" + url, data);
+		if (this.benoicPrefix) {
+			return this.angharadApiRequest(method, this.benoicPrefix + "/" + url, data);
 		} else {
 			return $.Deferred().reject("no benoic prefix").promise();
 		}
 	}
 	
 	carleonApiRequest(method, url, data) {
-    if (this.carleonPrefix) {
-      return this.angharadApiRequest(method, this.carleonPrefix + "/" + url, data);
+		if (this.carleonPrefix) {
+			return this.angharadApiRequest(method, this.carleonPrefix + "/" + url, data);
 		} else {
 			return $.Deferred().reject("no carleon prefix").promise();
 		}

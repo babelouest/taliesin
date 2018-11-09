@@ -27,7 +27,7 @@ class ElementButtons extends Component {
 			onEditCategory: props.onEditCategory,
 			hideRefresh: props.hideRefresh,
 			manageModalShow: false,
-                        serverConfig: StateStore.getState().serverConfig
+												serverConfig: StateStore.getState().serverConfig
 		};
 
 		this.playElement = this.playElement.bind(this);
@@ -70,7 +70,7 @@ class ElementButtons extends Component {
 			onEditCategory: nextProps.onEditCategory,
 			hideRefresh: nextProps.hideRefresh,
 			manageModalShow: false,
-                        serverConfig: StateStore.getState().serverConfig
+												serverConfig: StateStore.getState().serverConfig
 		});
 	}
 	
@@ -366,40 +366,40 @@ class ElementButtons extends Component {
 						</MenuItem>
 					</DropdownButton>
 				</ButtonGroup>
-        <div className="visible-xs dropdown-menu-center">
-          <DropdownButton id={"xs-manage-"+this.state.element.name} title={
-            <span><i className="fa fa-cog"></i></span>
-          }>
-            <MenuItem onClick={this.playElement}>
-              <FontAwesome name={"play"} className="space-after"/>
-              {i18n.t("common.play_now")}
-            </MenuItem>
-            <MenuItem divider />
-            <MenuItem onClick={this.playElementAdvanced}>
-              <FontAwesome name={"play"} />
-              <FontAwesome name={"cog"} className="space-after"/>
-              {i18n.t("common.create_stream")}
-            </MenuItem>
-            {refreshButtonMenu}
-            {categoryButtonMenu}
-            <MenuItem divider />
-            <MenuItem>
-              <FontAwesome name={"plus"} className="space-after"/>
-              {i18n.t("common.add_to_stream")}
-            </MenuItem>
-            {streamList}
-            <MenuItem divider />
-            <MenuItem>
-              <FontAwesome name={"plus"} className="space-after"/>
-              {i18n.t("common.add_to_playlist")}
-            </MenuItem>
-            {playlist}
-            <MenuItem divider />
-            <MenuItem onClick={() => {this.setState({manageModalShow: true});}}>
-              {i18n.t("common.manage_in_stream_playlist")}
-            </MenuItem>
-          </DropdownButton>
-        </div>
+				<div className="visible-xs dropdown-menu-center">
+					<DropdownButton id={"xs-manage-"+this.state.element.name} title={
+						<span><i className="fa fa-cog"></i></span>
+					}>
+						<MenuItem onClick={this.playElement}>
+							<FontAwesome name={"play"} className="space-after"/>
+							{i18n.t("common.play_now")}
+						</MenuItem>
+						<MenuItem divider />
+						<MenuItem onClick={this.playElementAdvanced}>
+							<FontAwesome name={"play"} />
+							<FontAwesome name={"cog"} className="space-after"/>
+							{i18n.t("common.create_stream")}
+						</MenuItem>
+						{refreshButtonMenu}
+						{categoryButtonMenu}
+						<MenuItem divider />
+						<MenuItem>
+							<FontAwesome name={"plus"} className="space-after"/>
+							{i18n.t("common.add_to_stream")}
+						</MenuItem>
+						{streamList}
+						<MenuItem divider />
+						<MenuItem>
+							<FontAwesome name={"plus"} className="space-after"/>
+							{i18n.t("common.add_to_playlist")}
+						</MenuItem>
+						{playlist}
+						<MenuItem divider />
+						<MenuItem onClick={() => {this.setState({manageModalShow: true});}}>
+							{i18n.t("common.manage_in_stream_playlist")}
+						</MenuItem>
+					</DropdownButton>
+				</div>
 				<ModalEditStream 
 					show={this.state.show} 
 					dataSource={this.state.dataSource} 

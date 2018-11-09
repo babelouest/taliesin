@@ -101,7 +101,7 @@ class MPDController extends Component {
 		if (nextProps.index > -1) {
 			newState.playIndex = nextProps.index;
 		}
-                if (!newPlayer && !newStream && this.state.playNow) {
+    if (!newPlayer && !newStream && this.state.playNow) {
 			newState.playNow = false;
 			newState.jukeboxIndex = this.state.playIndex;
 		}

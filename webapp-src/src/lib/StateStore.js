@@ -99,13 +99,13 @@ function stateStoreManager(state = defaultState, action) {
 				config.setLocalConfigValue("dataSource", action.currentDataSource);
 			}
 			break;
-    case "setDataSource":
-      for (i in state.dataSourceList) {
-        if (state.dataSourceList[i].name === action.dataSource.name) {
-          state.dataSourceList[i] = action.dataSource;
-        }
-      }
-      break;
+		case "setDataSource":
+			for (i in state.dataSourceList) {
+				if (state.dataSourceList[i].name === action.dataSource.name) {
+					state.dataSourceList[i] = action.dataSource;
+				}
+			}
+			break;
 		case "setCurrentDataSource":
 			state.profile.dataSource = action.currentDataSource;
 			config.setLocalConfigValue("dataSource", action.currentDataSource);

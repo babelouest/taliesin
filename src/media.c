@@ -60,7 +60,7 @@ json_t * media_get_tags(AVFormatContext * fmt_ctx) {
 }
 
 json_t * media_folder_detect_cover_by_id(struct config_elements * config, json_t * j_data_source, json_int_t tf_id, const char * path) {
-  json_t * j_query, * j_result, * j_return, * j_folder_list, * j_media_cover, * j_element;
+  json_t * j_query, * j_result, * j_return = NULL, * j_folder_list, * j_media_cover, * j_element;
   int res, cover_found = 0, p_index;
   char * escape, * pattern, * where_clause, * media_path;
   size_t index;
@@ -73,10 +73,11 @@ json_t * media_folder_detect_cover_by_id(struct config_elements * config, json_t
       o_free(escape);
       if (pattern != NULL) {
         where_clause = msprintf("= (SELECT `tic_id` FROM `%s` WHERE `tf_id`=%" JSON_INTEGER_FORMAT " AND `tm_name` LIKE '%s' AND `tm_refresh_status`='%d' ORDER BY `tm_name` LIMIT 1)", TALIESIN_TABLE_MEDIA, tf_id, pattern, DATA_SOURCE_REFRESH_MODE_PROCESSED);
-        j_query = json_pack("{sss[s]s{s{ssss}}}",
+        j_query = json_pack("{sss[ss]s{s{ssss}}}",
                             "table",
                             TALIESIN_TABLE_IMAGE_COVER,
                             "columns",
+                              "tic_path",
                               "tic_id",
                             "where",
                               "tic_id",
@@ -107,7 +108,7 @@ json_t * media_folder_detect_cover_by_id(struct config_elements * config, json_t
     }
   }
   
-  if (!cover_found) {
+  if (!cover_found && j_return == NULL) {
     // No cover found as files in the folder, look for cover in the media files
     j_folder_list = media_list_folder(config, j_data_source, tf_id, 1);
     if (check_result_value(j_folder_list, T_OK)) {
@@ -806,67 +807,89 @@ json_int_t cover_save_new_or_get_id(struct config_elements * config, json_int_t 
   json_int_t tic_id = 0;
   const char * cover, * cover_thumbnail;
   unsigned long cover_crc = crc32(0L, Z_NULL, 0);
-  char cover_crc_str[16] = {0};
-  json_t * j_query, * j_result, * j_last_id;
+  char cover_crc_str[16] = {0}, * full_path;
+  json_t * j_query, * j_result, * j_last_id, * j_data_source;
   int res;
   
   cover = json_string_value(json_object_get(json_object_get(j_media, "metadata"), "cover"));
   cover_thumbnail = json_string_value(json_object_get(json_object_get(j_media, "metadata"), "cover_thumbnail"));
-  if (strlen(cover) < TALIESIN_MEDIUMBLOB_MAX_SIZE) {
-    cover_crc = crc32(cover_crc, (const unsigned char *)cover, strlen(cover));
-    sprintf(cover_crc_str, "0x%08lx", cover_crc);
-    j_query = json_pack("{sss[s]s{ssso}}",
-                        "table",
-                        TALIESIN_TABLE_IMAGE_COVER,
-                        "columns",
-                          "tic_id",
-                        "where",
-                          "tic_fingerprint",
-                          cover_crc_str,
-                          "tds_id",
-                          tds_id?json_integer(tds_id):json_null());
-    if (j_query != NULL) {
-      res = h_select(config->conn, j_query, &j_result, NULL);
-      json_decref(j_query);
-      if (res == H_OK) {
-        if (json_array_size(j_result) > 0) {
-          tic_id = json_integer_value(json_object_get(json_array_get(j_result, 0), "tic_id"));
-        } else {
-          // There's no cover with this crc, so we add it
-          j_query = json_pack("{sss{sossssss}}",
-                              "table",
-                              TALIESIN_TABLE_IMAGE_COVER,
-                              "values",
-                                "tds_id",
-                                tds_id?json_integer(tds_id):json_null(),
-                                "tic_path",
-                                json_string_value(json_object_get(j_media, "path")),
-                                "tic_cover_thumbnail",
-                                cover_thumbnail,
-                                "tic_fingerprint",
-                                cover_crc_str);
-          res = h_insert(config->conn, j_query, NULL);
-          json_decref(j_query);
-          if (res == H_OK) {
-            j_last_id = h_last_insert_id(config->conn);
-            if (j_last_id != NULL) {
-              // Insert media metadata
-              tic_id = json_integer_value(j_last_id);
-              json_decref(j_last_id);
+  cover_crc = crc32(cover_crc, (const unsigned char *)cover, strlen(cover));
+  sprintf(cover_crc_str, "0x%08lx", cover_crc);
+  j_query = json_pack("{sss[ss]s{ssso}}",
+                      "table",
+                      TALIESIN_TABLE_IMAGE_COVER,
+                      "columns",
+                        "tic_id",
+                        "tic_path",
+                      "where",
+                        "tic_fingerprint",
+                        cover_crc_str,
+                        "tds_id",
+                        tds_id?json_integer(tds_id):json_null());
+  if (j_query != NULL) {
+    res = h_select(config->conn, j_query, &j_result, NULL);
+    json_decref(j_query);
+    if (res == H_OK) {
+      if (json_array_size(j_result) > 0) {
+        tic_id = json_integer_value(json_object_get(json_array_get(j_result, 0), "tic_id"));
+        j_data_source = data_source_get_by_id(config, tds_id);
+        if (check_result_value(j_data_source, T_OK)) {
+          full_path = msprintf("%s/%s", json_string_value(json_object_get(json_object_get(j_data_source, "data_source"), "path")), json_string_value(json_object_get(json_array_get(j_result, 0), "tic_path")));
+          if (media_has_cover_from_path(full_path) != T_OK) {
+            // No file containg the image there, updating table image_cover
+            j_query = json_pack("{sss{ssso}s{sI}}",
+                                "table",
+                                TALIESIN_TABLE_IMAGE_COVER,
+                                "set",
+                                  "tic_path",
+                                  json_string_value(json_object_get(j_media, "path")),
+                                  "tds_id",
+                                  tds_id?json_integer(tds_id):json_null(),
+                                "where",
+                                  "tic_id",
+                                  tic_id);
+            if (h_update(config->conn, j_query, NULL) != H_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "cover_save_new_or_get_id - Error updating image cover");
             }
-          } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "cover_save_new_or_get_id - error executing j_query (2)");
           }
+          o_free(full_path);
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "cover_save_new_or_get_id - Error data_source_get_by_id");
         }
-        json_decref(j_result);
+        json_decref(j_data_source);
       } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "cover_save_new_or_get_id - error executing j_query");
+        // There's no cover with this crc, so we add it
+        j_query = json_pack("{sss{sossssss}}",
+                            "table",
+                            TALIESIN_TABLE_IMAGE_COVER,
+                            "values",
+                              "tds_id",
+                              tds_id?json_integer(tds_id):json_null(),
+                              "tic_path",
+                              json_string_value(json_object_get(j_media, "path")),
+                              "tic_cover_thumbnail",
+                              cover_thumbnail,
+                              "tic_fingerprint",
+                              cover_crc_str);
+        res = h_insert(config->conn, j_query, NULL);
+        json_decref(j_query);
+        if (res == H_OK) {
+          j_last_id = h_last_insert_id(config->conn);
+          if (j_last_id != NULL) {
+            // Insert media metadata
+            tic_id = json_integer_value(j_last_id);
+            json_decref(j_last_id);
+          }
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "cover_save_new_or_get_id - error executing j_query (2)");
+        }
       }
+      json_decref(j_result);
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "cover_save_new_or_get_id - error allocating resources for j_query");
+      y_log_message(Y_LOG_LEVEL_ERROR, "cover_save_new_or_get_id - error executing j_query");
     }
   } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "cover_save_new_or_get_id - cover too large, over %d bytes", TALIESIN_MEDIUMBLOB_MAX_SIZE);
+    y_log_message(Y_LOG_LEVEL_ERROR, "cover_save_new_or_get_id - error allocating resources for j_query");
   }
   
   return tic_id;
@@ -1447,17 +1470,17 @@ json_t * media_cover_get_all(struct config_elements * config, json_t * j_data_so
         }
         json_decref(j_result);
       } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "media_cover_get - Error executing j_query");
+        y_log_message(Y_LOG_LEVEL_ERROR, "media_cover_get_all - Error executing j_query");
         j_return = json_pack("{si}", "result", T_ERROR_DB);
       }
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "media_cover_get - Error allocating resources for j_query");
+      y_log_message(Y_LOG_LEVEL_ERROR, "media_cover_get_all - Error allocating resources for j_query");
       j_return = json_pack("{si}", "result", T_ERROR_MEMORY);
     }
   } else if (check_result_value(j_media, T_ERROR_NOT_FOUND)) {
     j_return = json_pack("{si}", "result", T_ERROR_NOT_FOUND);
   } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "media_cover_get - Error media_get_full");
+    y_log_message(Y_LOG_LEVEL_ERROR, "media_cover_get_all - Error media_get_full");
     j_return = json_pack("{si}", "result", T_ERROR_MEMORY);
   }
   json_decref(j_media);
@@ -2475,4 +2498,32 @@ json_t * media_append_list_to_media_list(struct config_elements * config, json_t
     j_return = json_pack("{si}", "result", T_ERROR_MEMORY);
   }
   return j_return;
+}
+
+int media_has_cover_from_path(const char * path) {
+  AVFormatContext * full_size_cover_format_context = NULL;
+  AVCodecContext  * full_size_cover_codec_context  = NULL;
+  AVPacket          full_size_cover_packet;
+  int ret = T_OK;
+
+  if (path != NULL) {
+    if (access(path, F_OK) == -1) {
+      ret = T_ERROR_NOT_FOUND;
+    } else if (!avformat_open_input(&full_size_cover_format_context, path, NULL, NULL)) {
+      av_init_packet(&full_size_cover_packet);
+      if (get_media_cover(full_size_cover_format_context, &full_size_cover_codec_context, &full_size_cover_packet) != T_OK) {
+        ret = T_ERROR;
+      }
+      av_packet_unref(&full_size_cover_packet);
+      avcodec_free_context(&full_size_cover_codec_context);
+      avformat_close_input(&full_size_cover_format_context);
+    } else {
+      ret = T_ERROR;
+      y_log_message(Y_LOG_LEVEL_ERROR, "media_get_cover_from_path - Error avformat_open_input for path %s", path);
+    }
+  } else {
+    ret = T_ERROR;
+    y_log_message(Y_LOG_LEVEL_ERROR, "media_get_cover_from_path - Error, path is NULL");
+  }
+  return ret;
 }

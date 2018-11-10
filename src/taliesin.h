@@ -603,6 +603,7 @@ int             is_valid_b64_image(const unsigned char * base64_image);
 json_t        * media_get_tags_from_id(struct config_elements * config, json_int_t tm_id);
 json_t        * media_append_list_to_media_list(struct config_elements * config, json_t * append_list, const char * username);
 unsigned char * media_get_cover_from_path(const char * path, size_t * size);
+int             media_has_cover_from_path(const char * path);
 
 // db stream functions
 json_t * db_stream_list(struct config_elements * config);

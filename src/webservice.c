@@ -1239,7 +1239,7 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
         response->status = 500;
       }
     }
-    if (response->status != 200) {
+    if (response->status != 200 && client_data_jukebox != NULL) {
       jukebox_audio_buffer_clean(client_data_jukebox->audio_buffer);
       clean_client_data_jukebox(client_data_jukebox);
     }

@@ -809,9 +809,7 @@ json_t * jukebox_get_file_list(struct config_elements * config, struct _t_jukebo
   json_t * j_media, * j_return = NULL;
   json_int_t cur_offset = 0, end_offset = limit?(offset+limit):jukebox->file_list->nb_files;
   
-  if (jukebox != NULL && jukebox->file_list != NULL) {
-    file = jukebox->file_list->start;
-  }
+  file = jukebox->file_list->start;
   if (file != NULL) {
     if (pthread_mutex_lock(&jukebox->file_list->file_lock)) {
       y_log_message(Y_LOG_LEVEL_ERROR, "Error lock mutex file_list");

@@ -174,7 +174,7 @@ struct _t_file * webradio_get_next_file(struct _t_webradio * webradio, unsigned 
   struct _t_file * next_file = NULL;
   struct _audio_stream * stream = webradio->audio_stream;
 
-  if (webradio != NULL && index != NULL) {
+  if (index != NULL) {
     if (stream->nb_buffer >= (TALIESIN_STREAM_BUFFER_MAX)) {
       while (!stream->first_buffer->read && stream->status == TALIESIN_STREAM_STATUS_STARTED) {
         stream->transcode_status = TALIESIN_STREAM_TRANSCODE_STATUS_PAUSED;
@@ -839,9 +839,7 @@ json_t * webradio_get_file_list(struct config_elements * config, struct _t_webra
   json_t * j_media, * j_return;
   json_int_t cur_offset = 0, end_offset = limit?(offset+limit):webradio->file_list->nb_files;
   
-  if (webradio != NULL && webradio->file_list != NULL) {
-    file = webradio->file_list->start;
-  }
+  file = webradio->file_list->start;
   if (file != NULL) {
     if (pthread_mutex_lock(&webradio->file_list->file_lock)) {
       y_log_message(Y_LOG_LEVEL_ERROR, "Error lock mutex file_list");
@@ -1716,7 +1714,7 @@ void * webradio_run_thread(void * args) {
   webradio->audio_stream->pts              = 0;
   while ((current_file = webradio_get_next_file(webradio, &current_index)) != NULL &&
           webradio->audio_stream->status != TALIESIN_STREAM_STATUS_STOPPED) {
-    if (current_file != NULL && !open_input_file(current_file->path, &input_format_context, &input_codec_context, AVMEDIA_TYPE_AUDIO)) {
+    if (!open_input_file(current_file->path, &input_format_context, &input_codec_context, AVMEDIA_TYPE_AUDIO)) {
       duration = (input_format_context->duration/AV_TIME_BASE);
       j_media = media_get_by_id(config, current_file->tm_id);
       if (check_result_value(j_media, T_OK)) {

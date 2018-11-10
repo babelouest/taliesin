@@ -1142,7 +1142,7 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
                 u_map_put(response->map_header, "Content-Type", "audio/mpeg");
               }
               if (!client_data_webradio->metadata_send) {
-                snprintf(metaint, 16, "%d", client_data_webradio->audio_stream->stream_bitrate / 8 * TALIESIN_STREAM_METADATA_INTERVAL);
+                snprintf(metaint, 16, "%u", client_data_webradio->audio_stream->stream_bitrate / 8 * TALIESIN_STREAM_METADATA_INTERVAL);
                 u_map_put(response->map_header, "icy-metaint", metaint);
               }
             } else {

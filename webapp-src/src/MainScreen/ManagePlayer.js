@@ -34,10 +34,10 @@ class ManagePlayer extends Component {
 	}
 	
 	getInitialList() {
-		StateStore.getState().APIManager.benoicApiRequest("GET", "/device")
+		StateStore.getState().APIManager.benoicApiRequest("GET", "device")
 		.then((devices) => {
-			return devices.forEach((device) => {
-				return StateStore.getState().APIManager.benoicApiRequest("GET", "/device/" + encodeURIComponent(device.name) + "/overview")
+			return (devices || []).forEach((device) => {
+				return StateStore.getState().APIManager.benoicApiRequest("GET", "device/" + encodeURIComponent(device.name) + "/overview")
 				.then((overview) => {
 					if (overview.switches) {
 						var switchList = this.state.switchList;
@@ -52,9 +52,9 @@ class ManagePlayer extends Component {
 			});
 		});
 		
-		StateStore.getState().APIManager.carleonApiRequest("GET", "/service")
+		StateStore.getState().APIManager.carleonApiRequest("GET", "service")
 		.then((services) => {
-			services.forEach((service) => {
+			(services || []).forEach((service) => {
 				if (service.name === "service-mpd") {
 					service.element.forEach((player) => {
 						var storedPlayer = StateStore.getState().externalPlayerList.find((externalPlayer) => {
@@ -190,17 +190,18 @@ class ManagePlayer extends Component {
 		
 		this.state.playerList.forEach((player, index) => {
 			var enabledSwitch, switches = [<MenuItem key="0" eventKey="0" onClick={() => this.handleSelectSwitch(player)} className={!player.switch?"bg-success":""}>{i18n.t("common.none")}</MenuItem>];
-			if (player.enabled) {
-				enabledSwitch = 
-					<ToggleButtonGroup type="checkbox" defaultValue={["1"]} onChange={() => {this.handleChangeEnabled(index)}}>
-						<ToggleButton value="1">{i18n.t("common.enabled")}</ToggleButton>
-					</ToggleButtonGroup>
-			} else {
-				enabledSwitch = 
-					<ToggleButtonGroup type="checkbox" onChange={() => {this.handleChangeEnabled(index)}}>
-						<ToggleButton value="1">{i18n.t("common.disabled")}</ToggleButton>
-					</ToggleButtonGroup>
-			}
+			enabledSwitch = <ToggleButtonGroup
+					type="radio"
+					name="player-enabled"
+					value={player.enabled}
+					>
+						<ToggleButton value={true} onClick={(event) => {this.handleChangeEnabled(index, event)}}>
+							{i18n.t("common.enabled")}
+						</ToggleButton>
+						<ToggleButton value={false} onClick={(event) => {this.handleChangeEnabled(index, event)}}>
+							{i18n.t("common.disabled")}
+						</ToggleButton>
+					</ToggleButtonGroup>;
 			
 			this.state.switchList.forEach((switcher, index) => {
 				switches.push(

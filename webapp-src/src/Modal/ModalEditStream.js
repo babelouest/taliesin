@@ -124,12 +124,12 @@ class ModalEditStream extends Component {
 	
 	handleChangeFormat(e) {
 		var newStatus = {format: e.target.value};
-								var serverConfig = config.getLocalConfigValue("serverConfig");
-								if (serverConfig) {
-									serverConfig.default_stream_format = e.target.value;
-												config.setLocalConfigValue("serverConfig", serverConfig);
-												StateStore.dispatch({type: "setServerConfig", config: serverConfig});
-								}
+			var serverConfig = config.getLocalConfigValue("serverConfig");
+			if (serverConfig) {
+				serverConfig.default_stream_format = e.target.value;
+				config.setLocalConfigValue("serverConfig", serverConfig);
+				StateStore.dispatch({type: "setServerConfig", config: serverConfig});
+			}
 		if (e.target.value === "flac") {
 			newStatus.bitrateDisabled = true;
 		} else {
@@ -184,12 +184,11 @@ class ModalEditStream extends Component {
 						<Col md={8}>
 							<ToggleButtonGroup
 								type="checkbox"
-								value={this.state.recursive}
-								onChange={this.handleChangeRecursive}>
-								<ToggleButton value={true}>
+								value={this.state.recursive}>
+								<ToggleButton value={true} onClick={this.handleChangeRecursive}>
 										{i18n.t("modal.recursive")}
 								</ToggleButton>
-								<ToggleButton value={false}>
+								<ToggleButton value={false} onClick={this.handleChangeRecursive}>
 										{i18n.t("modal.non_recursive")}
 								</ToggleButton>
 							</ToggleButtonGroup>

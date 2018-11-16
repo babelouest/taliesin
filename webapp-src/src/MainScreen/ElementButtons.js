@@ -116,7 +116,7 @@ class ElementButtons extends Component {
 				streamName += " - " + this.state.subCategoryValue;
 			}
 		}
-		StateStore.getState().APIManager.taliesinApiRequest("GET", url + "?jukebox&recursive&name=" + encodeURI("{") + (StateStore.getState().profile.currentPlayer.name) + encodeURI("} - ") + encodeURI(streamName)+ "&format=" + this.state.serverConfig.default_stream_format + "&channels=" + this.state.serverConfig.default_stream_channels + "&samplerate=" + this.state.serverConfig.default_stream_sample_rate + "&bitrate=" + this.state.serverConfig.default_stream_bitrate)
+		StateStore.getState().APIManager.taliesinApiRequest("GET", url + "?jukebox&recursive&name=" + encodeURI("{") + encodeURI(StateStore.getState().profile.currentPlayer.name).replace(/#/g, "%23").replace(/\+/g, "%2B") + encodeURI("} - ") + encodeURI(streamName)+ "&format=" + this.state.serverConfig.default_stream_format + "&channels=" + this.state.serverConfig.default_stream_channels + "&samplerate=" + this.state.serverConfig.default_stream_sample_rate + "&bitrate=" + this.state.serverConfig.default_stream_bitrate)
 		.then((result) => {
 			var streamList = StateStore.getState().streamList;
 			streamList.push(result);

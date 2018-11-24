@@ -374,7 +374,6 @@ struct _t_jukebox {
   unsigned int                     stream_sample_rate;
   unsigned int                     stream_bitrate;
   
-  unsigned int                     nb_client;
   time_t                           last_seen;
   short int                        busy;
 };

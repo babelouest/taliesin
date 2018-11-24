@@ -38,7 +38,6 @@ int jukebox_init(struct _t_jukebox * jukebox, const char * format, unsigned shor
     jukebox->stream_bitrate = bit_rate;
     jukebox->playlist_name = NULL;
     jukebox->tpl_id = 0;
-    jukebox->nb_client = 0;
     jukebox->last_seen = 0;
     jukebox->busy = 0;
     jukebox->file_list = o_malloc(sizeof(struct _t_file_list));
@@ -77,13 +76,9 @@ int jukebox_init(struct _t_jukebox * jukebox, const char * format, unsigned shor
 }
 
 void jukebox_clean(struct _t_jukebox * jukebox) {
-  int i;
   if (jukebox != NULL) {
     file_list_clean(jukebox->file_list);
-    for (i=0; i<jukebox->nb_jukebox_audio_buffer; i++) {
-      jukebox_audio_buffer_clean(jukebox->jukebox_audio_buffer[i]);
-      o_free(jukebox->jukebox_audio_buffer[i]);
-    }
+    o_free(jukebox->jukebox_audio_buffer);
     o_free(jukebox->username);
     o_free(jukebox->display_name);
     o_free(jukebox->stream_format);
@@ -763,7 +758,7 @@ json_t * jukebox_get_info(struct _t_jukebox * jukebox) {
   json_t * j_stream = NULL, * j_client;
   
   if (jukebox != NULL) {
-    j_stream = json_pack("{sis{sssssosisssosisisisi}}",
+    j_stream = json_pack("{sis{sssssosisssosisisi}}",
                           "result",
                           T_OK,
                           "jukebox",
@@ -783,8 +778,6 @@ json_t * jukebox_get_info(struct _t_jukebox * jukebox) {
                             jukebox->stream_sample_rate,
                             "bitrate",
                             jukebox->stream_bitrate,
-                            "nb_client",
-                            jukebox->nb_client,
                             "last_seen",
                             jukebox->last_seen);
     j_client = jukebox_get_clients(jukebox);
@@ -1536,9 +1529,24 @@ ssize_t u_jukebox_stream (void * cls, uint64_t pos, char * buf, size_t max) {
 
 void u_jukebox_stream_free(void * cls) {
   struct _client_data_jukebox * client_data_jukebox = (struct _client_data_jukebox *)cls;
+  int i;
   
+  if (client_data_jukebox->audio_buffer->jukebox->nb_jukebox_audio_buffer > 1) {
+    for (i = 0; i < client_data_jukebox->audio_buffer->jukebox->nb_jukebox_audio_buffer; i++) {
+      if (client_data_jukebox->audio_buffer->jukebox->jukebox_audio_buffer[i] == cls) {
+        break;
+      }
+    }
+    for (; i < client_data_jukebox->audio_buffer->jukebox->nb_jukebox_audio_buffer - 1; i++) {
+      client_data_jukebox->audio_buffer->jukebox->jukebox_audio_buffer[i] = client_data_jukebox->audio_buffer->jukebox->jukebox_audio_buffer[i + 1];
+    }
+    client_data_jukebox->audio_buffer->jukebox->jukebox_audio_buffer = o_realloc(client_data_jukebox->audio_buffer->jukebox->jukebox_audio_buffer, (client_data_jukebox->audio_buffer->jukebox->nb_jukebox_audio_buffer - 1) * sizeof(struct _client_data_jukebox *));
+  } else {
+    o_free(client_data_jukebox->audio_buffer->jukebox->jukebox_audio_buffer);
+    client_data_jukebox->audio_buffer->jukebox->jukebox_audio_buffer = NULL;
+  }
   client_data_jukebox->client_present = 0;
-  client_data_jukebox->jukebox->nb_client--;
+  client_data_jukebox->jukebox->nb_jukebox_audio_buffer--;
   time(&client_data_jukebox->jukebox->last_seen);
   
   if (client_data_jukebox->audio_buffer->status == TALIESIN_STREAM_STATUS_STARTED) {

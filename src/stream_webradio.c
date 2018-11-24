@@ -1965,7 +1965,6 @@ void u_webradio_stream_free(void * cls) {
   struct _client_data_webradio * client_data_webradio = (struct _client_data_webradio *)cls;
   int i;
   
-  //y_log_message(Y_LOG_LEVEL_INFO, "end u_webradio_stream, global_offset ended at %zu", client_data_webradio->global_offset);
   if (client_data_webradio->audio_stream->nb_client_connected > 1) {
     for (i = 0; i < client_data_webradio->audio_stream->nb_client_connected; i++) {
       if (client_data_webradio->audio_stream->client_list[i] == cls) {

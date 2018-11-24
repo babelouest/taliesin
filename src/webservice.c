@@ -1181,29 +1181,36 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
               client_data_jukebox->audio_buffer->user_agent = o_strdup(u_map_get_case(request->map_header, "User-Agent"));
               client_data_jukebox->audio_buffer->file = file;
               client_data_jukebox->audio_buffer->jukebox = current_jukebox;
-              ret_thread_jukebox = pthread_create(&thread_jukebox, NULL, jukebox_run_thread, (void *)client_data_jukebox);
-              detach_thread_jukebox = pthread_detach(thread_jukebox);
-              if (ret_thread_jukebox || detach_thread_jukebox) {
-                y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread jukebox");
-                response->status = 500;
-              } else {
-                client_data_jukebox->client_present = 1;
-                client_data_jukebox->audio_buffer->status = TALIESIN_STREAM_TRANSCODE_STATUS_STARTED;
-                if (ulfius_set_stream_response(response, 200, u_jukebox_stream, u_jukebox_stream_free, U_STREAM_SIZE_UNKOWN, current_jukebox->stream_bitrate / 8, client_data_jukebox) == U_OK) {
-                  current_jukebox->nb_client++;
-                  time(&current_jukebox->last_seen);
-                  if (0 == o_strcmp(current_jukebox->stream_format, "vorbis")) {
-                    u_map_put(response->map_header, "Content-Type", "application/ogg");
-                  } else if (0 == o_strcmp(current_jukebox->stream_format, "flac")) {
-                    u_map_put(response->map_header, "Content-Type", "audio/flac");
-                  } else {
-                    u_map_put(response->map_header, "Content-Type", "audio/mpeg");
-                  }
-                } else {
-                  client_data_jukebox->client_present = 0;
-                  y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error ulfius_set_stream_response");
+              current_jukebox->jukebox_audio_buffer = o_realloc(current_jukebox->jukebox_audio_buffer, (current_jukebox->nb_jukebox_audio_buffer + 1)*sizeof(struct _jukebox_audio_buffer *));
+              if (current_jukebox->jukebox_audio_buffer != NULL) {
+                current_jukebox->jukebox_audio_buffer[current_jukebox->nb_jukebox_audio_buffer] = client_data_jukebox->audio_buffer;
+                current_jukebox->nb_jukebox_audio_buffer++;
+                ret_thread_jukebox = pthread_create(&thread_jukebox, NULL, jukebox_run_thread, (void *)client_data_jukebox);
+                detach_thread_jukebox = pthread_detach(thread_jukebox);
+                if (ret_thread_jukebox || detach_thread_jukebox) {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread jukebox");
                   response->status = 500;
+                } else {
+                  client_data_jukebox->client_present = 1;
+                  client_data_jukebox->audio_buffer->status = TALIESIN_STREAM_TRANSCODE_STATUS_STARTED;
+                  if (ulfius_set_stream_response(response, 200, u_jukebox_stream, u_jukebox_stream_free, U_STREAM_SIZE_UNKOWN, current_jukebox->stream_bitrate / 8, client_data_jukebox) == U_OK) {
+                    time(&current_jukebox->last_seen);
+                    if (0 == o_strcmp(current_jukebox->stream_format, "vorbis")) {
+                      u_map_put(response->map_header, "Content-Type", "application/ogg");
+                    } else if (0 == o_strcmp(current_jukebox->stream_format, "flac")) {
+                      u_map_put(response->map_header, "Content-Type", "audio/flac");
+                    } else {
+                      u_map_put(response->map_header, "Content-Type", "audio/mpeg");
+                    }
+                  } else {
+                    client_data_jukebox->client_present = 0;
+                    y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error ulfius_set_stream_response");
+                    response->status = 500;
+                  }
                 }
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "Error realloc current_jukebox->jukebox_audio_buffer");
+                response->status = 500;
               }
             } else {
               y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error initializing client_data_jukebox->audio_buffer");

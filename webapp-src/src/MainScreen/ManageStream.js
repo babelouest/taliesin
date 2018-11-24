@@ -294,7 +294,7 @@ class ManageStream extends Component {
 					</td>
 					<td>
 						<a role="button" onClick={() => this.detailsStream(stream)}>
-							{(stream.clients&&stream.clients.length)||0}
+							{(stream.clients && stream.clients.length)||0}
 						</a>
 					</td>
 					<td className="text-center">

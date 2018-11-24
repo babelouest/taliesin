@@ -17,7 +17,7 @@ class StreamMediaList extends Component {
 			limit: 100,
 			listLoaded: false
 		};
-		
+
 		this.getMediaList();
 		
 		StateStore.subscribe(() => {
@@ -31,6 +31,13 @@ class StreamMediaList extends Component {
 		this.handleMediaListPrevious = this.handleMediaListPrevious.bind(this);
 		this.handleMediaListNext = this.handleMediaListNext.bind(this);
 		this.getInitialoffset = this.getInitialoffset.bind(this);
+	}
+
+	componentDidUpdate() {
+          var currentMedia = $(".row-media.bg-success.row");
+          if (currentMedia && currentMedia.get() && currentMedia.get()[0]) {
+            currentMedia.get()[0].scrollIntoView();
+          }
 	}
 	
 	componentWillReceiveProps(nextProps) {

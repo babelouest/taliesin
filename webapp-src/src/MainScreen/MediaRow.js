@@ -46,7 +46,6 @@ class MediaRow extends Component {
 			coverLoaded: false,
 			modalShow: false,
 			modalTitle: this.buildTitle(nextProps.media),
-			visible: false,
 			highlight: nextProps.highlight
 		});
 	}

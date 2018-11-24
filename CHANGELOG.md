@@ -4,6 +4,8 @@
 
 - Update front-end libraries and adapt code to it
 - Use instance->timeout to automatically disconnect streams after a long inactivity
+- Fix multiple small bugs on front-end and backend
+- Each browser store its own stream parameters: format, channels, bitrate and sample rate
 
 ## 1.0.17
 

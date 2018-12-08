@@ -695,7 +695,6 @@ json_t * media_list_folder(struct config_elements * config, json_t * j_data_sour
           json_decref(j_result_history);
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "media_list_folder - Error executing j_query for history");
-          j_return = json_pack("{si}", "result", T_ERROR_DB);
         }
         if (!get_id) {
           json_object_del(j_element, "tm_id");
@@ -990,7 +989,7 @@ int media_update(struct config_elements * config, json_int_t tm_id, json_t * j_m
   int res, ret = T_OK;
   char * clause_last_updated;
   json_int_t tic_id = 0;
-  const char * key, * media_type, * cover, * cover_thumbnail;
+  const char * key, * cover, * cover_thumbnail;
   unsigned long cover_crc = crc32(0L, Z_NULL, 0);
   char cover_crc_str[16] = {0};
   
@@ -1052,10 +1051,6 @@ int media_update(struct config_elements * config, json_int_t tm_id, json_t * j_m
     clause_last_updated = msprintf("%" JSON_INTEGER_FORMAT, json_integer_value(json_object_get(j_media, "last_modified")));
   }
   
-  media_type = json_string_value(json_object_get(json_object_get(json_object_get(j_media, "metadata"), "format"), "media"));
-  if (media_type == NULL) {
-    media_type = "unknown";
-  }
   j_query = json_pack("{sss{sis{ss}sosI}s{sI}}",
                       "table",
                       TALIESIN_TABLE_MEDIA,
@@ -1550,13 +1545,15 @@ json_t * media_cover_get_by_id(struct config_elements * config, json_int_t tm_id
           }
           o_free(cover_path);
           o_free(cover_full);
+          j_return = json_pack("{sisO}", "result", T_OK, "cover", json_array_get(j_result_media, 0));
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "media_cover_get_by_id - Error data_source_get_by_id");
           j_return = json_pack("{si}", "result", T_ERROR);
         }
         json_decref(j_data_source);
+      } else {
+        j_return = json_pack("{sisO}", "result", T_OK, "cover", json_array_get(j_result_media, 0));
       }
-      j_return = json_pack("{sisO}", "result", T_OK, "cover", json_array_get(j_result_media, 0));
     } else {
       // If no cover in the media file, get cover in the folder
       clause_where = msprintf("= (SELECT `tic_id` FROM `%s` WHERE `tf_id`= (SELECT `tf_id` FROM %s WHERE `tm_id`=%" JSON_INTEGER_FORMAT "))", TALIESIN_TABLE_FOLDER, TALIESIN_TABLE_MEDIA, tm_id);
@@ -1600,13 +1597,15 @@ json_t * media_cover_get_by_id(struct config_elements * config, json_int_t tm_id
               }
               o_free(cover_path);
               o_free(cover_full);
+              j_return = json_pack("{sisO}", "result", T_OK, "cover", json_array_get(j_result_folder, 0));
             } else {
               y_log_message(Y_LOG_LEVEL_ERROR, "media_cover_get_by_id - Error data_source_get_by_id (2)");
               j_return = json_pack("{si}", "result", T_ERROR);
             }
             json_decref(j_data_source);
+          } else {
+            j_return = json_pack("{sisO}", "result", T_OK, "cover", json_array_get(j_result_folder, 0));
           }
-          j_return = json_pack("{sisO}", "result", T_OK, "cover", json_array_get(j_result_folder, 0));
         } else {
           j_return = json_pack("{si}", "result", T_ERROR_NOT_FOUND);
         }

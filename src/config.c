@@ -183,6 +183,8 @@ int config_set_values(struct config_elements * config, const char * config_type,
             ret = T_OK;
           } else {
             y_log_message(Y_LOG_LEVEL_ERROR, "config_get_db_values - Error config_type (this shouldn't happen)");
+            free_string_array(new_config_array);
+            new_config_array = NULL;
             ret = T_ERROR_PARAM;
           }
         } else {

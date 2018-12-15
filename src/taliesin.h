@@ -34,12 +34,9 @@
 #include <libswresample/swresample.h>
 
 /** Angharad libraries **/
-#define U_DISABLE_CURL
 #include <ulfius.h>
 #include <yder.h>
 
-#define _HOEL_MARIADB
-#define _HOEL_SQLITE
 #include <hoel.h>
 
 #ifndef DISABLE_OAUTH2

@@ -334,7 +334,7 @@ class FullScreen extends Component {
 						<label className="text-fullscreen">{i18n.t("common.open_folder")}</label>
 					</Col>
 					<Col xs={6}>
-						<span><a role="button" className="anchor-fullscreen" onClick={() => {this.handleSelectFolder(this.state.media.folder)}}>{this.state.media.folder || "/"}</a></span>
+						<span><a role="button" className="anchor-fullscreen" onClick={() => {this.handleSelectFolder(this.state.media.folder)}}>{this.state.media.data_source + "/" + this.state.media.folder}</a></span>
 					</Col>
 				</Row>
 			);

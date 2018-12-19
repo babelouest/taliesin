@@ -352,6 +352,10 @@ void exit_server(struct config_elements ** config, int exit_value) {
   
   if (config != NULL && *config != NULL) {
     // Cleaning data
+    ulfius_stop_framework((*config)->instance);
+    ulfius_clean_instance((*config)->instance);
+    h_close_db((*config)->conn);
+    h_clean_connection((*config)->conn);
     pthread_mutex_destroy(&(*config)->playlist_lock);
     o_free((*config)->config_file);
     o_free((*config)->server_remote_address);
@@ -380,10 +384,6 @@ void exit_server(struct config_elements ** config, int exit_value) {
     u_map_clean_full((*config)->static_file_config->mime_types);
     u_map_clean_full((*config)->static_file_config->map_header);
     o_free((*config)->static_file_config);
-    h_close_db((*config)->conn);
-    h_clean_connection((*config)->conn);
-    ulfius_stop_framework((*config)->instance);
-    ulfius_clean_instance((*config)->instance);
     o_free((*config)->instance);
     o_free((*config)->webradio_set);
     

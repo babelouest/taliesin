@@ -1562,7 +1562,7 @@ void callback_websocket_stream_onclose (const struct _u_request * request, struc
 
 void callback_websocket_stream_incoming_message (const struct _u_request * request, struct _websocket_manager * websocket_manager, const struct _websocket_message * last_message, void * websocket_user_data) {
   struct _ws_stream * ws_stream = (struct _ws_stream *)websocket_user_data;
-  json_t * j_message = json_loadb(last_message->data, last_message->data_len, 0, NULL), * j_is_valid = NULL, * j_result_command, * j_out_message;
+  json_t * j_message = json_loadb(last_message->data, last_message->data_len, 0, NULL), * j_is_valid = NULL, * j_result_command = NULL, * j_out_message;
   char * message;
   const char * token_value;
   time_t now;

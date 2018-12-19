@@ -61,11 +61,17 @@ if (JANSSON_FOUND)
     set(LIBS ${JANSSON_LIBRARIES})
 endif ()
 
-include(FindLibJWT)
-find_package(LibJWT REQUIRED)
-if (LIBJWT_FOUND)
-    set(LIBS ${LIBS} ${LIBJWT_LIBRARIES})
+
+if (DISABLE_OAUTH2)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDISABLE_OAUTH2")
+else ()
+    include(FindLibJWT)
+    find_package(LibJWT REQUIRED)
+    if (LIBJWT_FOUND)
+        set(LIBS ${LIBS} ${LIBJWT_LIBRARIES})
+    endif ()
 endif ()
+
 
 include(FindLibconfig)
 find_package(Libconfig REQUIRED)
@@ -115,25 +121,47 @@ set(LIBS ${LIBS} ${ZLIB_LIBRARIES})
 
 # build
 
-add_executable(taliesin ${CMAKE_CURRENT_SOURCE_DIR}/src/taliesin.h
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/glewlwyd_resource.h
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/static_file_callback.h
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/config.c
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/data_source.c
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/file_list.c
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/filesystem.c
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/glewlwyd_resource.c
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/libav-transcode-filter.c
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/media.c
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/misc.c
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/playlist.c
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/search.c
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/static_file_callback.c
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/stream.c
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/stream_jukebox.c
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/stream_webradio.c
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/webservice.c
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/taliesin.c )
+if (DISABLE_OAUTH2)
+    add_executable(taliesin ${CMAKE_CURRENT_SOURCE_DIR}/src/taliesin.h
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/glewlwyd_resource.h
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/static_file_callback.h
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/config.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/data_source.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/file_list.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/filesystem.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/libav-transcode-filter.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/media.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/misc.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/playlist.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/search.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/static_file_callback.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/stream.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/stream_jukebox.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/stream_webradio.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/webservice.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/taliesin.c )
+else ()
+    add_executable(taliesin ${CMAKE_CURRENT_SOURCE_DIR}/src/taliesin.h
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/glewlwyd_resource.h
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/static_file_callback.h
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/config.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/data_source.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/file_list.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/filesystem.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/libav-transcode-filter.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/glewlwyd_resource.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/media.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/misc.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/playlist.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/search.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/static_file_callback.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/stream.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/stream_jukebox.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/stream_webradio.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/webservice.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/taliesin.c )
+endif ()
+
 target_link_libraries(taliesin ${LIBS} pthread)
 
 set(Orcania_FIND_QUIETLY ON) # force to find Orcania quietly
@@ -206,6 +234,8 @@ endif ()
 set(LIBS ${LIBS} ${HOEL_LIBRARIES})
 
 target_link_libraries(taliesin ${LIBS})
+
+option(DISABLE_OAUTH2 "Disable OAuth2 authentication" OFF)
 
 # tests
 

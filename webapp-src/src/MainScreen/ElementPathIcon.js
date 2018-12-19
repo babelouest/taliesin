@@ -16,6 +16,7 @@ class ElementPathIcon extends Component {
 		this.handleOpenFile = this.handleOpenFile.bind(this);
 		this.onChangeVisibility = this.onChangeVisibility.bind(this);
 		this.getThumbnail = this.getThumbnail.bind(this);
+		this.handleCloseModal = this.handleCloseModal.bind(this);
 	}
 	
 	componentWillReceiveProps(nextProps) {
@@ -43,6 +44,10 @@ class ElementPathIcon extends Component {
 		var modalMedia = this.state.element;
 		modalMedia.data_source = this.state.dataSource;
 		this.setState({show: true, modalMedia: modalMedia, modalTitle: this.state.element.name});
+	}
+	
+	handleCloseModal() {
+		this.setState({show: false});
 	}
 	
 	onChangeVisibility(isVisible) {
@@ -192,7 +197,7 @@ class ElementPathIcon extends Component {
 				<div className="text-center">
 					<ElementButtons dataSource={this.state.dataSource} path={this.state.path + "/" + this.state.element.name} element={this.state.element} hideRefresh={this.state.hideRefresh}/>
 				</div>
-				<ModalMedia show={this.state.show} media={this.state.modalMedia} title={this.state.modalTitle} />
+				<ModalMedia show={this.state.show} media={this.state.modalMedia} title={this.state.modalTitle} onClose={this.handleCloseModal} />
 			</Col>
 		);
 	}

@@ -19,6 +19,7 @@ class ElementPathList extends Component {
 		
 		this.handleChangePath = this.handleChangePath.bind(this);
 		this.handleDetailsFile = this.handleDetailsFile.bind(this);
+		this.handleCloseModal = this.handleCloseModal.bind(this);
 	}
 	
 	componentWillReceiveProps(nextProps) {
@@ -44,6 +45,10 @@ class ElementPathList extends Component {
 		this.setState({show: true, modalMedia: modalMedia, modalTitle: this.state.element.name});
 	}
 	
+	handleCloseModal() {
+		this.setState({show: false});
+	}
+	
 	render() {
 		var element;
 		if (this.state.element.type === "folder") {
@@ -59,7 +64,7 @@ class ElementPathList extends Component {
 				<Col md={4} sm={4} xs={6} className="text-right">
 					<ElementButtons dataSource={this.state.dataSource} path={this.state.path + "/" + this.state.element.name} element={this.state.element}/>
 				</Col>
-				<ModalMedia show={this.state.show} media={this.state.modalMedia} title={this.state.modalTitle} />
+				<ModalMedia show={this.state.show} media={this.state.modalMedia} title={this.state.modalTitle} onClose={this.handleCloseModal}/>
 			</Row>
 		);
 	}

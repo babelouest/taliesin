@@ -33,6 +33,7 @@ class MediaRow extends Component {
 		this.handleSelectArtist = this.handleSelectArtist.bind(this);
 		this.handleSelectAlbum = this.handleSelectAlbum.bind(this);
 		this.onChangeVisibility = this.onChangeVisibility.bind(this);
+		this.handleCloseModal = this.handleCloseModal.bind(this);
 	}
 	
 	componentWillReceiveProps(nextProps) {
@@ -95,7 +96,11 @@ class MediaRow extends Component {
 			this.setState({modalShow: true});
 		}
 	}
-	
+
+	handleCloseModal() {
+		this.setState({modalShow: false});
+	}
+
 	handlePlayNow() {
 		StateStore.dispatch({
 			type: "loadStreamAndPlay", 
@@ -224,7 +229,7 @@ class MediaRow extends Component {
 						</VisibilitySensor>
 					</Col>
 				</Row>
-				<ModalMedia show={this.state.modalShow} media={this.state.media} title={this.state.modalTitle} />
+				<ModalMedia show={this.state.modalShow} media={this.state.media} title={this.state.modalTitle} onClose={this.handleCloseModal} />
 			</div>
 		);
 	}

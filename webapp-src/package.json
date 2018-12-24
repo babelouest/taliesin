@@ -1,51 +1,42 @@
 {
-  "name": "taliesin-react",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "bootstrap": "3",
-    "font-awesome": "^4.7.0",
-    "i18next": "^11.9.1",
-    "i18next-browser-languagedetector": "^2.2.3",
-    "i18next-xhr-backend": "^1.5.1",
-    "jquery": "^3.3.1",
-    "js-cookie": "^2.2.0",
-    "moment": "^2.22.2",
-    "react": "^16.5.2",
-    "react-audio-player": "^0.10.0",
-    "react-bootstrap": "^0.32.4",
-    "react-datetime": "^2.15.0",
-    "react-dom": "^16.5.2",
-    "react-fontawesome": "^1.6.1",
-    "react-i18next": "^8.0.7",
-    "react-lazyload": "^2.3.0",
-    "react-notification-system": "^0.2.17",
-    "react-redux": "^5.0.7",
-    "react-scripts": "2.0.4",
-    "react-tag-input": "^5.2.3",
-    "react-visibility-sensor": "^4.1.3",
-    "redux": "^4.0.0"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": "react-app",
-    "rules": {
-        "jsx-a11y/anchor-is-valid": [ "error", {
-            "components": [ "Link" ],
-            "specialLink": [ "hrefLeft", "hrefRight" ],
-            "aspects": [ "noHref", "invalidHref", "preferButton" ]
-          }]
-    }
-  },
-  "browserslist": [
-    ">0.2%",
-    "not dead",
-    "not ie <= 11",
-    "not op_mini all"
-  ]
+	"name": "my-minimal-react",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"dev": "webpack-dev-server --config webpack.dev.config.js --disable-host-check --host 0.0.0.0",
+		"build": "webpack"
+	},
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"i18next": "^11.9.1",
+		"i18next-browser-languagedetector": "^2.2.3",
+		"i18next-xhr-backend": "^1.5.1",
+		"js-cookie": "^2.2.0",
+		"moment": "^2.22.2",
+		"react": "^16.5.2",
+		"react-audio-player": "^0.10.0",
+		"react-bootstrap": "^0.32.4",
+		"react-datetime": "^2.15.0",
+		"react-dom": "^16.5.2",
+		"react-fontawesome": "^1.6.1",
+		"react-i18next": "^8.0.7",
+		"react-lazyload": "^2.3.0",
+		"react-notification-system": "^0.2.17",
+		"react-scripts": "2.0.4",
+		"react-tag-input": "^5.2.3",
+		"react-visibility-sensor": "^4.1.3",
+		"redux": "^4.0.0"
+	},
+	"devDependencies": {
+		"babel-core": "^6.26.0",
+		"babel-loader": "^7.1.2",
+		"babel-preset-env": "^1.6.1",
+		"babel-preset-react": "^6.24.1",
+		"css-loader": "^1.0.0",
+		"style-loader": "^0.23.1",
+		"webpack": "^3.10.0",
+		"webpack-dev-server": "^2.9.7"
+	}
 }

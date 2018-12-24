@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Row, Col, ButtonGroup, Button } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
+
 import StateStore from '../lib/StateStore';
 import ElementPathIcon from './ElementPathIcon';
 import ElementPathList from './ElementPathList';
@@ -19,7 +20,7 @@ class BrowsePath extends Component {
 			loaded: false,
 			offset: 0,
 			limit: 100,
-      unavailable: false
+			unavailable: false
 		};
 		
 		this.getElementList();
@@ -59,11 +60,11 @@ class BrowsePath extends Component {
 				this.setState({loaded: true, elementListInitial: result, elementList: result});
 			})
 			.fail((result) => {
-        if (result.status === 503) {
-          this.setState({loaded: true, elementListInitial: [], elementList: [], unavailable: true});
-        } else {
-          this.setState({loaded: true, elementListInitial: [], elementList: []});
-        }
+				if (result.status === 503) {
+					this.setState({loaded: true, elementListInitial: [], elementList: [], unavailable: true});
+				} else {
+					this.setState({loaded: true, elementListInitial: [], elementList: []});
+				}
 			});
 		}
 	}
@@ -77,10 +78,10 @@ class BrowsePath extends Component {
 		var currentElementList = this.state.elementList, index;
 		
 		if (this.state.loaded) {
-      if (this.state.unavailable) {
-        currentList.push(
-          <h4 className="bg-warning">{i18n.t("data_source.unavailabe")}</h4>
-        );
+			if (this.state.unavailable) {
+				currentList.push(
+					<h4 className="bg-warning">{i18n.t("data_source.unavailabe")}</h4>
+				);
 			} else if (this.state.view === "icon") {
 				for (index in currentElementList) {
 					if (index >= this.state.offset) {

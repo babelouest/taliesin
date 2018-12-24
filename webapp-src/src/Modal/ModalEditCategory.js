@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Button, Modal, FormControl, Row, Col, Label } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
+
 import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
 
@@ -130,9 +131,9 @@ class ModalEditCategory extends Component {
 			<Modal show={this.state.show}>
 				<Modal.Header>
 					<Modal.Title>
-						<Button onClick={this.handleEdit} className="btn" title={i18n.t("common.edit")}>
+						<Button onClick={this.handleEdit} className="btn space-after" title={i18n.t("common.edit")}>
 							<FontAwesome name={"pencil"} />
-						</Button>&nbsp;
+						</Button>
 						{this.state.category}: {this.state.categoryValue}
 					</Modal.Title>
 				</Modal.Header>

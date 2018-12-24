@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import FontAwesome from 'react-fontawesome';
 import { Image, Col } from 'react-bootstrap';
 import VisibilitySensor from 'react-visibility-sensor';
+
 import StateStore from '../lib/StateStore';
 import ElementButtons from './ElementButtons';
 import ModalMedia from '../Modal/ModalMedia';
@@ -15,6 +16,7 @@ class ElementPathIcon extends Component {
 		this.handleOpenFile = this.handleOpenFile.bind(this);
 		this.onChangeVisibility = this.onChangeVisibility.bind(this);
 		this.getThumbnail = this.getThumbnail.bind(this);
+		this.handleCloseModal = this.handleCloseModal.bind(this);
 	}
 	
 	componentWillReceiveProps(nextProps) {
@@ -42,6 +44,10 @@ class ElementPathIcon extends Component {
 		var modalMedia = this.state.element;
 		modalMedia.data_source = this.state.dataSource;
 		this.setState({show: true, modalMedia: modalMedia, modalTitle: this.state.element.name});
+	}
+	
+	handleCloseModal() {
+		this.setState({show: false});
 	}
 	
 	onChangeVisibility(isVisible) {
@@ -85,7 +91,7 @@ class ElementPathIcon extends Component {
 				if (this.state.element.type === "folder") {
 					icon =
 						<a role="button" onClick={() => this.handleChangePath(this.state.element.name)} title={this.state.element.name}>
-							<Image src="/images/folder-128.png" alt={this.state.element.name} className="elementImage" responsive>
+							<Image src="images/folder-128.png" alt={this.state.element.name} className="elementImage" responsive>
 							</Image>
 							<div className="hideOverflow">
 								<span>{this.state.element.name}</span>
@@ -94,7 +100,7 @@ class ElementPathIcon extends Component {
 				} else if (this.state.element.type === "audio") {
 					icon =
 						<a role="button" onClick={() => this.handleOpenFile(this.state.element.name)} title={this.state.element.name}>
-							<Image src="/images/audio-128.png" alt={this.state.element.name} className="elementImage" responsive>
+							<Image src="images/audio-128.png" alt={this.state.element.name} className="elementImage" responsive>
 							</Image>
 							<div className="hideOverflow">
 								<span>{this.state.element.name}</span>
@@ -103,7 +109,7 @@ class ElementPathIcon extends Component {
 				} else if (this.state.element.type === "artist") {
 					icon =
 						<a role="button" onClick={() => this.handleOpenFile(this.state.element.name)} title={this.state.element.name}>
-							<Image src="/images/artist-128.png" alt={this.state.element.name} className="elementImage" responsive>
+							<Image src="images/artist-128.png" alt={this.state.element.name} className="elementImage" responsive>
 							</Image>
 							<div className="hideOverflow">
 								<span>{this.state.element.name}</span>
@@ -112,7 +118,7 @@ class ElementPathIcon extends Component {
 				} else if (this.state.element.type === "album") {
 					icon =
 						<a role="button" onClick={() => this.handleOpenFile(this.state.element.name)} title={this.state.element.name}>
-							<Image src="/images/album-128.png" alt={this.state.element.name} className="elementImage" responsive>
+							<Image src="images/album-128.png" alt={this.state.element.name} className="elementImage" responsive>
 							</Image>
 							<div className="hideOverflow">
 								<span>{this.state.element.name}</span>
@@ -121,7 +127,7 @@ class ElementPathIcon extends Component {
 				} else if (this.state.element.type === "year") {
 					icon =
 						<a role="button" onClick={() => this.handleOpenFile(this.state.element.name)} title={this.state.element.name}>
-							<Image src="/images/year-128.png" alt={this.state.element.name} className="elementImage" responsive>
+							<Image src="images/year-128.png" alt={this.state.element.name} className="elementImage" responsive>
 							</Image>
 							<div className="hideOverflow">
 								<span>{this.state.element.name}</span>
@@ -130,7 +136,7 @@ class ElementPathIcon extends Component {
 				} else if (this.state.element.type === "genre") {
 					icon =
 						<a role="button" onClick={() => this.handleOpenFile(this.state.element.name)} title={this.state.element.name}>
-							<Image src="/images/genre-128.png" alt={this.state.element.name} className="elementImage" responsive>
+							<Image src="images/genre-128.png" alt={this.state.element.name} className="elementImage" responsive>
 							</Image>
 							<div className="hideOverflow">
 								<span>{this.state.element.name}</span>
@@ -139,7 +145,7 @@ class ElementPathIcon extends Component {
 				} else {
 					icon =
 						<a role="button" onClick={() => this.handleOpenFile(this.state.element.name)} title={this.state.element.name}>
-							<Image src="/images/unknown-128.png" alt={this.state.element.name} className="elementImage" responsive>
+							<Image src="images/unknown-128.png" alt={this.state.element.name} className="elementImage" responsive>
 							</Image>
 							<div className="hideOverflow">
 								<span>{this.state.element.name}</span>
@@ -191,7 +197,7 @@ class ElementPathIcon extends Component {
 				<div className="text-center">
 					<ElementButtons dataSource={this.state.dataSource} path={this.state.path + "/" + this.state.element.name} element={this.state.element} hideRefresh={this.state.hideRefresh}/>
 				</div>
-				<ModalMedia show={this.state.show} media={this.state.modalMedia} title={this.state.modalTitle} />
+				<ModalMedia show={this.state.show} media={this.state.modalMedia} title={this.state.modalTitle} onClose={this.handleCloseModal} />
 			</Col>
 		);
 	}

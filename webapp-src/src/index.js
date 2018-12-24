@@ -1,10 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
-import 'bootstrap/dist/css/bootstrap.css';
-import 'bootstrap/dist/css/bootstrap-theme.css';
-import 'font-awesome/css/font-awesome.min.css';
-//import 'node_modules/video-react/dist/video-react.css';
 
 import App from './App';
 import config from './lib/ConfigManager';
@@ -12,12 +7,27 @@ import OAuth2Connector from './lib/OAuth2Connector';
 import StateStore from './lib/StateStore';
 import i18n from './lib/i18n';
 
+function getBestStorageAvailable(storageType) {
+	if (storageType === "local") {
+		var testVal = "testLocalStorage";
+		try {
+			localStorage.setItem(testVal, testVal);
+			localStorage.removeItem(testVal);
+			return storageType;
+		} catch (e) {
+			return "cookie";
+		}
+	} else {
+		return storageType;
+	}
+}
+
 config.fetchConfig()
 .then(function () {
 	var curOauth2Config = config.getConfigValue("oauth2Config");
 	if (curOauth2Config && curOauth2Config.enabled) {
 		var oauth2Connector = new OAuth2Connector({
-			storageType: curOauth2Config.storageType, 
+			storageType: getBestStorageAvailable(curOauth2Config.storageType),
 			responseType: curOauth2Config.responseType, 
 			serverUrl: curOauth2Config.serverUrl, 
 			authUrl: curOauth2Config.authUrl, 
@@ -42,7 +52,7 @@ config.fetchConfig()
 					ReactDOM.render(<App/>, document.getElementById('root'));
 				} else if (newStatus === "disconnected") {
 					StateStore.dispatch({ type: "connection", status: newStatus, token: false, expiration: 0, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), benoicPrefix: config.getConfigValue("benoicPrefix"), carleonPrefix: config.getConfigValue("carleonPrefix"), angharadApiUrl: config.getConfigValue("angharadApiUrl"), oauth2: true });
-          StateStore.dispatch({ type: "showFullScreen", show: false });
+					StateStore.dispatch({ type: "showFullScreen", show: false });
 					ReactDOM.render(<App/>, document.getElementById('root'));
 				} else if (newStatus === "refresh") {
 					StateStore.dispatch({ type: "newApiToken", token: token, expiration: expiration});
@@ -60,7 +70,7 @@ config.fetchConfig()
 	ReactDOM.render(<App/>, document.getElementById('root'));
 })
 .fail((error) => {
-	ReactDOM.render(<h2>&nbsp;&nbsp;Error loading web configuration</h2>, document.getElementById('root'));
+	ReactDOM.render(<h2>Error loading web configuration</h2>, document.getElementById('root'));
 });
 
 StateStore.subscribe(() => {
@@ -138,17 +148,22 @@ StateStore.subscribe(() => {
 			});
 			
 			// Get server default config
-			StateStore.getState().APIManager.taliesinApiRequest("GET", "/../config")
-			.then((result) => {
-				StateStore.dispatch({type: "setServerConfig", config: result});
-			})
-			.fail((result) => {
-				StateStore.getState().NotificationManager.addNotification({
-					message: i18n.t("common.message_error_loading_server_config"),
-					level: 'error'
+      if (config.getLocalConfigValue("serverConfig")) {
+        StateStore.dispatch({type: "setServerConfig", config: config.getLocalConfigValue("serverConfig")});
+      } else {
+				StateStore.getState().APIManager.taliesinApiRequest("GET", "/../config")
+				.then((result) => {
+					StateStore.dispatch({type: "setServerConfig", config: result});
+																				config.setLocalConfigValue("serverConfig", result);
+				})
+				.fail((result) => {
+					StateStore.getState().NotificationManager.addNotification({
+						message: i18n.t("common.message_error_loading_server_config"),
+						level: 'error'
+					});
+					StateStore.dispatch({type: "setServerConfig", config: {}});
 				});
-				StateStore.dispatch({type: "setServerConfig", config: {}});
-			});
+      }
 		}
 	}
 });

@@ -9,8 +9,6 @@ class MediaInfo extends Component {
 		this.state = {
 			media: props.media, 
 			imgThumbBlob: props.imgThumbBlob, 
-			imgBlob: false, 
-			imgLoaded: false, 
 			title: this.buildTitle(props.media, props.index, props.total), 
 			meta: props.meta,
 			showModal: false

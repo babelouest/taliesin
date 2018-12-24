@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Row, Col, ButtonGroup, Button } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
+
 import StateStore from '../lib/StateStore';
 import ElementCategoryList from './ElementCategoryList';
 import ElementCategoryIcon from './ElementCategoryIcon';

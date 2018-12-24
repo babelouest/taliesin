@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { DropdownButton, Button, ButtonGroup, MenuItem, Table, Image, Row, Col } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
+
 import StateStore from '../lib/StateStore';
 import ModalConfirm from '../Modal/ModalConfirm';
 import ModalEditPlaylist from '../Modal/ModalEditPlaylist';
@@ -29,7 +30,8 @@ class BrowsePlaylist extends Component {
 			playlistToShow: props.playlist,
 			mediaList: [],
 			offset: 0,
-			limit: 100
+			limit: 100,
+			serverConfig: StateStore.getState().serverConfig
 		};
 		
 		StateStore.subscribe(() => {
@@ -81,7 +83,8 @@ class BrowsePlaylist extends Component {
 			playlistToShow: nextProps.playlist,
 			mediaList: [],
 			offset: 0,
-			limit: 100
+			limit: 100,
+			serverConfig: StateStore.getState().serverConfig
 		}, () => {
 			if (this.state.playlistToShow) {
 				var playlist = this.state.playlistToShow;
@@ -231,7 +234,7 @@ class BrowsePlaylist extends Component {
 	}
 	
 	runPlayElement(playlist) {
-		StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(playlist.name) + "/load?jukebox&name={" + (StateStore.getState().profile.currentPlayer.name) + "} - " + playlist.name)
+		StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist/" + encodeURIComponent(playlist.name) + "/load?jukebox&name={" + (StateStore.getState().profile.currentPlayer.name) + "} - " + playlist.name + "&format=" + this.state.serverConfig.default_stream_format + "&channels=" + this.state.serverConfig.default_stream_channels + "&samplerate=" + this.state.serverConfig.default_stream_sample_rate + "&bitrate=" + this.state.serverConfig.default_stream_bitrate)
 		.then((result) => {
 			var streamList = StateStore.getState().streamList;
 			streamList.push(result);
@@ -521,7 +524,7 @@ class BrowsePlaylist extends Component {
 									<FontAwesome name={"play"} />
 								</Button>
 								<Button title={i18n.t("common.create_stream")} onClick={() => {this.playAdvanced(aPlaylist)}}>
-									<FontAwesome name={"play"} />&nbsp;
+									<FontAwesome name={"play"} className="space-after"/>
 									<FontAwesome name={"cog"} />
 								</Button>
 								<Button title={i18n.t("common.edit")} onClick={() => this.editPlaylist(aPlaylist)} disabled={!this.canUpdate(aPlaylist)}>
@@ -554,40 +557,40 @@ class BrowsePlaylist extends Component {
 								<span><i className="fa fa-cog"></i></span>
 							}>
 								<MenuItem onClick={() => {this.playNow(aPlaylist)}}>
-									<FontAwesome name={"play"} />&nbsp;
+									<FontAwesome name={"play"} className="space-after"/>
 									{i18n.t("common.play_now")}
 								</MenuItem>
 								<MenuItem divider />
 								<MenuItem onClick={() => {this.playAdvanced(aPlaylist)}}>
 									<FontAwesome name={"play"} />
-									<FontAwesome name={"cog"} />&nbsp;
+									<FontAwesome name={"cog"} className="space-after"/>
 									{i18n.t("common.create_stream")}
 								</MenuItem>
 								<MenuItem onClick={() => this.editPlaylist(aPlaylist)} disabled={!this.canUpdate(aPlaylist)}>
-									<FontAwesome name={"pencil"} />&nbsp;
+									<FontAwesome name={"pencil"} className="space-after"/>
 									{i18n.t("common.edit")}
 								</MenuItem>
 								<MenuItem onClick={() => this.exportPlaylist(aPlaylist)}>
-									<FontAwesome name={"save"} />&nbsp;
+									<FontAwesome name={"save"} className="space-after"/>
 									{i18n.t("common.save")}
 								</MenuItem>
 								<MenuItem onClick={() => this.importPlaylist(aPlaylist)}>
-									<FontAwesome name={"upload"} />&nbsp;
+									<FontAwesome name={"upload"} className="space-after"/>
 									{i18n.t("common.import")}
 								</MenuItem>
 								<MenuItem>
-									<FontAwesome name={"plus"} />&nbsp;
+									<FontAwesome name={"plus"} className="space-after"/>
 									{i18n.t("common.add_to_stream")}
 								</MenuItem>
 								{streamList}
 								<MenuItem divider />
 								<MenuItem>
-									<FontAwesome name={"plus"} />&nbsp;
+									<FontAwesome name={"plus"} className="space-after"/>
 									{i18n.t("common.add_to_playlist")}
 								</MenuItem>
 								{playlist}
 								<MenuItem onClick={() => this.deletePlaylist(aPlaylist)} disabled={!this.canUpdate(aPlaylist)}>
-									<FontAwesome name={"trash"} />&nbsp;
+									<FontAwesome name={"trash"} className="space-after"/>
 									{i18n.t("common.delete")}
 								</MenuItem>
 							</DropdownButton>

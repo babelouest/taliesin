@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Row, Col, Image, ButtonGroup, Button, MenuItem, DropdownButton } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
+
 import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
 
@@ -180,10 +181,13 @@ class FullScreen extends Component {
 		StateStore.dispatch({type: "setPlayerAction", action: action});
 	}
 	
-	handleChangeVolume(volume) {
+	handleChangeVolume(deltaVolume) {
+		var volume = this.state.volume + deltaVolume;
+		if (volume < 0) volume = 0;
+		if (volume > 100) volume = 100;
 		if (this._ismounted) {
-			this.setState({volume: (this.state.volume+volume)}, () => {
-				StateStore.dispatch({type: "setPlayerAction", action: "volume", parameter: (volume)});
+			this.setState({volume: (volume)}, () => {
+				StateStore.dispatch({type: "setPlayerAction", action: "volume", parameter: (deltaVolume)});
 			});
 		}
 	}
@@ -309,7 +313,7 @@ class FullScreen extends Component {
 							<label className="text-fullscreen">{i18n.t("common.date")}</label>
 						</Col>
 						<Col xs={6}>
-							<span><a role="button" className="anchor-fullscreen" onClick={() => {this.handleSelectYear(this.state.media.tags.date)}}>{this.state.media.tags.date}</a></span>
+							<span><a role="button" className="anchor-fullscreen" onClick={() => {this.handleSelectYear(this.state.media.tags.date)}}>{this.state.media.tags.date.substring(0, 4)}</a></span>
 						</Col>
 					</Row>);
 			}
@@ -330,7 +334,7 @@ class FullScreen extends Component {
 						<label className="text-fullscreen">{i18n.t("common.open_folder")}</label>
 					</Col>
 					<Col xs={6}>
-						<span><a role="button" className="anchor-fullscreen" onClick={() => {this.handleSelectFolder(this.state.media.folder)}}>{this.state.media.folder || "/"}</a></span>
+						<span><a role="button" className="anchor-fullscreen" onClick={() => {this.handleSelectFolder(this.state.media.folder)}}>{this.state.media.data_source + "/" + this.state.media.folder}</a></span>
 					</Col>
 				</Row>
 			);

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import FontAwesome from 'react-fontawesome';
 import { DropdownButton, MenuItem, ButtonGroup, Button } from 'react-bootstrap';
+
 import StateStore from '../lib/StateStore';
 import ModalEditStream from '../Modal/ModalEditStream';
 import ModalEditPlaylist from '../Modal/ModalEditPlaylist';
@@ -25,7 +26,8 @@ class ElementButtons extends Component {
 			editCategoryShow: false,
 			onEditCategory: props.onEditCategory,
 			hideRefresh: props.hideRefresh,
-			manageModalShow: false
+			manageModalShow: false,
+												serverConfig: StateStore.getState().serverConfig
 		};
 
 		this.playElement = this.playElement.bind(this);
@@ -40,7 +42,7 @@ class ElementButtons extends Component {
 		this.viewCategory = this.viewCategory.bind(this);
 		this.onCloseCategory = this.onCloseCategory.bind(this);
 		this.handleSelectRemove = this.handleSelectRemove.bind(this);
-		this.limitStrLenghth = this.limitStrLenghth.bind(this);
+		this.limitStrLength = this.limitStrLength.bind(this);
 		
 		StateStore.subscribe(() => {
 			var reduxState = StateStore.getState();
@@ -67,7 +69,8 @@ class ElementButtons extends Component {
 			editCategoryShow: false,
 			onEditCategory: nextProps.onEditCategory,
 			hideRefresh: nextProps.hideRefresh,
-			manageModalShow: false
+			manageModalShow: false,
+												serverConfig: StateStore.getState().serverConfig
 		});
 	}
 	
@@ -113,7 +116,7 @@ class ElementButtons extends Component {
 				streamName += " - " + this.state.subCategoryValue;
 			}
 		}
-		StateStore.getState().APIManager.taliesinApiRequest("GET", url + "?jukebox&recursive&name=" + encodeURI("{") + (StateStore.getState().profile.currentPlayer.name) + encodeURI("} - ") + encodeURI(streamName))
+		StateStore.getState().APIManager.taliesinApiRequest("GET", url + "?jukebox&recursive&name=" + encodeURI("{") + encodeURI(StateStore.getState().profile.currentPlayer.name).replace(/#/g, "%23").replace(/\+/g, "%2B") + encodeURI("} - ") + encodeURI(streamName)+ "&format=" + this.state.serverConfig.default_stream_format + "&channels=" + this.state.serverConfig.default_stream_channels + "&samplerate=" + this.state.serverConfig.default_stream_sample_rate + "&bitrate=" + this.state.serverConfig.default_stream_bitrate)
 		.then((result) => {
 			var streamList = StateStore.getState().streamList;
 			streamList.push(result);
@@ -283,7 +286,7 @@ class ElementButtons extends Component {
 		this.setState({removeDropdown: !this.state.removeDropdown});
 	}
 	
-	limitStrLenghth(str, length) {
+	limitStrLength(str, length) {
 		if (str.length > length) {
 			return str.substring(0, length) + "...";
 		} else {
@@ -292,11 +295,11 @@ class ElementButtons extends Component {
 	}
 	
 	render() {
-		var streamList = [], playlist = [<MenuItem key={0} onClick={() => this.addToNewPlaylist()}>New playlist</MenuItem>], refreshButton, refreshButtonMenu, categoryButton, categoryButtonMenu, modalCategory;
+		var streamList = [], playlist = [<MenuItem key={0} onClick={() => this.addToNewPlaylist()}>{i18n.t("common.new_playlist")}</MenuItem>], refreshButton, refreshButtonMenu, categoryButton, categoryButtonMenu, modalCategory;
 		this.state.streamList.forEach((stream, index) => {
 			streamList.push(
 				<MenuItem key={index} onClick={() => this.addToStream(stream.name)}>
-					<span className="visible-xs">- {stream.display_name?this.limitStrLenghth(stream.display_name, 20):i18n.t("common.no_name")}</span>
+					<span className="visible-xs">- {stream.display_name?this.limitStrLength(stream.display_name, 20):i18n.t("common.no_name")}</span>
 					<span className="hidden-xs">- {stream.display_name||i18n.t("common.no_name")}</span>
 				</MenuItem>
 			);
@@ -304,7 +307,7 @@ class ElementButtons extends Component {
 		this.state.playlist.forEach((pl, index) => {
 			playlist.push(
 				<MenuItem key={index+1} onClick={() => this.addToPlaylist(pl.name)}>
-					<span className="visible-xs">- {this.limitStrLenghth(pl.name, 20)}</span>
+					<span className="visible-xs">- {this.limitStrLength(pl.name, 20)}</span>
 					<span className="hidden-xs">- {pl.name}</span>
 				</MenuItem>
 			);
@@ -316,7 +319,7 @@ class ElementButtons extends Component {
 				</Button>
 			refreshButtonMenu =
 				<MenuItem>
-					<FontAwesome name={"refresh"} />&nbsp;
+					<FontAwesome name={"refresh"} className="space-after"/>
 					{i18n.t("common.refresh_folder")}
 				</MenuItem>
 		}
@@ -329,7 +332,7 @@ class ElementButtons extends Component {
 				</Button>
 			categoryButtonMenu =
 				<MenuItem>
-					<FontAwesome name={"eye"} />&nbsp;
+					<FontAwesome name={"eye"} className="space-after"/>
 					{i18n.t("common.view_category")}
 				</MenuItem>
 		}
@@ -340,12 +343,12 @@ class ElementButtons extends Component {
 						<FontAwesome name={"play"} />
 					</Button>
 					<Button title={i18n.t("common.create_stream")} onClick={this.playElementAdvanced}>
-						<FontAwesome name={"play"} />&nbsp;
+						<FontAwesome name={"play"} className="space-after"/>
 						<FontAwesome name={"cog"} />
 					</Button>
 					{refreshButton}
 					{categoryButton}
-					<DropdownButton id={"add"-this.state.element.name} title={
+					<DropdownButton id={"add-"+this.state.element.name} title={
 						<span><i className="fa fa-plus"></i></span>
 					}>
 						<MenuItem>
@@ -363,38 +366,40 @@ class ElementButtons extends Component {
 						</MenuItem>
 					</DropdownButton>
 				</ButtonGroup>
-				<DropdownButton className="visible-xs" id={"xs-manage"-this.state.element.name} title={
-					<span><i className="fa fa-cog"></i></span>
-				}>
-					<MenuItem onClick={this.playElement}>
-						<FontAwesome name={"play"} />&nbsp;
-						{i18n.t("common.play_now")}
-					</MenuItem>
-					<MenuItem divider />
-					<MenuItem onClick={this.playElementAdvanced}>
-						<FontAwesome name={"play"} />
-						<FontAwesome name={"cog"} />&nbsp;
-						{i18n.t("common.create_stream")}
-					</MenuItem>
-					{refreshButtonMenu}
-					{categoryButtonMenu}
-					<MenuItem divider />
-					<MenuItem>
-						<FontAwesome name={"plus"} />&nbsp;
-						{i18n.t("common.add_to_stream")}
-					</MenuItem>
-					{streamList}
-					<MenuItem divider />
-					<MenuItem>
-						<FontAwesome name={"plus"} />&nbsp;
-						{i18n.t("common.add_to_playlist")}
-					</MenuItem>
-					{playlist}
-					<MenuItem divider />
-					<MenuItem onClick={() => {this.setState({manageModalShow: true});}}>
-						{i18n.t("common.manage_in_stream_playlist")}
-					</MenuItem>
-				</DropdownButton>
+				<div className="visible-xs dropdown-menu-center">
+					<DropdownButton id={"xs-manage-"+this.state.element.name} title={
+						<span><i className="fa fa-cog"></i></span>
+					}>
+						<MenuItem onClick={this.playElement}>
+							<FontAwesome name={"play"} className="space-after"/>
+							{i18n.t("common.play_now")}
+						</MenuItem>
+						<MenuItem divider />
+						<MenuItem onClick={this.playElementAdvanced}>
+							<FontAwesome name={"play"} />
+							<FontAwesome name={"cog"} className="space-after"/>
+							{i18n.t("common.create_stream")}
+						</MenuItem>
+						{refreshButtonMenu}
+						{categoryButtonMenu}
+						<MenuItem divider />
+						<MenuItem>
+							<FontAwesome name={"plus"} className="space-after"/>
+							{i18n.t("common.add_to_stream")}
+						</MenuItem>
+						{streamList}
+						<MenuItem divider />
+						<MenuItem>
+							<FontAwesome name={"plus"} className="space-after"/>
+							{i18n.t("common.add_to_playlist")}
+						</MenuItem>
+						{playlist}
+						<MenuItem divider />
+						<MenuItem onClick={() => {this.setState({manageModalShow: true});}}>
+							{i18n.t("common.manage_in_stream_playlist")}
+						</MenuItem>
+					</DropdownButton>
+				</div>
 				<ModalEditStream 
 					show={this.state.show} 
 					dataSource={this.state.dataSource} 

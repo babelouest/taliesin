@@ -134,12 +134,15 @@ int main (int argc, char ** argv) {
   config->static_file_config->url_prefix = NULL;
   config->static_file_config->redirect_on_404 = "/";
   config->static_file_config->mime_types = o_malloc(sizeof(struct _u_map));
-  if (config->static_file_config->mime_types == NULL) {
+  config->static_file_config->map_header = o_malloc(sizeof(struct _u_map));
+  if (config->static_file_config->mime_types == NULL || config->static_file_config->map_header == NULL) {
     fprintf(stderr, "init - Error allocating resources for config->static_file_config->mime_types, aborting");
     exit_server(&config, TALIESIN_ERROR);
   }
   u_map_init(config->static_file_config->mime_types);
   u_map_put(config->static_file_config->mime_types, "*", "application/octet-stream");
+  u_map_init(config->static_file_config->map_header);
+  u_map_put(config->static_file_config->map_header, "Cache-Control", "public,max-age=31536000,immutable");
   
   if (pthread_mutex_init(&global_handler_close_lock, NULL) || 
       pthread_cond_init(&global_handler_close_cond, NULL)) {
@@ -349,6 +352,10 @@ void exit_server(struct config_elements ** config, int exit_value) {
   
   if (config != NULL && *config != NULL) {
     // Cleaning data
+    ulfius_stop_framework((*config)->instance);
+    ulfius_clean_instance((*config)->instance);
+    h_close_db((*config)->conn);
+    h_clean_connection((*config)->conn);
     pthread_mutex_destroy(&(*config)->playlist_lock);
     o_free((*config)->config_file);
     o_free((*config)->server_remote_address);
@@ -375,11 +382,8 @@ void exit_server(struct config_elements ** config, int exit_value) {
     o_free((*config)->static_file_config->files_path);
     o_free((*config)->static_file_config->url_prefix);
     u_map_clean_full((*config)->static_file_config->mime_types);
+    u_map_clean_full((*config)->static_file_config->map_header);
     o_free((*config)->static_file_config);
-    h_close_db((*config)->conn);
-    h_clean_connection((*config)->conn);
-    ulfius_stop_framework((*config)->instance);
-    ulfius_clean_instance((*config)->instance);
     o_free((*config)->instance);
     o_free((*config)->webradio_set);
     

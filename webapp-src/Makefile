@@ -26,10 +26,10 @@ install-dev:
 	$(JSC) install
 
 dev:
-	$(JSC) start
+	$(JSC) run dev
 
 build-webapp:
-	GENERATE_SOURCEMAP=false $(JSC) run build
-	find build/ -name config.json -delete
+	$(JSC) run build
 	find $(WEBAPP_DEST) ! -name config.json ! -name webapp -delete
-	cp -R build/* $(WEBAPP_DEST)
+	cp -R index.html config.json.sample favicon.ico css/ fonts/ images/ js/ locales/ $(WEBAPP_DEST)
+	cp output/bundle.min.js $(WEBAPP_DEST)/bundle.js

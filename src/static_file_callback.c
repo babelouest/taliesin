@@ -116,6 +116,7 @@ int callback_static_file (const struct _u_request * request, struct _u_response 
           y_log_message(Y_LOG_LEVEL_WARNING, "Static File Server - Unknown mime type for extension %s", get_filename_ext(file_requested));
         }
         u_map_put(response->map_header, "Content-Type", content_type);
+        u_map_copy_into(response->map_header, ((struct _static_file_config *)user_data)->map_header);
         
         if (ulfius_set_stream_response(response, 200, callback_static_file_stream, callback_static_file_stream_free, length, STATIC_FILE_CHUNK, f) != U_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "callback_static_file - Error ulfius_set_stream_response");

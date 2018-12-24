@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Row, Col, Button, ButtonGroup, DropdownButton, MenuItem } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
-import $ from 'jquery';
+
 import StateStore from '../lib/StateStore';
 import StreamSelector from './StreamSelector';
 import PlayerSelector from './PlayerSelector';
@@ -27,7 +27,8 @@ class Footer extends Component {
 			fullScreen: false,
 			currentPlayer: StateStore.getState().profile.currentPlayer,
 			play: false,
-			stream_external: false
+			stream_external: false,
+												imgBlob: false
 		};
 		
 		StateStore.subscribe(() => {
@@ -48,9 +49,9 @@ class Footer extends Component {
 			} else if (reduxState.lastAction === "setStream") {
 				if (StateStore.getState().profile.stream.name === this.state.stream.name) {
 					this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, play: false}, () => {
-					this.buildExternal();
-					this.setWindowTitle();
-				});
+						this.buildExternal();
+						this.setWindowTitle();
+					});
 				}
 			} else if (reduxState.lastAction === "loadStreamAndPlay") {
 				this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, jukeboxIndex: StateStore.getState().profile.jukeboxIndex, play: true}, () => {
@@ -67,6 +68,8 @@ class Footer extends Component {
 				this.setState({mediaNext: StateStore.getState().profile.mediaNext, play: false});
 			} else if (reduxState.lastAction === "setStoredValues") {
 				this.setState({currentPlayer: StateStore.getState().profile.currentPlayer, stream: StateStore.getState().profile.stream, mediaNow: false, play: false}, () => {this.buildExternal()});
+			} else if (reduxState.lastAction === "setMediaThumb") {
+				this.setState({imgBlob: StateStore.getState().profile.imgThumbBlob});
 			}
 		});
 		
@@ -75,6 +78,7 @@ class Footer extends Component {
 		this.buildExternal = this.buildExternal.bind(this);
 		this.setWindowTitle = this.setWindowTitle.bind(this);
 		this.buildTitle = this.buildTitle.bind(this);
+								this.showNotification = this.showNotification.bind(this);
 		
 		this.setWindowTitle();
 	}
@@ -82,8 +86,41 @@ class Footer extends Component {
 	setWindowTitle() {
 		if (this.state.mediaNow) {
 			document.title = this.buildTitle(this.state.mediaNow, (this.state.stream.webradio?-1:this.state.jukeboxIndex), this.state.stream.elements) + " - Taliesin";
+												this.showNotification();
 		} else {
 			document.title = "Taliesin";
+		}
+	}
+
+	showNotification() {
+		if (("Notification" in window) && !!this.state.mediaNow) {
+			var title = this.buildTitle(this.state.mediaNow, (this.state.stream.webradio?-1:this.state.jukeboxIndex), this.state.stream.elements);
+			var icon = StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name + "/cover";
+			var body = "";
+			var timeout = 10000;
+			if (this.state.mediaNow.tags) {
+				body = (this.state.mediaNow.tags.title || this.state.mediaNow.name) + "\n" + (this.state.mediaNow.tags.artist || this.state.mediaNow.tags.album_artist || "") + "\n" + (this.state.mediaNow.tags.album || "") + "\n" + (this.state.mediaNow.tags.date || "");
+			} else {
+				body = this.state.mediaNow.name;
+			}
+			if (!this.state.stream.webradio) {
+				icon += "?index=" + this.state.jukeboxIndex;
+			}
+			if (Notification.permission === "granted") {
+				var notif = new Notification(title, {icon: icon, dir: "rtl", body: body});
+				setTimeout(notif.close.bind(notif), timeout);
+			} else if (Notification.permission !== 'denied') {
+				Notification.requestPermission(function (permission) {
+					if(!('permission' in Notification)) {
+						Notification.permission = permission;
+					}
+
+					if (permission === "granted") {
+						var notif = new Notification(title, {icon: icon, dir: "rtl", body: body});
+						setTimeout(notif.close.bind(notif), timeout);
+					}
+				});
+			}
 		}
 	}
 	
@@ -133,7 +170,7 @@ class Footer extends Component {
 			if (this.state.stream.webradio) {
 				stream_external = "data:application/mpegurl;base64," + btoa("#EXTM3U\n\n#EXTINF:0," + (this.state.stream.display_name||"no name") + "\n" + StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name + "\n");
 			} else {
-				stream_external = StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name;
+				stream_external = StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name + "?url_prefix=" + StateStore.getState().taliesinApiUrl;
 			}
 			this.setState({stream_external: stream_external}, () => {
 				$("#play-external-anchor-footer")[0].click();
@@ -170,44 +207,35 @@ class Footer extends Component {
 				</Col>;
 			if (this.state.currentPlayer.type==="carleon") {
 				audioPlayer =
-					<Col md={3} sm={6} xs={6} className="player-box">
+					<Col md={3} sm={5} xs={5} className="player-box">
 						<MPDController player={this.state.currentPlayer} stream={this.state.stream} play={this.state.play} index={this.state.jukeboxIndex} />
 					</Col>;
 			} else if (this.state.currentPlayer.type==="internal") {
 				audioPlayer =
-					<Col md={3} sm={6} xs={6} className="player-box">
+					<Col md={3} sm={5} xs={5} className="player-box">
 						<AudioPlayer stream={this.state.stream} play={this.state.play} index={this.state.jukeboxIndex} duration={this.state.stream.webradio?0:(this.state.mediaNow.duration/1000)} />
 					</Col>;
 			} else { // External
 				audioPlayer =
-					<Col md={3} sm={6} xs={6} className="player-box">
+					<Col md={3} sm={5} xs={5} className="player-box">
 					</Col>;
 			}
 			if (this.state.stream.name) {
 				middleButtons =
-					<Col md={2} sm={2} xs={2} className="text-center">
-						<ButtonGroup className="hidden-xs hidden-sm">
-							<Button title={i18n.t("player.full_screen")} onClick={ ()=> this.showFullScreen()}>
-								<FontAwesome name={"arrows-alt"} />
-							</Button>
+					<Col md={2} sm={3} xs={3} className="text-center">
+						<ButtonGroup>
 							<Button title={i18n.t("player.list_media")} onClick={ ()=> this.showMediaList()}>
 								<FontAwesome name={"list"} />
 							</Button>
-						</ButtonGroup>
-						<DropdownButton id={"center-dropdown"} title="" pullRight className="visible-xs visible-sm">
-							<MenuItem onClick={ ()=> this.showFullScreen()}>
+							<Button title={i18n.t("player.full_screen")} onClick={ ()=> this.showFullScreen()}>
 								<FontAwesome name={"arrows-alt"} />
-								&nbsp;Full-screen
-							</MenuItem>
-							<MenuItem onClick={ ()=> this.showMediaList()}>
-								<FontAwesome name={"list"} />
-								&nbsp;List media
-							</MenuItem>
-						</DropdownButton>
+							</Button>
+						</ButtonGroup>
 					</Col>;
 			}
 			return (
 				<div className="navbar-fixed-bottom footer">
+					<div className="media-background-fullscreen hidden-md hidden-lg hidden-sm" style={{backgroundImage:this.state.imgBlob?"url(data:image/png;base64,"+this.state.imgBlob+")":"" }}></div>
 					<a href={(this.state.stream_external||"")} style={{display: "none"}} id={"play-external-anchor-footer"} download={(this.state.stream.display_name||i18n.t("common.no_name"))+".m3u"}>{i18n.t("common.external")}</a>
 					<Row>
 						{streamSelector}

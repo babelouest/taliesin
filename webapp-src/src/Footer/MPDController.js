@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { ButtonGroup, Button, DropdownButton, MenuItem } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
+
 import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
 
@@ -100,15 +101,15 @@ class MPDController extends Component {
 		if (nextProps.index > -1) {
 			newState.playIndex = nextProps.index;
 		}
+    if (!newPlayer && !newStream && this.state.playNow) {
+			newState.playNow = false;
+			newState.jukeboxIndex = this.state.playIndex;
+		}
 		this.setState(newState, () => {
 			if (newPlayer) {
 				this.MPDConnect();
 			} else if (newStream) {
 				this.loadStream(this.state.playNow);
-			} else if (this.state.playNow) {
-				this.setState({playNow: false, jukeboxIndex: this.state.playIndex}, () => {
-					this.handlePlay();
-				});
 			}
 		});
 	}
@@ -401,7 +402,7 @@ class MPDController extends Component {
 		return (
 			<div>
 				<div>
-					<ButtonGroup>
+					<ButtonGroup className="space-after">
 						<Button title={i18n.t("player.previous")} onClick={this.handlePrevious}>
 							<FontAwesome name={"fast-backward"} />
 						</Button>
@@ -413,7 +414,6 @@ class MPDController extends Component {
 							<FontAwesome name={"fast-forward"} />
 						</Button>
 					</ButtonGroup>
-					&nbsp;
 					<ButtonGroup>
 						<Button title={i18n.t("common.repeat")} onClick={this.handleRepeat} className={(this.state.jukeboxRepeat&&!this.state.stream.webradio)?"btn-primary":""}>
 							<FontAwesome name={"repeat"} />
@@ -432,8 +432,8 @@ class MPDController extends Component {
 					</ButtonGroup>
 				</div>
 				<div>
-					<label className="hidden-xs">
-						{i18n.t("player.current_stream")}&nbsp;
+					<label className="hidden-xs space-after">
+						{i18n.t("player.current_stream")}
 					</label>
 					<span>
 						{streamName}

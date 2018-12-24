@@ -39,6 +39,7 @@ var defaultState = {
 		playlist: false,
 		mediaNow: false,
 		mediaNext: false,
+		imgThumbBlob: false,
 		browse: "dashboard",
 		view: "list",
 		jukeboxIndex: 0,
@@ -59,8 +60,8 @@ function stateStoreManager(state = defaultState, action) {
 			state.APIManager = new APIManager({
 				taliesinApiUrl: action.taliesinApiUrl,
 				angharadApiUrl: action.angharadApiUrl,
-        benoicPrefix: action.benoicPrefix,
-        carleonPrefix: action.carleonPrefix,
+				benoicPrefix: action.benoicPrefix,
+				carleonPrefix: action.carleonPrefix,
 				oauth2: action.oauth2
 			});
 			state.taliesinApiUrl = action.taliesinApiUrl;
@@ -98,13 +99,13 @@ function stateStoreManager(state = defaultState, action) {
 				config.setLocalConfigValue("dataSource", action.currentDataSource);
 			}
 			break;
-    case "setDataSource":
-      for (i in state.dataSourceList) {
-        if (state.dataSourceList[i].name === action.dataSource.name) {
-          state.dataSourceList[i] = action.dataSource;
-        }
-      }
-      break;
+		case "setDataSource":
+			for (i in state.dataSourceList) {
+				if (state.dataSourceList[i].name === action.dataSource.name) {
+					state.dataSourceList[i] = action.dataSource;
+				}
+			}
+			break;
 		case "setCurrentDataSource":
 			state.profile.dataSource = action.currentDataSource;
 			config.setLocalConfigValue("dataSource", action.currentDataSource);
@@ -178,6 +179,9 @@ function stateStoreManager(state = defaultState, action) {
 			break;
 		case "setMediaNow":
 			state.profile.mediaNow = action.media;
+			break;
+		case "setMediaThumb":
+			state.profile.imgThumbBlob = action.imgThumbBlob;
 			break;
 		case "setMediaNext":
 			state.profile.mediaNext = action.media;

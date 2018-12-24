@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Row, Col, Image, Button, ButtonGroup, Label } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
+
 import VisibilitySensor from 'react-visibility-sensor';
 import StateStore from '../lib/StateStore';
 import ModalMedia from '../Modal/ModalMedia';
@@ -32,6 +33,7 @@ class MediaRow extends Component {
 		this.handleSelectArtist = this.handleSelectArtist.bind(this);
 		this.handleSelectAlbum = this.handleSelectAlbum.bind(this);
 		this.onChangeVisibility = this.onChangeVisibility.bind(this);
+		this.handleCloseModal = this.handleCloseModal.bind(this);
 	}
 	
 	componentWillReceiveProps(nextProps) {
@@ -45,7 +47,6 @@ class MediaRow extends Component {
 			coverLoaded: false,
 			modalShow: false,
 			modalTitle: this.buildTitle(nextProps.media),
-			visible: false,
 			highlight: nextProps.highlight
 		});
 	}
@@ -95,7 +96,11 @@ class MediaRow extends Component {
 			this.setState({modalShow: true});
 		}
 	}
-	
+
+	handleCloseModal() {
+		this.setState({modalShow: false});
+	}
+
 	handlePlayNow() {
 		StateStore.dispatch({
 			type: "loadStreamAndPlay", 
@@ -165,7 +170,7 @@ class MediaRow extends Component {
 			if (this.state.stream && !this.state.stream.webradio) {
 				firstCol =
 					<Col md={2} sm={12} xs={12}>
-						<ButtonGroup>
+						<ButtonGroup className="space-after">
 							<Button title={i18n.t("common.play_now")} onClick={this.handlePlayNow}>
 								<FontAwesome name="play" />
 							</Button>
@@ -173,8 +178,8 @@ class MediaRow extends Component {
 								<FontAwesome name="trash" />
 							</Button>
 						</ButtonGroup>
-						&nbsp;&nbsp;{(this.state.elements>=10&&this.state.index<9?"0":"") + (this.state.index + 1) + "/" + this.state.elements}
-						&nbsp;{this.state.highlight?<FontAwesome name="music" />:""}
+						<span className="space-before">{(this.state.elements>=10&&this.state.index<9?"0":"") + (this.state.index + 1) + "/" + this.state.elements}</span>
+						<span className="space-before">{this.state.highlight?<FontAwesome name="music" />:""}</span>
 					</Col>;
 			} else if (this.state.stream && this.state.stream.webradio) {
 				firstCol =
@@ -186,7 +191,7 @@ class MediaRow extends Component {
 		if (this.state.imgThumbBlob) {
 			cover = <Image src={"data:image/jpeg;base64," + this.state.imgThumbBlob} thumbnail responsive className="cover-image-thumb"/>
 		} else {
-			cover = <Image src="/images/album-128.png" alt={this.state.media.name} className="cover-image-thumb" responsive />
+			cover = <Image src="images/album-128.png" alt={this.state.media.name} className="cover-image-thumb" responsive />
 		}
 		return (
 			<div>
@@ -224,7 +229,7 @@ class MediaRow extends Component {
 						</VisibilitySensor>
 					</Col>
 				</Row>
-				<ModalMedia show={this.state.modalShow} media={this.state.media} title={this.state.modalTitle} />
+				<ModalMedia show={this.state.modalShow} media={this.state.media} title={this.state.modalTitle} onClose={this.handleCloseModal} />
 			</div>
 		);
 	}

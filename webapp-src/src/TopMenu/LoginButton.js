@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { NavItem } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
+
 import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
 
@@ -32,8 +33,8 @@ class LoginButton extends Component {
 		} else if (this.state.status !== "noauth") {
 			return <NavItem href="" onClick={() => this.handleConnect()}><FontAwesome name={"sign-in"} /> {i18n.t("topmenu.log_in")}</NavItem>;
 		} else {
-      return <div></div>;
-    }
+			return <div></div>;
+		}
 	}
 }
 

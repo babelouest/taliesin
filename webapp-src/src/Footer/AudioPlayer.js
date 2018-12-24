@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import ReactAudioPlayer from 'react-audio-player';
-//import VideoPlayer from 'video-react';
 import FontAwesome from 'react-fontawesome';
 import { ButtonGroup, Button, DropdownButton, MenuItem } from 'react-bootstrap';
 
@@ -368,7 +367,7 @@ class AudioPlayer extends Component {
 					} else {
 						this.sendStreamComand("list", {offset: this.state.jukeboxIndex, limit: 1});
 					}
-          this.rap.audioEl.play();
+					this.rap.audioEl.play();
 				});
 			}
 		})
@@ -418,10 +417,13 @@ class AudioPlayer extends Component {
 		}
 	}
 	
-	handleChangeVolume(volume) {
-		this.rap.audioEl.volume = ((this.state.volume+volume) / 100);
-		this.setState({volume: this.state.volume+volume}, () => {
-			this.dispatchPlayerStatus({volume: (this.state.volume+volume)});
+	handleChangeVolume(deltaVolume) {
+		var volume = this.state.volume + deltaVolume;
+		if (volume < 0) volume = 0;
+		if (volume > 100) volume = 100;
+		this.rap.audioEl.volume = volume / 100;
+		this.setState({volume: volume}, () => {
+			this.dispatchPlayerStatus({volume: volume});
 		});
 	}
 	
@@ -483,8 +485,8 @@ class AudioPlayer extends Component {
 		}
 		metadata = 
 			<div>
-				<label className="hidden-xs">{i18n.t("player.current_stream")}&nbsp;</label>
-				<span>{streamName}</span>
+				<label className="hidden-xs">{i18n.t("player.current_stream")}</label>
+				<span className="space-before">{streamName}</span>
 			</div>;
 		if (this.state.play) {
 			if (this.state.stream.webradio) {
@@ -520,7 +522,7 @@ class AudioPlayer extends Component {
 		return (
 			<div>
 				<div>
-					<ButtonGroup>
+					<ButtonGroup className="space-after">
 						<Button title={i18n.t("player.previous")} onClick={this.handlePrevious}>
 							<FontAwesome name={"fast-backward"} />
 						</Button>
@@ -532,7 +534,6 @@ class AudioPlayer extends Component {
 							<FontAwesome name={"fast-forward"} />
 						</Button>
 					</ButtonGroup>
-					&nbsp;
 					<ButtonGroup>
 						<Button title={i18n.t("common.repeat")} onClick={this.handleRepeat} disabled={this.state.stream.webradio} className={(this.state.jukeboxRepeat&&!this.state.stream.webradio)?"btn-primary":""}>
 							<FontAwesome name={"repeat"} />

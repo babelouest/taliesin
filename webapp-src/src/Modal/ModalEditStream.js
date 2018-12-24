@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
 import { Button, Modal, Row, Col, Label, FormControl, ToggleButton, ToggleButtonGroup } from 'react-bootstrap';
+
 import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
+import config from '../lib/ConfigManager';
 
 class ModalEditStream extends Component {
 	constructor(props) {
@@ -122,6 +124,12 @@ class ModalEditStream extends Component {
 	
 	handleChangeFormat(e) {
 		var newStatus = {format: e.target.value};
+			var serverConfig = config.getLocalConfigValue("serverConfig");
+			if (serverConfig) {
+				serverConfig.default_stream_format = e.target.value;
+				config.setLocalConfigValue("serverConfig", serverConfig);
+				StateStore.dispatch({type: "setServerConfig", config: serverConfig});
+			}
 		if (e.target.value === "flac") {
 			newStatus.bitrateDisabled = true;
 		} else {
@@ -131,14 +139,32 @@ class ModalEditStream extends Component {
 	}
 	
 	handleChangeChannels(e) {
+		var serverConfig = config.getLocalConfigValue("serverConfig");
+		if (serverConfig) {
+			serverConfig.default_stream_channels = e.target.value;
+			config.setLocalConfigValue("serverConfig", serverConfig);
+			StateStore.dispatch({type: "setServerConfig", config: serverConfig});
+		}
 		this.setState({channels: e.target.value});
 	}
 	
 	handleChangeBitrate(e) {
+		var serverConfig = config.getLocalConfigValue("serverConfig");
+		if (serverConfig) {
+			serverConfig.default_stream_bitrate = e.target.value;
+			config.setLocalConfigValue("serverConfig", serverConfig);
+			StateStore.dispatch({type: "setServerConfig", config: serverConfig});
+		}
 		this.setState({bitrate: e.target.value});
 	}
 	
 	handleChangeSampleRate(e) {
+		var serverConfig = config.getLocalConfigValue("serverConfig");
+		if (serverConfig) {
+			serverConfig.default_stream_sample_rate = e.target.value;
+			config.setLocalConfigValue("serverConfig", serverConfig);
+			StateStore.dispatch({type: "setServerConfig", config: serverConfig});
+		}
 		this.setState({sampleRate: e.target.value});
 	}
 	
@@ -158,12 +184,11 @@ class ModalEditStream extends Component {
 						<Col md={8}>
 							<ToggleButtonGroup
 								type="checkbox"
-								value={this.state.recursive}
-								onChange={this.handleChangeRecursive}>
-								<ToggleButton value={true}>
+								value={this.state.recursive}>
+								<ToggleButton value={true} onClick={this.handleChangeRecursive}>
 										{i18n.t("modal.recursive")}
 								</ToggleButton>
-								<ToggleButton value={false}>
+								<ToggleButton value={false} onClick={this.handleChangeRecursive}>
 										{i18n.t("modal.non_recursive")}
 								</ToggleButton>
 							</ToggleButtonGroup>

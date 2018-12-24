@@ -398,7 +398,7 @@ class TopMenu extends Component {
 				searchOverlay =
 					<Popover id="searchResult">
 							{i18n.t("topmenu.search_result")} <strong>{this.state.searchPattern}</strong>
-							&nbsp;<Button title={i18n.t("topmenu.close")} onClick={this.closeSearch}>
+							<Button title={i18n.t("topmenu.close")} onClick={this.closeSearch} className="space-before">
 								<FontAwesome name={"close"} />
 							</Button>
 							{playlistResult}
@@ -471,7 +471,6 @@ class TopMenu extends Component {
 									<MenuItem onClick={() => {this.handleSelectView("list")}} className={this.state.view==="list"?"bg-success":""}>{i18n.t("topmenu.list")}</MenuItem>
 									<MenuItem onClick={() => {this.handleSelectView("icon")}} className={this.state.view==="icon"?"bg-success":""}>{i18n.t("topmenu.icon")}</MenuItem>
 								</NavDropdown>
-								<NavItem onClick={() => this.handleAdvancedSearch()}>{i18n.t("topmenu.advanced_search")}</NavItem>
 							</Nav>
 							<Nav pullRight>
 								{userDropdown}
@@ -486,8 +485,11 @@ class TopMenu extends Component {
 										<InputGroup>
 											<FormControl type="text" placeholder={i18n.t("topmenu.search")} value={this.state.searchPattern} onChange={this.handleChangeSearchPattern} />
 											<InputGroup.Button>
-												<Button onClick={this.runSimpleSearch}>
+												<Button onClick={this.runSimpleSearch} title={i18n.t("topmenu.search")}>
 													<FontAwesome name={"search"} />
+												</Button>
+												<Button onClick={this.handleAdvancedSearch} title={i18n.t("topmenu.advanced_search")}>
+													<FontAwesome name={"search-plus"} />
 												</Button>
 											</InputGroup.Button>
 										</InputGroup>

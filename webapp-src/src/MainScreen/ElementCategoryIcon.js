@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import FontAwesome from 'react-fontawesome';
 import { Image, Col } from 'react-bootstrap';
 import VisibilitySensor from 'react-visibility-sensor';
+
 import ModalMedia from '../Modal/ModalMedia';
 import StateStore from '../lib/StateStore';
 import ElementButtons from './ElementButtons';
@@ -41,9 +42,11 @@ class ElementCategoryIcon extends Component {
 			this.setState({modal: <ModalMedia show={true} media={this.state.element} title={this.state.element.tags.title||this.state.element.name} />});
 		} else {
 			if (this.state.subCategory) {
-				StateStore.dispatch({type: "setCurrentCategory", category: this.state.category, categoryValue: this.state.categoryValue, subCategory: this.state.subCategory, subCategoryValue: name});
+        StateStore.dispatch({type: "setCurrentBrowse", browse: "category"});
+        StateStore.dispatch({type: "setCurrentCategory", category: this.state.category, categoryValue: this.state.categoryValue, subCategory: this.state.subCategory, subCategoryValue: name});
 			} else {
-				StateStore.dispatch({type: "setCurrentCategory", category: this.state.category, categoryValue: name});
+        StateStore.dispatch({type: "setCurrentBrowse", browse: "category"});
+        StateStore.dispatch({type: "setCurrentCategory", category: this.state.category, categoryValue: name});
 			}
 		}
 	}
@@ -80,7 +83,7 @@ class ElementCategoryIcon extends Component {
 			icon = 
 				<div>
 					<a role="button" onClick={() => this.handleChangePath(this.state.element.name)} title={this.state.element.name}>
-						<Image src="/images/unknown-128.png" alt={this.state.element.name} className="elementImage" responsive>
+						<Image src="images/unknown-128.png" alt={this.state.element.name} className="elementImage" responsive>
 						</Image>
 						<FontAwesome name="spinner" spin />
 						<div className="hideOverflow">
@@ -92,7 +95,7 @@ class ElementCategoryIcon extends Component {
 			if (!this.state.thumb) {
 				icon =
 					<a role="button" onClick={() => this.handleChangePath(this.state.element.name)} title={this.state.element.name}>
-						<Image src={"/images/" + this.state.element.type + "-128.png"} alt={this.state.element.name} className="elementImage" responsive>
+						<Image src={"images/" + this.state.element.type + "-128.png"} alt={this.state.element.name} className="elementImage" responsive>
 						</Image>
 						<div className="hideOverflow">
 							<span>{this.state.element.name}</span>

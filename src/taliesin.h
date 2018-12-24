@@ -34,12 +34,9 @@
 #include <libswresample/swresample.h>
 
 /** Angharad libraries **/
-#define U_DISABLE_CURL
 #include <ulfius.h>
 #include <yder.h>
 
-#define _HOEL_MARIADB
-#define _HOEL_SQLITE
 #include <hoel.h>
 
 #ifndef DISABLE_OAUTH2
@@ -103,7 +100,7 @@
 #define TALIESIN_STREAM_DEFAULT_BIT_RATE             128000
 #define TALIESIN_STREAM_FLAC_BIT_RATE                1411000
 #define TALIESIN_STREAM_BUFFER_MAX                   3
-#define TALIESIN_PLAYLIST_CLIENT_MAX                 3
+#define TALIESIN_STREAM_CLIENT_MAX                   5
 #define TALIESIN_STREAM_METADATA_INTERVAL            5
 #define TALIESIN_STREAM_INITIAL_CLIENT_BUFFER_LENGTH 5
 #define TALIESIN_STREAM_HEADER_SIZE                  1024
@@ -314,9 +311,6 @@ struct _client_data_webradio {
   char                 * client_address;
   char                 * user_agent;
   short unsigned int     command;
-  
-  char                 * server_remote_address;
-  char                 * api_prefix;
 };
 
 struct _client_data_jukebox {
@@ -327,9 +321,6 @@ struct _client_data_jukebox {
   char                            stream_name[TALIESIN_PLAYLIST_NAME_LENGTH + 1];
   short unsigned int              command;
   short unsigned int              client_present;
-  
-  char                          * server_remote_address;
-  char                          * api_prefix;
 };
 
 struct _jukebox_audio_buffer {
@@ -380,7 +371,6 @@ struct _t_jukebox {
   unsigned int                     stream_sample_rate;
   unsigned int                     stream_bitrate;
   
-  unsigned int                     nb_client;
   time_t                           last_seen;
   short int                        busy;
 };
@@ -565,7 +555,7 @@ json_t * is_jukebox_command_valid(struct config_elements * config, struct _t_juk
 json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * jukebox, const char * username, json_t * j_command);
 int      jukebox_close(struct config_elements * config, struct _t_jukebox * jukebox);
 int      jukebox_audio_buffer_add_data(struct _jukebox_audio_buffer * jukebox_audio_buffer, uint8_t *buf, int buf_size);
-int      jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukebox, char ** m3u_data);
+int      jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukebox, const char * url_prefix, char ** m3u_data);
 int      is_valid_path_element_parameter(struct config_elements * config, json_t * jukebox_element, const char * username, int is_admin);
 int      is_valid_category_element_parameter(struct config_elements * config, json_t * category_element, const char * username, int is_admin);
 int      is_valid_playlist_element_parameter(struct config_elements * config, json_t * j_playlist, const char * username);
@@ -609,6 +599,7 @@ int             is_valid_b64_image(const unsigned char * base64_image);
 json_t        * media_get_tags_from_id(struct config_elements * config, json_int_t tm_id);
 json_t        * media_append_list_to_media_list(struct config_elements * config, json_t * append_list, const char * username);
 unsigned char * media_get_cover_from_path(const char * path, size_t * size);
+int             media_has_cover_from_path(const char * path);
 
 // db stream functions
 json_t * db_stream_list(struct config_elements * config);

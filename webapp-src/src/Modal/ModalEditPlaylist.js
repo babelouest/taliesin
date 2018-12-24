@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Button, Modal, FormControl, FormGroup, Row, Col, Label } from 'react-bootstrap';
+
 import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
 

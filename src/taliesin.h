@@ -464,6 +464,8 @@ char * rand_string(char * str, size_t size);
 void   redirect_libav_logs(void * avcl, int level, const char * fmt, va_list vl);
 char * get_ip_source(const struct _u_request * request);
 
+int check_result_value(json_t * result, const int value);
+
 // Filesystem functions
 int      is_fs_directory_readable(const char * path);
 json_t * fs_directory_read(const char * path);

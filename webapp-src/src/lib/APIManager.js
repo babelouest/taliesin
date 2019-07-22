@@ -25,7 +25,9 @@ class APIManager {
 			} else {
 				if (StateStore.getState().oauth2Connector && StateStore.getState().oauth2Connector.runRefreshToken) {
 					return StateStore.getState().oauth2Connector.runRefreshToken()
-					.then(() => {
+					.then((res) => {
+						this.oauth2 = res.token;
+						StateStore.dispatch({ type: "newApiToken", token: res.token, expiration: ((res.expiration*1000)+curDate.getTime())});
 						return this.APIRequestExecute(method, url, data);
 					})
 					.always(() => {

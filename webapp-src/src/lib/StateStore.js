@@ -77,8 +77,12 @@ function stateStoreManager(state = defaultState, action) {
 			state.profile.connectedUser = action.profile.login;
 			break;
 		case "newApiToken":
-			state.token = action.token;
-			state.token_expiration = action.expiration;
+                        if (action.token) {
+                                state.token = action.token;
+                        }
+                        if (action.expiration) {
+                                state.token_expiration = action.expiration;
+                        }
 			state.ready = (!!state.APIManager && !!state.token && (state.status==="connected") && !!state.oauth2Connector);
 			break;
 		case "setOauth2Connector":

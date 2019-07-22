@@ -329,6 +329,9 @@ class OAuth2Connector {
 					cb(false);
 				}
 			}
+		})
+		.then((result) => {
+			return {token: result.access_token, expiration: result.expires_in};
 		});
 	}
 	

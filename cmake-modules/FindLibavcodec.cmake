@@ -31,7 +31,7 @@
 #=============================================================================
 
 find_package(PkgConfig QUIET)
-pkg_check_modules(PC_LIBAVCODEC QUIET Libavcodec)
+pkg_check_modules(PC_LIBAVCODEC QUIET libavcodec)
 
 find_path(LIBAVCODEC_INCLUDE_DIR
         NAMES libavcodec/avcodec.h

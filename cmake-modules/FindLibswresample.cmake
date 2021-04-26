@@ -32,7 +32,7 @@
 #=============================================================================
 
 find_package(PkgConfig QUIET)
-pkg_check_modules(PC_LIBSWRESAMPLE QUIET Libswresample)
+pkg_check_modules(PC_LIBSWRESAMPLE QUIET libswresample)
 
 find_path(LIBSWRESAMPLE_INCLUDE_DIR
         NAMES libswresample/swresample.h

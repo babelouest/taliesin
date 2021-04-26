@@ -32,7 +32,7 @@
 #=============================================================================
 
 find_package(PkgConfig QUIET)
-pkg_check_modules(PC_LIBAVFILTER QUIET Libavfilter)
+pkg_check_modules(PC_LIBAVFILTER QUIET libavfilter)
 
 find_path(LIBAVFILTER_INCLUDE_DIR
         NAMES libavfilter/avfilter.h

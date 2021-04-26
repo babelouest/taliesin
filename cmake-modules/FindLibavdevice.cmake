@@ -32,7 +32,7 @@
 #=============================================================================
 
 find_package(PkgConfig QUIET)
-pkg_check_modules(PC_LIBAVDEVICE QUIET Libavdevice)
+pkg_check_modules(PC_LIBAVDEVICE QUIET libavdevice)
 
 find_path(LIBAVDEVICE_INCLUDE_DIR
         NAMES libavdevice/avdevice.h

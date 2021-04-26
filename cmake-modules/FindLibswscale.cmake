@@ -31,7 +31,7 @@
 #=============================================================================
 
 find_package(PkgConfig QUIET)
-pkg_check_modules(PC_LIBSWSCALE QUIET Libswscale)
+pkg_check_modules(PC_LIBSWSCALE QUIET libswscale)
 
 find_path(LIBSWSCALE_INCLUDE_DIR
         NAMES libswscale/swscale.h

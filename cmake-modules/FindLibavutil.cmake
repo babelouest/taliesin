@@ -31,7 +31,7 @@
 #=============================================================================
 
 find_package(PkgConfig QUIET)
-pkg_check_modules(PC_LIBAVUTIL QUIET Libavutil)
+pkg_check_modules(PC_LIBAVUTIL QUIET libavutil)
 
 find_path(LIBAVUTIL_INCLUDE_DIR
         NAMES libavutil/avutil.h

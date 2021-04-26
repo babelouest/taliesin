@@ -32,7 +32,7 @@
 #=============================================================================
 
 find_package(PkgConfig QUIET)
-pkg_check_modules(PC_LIBAVFORMAT QUIET Libavformat)
+pkg_check_modules(PC_LIBAVFORMAT QUIET libavformat)
 
 find_path(LIBAVFORMAT_INCLUDE_DIR
         NAMES libavformat/avformat.h

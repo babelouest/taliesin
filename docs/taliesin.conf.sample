@@ -122,17 +122,16 @@ stream_sample_rate = 44100   # use values 8000, 11025, 22050, 32000, 44100 or 48
 stream_bitrate     = 128000  # use values 32000, 96000, 128000, 192000, 256000 or 320000
 timeout            = 20      # timeout in seconds to automatically disconnect idle streams
 
-# jwt parameters, these parameters correspond to the JWT configuration of the OAuth2 server you rely on, if necessary
-jwt =
+# oidc parameters
+use_oidc_authentication = false # default true, on false no authentication is required and all users are admin
+# either server_remote_config or server_public_jwks is mandatory
+oidc =
 {
-   key_size = 512
-   
-   use_rsa = true
-   rsa_pub_file = "/usr/etc/taliesin/public-rsa.pem"
-   
-   use_ecdsa = false
-   ecdsa_pub_file = "/usr/etc/taliesin/public-ecdsa.pem"
-   
-   use_sha = false
-   sha_secret = "secret"
+#  server_remote_config = "https://glewlwyd.tld/api/oidc/.well-known/openid-configuration"
+#  server_remote_config_verify_cert = true     # optional, default true
+#  server_public_jwks = "/path/to/public.jwks"
+#  iss = "https://glewlwyd.tld/"               # optional, but recommended
+#  realm = "taliesin"                          # optional
+#  aud = "me"                                  # optional
+#  dpop_max_iat = 60                           # optional, default 0 (disabled)
 }

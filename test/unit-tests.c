@@ -7,6 +7,90 @@
 
 #include "unit-tests.h"
 
+char * read_file(const char * filename) {
+  char * buffer = NULL;
+  long length;
+  FILE * f;
+  if (filename != NULL) {
+    f = fopen (filename, "rb");
+    if (f) {
+      fseek (f, 0, SEEK_END);
+      length = ftell (f);
+      fseek (f, 0, SEEK_SET);
+      buffer = o_malloc (length + 1);
+      if (buffer) {
+        fread (buffer, 1, length, f);
+        buffer[length] = '\0';
+      }
+      fclose (f);
+    }
+    return buffer;
+  } else {
+    return NULL;
+  }
+}
+
+/**
+ * json_t * json_search(json_t * haystack, json_t * needle)
+ * jansson library addon
+ * Look for an occurence of needle within haystack
+ * If needle is present in haystack, return the reference to the json_t * that is equal to needle
+ * If needle is not found, return NULL
+ */
+json_t * json_search(json_t * haystack, json_t * needle) {
+  json_t * value1 = NULL, * value2 = NULL;
+  size_t index = 0;
+  const char * key = NULL;
+
+  if (!haystack || !needle)
+    return NULL;
+
+  if (haystack == needle)
+    return haystack;
+
+  // If both haystack and needle are the same type, test them
+  if (json_typeof(haystack) == json_typeof(needle) && !json_is_object(haystack))
+    if (json_equal(haystack, needle))
+      return haystack;
+
+  // If they are not equals, test json_search in haystack elements recursively if it's an array or an object
+  if (json_is_array(haystack)) {
+    json_array_foreach(haystack, index, value1) {
+      if (json_equal(value1, needle)) {
+        return value1;
+      } else {
+        value2 = json_search(value1, needle);
+        if (value2 != NULL) {
+          return value2;
+        }
+      }
+    }
+  } else if (json_is_object(haystack) && json_is_object(needle)) {
+    int same = 1;
+    json_object_foreach(needle, key, value1) {
+      value2 = json_object_get(haystack, key);
+      if (!json_equal(value1, value2)) {
+        same = 0;
+      }
+    }
+    if (same) {
+      return haystack;
+    }
+  } else if (json_is_object(haystack)) {
+    json_object_foreach(haystack, key, value1) {
+      if (json_equal(value1, needle)) {
+        return value1;
+      } else {
+        value2 = json_search(value1, needle);
+        if (value2 != NULL) {
+          return value2;
+        }
+      }
+    }
+  }
+  return NULL;
+}
+
 /**
  * decode a u_map into a string
  */

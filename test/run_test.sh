@@ -12,12 +12,12 @@ GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 COMMAND=$1
 CHRLEN=${#COMMAND}
-NBSP=`echo 42-${CHRLEN}|bc`
+NBSP=$((48-$CHRLEN))
 
 printf "Run $1"
 printf_new " " $NBSP
 
-$1 $2 $3 $4 $5 $6 $7 $8 $9 1>$1.log
+$1 $2 $3 $4 $5 $6 $7 $8 $9 1>$1.log 2>&1
 
 if [ $? -ne 0 ]
 then

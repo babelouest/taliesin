@@ -7,20 +7,18 @@
 #include <time.h>
 
 #include <check.h>
-#include <ulfius.h>
 #include <orcania.h>
 #include <yder.h>
+#include <ulfius.h>
+#include <rhonabwy.h>
 
 #include "unit-tests.h"
 
-#define AUTH_SERVER_URI     "http://localhost:4593/api"
-#define USER_LOGIN          "user1"
-#define USER_PASSWORD       "MyUser1Password!"
-#define USER_SCOPE_LIST     "taliesin"
+#define USER_LOGIN          "dev"
 #define ADMIN_LOGIN         "admin"
-#define ADMIN_PASSWORD      "MyAdminPassword2016!"
-#define ADMIN_SCOPE_LIST    "taliesin taliesin_admin"
 #define TALIESIN_SERVER_URI "http://localhost:8576/api"
+#define DATA_SOURCE_VALID   "dataSourceTest"
+#define DATA_SOURCE_PATH    "/tmp/media"
 
 #define DATA_SOURCE_VALID       "dataSourceTest"
 
@@ -457,72 +455,73 @@ int main(int argc, char *argv[])
   int number_failed;
   Suite *s;
   SRunner *sr;
-  struct _u_request auth_req;
-  struct _u_response auth_resp;
-  int res;
+  jwt_t * jwt;
+  jwks_t * jwks;
+  char * str_jwks, * token, * bearer_token;
+  json_t * j_claims;
+  time_t now;
   
   y_init_logs("Taliesin test", Y_LOG_MODE_CONSOLE, Y_LOG_LEVEL_DEBUG, NULL, "Starting Taliesin test");
   
-  // Getting a refresh_token
-  ulfius_init_request(&auth_req);
-  ulfius_init_request(&user_req);
-  ulfius_init_response(&auth_resp);
-  auth_req.http_verb = strdup("POST");
-  auth_req.http_url = msprintf("%s/token/", argc>7?argv[7]:AUTH_SERVER_URI);
-  u_map_put(auth_req.map_post_body, "grant_type", "password");
-  user_login = argc>1?argv[1]:USER_LOGIN;
-  u_map_put(auth_req.map_post_body, "username", user_login);
-  u_map_put(auth_req.map_post_body, "password", argc>2?argv[2]:USER_PASSWORD);
-  u_map_put(auth_req.map_post_body, "scope", argc>3?argv[3]:USER_SCOPE_LIST);
-  res = ulfius_send_http_request(&auth_req, &auth_resp);
-  if (res == U_OK && auth_resp.status == 200) {
-    json_t * json_body = ulfius_get_json_body_response(&auth_resp, NULL);
-    char * bearer_token = msprintf("Bearer %s", (json_string_value(json_object_get(json_body, "access_token"))));
-    y_log_message(Y_LOG_LEVEL_INFO, "User %s authenticated", USER_LOGIN);
+  if (argv[1] != NULL) {
+    str_jwks = read_file(argv[1]);
+    
+    // Generate user and admin access tokens
+    ulfius_init_request(&user_req);
+    ulfius_init_request(&admin_req);
+    r_jwt_init(&jwt);
+    r_jwt_set_header_str_value(jwt, "typ", "at+jwt");
+    r_jwks_init(&jwks);
+    r_jwks_import_from_str(jwks, str_jwks);
+    r_jwt_add_sign_jwks(jwt, jwks, NULL);
+    o_free(str_jwks);
+    
+    time(&now);
+    j_claims = json_pack("{ss ss ss ss ss si si si ss}",
+                         "iss", "https://glewlwyd.tld/",
+                         "sub", USER_LOGIN,
+                         "client_id", "client",
+                         "jti", "abcdxyz1234",
+                         "type", "access_token",
+                         "iat", now,
+                         "exp", now+3600,
+                         "nbf", now,
+                         "scope", "taliesin");
+    r_jwt_set_full_claims_json_t(jwt, j_claims);
+    token = r_jwt_serialize_signed(jwt, NULL, 0);
+    bearer_token = msprintf("Bearer %s", token);
     u_map_put(user_req.map_header, "Authorization", bearer_token);
-    free(bearer_token);
-    json_decref(json_body);
-  } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "Error authentication user %s", argc>1?argv[1]:USER_LOGIN);
-  }
-  ulfius_clean_request(&auth_req);
-  ulfius_clean_response(&auth_resp);
-  
-  ulfius_init_request(&auth_req);
-  ulfius_init_request(&admin_req);
-  ulfius_init_response(&auth_resp);
-  auth_req.http_verb = strdup("POST");
-  auth_req.http_url = msprintf("%s/token/", argc>7?argv[7]:AUTH_SERVER_URI);
-  u_map_put(auth_req.map_post_body, "grant_type", "password");
-  admin_login = argc>4?argv[4]:ADMIN_LOGIN;
-  u_map_put(auth_req.map_post_body, "username", admin_login);
-  u_map_put(auth_req.map_post_body, "password", argc>5?argv[5]:ADMIN_PASSWORD);
-  u_map_put(auth_req.map_post_body, "scope", argc>6?argv[6]:ADMIN_SCOPE_LIST);
-  res = ulfius_send_http_request(&auth_req, &auth_resp);
-  if (res == U_OK && auth_resp.status == 200) {
-    json_t * json_body = ulfius_get_json_body_response(&auth_resp, NULL);
-    char * bearer_token = msprintf("Bearer %s", (json_string_value(json_object_get(json_body, "access_token"))));
-    y_log_message(Y_LOG_LEVEL_INFO, "User %s authenticated", ADMIN_LOGIN);
+    o_free(bearer_token);
+    o_free(token);
+    
+    json_object_set_new(j_claims, "scope", json_string("taliesin taliesin_admin"));
+    json_object_set_new(j_claims, "sub", json_string(ADMIN_LOGIN));
+    r_jwt_set_full_claims_json_t(jwt, j_claims);
+    token = r_jwt_serialize_signed(jwt, NULL, 0);
+    bearer_token = msprintf("Bearer %s", token);
     u_map_put(admin_req.map_header, "Authorization", bearer_token);
-    free(bearer_token);
-    json_decref(json_body);
+    o_free(bearer_token);
+    o_free(token);
+    
+    json_decref(j_claims);
+    r_jwt_free(jwt);
+    r_jwks_free(jwks);
+    
+    s = taliesin_suite();
+    sr = srunner_create(s);
+
+    srunner_run_all(sr, CK_VERBOSE);
+    number_failed = srunner_ntests_failed(sr);
+    srunner_free(sr);
+    
+    ulfius_clean_request(&user_req);
+    ulfius_clean_request(&admin_req);
   } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "Error authentication user %s", argc>4?argv[4]:ADMIN_LOGIN);
+    y_log_message(Y_LOG_LEVEL_ERROR, "Error, no jwks file path specified");
+    number_failed = 1;
   }
-  ulfius_clean_request(&auth_req);
-  ulfius_clean_response(&auth_resp);
-
-  s = taliesin_suite();
-  sr = srunner_create(s);
-
-  srunner_run_all(sr, CK_VERBOSE);
-  number_failed = srunner_ntests_failed(sr);
-  srunner_free(sr);
-  
-  ulfius_clean_request(&user_req);
-  ulfius_clean_request(&admin_req);
   
   y_close_logs();
   
-  return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
+	return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

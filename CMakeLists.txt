@@ -27,10 +27,12 @@ set(PROGRAM_VERSION_MINOR "0")
 set(PROGRAM_VERSION_PATCH "18")
 set(PROJECT_DESCRIPTION "Lightweight audio streaming server")
 set(PROJECT_BUGREPORT_PATH "https://github.com/babelouest/taliesin/issues")
-set(ORCANIA_VERSION_DOWNLOAD "1.2.9")
-set(YDER_VERSION_DOWNLOAD "1.4.4")
-set(ULFIUS_VERSION_DOWNLOAD "2.5.2")
-set(HOEL_VERSION_DOWNLOAD "1.4.8")
+set(ORCANIA_VERSION_REQUIRED "2.2.0")
+set(YDER_VERSION_REQUIRED "1.4.13")
+set(ULFIUS_VERSION_REQUIRED "2.7.2")
+set(IDDAWC_VERSION_REQUIRED "0.9.9")
+set(RHONABWY_VERSION_REQUIRED "0.9.999")
+set(HOEL_VERSION_REQUIRED "1.4.17")
 
 include(GNUInstallDirs)
 include(CheckSymbolExists)
@@ -60,18 +62,6 @@ find_package(Jansson ${JANSSON_MIN_VERSION} REQUIRED)
 if (JANSSON_FOUND)
     set(LIBS ${JANSSON_LIBRARIES})
 endif ()
-
-
-if (DISABLE_OAUTH2)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDISABLE_OAUTH2")
-else ()
-    include(FindLibJWT)
-    find_package(LibJWT REQUIRED)
-    if (LIBJWT_FOUND)
-        set(LIBS ${LIBS} ${LIBJWT_LIBRARIES})
-    endif ()
-endif ()
-
 
 include(FindLibconfig)
 find_package(Libconfig REQUIRED)
@@ -123,8 +113,8 @@ set(LIBS ${LIBS} ${ZLIB_LIBRARIES})
 
 if (DISABLE_OAUTH2)
     add_executable(taliesin ${CMAKE_CURRENT_SOURCE_DIR}/src/taliesin.h
-                    ${CMAKE_CURRENT_SOURCE_DIR}/src/glewlwyd_resource.h
-                    ${CMAKE_CURRENT_SOURCE_DIR}/src/static_file_callback.h
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/static_compressed_inmemory_website_callback.h
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/http_compression_callback.h
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/config.c
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/data_source.c
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/file_list.c
@@ -134,7 +124,8 @@ if (DISABLE_OAUTH2)
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/misc.c
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/playlist.c
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/search.c
-                    ${CMAKE_CURRENT_SOURCE_DIR}/src/static_file_callback.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/static_compressed_inmemory_website_callback.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/http_compression_callback.c
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/stream.c
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/stream_jukebox.c
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/stream_webradio.c
@@ -142,19 +133,21 @@ if (DISABLE_OAUTH2)
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/taliesin.c )
 else ()
     add_executable(taliesin ${CMAKE_CURRENT_SOURCE_DIR}/src/taliesin.h
-                    ${CMAKE_CURRENT_SOURCE_DIR}/src/glewlwyd_resource.h
-                    ${CMAKE_CURRENT_SOURCE_DIR}/src/static_file_callback.h
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/iddawc_resource.h
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/static_compressed_inmemory_website_callback.h
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/http_compression_callback.h
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/config.c
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/data_source.c
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/file_list.c
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/filesystem.c
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/libav-transcode-filter.c
-                    ${CMAKE_CURRENT_SOURCE_DIR}/src/glewlwyd_resource.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/iddawc_resource.c
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/media.c
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/misc.c
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/playlist.c
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/search.c
-                    ${CMAKE_CURRENT_SOURCE_DIR}/src/static_file_callback.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/static_compressed_inmemory_website_callback.c
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/http_compression_callback.c
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/stream.c
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/stream_jukebox.c
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/stream_webradio.c
@@ -164,74 +157,177 @@ endif ()
 
 target_link_libraries(taliesin ${LIBS} pthread)
 
+set(SEARCH_ORCANIA OFF CACHE BOOL "Force to false") # Avoid to search and download orcania during orcania search and download
+set(SEARCH_YDER OFF CACHE BOOL "Force to false") # Avoid to search and download yder during ulfius and hoel search and download
+
+set(SEARCH_ORCANIA_U OFF CACHE BOOL "Force to false") # Avoid to search and download orcania during ulfius search and download
+set(BUILD_UWSC OFF CACHE BOOL "Force to false") # Avoid to build uwsc during ulfius search and download
+
+set(SEARCH_ORCANIA_H OFF CACHE BOOL "Force to false") # Avoid to search and download orcania during hoel search and download
+
+set(SEARCH_ORCANIA_R OFF CACHE BOOL "Force to false") # Avoid to search and download orcania during hoel search and download
+set(SEARCH_YDER_R OFF CACHE BOOL "Force to false") # Avoid to search and download yder during ulfius and hoel search and download
+set(SEARCH_ULFIUS_R OFF CACHE BOOL "Force to false") # Avoid to search and download ulfius during rhonabwy search and download
+
+set(SEARCH_ORCANIA_I OFF CACHE BOOL "Force to false") # Avoid to search and download orcania during iddawc search and download
+set(SEARCH_YDER_I OFF CACHE BOOL "Force to false") # Avoid to search and download yder during iddawc search and download
+set(SEARCH_ULFIUS_I OFF CACHE BOOL "Force to false") # Avoid to search and download ulfius during iddawc search and download
+set(SEARCH_RHONABWY_I OFF CACHE BOOL "Force to false") # Avoid to search and download rhonabwy during iddawc search and download
+
+option(DOWNLOAD_DEPENDENCIES "Download required dependencies" ON)
+
 set(Orcania_FIND_QUIETLY ON) # force to find Orcania quietly
 include(FindOrcania)
-find_package(Orcania 1.1 QUIET) # try to find orcania
-if (NOT ORCANIA_FOUND)
-    include(DownloadProject)
-    download_project(PROJ orcania # ... otherwise, download archive
-            URL "https://github.com/babelouest/orcania/archive/v${ORCANIA_VERSION_DOWNLOAD}.tar.gz"
-            QUIET)
-    add_subdirectory(${orcania_SOURCE_DIR} ${orcania_BINARY_DIR})
-    include_directories(${orcania_SOURCE_DIR}/include)
-    add_dependencies(taliesin orcania)
-		set(ORCANIA_LIBRARIES orcania)
+find_package(Orcania ${ORCANIA_VERSION_REQUIRED} QUIET) # try to find orcania
+if (ORCANIA_FOUND)
+	include_directories(${orcania_SOURCE_DIR}/include)
+elseif (NOT ORCANIA_FOUND AND DOWNLOAD_DEPENDENCIES)
+	include(DownloadProject)
+	message(STATUS "Download Orcania ${ORCANIA_VERSION_REQUIRED}")
+	download_project(PROJ orcania # ... otherwise, download archive
+			URL "https://github.com/babelouest/orcania/archive/v${ORCANIA_VERSION_REQUIRED}.tar.gz"
+			QUIET)
+	add_subdirectory(${orcania_SOURCE_DIR} ${orcania_BINARY_DIR})
+	include_directories(${orcania_SOURCE_DIR}/include)
+	add_dependencies(taliesin orcania)
+	set(ORCANIA_LIBRARIES orcania)
+	include_directories(${orcania_BINARY_DIR})
+else ()
+	message( FATAL_ERROR "Orcania not found")
 endif ()
 set(LIBS ${LIBS} ${ORCANIA_LIBRARIES})
 
 set(Yder_FIND_QUIETLY ON) # force to find Yder quietly
 include(FindYder)
-find_package(Yder 1.1 QUIET) # try to find Yder
-if (NOT YDER_FOUND)
-    include(DownloadProject)
-    option(CHECK_ORCANIA "specific param" off)
-    download_project(PROJ yder # ... otherwise, download archive
-            URL "https://github.com/babelouest/yder/archive/v${YDER_VERSION_DOWNLOAD}.tar.gz"
-            QUIET)
-    add_subdirectory(${yder_SOURCE_DIR} ${yder_BINARY_DIR})
-    include_directories(${yder_SOURCE_DIR}/include)
-    include_directories(${orcania_SOURCE_DIR}/include)
-    add_dependencies(taliesin yder)
-		set(YDER_LIBRARIES yder)
+find_package(Yder ${YDER_VERSION_REQUIRED} QUIET) # try to find Yder
+if (YDER_FOUND)
+	include_directories(${yder_SOURCE_DIR}/include)
+elseif (NOT YDER_FOUND AND DOWNLOAD_DEPENDENCIES)
+	include(DownloadProject)
+	message(STATUS "Download Yder ${YDER_VERSION_REQUIRED}")
+	option(CHECK_ORCANIA "specific param" off)
+	download_project(PROJ yder # ... otherwise, download archive
+			URL "https://github.com/babelouest/yder/archive/v${YDER_VERSION_REQUIRED}.tar.gz"
+			QUIET)
+	add_subdirectory(${yder_SOURCE_DIR} ${yder_BINARY_DIR})
+	include_directories(${yder_SOURCE_DIR}/include)
+	include_directories(${orcania_SOURCE_DIR}/include)
+	add_dependencies(taliesin yder)
+	add_dependencies(yder orcania)
+	set(YDER_LIBRARIES yder)
+	include_directories(${yder_BINARY_DIR})
+else ()
+	message( FATAL_ERROR "Yder not found")
 endif ()
 set(LIBS ${LIBS} ${YDER_LIBRARIES})
 
 set(Ulfius_FIND_QUIETLY ON)
 include(FindUlfius)
-find_package(Ulfius 2.2 QUIET)
-if (NOT ULFIUS_FOUND)
-    include(DownloadProject)
-    option(INSTALL_HEADER "specific param" off)
-    option(CHECK_YDER "specific param" off)
-    download_project(PROJ ulfius
-            URL "https://github.com/babelouest/ulfius/archive/v${ULFIUS_VERSION_DOWNLOAD}.tar.gz"
-            QUIET)
-    add_subdirectory(${ulfius_SOURCE_DIR} ${ulfius_BINARY_DIR})
-    include_directories(${yder_SOURCE_DIR}/include)
-    include_directories(${orcania_SOURCE_DIR}/include)
-    include_directories(${ulfius_SOURCE_DIR}/include)
-    add_dependencies(taliesin ulfius)
-		set(ULFIUS_LIBRARIES ulfius)
+find_package(Ulfius ${ULFIUS_VERSION_REQUIRED} QUIET)
+if (ULFIUS_FOUND)
+	include_directories(${ulfius_SOURCE_DIR}/include)
+elseif (NOT ULFIUS_FOUND AND DOWNLOAD_DEPENDENCIES)
+	include(DownloadProject)
+	option(WITH_WEBSOCKET "specific param" off)
+	option(INSTALL_HEADER "specific param" off)
+	option(CHECK_YDER "specific param" off)
+	message(STATUS "Download Ulfius ${ULFIUS_VERSION_REQUIRED}")
+	download_project(PROJ ulfius
+			URL "https://github.com/babelouest/ulfius/archive/v${ULFIUS_VERSION_REQUIRED}.tar.gz"
+			QUIET)
+	add_subdirectory(${ulfius_SOURCE_DIR} ${ulfius_BINARY_DIR})
+	include_directories(${yder_SOURCE_DIR}/include)
+	include_directories(${orcania_SOURCE_DIR}/include)
+	include_directories(${ulfius_SOURCE_DIR}/include)
+	add_dependencies(taliesin ulfius)
+	add_dependencies(ulfius yder)
+	add_dependencies(ulfius orcania)
+	set(ULFIUS_LIBRARIES ulfius)
+	include_directories(${ulfius_BINARY_DIR})
+else ()
+	message( FATAL_ERROR "Ulfius not found")
 endif ()
 set(LIBS ${LIBS} ${ULFIUS_LIBRARIES})
 
 set(Hoel_FIND_QUIETLY ON)
 include(FindHoel)
-find_package(Hoel 1.3 QUIET)
-if (NOT HOEL_FOUND)
-    include(DownloadProject)
-    option(WITH_PGSQL "specific param" off)
-    option(INSTALL_HEADER "specific param" off)
-    option(CHECK_YDER "specific param" off)
-    download_project(PROJ hoel
-            URL "https://github.com/babelouest/hoel/archive/v${HOEL_VERSION_DOWNLOAD}.tar.gz"
-            QUIET)
-    add_subdirectory(${hoel_SOURCE_DIR} ${hoel_BINARY_DIR})
-    include_directories(${hoel_SOURCE_DIR}/include)
-    add_dependencies(taliesin hoel)
-		set(HOEL_LIBRARIES hoel)
+find_package(Hoel ${HOEL_VERSION_REQUIRED} QUIET)
+if (HOEL_FOUND)
+	include_directories(${hoel_SOURCE_DIR}/include)
+elseif (NOT HOEL_FOUND AND DOWNLOAD_DEPENDENCIES)
+	include(DownloadProject)
+	option(INSTALL_HEADER "specific param" off)
+	option(CHECK_YDER "specific param" off)
+	message(STATUS "Download Hoel ${HOEL_VERSION_REQUIRED}")
+	download_project(PROJ hoel
+			URL "https://github.com/babelouest/hoel/archive/v${HOEL_VERSION_REQUIRED}.tar.gz"
+			QUIET)
+	add_subdirectory(${hoel_SOURCE_DIR} ${hoel_BINARY_DIR})
+	include_directories(${hoel_SOURCE_DIR}/include)
+	add_dependencies(taliesin hoel)
+	add_dependencies(hoel yder)
+	add_dependencies(hoel orcania)
+	set(HOEL_LIBRARIES hoel)
+	include_directories(${hoel_BINARY_DIR})
+else ()
+	message( FATAL_ERROR "Hoel not found")
 endif ()
 set(LIBS ${LIBS} ${HOEL_LIBRARIES})
+
+if (DISABLE_OAUTH2)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDISABLE_OAUTH2")
+else ()
+  set(Rhonabwy_FIND_QUIETLY ON) # force to find Rhonabwy quietly
+  include(FindRhonabwy)
+  find_package(Rhonabwy ${RHONABWY_VERSION_REQUIRED} QUIET) # try to find rhonabwy
+  if (RHONABWY_FOUND)
+    include_directories(${rhonabwy_SOURCE_DIR}/include)
+  elseif (NOT RHONABWY_FOUND AND DOWNLOAD_DEPENDENCIES)
+    include(DownloadProject)
+    message(STATUS "Download Rhonabwy ${RHONABWY_VERSION_REQUIRED}")
+    download_project(PROJ rhonabwy # ... otherwise, download archive
+        URL "https://github.com/babelouest/rhonabwy/archive/v${RHONABWY_VERSION_REQUIRED}.tar.gz"
+        QUIET)
+    add_subdirectory(${rhonabwy_SOURCE_DIR} ${rhonabwy_BINARY_DIR})
+    include_directories(${rhonabwy_SOURCE_DIR}/include)
+    set(RHONABWY_LIBRARIES rhonabwy)
+    include_directories(${rhonabwy_BINARY_DIR})
+    add_dependencies(rhonabwy orcania)
+    add_dependencies(rhonabwy yder)
+    add_dependencies(rhonabwy ulfius)
+    add_dependencies(taliesin rhonabwy)
+    set (RHONABWY_FOUND ON)
+  else ()
+    message( FATAL_ERROR "Rhonabwy not found")
+  endif ()
+  set(LIBS ${LIBS} ${RHONABWY_LIBRARIES})
+
+  set(Iddawc_FIND_QUIETLY ON) # force to find Iddawc quietly
+  include(FindIddawc)
+  find_package(Iddawc ${IDDAWC_VERSION_REQUIRED} QUIET) # try to find iddawc
+  if (IDDAWC_FOUND)
+    include_directories(${iddawc_SOURCE_DIR}/include)
+  elseif (NOT IDDAWC_FOUND AND DOWNLOAD_DEPENDENCIES)
+    include(DownloadProject)
+    message(STATUS "Download Iddawc ${IDDAWC_VERSION_REQUIRED}")
+    download_project(PROJ iddawc # ... otherwise, download archive
+        URL "https://github.com/babelouest/iddawc/archive/v${IDDAWC_VERSION_REQUIRED}.tar.gz"
+        QUIET)
+    add_subdirectory(${iddawc_SOURCE_DIR} ${iddawc_BINARY_DIR})
+    include_directories(${iddawc_SOURCE_DIR}/include)
+    set(IDDAWC_LIBRARIES iddawc)
+    include_directories(${iddawc_BINARY_DIR})
+    set (IDDAWC_FOUND ON)
+    add_dependencies(iddawc orcania)
+    add_dependencies(iddawc yder)
+    add_dependencies(iddawc ulfius)
+    add_dependencies(iddawc rhonabwy)
+    add_dependencies(taliesin iddawc)
+  else ()
+    message( FATAL_ERROR "Iddawc not found")
+  endif ()
+  set(LIBS ${LIBS} ${IDDAWC_LIBRARIES})
+endif ()
 
 target_link_libraries(taliesin ${LIBS})
 
@@ -334,7 +430,7 @@ set(CPACK_GENERATOR "TGZ;DEB")
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "mail@babelouest.org")
 set(CPACK_DEBIAN_PACKAGE_DESCRIPTION ${PROJECT_DESCRIPTION})
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/babelouest/taliesin")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.3.4), libconfig9, libjansson4 (>= 2.7), liborcania (>= 1.2), libyder (>= 1.3), libulfius (>= 2.3), libhoel (>= 1.4), lsb-base (>= 3.0-6)")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.3.4), libconfig9, libjansson4 (>= 2.7), liborcania (>= 2.1), libyder (>= 1.4), libulfius (>= 2.7), libhoel (>= 1.4), lsb-base (>= 3.0-6)")
 set(CPACK_PACKAGE_FILE_NAME ${PACKAGE_FILE_NAME})
 
 set(CPACK_SOURCE_GENERATOR "TGZ")

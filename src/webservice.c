@@ -30,19 +30,19 @@
 
 #include "taliesin.h"
 
-int has_scope(struct config_elements * config, json_t * scope_array, const char * scope) {
-  json_t * element;
-  size_t index;
-  if (!config->use_oauth2_authentication) {
+int has_scope(struct config_elements * config, json_t * scope_value, const char * scope) {
+  char ** scope_array = NULL;
+  int ret;
+  
+  if (!config->use_oidc_authentication) {
     return 1;
-  } else if (scope_array != NULL && scope != NULL && json_is_array(scope_array)) {
-    json_array_foreach(scope_array, index, element) {
-      if (json_is_string(element) && 0 == o_strcmp(json_string_value(element), scope)) {
-        return 1;
-      }
+  } else if (json_string_length(scope_value) && scope != NULL) {
+    if (split_string(json_string_value(scope_value), " ", &scope_array)) {
+      ret = string_array_has_value((const char **)scope_array, scope);
     }
+    free_string_array(scope_array);
   }
-  return 0;
+  return ret;
 }
 
 const char * get_username(const struct _u_request * request, struct _u_response * response, struct config_elements * config) {
@@ -54,7 +54,7 @@ const char * get_username(const struct _u_request * request, struct _u_response 
     }
   }
   if (username == NULL){
-    username =  json_string_value(json_object_get((json_t *)response->shared_data, "username"));
+    username =  json_string_value(json_object_get((json_t *)response->shared_data, "sub"));
   }
   return username;
 }
@@ -63,6 +63,13 @@ int set_response_json_body_and_clean(struct _u_response * response, uint status,
   int res = ulfius_set_json_body_response(response, status, json_body);
   json_decref(json_body);
   return res;
+}
+
+int callback_404_if_necessary (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  if (!request->callback_position) {
+    response->status = 404;
+  }
+  return U_CALLBACK_CONTINUE;
 }
 
 /**
@@ -90,7 +97,7 @@ int callback_taliesin_options (const struct _u_request * request, struct _u_resp
  * send the location of prefixes
  */
 int callback_taliesin_server_configuration (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  set_response_json_body_and_clean(response, 200, json_pack("{sssssssssisisiso}", 
+  set_response_json_body_and_clean(response, 200, json_pack("{ss*ss*ss*ss*sisisiso}", 
                         "api_prefix", 
                         ((struct config_elements *)user_data)->api_prefix,
                         "oauth_scope_user",
@@ -112,6 +119,7 @@ int callback_taliesin_server_configuration (const struct _u_request * request, s
                         json_true()
 #endif
                         ));
+  y_log_message(Y_LOG_LEVEL_DEBUG, "body %.*s", response->binary_body_length, response->binary_body);
   return U_CALLBACK_COMPLETE;
 };
 
@@ -120,18 +128,15 @@ int callback_taliesin_server_configuration (const struct _u_request * request, s
  */
 int callback_taliesin_check_access (const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct config_elements * config = (struct config_elements *)user_data;
-  char * scope;
   
-  if (config->use_oauth2_authentication) {
+  if (config->use_oidc_authentication) {
 #ifdef DISABLE_OAUTH2
     return U_CALLBACK_UNAUTHORIZED;
 #else
-    return callback_check_glewlwyd_access_token(request, response, config->glewlwyd_resource_config);
+    return callback_check_jwt_profile_access_token(request, response, config->iddawc_resource_config);
 #endif
   } else {
-    scope = msprintf("%s %s", config->oauth_scope_user, config->oauth_scope_admin);
-    response->shared_data = (void*)json_pack("{ssss}", "username", TALIESIN_NO_AUTHENTICATION_USERNAME, "scope", scope);
-    o_free(scope);
+    ulfius_set_response_shared_data(response, json_pack("{ssss++}", "sub", TALIESIN_NO_AUTHENTICATION_USERNAME, "scope", config->oauth_scope_user, " ", config->oauth_scope_admin), (void (*)(void *))&json_decref);
     return U_CALLBACK_CONTINUE;
   }
 }
@@ -141,51 +146,17 @@ int callback_taliesin_check_access (const struct _u_request * request, struct _u
  */
 int callback_taliesin_check_admin_access (const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct config_elements * config = (struct config_elements *)user_data;
-  char * scope;
-#ifndef DISABLE_OAUTH2
-  int res, found = 0;
-  json_t * j_element;
-  size_t index;
-#endif
   
-  if (config->use_oauth2_authentication) {
+  if (config->use_oidc_authentication) {
 #ifdef DISABLE_OAUTH2
     return U_CALLBACK_UNAUTHORIZED;
 #else
-    if ((res = callback_check_glewlwyd_access_token(request, response, config->glewlwyd_resource_config)) == U_CALLBACK_CONTINUE) {
-      json_array_foreach(json_object_get(((json_t *)response->shared_data), "scope"), index, j_element) {
-        if (0 ==  o_strcmp(json_string_value(j_element), config->oauth_scope_admin)) {
-          found = 1;
-          break;
-        }
-      }
-      if (found) {
-        return U_CALLBACK_CONTINUE;
-      } else {
-        json_decref((json_t *)response->shared_data);
-        response->shared_data = NULL;
-        return U_CALLBACK_UNAUTHORIZED;
-      }
-    } else {
-      return res;
-    }
+    return callback_check_jwt_profile_access_token(request, response, config->iddawc_resource_config_admin);
 #endif
   } else {
-    scope = msprintf("%s %s", config->oauth_scope_user, config->oauth_scope_admin);
-    response->shared_data = (void*)json_pack("{ssss}", "username", TALIESIN_NO_AUTHENTICATION_USERNAME, "scope", scope);
-    o_free(scope);
+    ulfius_set_response_shared_data(response, json_pack("{ssss++}", "sub", TALIESIN_NO_AUTHENTICATION_USERNAME, "scope", config->oauth_scope_user, " ", config->oauth_scope_admin), (void (*)(void *))&json_decref);
     return U_CALLBACK_CONTINUE;
   }
-}
-
-/**
- * Last endpoint called, clean response->shared_data
- */
-int callback_clean (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  if (response->shared_data != NULL) {
-    json_decref((json_t *)response->shared_data);
-  }
-  return U_CALLBACK_COMPLETE;
 }
 
 /**
@@ -1253,9 +1224,6 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
   } else {
     response->status = 404;
   }
-  if (response->shared_data != NULL) {
-    json_decref((json_t *)response->shared_data);
-  }
   return U_CALLBACK_COMPLETE;
 }
 
@@ -1360,9 +1328,6 @@ int callback_taliesin_stream_manage (const struct _u_request * request, struct _
     response->status = 404;
   }
   json_decref(j_body);
-  if (response->shared_data != NULL) {
-    json_decref((json_t *)response->shared_data);
-  }
   return res;
 }
 
@@ -1405,6 +1370,7 @@ int callback_taliesin_stream_manage_ws (const struct _u_request * request, struc
       ws_stream->jukebox = current_playlist;
       ws_stream->status = TALIESIN_WEBSOCKET_PLAYLIST_STATUS_OPEN;
       if (ulfius_set_websocket_response(response, "taliesin", "permessage-deflate", &callback_websocket_stream_manager, ws_stream, &callback_websocket_stream_incoming_message, ws_stream, &callback_websocket_stream_onclose, ws_stream) == U_OK) {
+        ulfius_add_websocket_deflate_extension(response);
         pthread_setname_np(pthread_self(), request->http_url);
         ret = U_CALLBACK_COMPLETE;
       } else {
@@ -1419,9 +1385,6 @@ int callback_taliesin_stream_manage_ws (const struct _u_request * request, struc
   } else {
     response->status = 404;
   }
-  if (response->shared_data != NULL) {
-    json_decref((json_t *)response->shared_data);
-  }
   return ret;
 }
 
@@ -1434,6 +1397,8 @@ void callback_websocket_stream_manager (const struct _u_request * request, struc
   struct timeval tv_now;
   int ret_wait;
   
+  websocket_manager->keep_messages = U_WEBSOCKET_KEEP_NONE;
+
   if (ws_stream->webradio != NULL) {
     ws_stream->webradio->nb_websocket++;
     // Loop until websocket is closed by the server or the client
@@ -1446,7 +1411,7 @@ void callback_websocket_stream_manager (const struct _u_request * request, struc
       pthread_mutex_unlock(&ws_stream->webradio->message_lock);
       
       time(&now);
-      if (ret_wait != ETIMEDOUT && websocket_manager->connected && ((ws_stream->is_authenticated && ws_stream->expiration && ws_stream->expiration > now) || !ws_stream->config->use_oauth2_authentication)) {
+      if (ret_wait != ETIMEDOUT && websocket_manager->connected && ((ws_stream->is_authenticated && ws_stream->expiration && ws_stream->expiration > now) || !ws_stream->config->use_oidc_authentication)) {
         if (ws_stream->webradio->message_type == TALIESIN_PLAYLIST_MESSAGE_TYPE_NEW_MEDIA) {
           j_result = media_get_by_id(ws_stream->config, ws_stream->webradio->audio_stream->first_buffer->file->tm_id);
           if (check_result_value(j_result, T_OK)) {
@@ -1566,56 +1531,28 @@ void callback_websocket_stream_incoming_message (const struct _u_request * reque
   char * message;
   const char * token_value;
   time_t now;
-#ifndef DISABLE_OAUTH2
-  json_t * j_res_scope, * j_access_token;
-  int res_validity;
-#endif
   
   time(&now);
   if (json_is_object(j_message) && json_is_string(json_object_get(j_message, "command")) && 0 == o_strcasecmp("authorization", json_string_value(json_object_get(j_message, "command")))) {
     token_value = json_string_value(json_object_get(j_message, "token"));
     if (token_value != NULL) {
 #ifndef DISABLE_OAUTH2
-      j_access_token = access_token_check_signature(ws_stream->config->glewlwyd_resource_config, token_value);
-      if (check_result_value(j_access_token, G_OK)) {
-        res_validity = access_token_check_validity(ws_stream->config->glewlwyd_resource_config, json_object_get(j_access_token, "grants"));
-        if (res_validity == G_OK) {
-          j_res_scope = access_token_check_scope(ws_stream->config->glewlwyd_resource_config, json_object_get(j_access_token, "grants"));
-          if (check_result_value(j_res_scope, G_ERROR_INSUFFICIENT_SCOPE)) {
-            j_out_message = json_pack("{ssss}", "command", "authorization", "result", "insufficient_scope");
-            message = json_dumps(j_out_message, JSON_COMPACT);
-            if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
-              y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
-            }
-            o_free(message);
-            json_decref(j_out_message);
-            ws_stream->is_authenticated = 0;
-          } else if (!check_result_value(j_res_scope, G_OK)) {
-            j_out_message = json_pack("{ssss}", "command", "authorization", "result", "invalid_request");
-            message = json_dumps(j_out_message, JSON_COMPACT);
-            if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
-              y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
-            }
-            o_free(message);
-            json_decref(j_out_message);
-            ws_stream->is_authenticated = 0;
-          } else {
-            j_out_message = json_pack("{ssss}", "command", "authorization", "result", "connected");
-            message = json_dumps(j_out_message, JSON_COMPACT);
-            if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
-              y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
-            }
-            o_free(message);
-            json_decref(j_out_message);
-            ws_stream->is_authenticated = 1;
-            ws_stream->expiration = json_integer_value(json_object_get(json_object_get(j_access_token, "grants"), "iat")) + json_integer_value(json_object_get(json_object_get(j_access_token, "grants"), "expires_in"));
-            if (ws_stream->username == NULL) {
-              ws_stream->username = o_strdup(json_string_value(json_object_get(json_object_get(j_access_token, "grants"), "username")));
-            }
+      if (i_verify_jwt_access_token(ws_stream->config->iddawc_resource_config->session, ws_stream->config->iddawc_resource_config->aud) == I_OK) {
+        if (jwt_profile_access_token_check_scope(ws_stream->config->iddawc_resource_config, ws_stream->config->iddawc_resource_config->session->access_token_payload) == I_TOKEN_OK) {
+          j_out_message = json_pack("{ssss}", "command", "authorization", "result", "connected");
+          message = json_dumps(j_out_message, JSON_COMPACT);
+          if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
           }
-          json_decref(j_res_scope);
+          o_free(message);
+          json_decref(j_out_message);
+          ws_stream->is_authenticated = 1;
+          ws_stream->expiration = json_integer_value(json_object_get(ws_stream->config->iddawc_resource_config->session->access_token_payload, "exp"));
+          if (ws_stream->username == NULL) {
+            ws_stream->username = o_strdup(json_string_value(json_object_get(ws_stream->config->iddawc_resource_config->session->access_token_payload, "username")));
+          }
         } else {
-          j_out_message = json_pack("{ssss}", "command", "authorization", "result", "invalid_request");
+          j_out_message = json_pack("{ssss}", "command", "authorization", "result", "insufficient_scope");
           message = json_dumps(j_out_message, JSON_COMPACT);
           if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
             y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
@@ -1634,9 +1571,8 @@ void callback_websocket_stream_incoming_message (const struct _u_request * reque
         json_decref(j_out_message);
         ws_stream->is_authenticated = 0;
       }
-      json_decref(j_access_token);
 #else
-      if (ws_stream->config->use_oauth2_authentication) {
+      if (ws_stream->config->use_oidc_authentication) {
         j_out_message = json_pack("{ssss}", "command", "authorization", "result", "invalid_request");
         message = json_dumps(j_out_message, JSON_COMPACT);
         if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
@@ -1670,7 +1606,7 @@ void callback_websocket_stream_incoming_message (const struct _u_request * reque
       json_decref(j_out_message);
       ws_stream->is_authenticated = 0;
     }
-  } else if (ws_stream->is_authenticated || !ws_stream->config->use_oauth2_authentication) {
+  } else if (ws_stream->is_authenticated || !ws_stream->config->use_oidc_authentication) {
     if (ws_stream->expiration > now) {
       if (ws_stream->webradio != NULL) {
         j_is_valid = is_webradio_command_valid(ws_stream->config, ws_stream->webradio, j_message, ws_stream->username, ws_stream->is_admin);
@@ -1854,10 +1790,7 @@ int callback_taliesin_stream_cover (const struct _u_request * request, struct _u
   } else {
     response->status = 404;
   }
-  if (response->shared_data != NULL) {
-    json_decref((json_t *)response->shared_data);
-  }
-  return U_CALLBACK_COMPLETE;
+  return U_CALLBACK_CONTINUE;
 }
 
 /**

@@ -23,6 +23,18 @@
 #include "taliesin.h"
 
 /**
+ * Return the filename extension
+ */
+static const char * get_filename_ext(const char *path) {
+    const char *dot = strrchr(path, '.');
+    if(!dot || dot == path) return "*";
+    if (strchr(dot, '?') != NULL) {
+      *strchr(dot, '?') = '\0';
+    }
+    return dot;
+}
+
+/**
  * Return a char array from a json string array
  */
 char ** get_array_from_json_list(json_t * j_config_values) {

@@ -20,8 +20,8 @@
 #
 
 ifndef DISABLE_OAUTH2
-	OAUTH2_OBJECTS=glewlwyd_resource.o
-	INITIAL_LIBS=-ljwt
+	OAUTH2_OBJECTS=iddawc_resource.o
+	INITIAL_LIBS=-lrhonabwy
 else
 	INITIAL_FLAG=-DDISABLE_OAUTH2
 endif
@@ -29,8 +29,8 @@ endif
 CC=gcc
 #CC=clang
 CFLAGS=-c -Wall $(ADDITIONALFLAGS)
-LIBS=-lc -lulfius -lyder -ljansson -lorcania -lhoel -lconfig -lpthread -lavcodec -lavutil -lswresample -lavformat -lswscale -lz $(INITIAL_LIBS)
-OBJECTS=$(OAUTH2_OBJECTS) static_file_callback.o misc.o libav-transcode-filter.o config.o file_list.o filesystem.o data_source.o media.o playlist.o stream.o stream_jukebox.o stream_webradio.o search.o webservice.o taliesin.o
+LIBS=-lc -lulfius -lyder -ljansson -lorcania -lhoel -liddawc -lconfig -lpthread -lavcodec -lavutil -lswresample -lavformat -lswscale -lz $(INITIAL_LIBS)
+OBJECTS=$(OAUTH2_OBJECTS) taliesin.o webservice.o static_compressed_inmemory_website_callback.o http_compression_callback.o misc.o libav-transcode-filter.o config.o file_list.o filesystem.o data_source.o media.o playlist.o stream.o stream_jukebox.o stream_webradio.o search.o
 PREFIX=/usr/local
 CONFIG_FILE=../taliesin.conf
 

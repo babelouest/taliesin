@@ -142,7 +142,7 @@ json_t * media_search(struct config_elements * config, const char * username_esc
   return j_return;
 }
 
-/*
+/**
  * A simple search looks for the search_pattern in the following categories:
  * - media tags and filename
  * - folder name
@@ -373,8 +373,8 @@ json_t * is_valid_media_advanced_search(struct config_elements * config, const c
   return j_return;
 }
 
-/*
- * An advanced search look for the following patterns:
+/**
+ * An advanced search looks for the following patterns:
  * - tag value
  * - media played history
  * - media last seen date

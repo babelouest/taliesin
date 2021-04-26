@@ -1,7 +1,7 @@
 /**
  *
  * Taliesin - Media server
- * 
+ *
  * Main file
  *
  * Copyright 2017-2018 Nicolas Mora <mail@babelouest.org>
@@ -30,10 +30,33 @@
 
 #include "taliesin.h"
 
+static char * read_file(const char * filename) {
+  char * buffer = NULL;
+  long length;
+  FILE * f;
+  if (filename != NULL) {
+    f = fopen (filename, "rb");
+    if (f) {
+      fseek (f, 0, SEEK_END);
+      length = ftell (f);
+      fseek (f, 0, SEEK_SET);
+      buffer = o_malloc (length + 1);
+      if (buffer) {
+        fread (buffer, 1, length, f);
+        buffer[length] = '\0';
+      }
+      fclose (f);
+    }
+    return buffer;
+  } else {
+    return NULL;
+  }
+}
+
 /**
  *
  * Main function
- * 
+ *
  * Initialize config structure, parse the arguments and the config file
  * Then run the webservice
  *
@@ -47,32 +70,45 @@ int main (int argc, char ** argv) {
   int ret_thread_webradio = 0, detach_thread_webradio = 0;
   pthread_t thread_webradio;
   struct _t_webradio * webradio;
-  
+#ifndef DISABLE_OAUTH2
+  char * str_jwks;
+  json_t * j_jwks;
+#endif
+
 #if LIBAVFORMAT_VERSION_INT < AV_VERSION_INT(58, 9, 100)
   av_register_all();
 #endif
-  
+
   srand(time(NULL));
   if (config == NULL) {
     fprintf(stderr, "Memory error - config\n");
     return 1;
   }
-  
+
   // Init config structure with default values
   config->config_file = NULL;
-  config->server_remote_address = NULL;
   config->api_prefix = NULL;
   config->log_mode = Y_LOG_MODE_NONE;
   config->log_level = Y_LOG_LEVEL_NONE;
   config->log_file = NULL;
+  config->server_remote_address = NULL;
   config->conn = NULL;
   config->instance = o_malloc(sizeof(struct _u_instance));
   config->allow_origin = NULL;
-  config->use_oauth2_authentication = 0;
+  config->use_oidc_authentication = 0;
 #ifndef DISABLE_OAUTH2
-  config->glewlwyd_resource_config = o_malloc(sizeof(struct _glewlwyd_resource_config));
+  config->iddawc_resource_config = o_malloc(sizeof(struct _iddawc_resource_config));
+  config->iddawc_resource_config_admin = o_malloc(sizeof(struct _iddawc_resource_config));
+  config->oidc_server_remote_config = NULL;
+  config->oidc_server_remote_config_verify_cert = 1;
+  config->oidc_server_public_jwks = NULL;
+  config->oidc_realm = NULL;
+  config->oidc_iss = NULL;
+  config->oidc_aud = NULL;
+  config->oidc_dpop_max_iat = 0;
+  config->oidc_configured = 0;
 #endif
-  config->static_file_config = o_malloc(sizeof(struct _static_file_config));
+  config->static_file_config = o_malloc(sizeof(struct _u_compressed_inmemory_website_config));
   config->use_secure_connection = 0;
   config->secure_connection_key_file = NULL;
   config->secure_connection_pem_file = NULL;
@@ -91,7 +127,7 @@ int main (int argc, char ** argv) {
   config->image_file_extension = NULL;
   config->cover_file_pattern = NULL;
   config->external_player = NULL;
-  
+
   pthread_mutexattr_init ( &mutexattr );
   pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_RECURSIVE );
   if (pthread_mutex_init(&config->playlist_lock, &mutexattr)) {
@@ -103,50 +139,36 @@ int main (int argc, char ** argv) {
   config->stream_sample_rate = TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
   config->stream_bitrate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
 #ifndef DISABLE_OAUTH2
-  if (config->instance == NULL || config->glewlwyd_resource_config == NULL || config->static_file_config == NULL) {
+  if (config->instance == NULL || config->iddawc_resource_config == NULL || config->iddawc_resource_config_admin == NULL || config->static_file_config == NULL) {
 #else
   if (config->instance == NULL || config->static_file_config == NULL) {
 #endif
-    fprintf(stderr, "Memory error - config->instance || config->glewlwyd_resource_config || config->static_file_config\n");
+    fprintf(stderr, "Memory error - config->instance || config->iddawc_resource_config || config->iddawc_resource_config_admin || config->static_file_config\n");
     return 1;
   }
-  if (pthread_mutex_init(&config->stream_stop_lock, NULL) || 
+  if (pthread_mutex_init(&config->stream_stop_lock, NULL) ||
       pthread_cond_init(&config->stream_stop_cond, NULL)) {
-    fprintf(stderr, "Error init stream_stop_lock or stream_stop_cond");
+    fprintf(stderr, "Error init stream_stop_lock or stream_stop_cond\n");
     return 1;
   }
-  if (pthread_mutex_init(&config->refresh_lock, NULL) || 
+  if (pthread_mutex_init(&config->refresh_lock, NULL) ||
       pthread_cond_init(&config->refresh_cond, NULL)) {
-    fprintf(stderr, "Error init refresh_lock or refresh_cond");
+    fprintf(stderr, "Error init refresh_lock or refresh_cond\n");
     return 1;
   }
   ulfius_init_instance(config->instance, TALIESIN_DEFAULT_PORT, NULL, NULL);
   config->timeout = TALIESIN_DEFAULT_HTTP_TIMEOUT;
-#ifndef DISABLE_OAUTH2
-  config->glewlwyd_resource_config->method = G_METHOD_HEADER;
-  config->glewlwyd_resource_config->realm = NULL;
-  config->glewlwyd_resource_config->oauth_scope = NULL;
-  config->glewlwyd_resource_config->jwt_decode_key = NULL;
-  config->glewlwyd_resource_config->jwt_alg = JWT_ALG_NONE;
-#endif
 
-  config->static_file_config->files_path = NULL;
-  config->static_file_config->url_prefix = NULL;
-  config->static_file_config->redirect_on_404 = "/";
-  config->static_file_config->mime_types = o_malloc(sizeof(struct _u_map));
-  config->static_file_config->map_header = o_malloc(sizeof(struct _u_map));
-  if (config->static_file_config->mime_types == NULL || config->static_file_config->map_header == NULL) {
-    fprintf(stderr, "init - Error allocating resources for config->static_file_config->mime_types, aborting");
-    exit_server(&config, TALIESIN_ERROR);
+  if (u_init_compressed_inmemory_website_config(config->static_file_config) != U_OK) {
+    fprintf(stderr, "Error u_init_compressed_inmemory_website_config\n");
+    return 1;
   }
-  u_map_init(config->static_file_config->mime_types);
-  u_map_put(config->static_file_config->mime_types, "*", "application/octet-stream");
-  u_map_init(config->static_file_config->map_header);
-  u_map_put(config->static_file_config->map_header, "Cache-Control", "public,max-age=31536000,immutable");
-  
-  if (pthread_mutex_init(&global_handler_close_lock, NULL) || 
+  u_map_put(&config->static_file_config->mime_types, "*", "application/octet-stream");
+  u_map_put(&config->static_file_config->map_header, "Cache-Control", "public,max-age=31536000,immutable");
+
+  if (pthread_mutex_init(&global_handler_close_lock, NULL) ||
       pthread_cond_init(&global_handler_close_cond, NULL)) {
-    fprintf(stderr, "init - Error initializing global_handler_close_lock or global_handler_close_cond");
+    fprintf(stderr, "init - Error initializing global_handler_close_lock or global_handler_close_cond\n");
   }
   // Catch end signals to make a clean exit
   signal (SIGQUIT, exit_handler);
@@ -160,32 +182,83 @@ int main (int argc, char ** argv) {
     print_help(stderr);
     exit_server(&config, TALIESIN_ERROR);
   }
-  
+
   // Then we parse configuration file
   // They have lower priority than command line parameters
   if (!build_config_from_file(config)) {
     fprintf(stderr, "Error config file\n");
     exit_server(&config, TALIESIN_ERROR);
   }
-  
+
   // Check if all mandatory configuration variables are present and correctly typed
   if (!check_config(config)) {
     fprintf(stderr, "Error initializing configuration\n");
     exit_server(&config, TALIESIN_ERROR);
   }
-  
+
   if (load_config_values(config) != T_OK) {
     fprintf(stderr, "Error load_config_values\n");
     exit_server(&config, TALIESIN_ERROR);
   }
 
+#ifndef DISABLE_OAUTH2
+  if (config->use_oidc_authentication) {
+    if (i_jwt_profile_access_token_init_config(config->iddawc_resource_config, I_METHOD_HEADER, NULL, NULL, config->oauth_scope_user, config->server_remote_address, 1, 0, config->oidc_dpop_max_iat) != I_TOKEN_OK) {
+      fprintf(stderr, "Error i_jwt_profile_access_token_init_config\n");
+      exit_server(&config, TALIESIN_ERROR);
+    } else {
+      config->oidc_configured = 1;
+      if (config->oidc_server_remote_config != NULL) {
+        if (!i_jwt_profile_access_token_load_config(config->iddawc_resource_config, config->oidc_server_remote_config, config->oidc_server_remote_config_verify_cert)) {
+          fprintf(stderr, "Error i_jwt_profile_access_token_load_config\n");
+          exit_server(&config, TALIESIN_ERROR);
+        }
+        y_log_message(Y_LOG_LEVEL_INFO, "Load remote authentification config: %s\n", config->oidc_server_remote_config);
+      } else if (config->oidc_server_public_jwks != NULL) {
+        res = 1;
+        if ((str_jwks = read_file(config->oidc_server_public_jwks)) != NULL) {
+          if ((j_jwks = json_loads(str_jwks, JSON_DECODE_ANY, NULL)) != NULL) {
+            if (!i_jwt_profile_access_token_load_jwks(config->iddawc_resource_config, j_jwks, config->oidc_iss)) {
+              fprintf(stderr, "Error i_jwt_profile_access_token_load_jwks\n");
+            }
+          } else {
+            fprintf(stderr, "Error parsing jwks\n");
+            res = 0;
+          }
+          json_decref(j_jwks);
+        } else {
+          fprintf(stderr, "Error reading jwks file\n");
+          res = 0;
+        }
+        o_free(str_jwks);
+        if (!res) {
+          exit_server(&config, TALIESIN_ERROR);
+        }
+        y_log_message(Y_LOG_LEVEL_INFO, "Load signature key from file: %s\n", config->oidc_server_public_jwks);
+      } else {
+        fprintf(stderr, "Error oidc config\n");
+        exit_server(&config, TALIESIN_ERROR);
+      }
+    }
+    // TODO add a copy iddawc session function
+    config->iddawc_resource_config_admin->session = config->iddawc_resource_config->session;
+    config->iddawc_resource_config_admin->method = I_METHOD_HEADER;
+    config->iddawc_resource_config_admin->oauth_scope = config->oauth_scope_admin;
+    config->iddawc_resource_config_admin->realm = NULL;
+    config->iddawc_resource_config_admin->aud = NULL;
+    config->iddawc_resource_config_admin->resource_url_root = config->iddawc_resource_config->resource_url_root;
+    config->iddawc_resource_config_admin->accept_access_token = 1;
+    config->iddawc_resource_config_admin->accept_client_token = 0;
+  }
+#endif
+
   // TODO remove instance timeout when MHD will support a timeout on a streaming response
   config->instance->timeout = config->timeout;
-  
+
   //av_log_set_callback(&redirect_libav_logs);
-  
-  // At this point, we declare all API endpoints and configure 
-  
+
+  // At this point, we declare all API endpoints and configure
+
   // Data source endpoints
   ulfius_add_endpoint_by_val(config->instance, "*", config->api_prefix, "/data_source/*", TALIESIN_CALLBACK_PRIORITY_AUTHENTICATION, &callback_taliesin_check_access, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/data_source/", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_data_source_list, (void*)config);
@@ -198,7 +271,7 @@ int main (int argc, char ** argv) {
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/data_source/:data_source/refresh", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_data_source_refresh_status, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "DELETE", config->api_prefix, "/data_source/:data_source/refresh", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_data_source_refresh_stop, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "POST", config->api_prefix, "/data_source/:data_source/clean", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_data_source_clean, (void*)config);
-  
+
   // Browse media endpoints
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/data_source/:data_source/browse/path/*", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_media_get_path, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/data_source/:data_source/browse/category/:level", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_category_get, (void*)config);
@@ -208,7 +281,7 @@ int main (int argc, char ** argv) {
   ulfius_add_endpoint_by_val(config->instance, "DELETE", config->api_prefix, "/data_source/:data_source/info/category/:level/:category", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_category_delete_info, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/data_source/:data_source/browse/category/:level/:category/:sublevel/", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_subcategory_get, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/data_source/:data_source/browse/category/:level/:category/:sublevel/:subcategory", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_subcategory_list, (void*)config);
-  
+
   // Playlist endpoints
   ulfius_add_endpoint_by_val(config->instance, "*", config->api_prefix, "/playlist/*", TALIESIN_CALLBACK_PRIORITY_AUTHENTICATION, &callback_taliesin_check_access, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/playlist/", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_playlist_list, (void*)config);
@@ -221,7 +294,7 @@ int main (int argc, char ** argv) {
   ulfius_add_endpoint_by_val(config->instance, "POST", config->api_prefix, "/playlist/:playlist/has_media", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_playlist_has_media, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/playlist/:playlist/load", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_playlist_load, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/playlist/:playlist/export", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_playlist_export, (void*)config);
-  
+
   // Config endpoints
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/users/", TALIESIN_CALLBACK_PRIORITY_AUTHENTICATION, &callback_taliesin_check_admin_access, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/users/", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_username_get_list, (void*)config);
@@ -229,11 +302,11 @@ int main (int argc, char ** argv) {
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/config/:type/", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_config_type_get, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "PUT", config->api_prefix, "/config/:type/", TALIESIN_CALLBACK_PRIORITY_AUTHENTICATION, &callback_taliesin_check_admin_access, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "PUT", config->api_prefix, "/config/:type/", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_config_type_set, (void*)config);
-  
+
   // Streaming endpoint
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/stream/:stream_name", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_stream_media, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/stream/:stream_name/cover", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_stream_cover, (void*)config);
-  
+
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/stream/", TALIESIN_CALLBACK_PRIORITY_AUTHENTICATION, &callback_taliesin_check_access, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/stream/", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_stream_get_list, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "PUT", config->api_prefix, "/stream/:stream_name/manage", TALIESIN_CALLBACK_PRIORITY_AUTHENTICATION, &callback_taliesin_check_access, (void*)config);
@@ -246,12 +319,15 @@ int main (int argc, char ** argv) {
   ulfius_add_endpoint_by_val(config->instance, "*", config->api_prefix, "/search/", TALIESIN_CALLBACK_PRIORITY_AUTHENTICATION, &callback_taliesin_check_access, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "GET", config->api_prefix, "/search/", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_search, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "PUT", config->api_prefix, "/search/", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_advanced_search, (void*)config);
-  
+
   // Other endpoints
-  ulfius_add_endpoint_by_val(config->instance, "GET", NULL, "*", TALIESIN_CALLBACK_PRIORITY_FILES, &callback_static_file, (void*)config->static_file_config);
+  ulfius_add_endpoint_by_val(config->instance, "GET", NULL, "*", TALIESIN_CALLBACK_PRIORITY_FILES, &callback_static_compressed_inmemory_website, (void*)config->static_file_config);
+  ulfius_add_endpoint_by_val(config->instance, "GET", NULL, "*", TALIESIN_CALLBACK_PRIORITY_POST_FILE, &callback_404_if_necessary, NULL);
   ulfius_add_endpoint_by_val(config->instance, "GET", "/config/", NULL, TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_server_configuration, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "OPTIONS", NULL, "*", TALIESIN_CALLBACK_PRIORITY_ZERO, &callback_taliesin_options, NULL);
-  ulfius_add_endpoint_by_val(config->instance, "*", NULL, "*", TALIESIN_CALLBACK_PRIORITY_CLEAN, &callback_clean, (void*)config);
+
+  // API output compression
+  ulfius_add_endpoint_by_val(config->instance, "*", config->api_prefix, "*", TALIESIN_CALLBACK_PRIORITY_COMPRESSION, &callback_http_compression, NULL);
 
   // Set default headers
   u_map_put(config->instance->default_headers, "Access-Control-Allow-Origin", config->allow_origin);
@@ -282,7 +358,7 @@ int main (int argc, char ** argv) {
     y_log_message(Y_LOG_LEVEL_ERROR, "Error getting startup stream lists");
   }
   json_decref(j_stream_list);
-  
+
   if (config->use_secure_connection) {
     char * key_file = get_file_content(config->secure_connection_key_file);
     char * pem_file = get_file_content(config->secure_connection_pem_file);
@@ -296,9 +372,9 @@ int main (int argc, char ** argv) {
   } else {
     res = ulfius_start_framework(config->instance);
   }
-  
+
   if (res == U_OK) {
-    y_log_message(Y_LOG_LEVEL_INFO, "Start taliesin on port %d, prefix: %s, secure: %s", config->instance->port, config->api_prefix, config->use_secure_connection?"true":"false");
+    y_log_message(Y_LOG_LEVEL_INFO, "Taliesin started on port %d, prefix: %s, secure: %s, remote address: %s", config->instance->port, config->api_prefix, config->use_secure_connection?"true":"false", config->server_remote_address);
     // Wait until stop signal is broadcasted
     pthread_mutex_lock(&global_handler_close_lock);
     pthread_cond_wait(&global_handler_close_cond, &global_handler_close_lock);
@@ -349,7 +425,7 @@ int main (int argc, char ** argv) {
  * Exit properly the server by closing opened connections, databases and files
  */
 void exit_server(struct config_elements ** config, int exit_value) {
-  
+
   if (config != NULL && *config != NULL) {
     // Cleaning data
     ulfius_stop_framework((*config)->instance);
@@ -367,9 +443,16 @@ void exit_server(struct config_elements ** config, int exit_value) {
     o_free((*config)->oauth_scope_user);
     o_free((*config)->oauth_scope_admin);
 #ifndef DISABLE_OAUTH2
-    o_free((*config)->glewlwyd_resource_config->oauth_scope);
-    o_free((*config)->glewlwyd_resource_config->jwt_decode_key);
-    o_free((*config)->glewlwyd_resource_config);
+    if ((*config)->oidc_configured) {
+      i_jwt_profile_access_token_close_config((*config)->iddawc_resource_config);
+    }
+    o_free((*config)->iddawc_resource_config);
+    o_free((*config)->iddawc_resource_config_admin);
+    o_free((*config)->oidc_server_remote_config);
+    o_free((*config)->oidc_server_public_jwks);
+    o_free((*config)->oidc_iss);
+    o_free((*config)->oidc_realm);
+    o_free((*config)->oidc_aud);
 #endif
     o_free((*config)->stream_format);
     free_string_array((*config)->audio_file_extension);
@@ -378,15 +461,13 @@ void exit_server(struct config_elements ** config, int exit_value) {
     free_string_array((*config)->image_file_extension);
     free_string_array((*config)->cover_file_pattern);
     free_string_array((*config)->external_player);
-    
+
+    u_clean_compressed_inmemory_website_config((*config)->static_file_config);
     o_free((*config)->static_file_config->files_path);
-    o_free((*config)->static_file_config->url_prefix);
-    u_map_clean_full((*config)->static_file_config->mime_types);
-    u_map_clean_full((*config)->static_file_config->map_header);
     o_free((*config)->static_file_config);
     o_free((*config)->instance);
     o_free((*config)->webradio_set);
-    
+
     o_free(*config);
     (*config) = NULL;
   }
@@ -411,11 +492,11 @@ int build_config_from_args(int argc, char ** argv, struct config_elements * conf
     {"version", optional_argument, NULL, 'v'},
     {NULL, 0, NULL, 0}
   };
-  
+
   if (config != NULL) {
     do {
       next_option = getopt_long(argc, argv, short_options, long_options, NULL);
-      
+
       switch (next_option) {
         case 'c':
           if (optarg != NULL) {
@@ -522,20 +603,20 @@ int build_config_from_args(int argc, char ** argv, struct config_elements * conf
           exit_server(&config, TALIESIN_STOP);
           break;
       }
-      
+
     } while (next_option != -1);
-    
+
     // If none exists, exit failure
     if (config->config_file == NULL) {
       fprintf(stderr, "No configuration file found, please specify a configuration file path\n");
       return 0;
     }
-    
+
     return 1;
   } else {
     return 0;
   }
-  
+
 }
 
 /**
@@ -593,28 +674,28 @@ void exit_handler(int signal) {
  * Read the config file, get mandatory variables and devices
  */
 int build_config_from_file(struct config_elements * config) {
-  
+
   config_t cfg;
   config_setting_t * root, * database, * mime_type_list, * mime_type;
   const char * cur_server_remote_address, * cur_prefix, * cur_log_mode, * cur_log_level, * cur_log_file = NULL, * one_log_mode, * cur_allow_origin,
              * db_type, * db_sqlite_path, * db_mariadb_host = NULL, * db_mariadb_user = NULL,
              * db_mariadb_password = NULL, * db_mariadb_dbname = NULL, * cur_static_files_path = NULL,
              * cur_oauth_scope_user = NULL, * cur_oauth_scope_admin = NULL, * extension = NULL, * mime_type_value = NULL, * cur_stream_format = NULL;
-  int db_mariadb_port = 0, cur_stream_channels = 0, cur_stream_sample_rate = 0, cur_stream_bit_rate = 0, cur_use_oauth2_authentication = 1, cur_user_can_create_data_source = 0, cur_timeout = 0, i = 0;
+  int db_mariadb_port = 0, cur_stream_channels = 0, cur_stream_sample_rate = 0, cur_stream_bit_rate = 0, cur_use_oidc_authentication = 1, cur_user_can_create_data_source = 0, cur_timeout = 0, i = 0;
 #ifndef DISABLE_OAUTH2
-  config_setting_t * jwt;
-  const char * cur_rsa_pub_file = NULL, * cur_ecdsa_pub_file = NULL, * cur_sha_secret = NULL;
-  int cur_key_size = 512, cur_use_rsa = 0, cur_use_ecdsa = 0, cur_use_sha = 0;
+  config_setting_t * oidc_cfg;
+  const char * cur_oidc_server_remote_config = NULL, * cur_oidc_server_public_jwks = NULL, * cur_oidc_iss = NULL, * cur_oidc_realm = NULL, * cur_oidc_aud = NULL;
+  int cur_oidc_dpop_max_iat = 0, cur_oidc_server_remote_config_verify_cert = 0;
 #endif
-  
+
   config_init(&cfg);
-  
+
   if (!config_read_file(&cfg, config->config_file)) {
     fprintf(stderr, "Error parsing config file %s\nOn line %d error: %s\n", config_error_file(&cfg), config_error_line(&cfg), config_error_text(&cfg));
     config_destroy(&cfg);
     return 0;
   }
-  
+
   if (config->instance->port == TALIESIN_DEFAULT_PORT) {
     // Get Port number to listen to
     int port;
@@ -622,7 +703,7 @@ int build_config_from_file(struct config_elements * config) {
       config->instance->port = (uint)port;
     }
   }
-  
+
   if (config->server_remote_address == NULL) {
     // Get allow-origin value for CORS
     if (config_lookup_string(&cfg, "server_remote_address", &cur_server_remote_address)) {
@@ -688,7 +769,7 @@ int build_config_from_file(struct config_elements * config) {
       }
     }
   }
-  
+
   if (config->log_level == Y_LOG_LEVEL_NONE) {
     // Get log level
     if (config_lookup_string(&cfg, "log_level", &cur_log_level)) {
@@ -710,7 +791,7 @@ int build_config_from_file(struct config_elements * config) {
     fprintf(stderr, "Error initializing logs\n");
     exit_server(&config, TALIESIN_ERROR);
   }
-  
+
   root = config_root_setting(&cfg);
   database = config_setting_get_member(root, "database");
   if (database != NULL) {
@@ -781,100 +862,66 @@ int build_config_from_file(struct config_elements * config) {
       mime_type = config_setting_get_elem(mime_type_list, i);
       if (mime_type != NULL) {
         if (config_setting_lookup_string(mime_type, "extension", &extension) && config_setting_lookup_string(mime_type, "type", &mime_type_value)) {
-          u_map_put(config->static_file_config->mime_types, extension, mime_type_value);
+          u_map_put(&config->static_file_config->mime_types, extension, mime_type_value);
         }
       }
     }
   }
-  
-  if (config_lookup_bool(&cfg, "use_oauth2_authentication", &cur_use_oauth2_authentication) == CONFIG_TRUE) {
-    config->use_oauth2_authentication = cur_use_oauth2_authentication;
+
+  if (config_lookup_bool(&cfg, "use_oidc_authentication", &cur_use_oidc_authentication) == CONFIG_TRUE) {
+    config->use_oidc_authentication = cur_use_oidc_authentication;
   }
-  
-  if (config->use_oauth2_authentication) {
+
+  if (config->use_oidc_authentication) {
 #ifndef DISABLE_OAUTH2
-    jwt = config_setting_get_member(root, "jwt");
-    if (jwt != NULL) {
-      config_setting_lookup_bool(jwt, "use_rsa", &cur_use_rsa);
-      config_setting_lookup_bool(jwt, "use_ecdsa", &cur_use_ecdsa);
-      config_setting_lookup_bool(jwt, "use_sha", &cur_use_sha);
-      config_setting_lookup_int(jwt, "key_size", &cur_key_size);
-      if (cur_key_size == 256 || cur_key_size == 384 || cur_key_size == 512) {
-        if (cur_use_rsa) {
-          config_setting_lookup_string(jwt, "rsa_pub_file", &cur_rsa_pub_file);
-          if (cur_rsa_pub_file != NULL) {
-            config->glewlwyd_resource_config->jwt_decode_key = get_file_content(cur_rsa_pub_file);
-            if (cur_key_size == 256) {
-              config->glewlwyd_resource_config->jwt_alg = JWT_ALG_RS256;
-            } else if (cur_key_size == 384) {
-              config->glewlwyd_resource_config->jwt_alg = JWT_ALG_RS384;
-            } else if (cur_key_size == 512) {
-              config->glewlwyd_resource_config->jwt_alg = JWT_ALG_RS512;
-            }
-            if (config->glewlwyd_resource_config->jwt_decode_key == NULL) {
-              config_destroy(&cfg);
-              fprintf(stderr, "Error, rsa_pub_file content incorrect\n");
-              return 0;
-            }
-          } else {
-            config_destroy(&cfg);
-            fprintf(stderr, "Error, rsa_pub_file incorrect\n");
-            return 0;
-          }
-        } else if (cur_use_ecdsa) {
-          config_setting_lookup_string(jwt, "ecdsa_pub_file", &cur_ecdsa_pub_file);
-          if (cur_ecdsa_pub_file != NULL) {
-            config->glewlwyd_resource_config->jwt_decode_key = get_file_content(cur_ecdsa_pub_file);
-            if (cur_key_size == 256) {
-              config->glewlwyd_resource_config->jwt_alg = JWT_ALG_ES256;
-            } else if (cur_key_size == 384) {
-              config->glewlwyd_resource_config->jwt_alg = JWT_ALG_ES384;
-            } else if (cur_key_size == 512) {
-              config->glewlwyd_resource_config->jwt_alg = JWT_ALG_ES512;
-            }
-            if (config->glewlwyd_resource_config->jwt_decode_key == NULL) {
-              config_destroy(&cfg);
-              fprintf(stderr, "Error, ecdsa_pub_file content incorrect\n");
-              return 0;
-            }
-          } else {
-            config_destroy(&cfg);
-            fprintf(stderr, "Error, ecdsa_pub_file incorrect\n");
-            return 0;
-          }
-        } else if (cur_use_sha) {
-          config_setting_lookup_string(jwt, "sha_secret", &cur_sha_secret);
-          if (cur_sha_secret != NULL) {
-            config->glewlwyd_resource_config->jwt_decode_key = o_strdup(cur_sha_secret);
-            if (cur_key_size == 256) {
-              config->glewlwyd_resource_config->jwt_alg = JWT_ALG_HS256;
-            } else if (cur_key_size == 384) {
-              config->glewlwyd_resource_config->jwt_alg = JWT_ALG_HS384;
-            } else if (cur_key_size == 512) {
-              config->glewlwyd_resource_config->jwt_alg = JWT_ALG_HS512;
-            }
-          } else {
-            config_destroy(&cfg);
-            fprintf(stderr, "Error, sha_secret incorrect\n");
-            return 0;
-          }
-        } else {
-          config_destroy(&cfg);
-          fprintf(stderr, "Error, no jwt algorithm selected\n");
-          return 0;
-        }
-      } else {
+    oidc_cfg = config_lookup(&cfg, "oidc");
+    if (config_setting_lookup_string(oidc_cfg, "server_remote_config", &cur_oidc_server_remote_config) == CONFIG_TRUE) {
+      if ((config->oidc_server_remote_config = o_strdup(cur_oidc_server_remote_config)) == NULL) {
+        fprintf(stderr, "Error allocating config->oidc_server_remote_config, exiting\n");
         config_destroy(&cfg);
-        fprintf(stderr, "Error, key_size incorrect, values available are 256, 384 or 512\n");
         return 0;
       }
     }
+    if (config_setting_lookup_bool(oidc_cfg, "server_remote_config_verify_cert", &cur_oidc_server_remote_config_verify_cert) == CONFIG_TRUE) {
+      config->oidc_server_remote_config_verify_cert = (time_t)cur_oidc_server_remote_config_verify_cert;
+    }
+    if (config_setting_lookup_string(oidc_cfg, "server_public_jwks", &cur_oidc_server_public_jwks) == CONFIG_TRUE) {
+      if ((config->oidc_server_public_jwks = o_strdup(cur_oidc_server_public_jwks)) == NULL) {
+        fprintf(stderr, "Error allocating config->oidc_server_public_jwks, exiting\n");
+        config_destroy(&cfg);
+        return 0;
+      }
+    }
+    if (config_setting_lookup_string(oidc_cfg, "iss", &cur_oidc_iss) == CONFIG_TRUE) {
+      if ((config->oidc_iss = o_strdup(cur_oidc_iss)) == NULL) {
+        fprintf(stderr, "Error allocating config->oidc_iss, exiting\n");
+        config_destroy(&cfg);
+        return 0;
+      }
+    }
+    if (config_setting_lookup_string(oidc_cfg, "realm", &cur_oidc_realm) == CONFIG_TRUE) {
+      if ((config->oidc_realm = o_strdup(cur_oidc_realm)) == NULL) {
+        fprintf(stderr, "Error allocating config->oidc_realm, exiting\n");
+        config_destroy(&cfg);
+        return 0;
+      }
+    }
+    if (config_setting_lookup_string(oidc_cfg, "aud", &cur_oidc_aud) == CONFIG_TRUE) {
+      if ((config->oidc_aud = o_strdup(cur_oidc_aud)) == NULL) {
+        fprintf(stderr, "Error allocating config->oidc_aud, exiting\n");
+        config_destroy(&cfg);
+        return 0;
+      }
+    }
+    if (config_setting_lookup_int(oidc_cfg, "dpop_max_iat", &cur_oidc_dpop_max_iat) == CONFIG_TRUE) {
+      config->oidc_dpop_max_iat = (time_t)cur_oidc_dpop_max_iat;
+    }
 #else
-    fprintf(stderr, "Error, Taliesin was built without a jwt library\n");
+    fprintf(stderr, "Error, Taliesin was built without oidc support\n");
     return 0;
 #endif
   }
-  
+
   if (config_lookup_string(&cfg, "oauth_scope_user", &cur_oauth_scope_user)) {
     config->oauth_scope_user = o_strdup(cur_oauth_scope_user);
     if (config->oauth_scope_user == NULL) {
@@ -883,7 +930,7 @@ int build_config_from_file(struct config_elements * config) {
       return 0;
     }
   }
-  
+
   if (config_lookup_string(&cfg, "oauth_scope_admin", &cur_oauth_scope_admin)) {
     config->oauth_scope_admin = o_strdup(cur_oauth_scope_admin);
     if (config->oauth_scope_admin == NULL) {
@@ -892,22 +939,7 @@ int build_config_from_file(struct config_elements * config) {
       return 0;
     }
   }
-  
-#ifndef DISABLE_OAUTH2
-  if (config->oauth_scope_user != NULL && config->oauth_scope_admin != NULL) {
-    config->glewlwyd_resource_config->oauth_scope = msprintf("%s %s", config->oauth_scope_user, config->oauth_scope_admin);
-    if (config->glewlwyd_resource_config->oauth_scope == NULL) {
-      fprintf(stderr, "Error allocating resources for oauth_scope, exiting\n");
-      config_destroy(&cfg);
-      return 0;
-    }
-  } else {
-    fprintf(stderr, "Error oauth_scope_user or oauth_scope_admin values in config, exiting\n");
-    config_destroy(&cfg);
-    return 0;
-  }
-#endif
-  
+
   if (config_lookup_string(&cfg, "stream_format", &cur_stream_format)) {
     if (0 == o_strcasecmp(cur_stream_format, "mp3") || 0 == o_strcasecmp(cur_stream_format, "vorbis") || 0 == o_strcasecmp(cur_stream_format, "flac")) {
       o_free(config->stream_format);
@@ -923,7 +955,7 @@ int build_config_from_file(struct config_elements * config) {
       return 0;
     }
   }
-  
+
   if (config_lookup_int(&cfg, "stream_channels", &cur_stream_channels) == CONFIG_TRUE) {
     if (cur_stream_channels == 1 || cur_stream_channels == 2) {
       config->stream_channels = cur_stream_channels;
@@ -933,7 +965,7 @@ int build_config_from_file(struct config_elements * config) {
       return 0;
     }
   }
-  
+
   if (config_lookup_int(&cfg, "stream_sample_rate", &cur_stream_sample_rate) == CONFIG_TRUE) {
     if (cur_stream_sample_rate != 8000 && cur_stream_sample_rate != 11025 && cur_stream_sample_rate != 22050 && cur_stream_sample_rate != 32000 && cur_stream_sample_rate != 44100 && cur_stream_sample_rate != 48000) {
       fprintf(stderr, "Error stream_sample_rate, use values 8000, 11025, 22050, 32000, 44100 or 48000\n");
@@ -943,7 +975,7 @@ int build_config_from_file(struct config_elements * config) {
       config->stream_sample_rate = cur_stream_sample_rate;
     }
   }
-  
+
   if (config_lookup_int(&cfg, "stream_bitrate", &cur_stream_bit_rate) == CONFIG_TRUE) {
     if (0 != o_strcasecmp("flac", config->stream_format) && cur_stream_bit_rate != 32000 && cur_stream_bit_rate != 96000 && cur_stream_bit_rate != 128000 && cur_stream_bit_rate != 192000 && cur_stream_bit_rate != 256000 && cur_stream_bit_rate != 320000) {
       fprintf(stderr, "Error stream_bitrate, use values 32000, 96000, 128000, 192000, 256000 or 320000\n");
@@ -953,7 +985,7 @@ int build_config_from_file(struct config_elements * config) {
       config->stream_bitrate = cur_stream_bit_rate;
     }
   }
-  
+
   if (config_lookup_int(&cfg, "timeout", &cur_timeout)) {
     if (cur_timeout >= 0) {
       config->timeout = cur_timeout;
@@ -967,7 +999,7 @@ int build_config_from_file(struct config_elements * config) {
   if (config_lookup_bool(&cfg, "user_can_create_data_source", &cur_user_can_create_data_source) == CONFIG_TRUE) {
     config->user_can_create_data_source = cur_user_can_create_data_source;
   }
-  
+
   config_destroy(&cfg);
   return 1;
 }
@@ -981,7 +1013,7 @@ int check_config(struct config_elements * config) {
   if (config->instance->port == -1) {
     config->instance->port = TALIESIN_DEFAULT_PORT;
   }
-  
+
   if (config->api_prefix == NULL) {
     config->api_prefix = o_strdup(TALIESIN_DEFAULT_PREFIX);
     if (config->api_prefix == NULL) {
@@ -989,21 +1021,21 @@ int check_config(struct config_elements * config) {
       return 0;
     }
   }
-  
+
   if (config->log_mode == Y_LOG_MODE_NONE) {
     config->log_mode = Y_LOG_MODE_CONSOLE;
   }
-  
+
   if (config->log_level == Y_LOG_LEVEL_NONE) {
     config->log_level = Y_LOG_LEVEL_ERROR;
   }
-  
+
   if (config->log_mode == Y_LOG_MODE_FILE && config->log_file == NULL) {
     fprintf(stderr, "Error, you must specify a log file if log mode is set to file\n");
     print_help(stderr);
     return 0;
   }
-  
+
   return 1;
 }
 
@@ -1034,7 +1066,7 @@ char * get_file_content(const char * file_path) {
     }
     fclose (f);
   }
-  
+
   return buffer;
 }
 
@@ -1068,7 +1100,7 @@ void redirect_libav_logs(void * avcl, int level, const char * fmt, va_list vl) {
     y_level = Y_LOG_LEVEL_NONE;
     break;
   }
-  
+
   if (y_level != Y_LOG_LEVEL_NONE) {
     va_copy(args_cpy, vl);
     new_fmt = msprintf("LIBAV - %s", fmt);

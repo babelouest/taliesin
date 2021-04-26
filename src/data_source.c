@@ -229,7 +229,7 @@ json_t * is_data_source_valid(struct config_elements * config, const char * user
           }
         }
 
-        if (config->use_oauth2_authentication && json_object_get(j_data_source, "scope") != NULL &&
+        if (config->use_oidc_authentication && json_object_get(j_data_source, "scope") != NULL &&
             (
               !json_is_string(json_object_get(j_data_source, "scope")) ||
               (
@@ -240,7 +240,7 @@ json_t * is_data_source_valid(struct config_elements * config, const char * user
             )
           ) {
           json_array_append_new(j_result, json_pack("{ss}", "scope", "scope value is an optional string and can be only " TALIESIN_SCOPE_ALL " or " TALIESIN_SCOPE_ME ", only administrator can add data source for all users"));
-        } else if (config->use_oauth2_authentication && !config->user_can_create_data_source && o_strcmp(json_string_value(json_object_get(j_data_source, "scope")), TALIESIN_SCOPE_ME) == 0) {
+        } else if (config->use_oidc_authentication && !config->user_can_create_data_source && o_strcmp(json_string_value(json_object_get(j_data_source, "scope")), TALIESIN_SCOPE_ME) == 0) {
           json_array_append_new(j_result, json_pack("{ss}", "scope", "only administrator can add data source"));
         }
       }

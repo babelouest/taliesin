@@ -34,7 +34,7 @@
 #include <zlib.h>
 
 #include "taliesin.h"
-#include "static_file_callback.h"
+#include "static_compressed_inmemory_website_callback.h"
 
 json_t * media_get_tags(AVFormatContext * fmt_ctx) {
   AVDictionaryEntry * tag = NULL;
@@ -935,7 +935,7 @@ int media_add(struct config_elements * config, json_int_t tds_id, json_int_t tf_
                         "tm_path",
                         path,
                         "tm_duration",
-                        json_object_get(json_object_get(j_media, "metadata"), "duration")!=NULL?json_integer_value(json_object_get(json_object_get(j_media, "metadata"), "duration")):0);
+                        json_integer_value(json_object_get(json_object_get(j_media, "metadata"), "duration"))>0?json_integer_value(json_object_get(json_object_get(j_media, "metadata"), "duration")):0);
   o_free(clause_last_updated);
   if (j_query != NULL) {
     if (tf_id > 0) {

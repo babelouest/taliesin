@@ -40,10 +40,11 @@
 #include <hoel.h>
 
 #ifndef DISABLE_OAUTH2
-#include "glewlwyd_resource.h"
+#include "iddawc_resource.h"
 #endif
 
-#include "static_file_callback.h"
+#include "static_compressed_inmemory_website_callback.h"
+#include "http_compression_callback.h"
 
 /**
  * Application constant definitions
@@ -60,8 +61,9 @@
 #define TALIESIN_CALLBACK_PRIORITY_ZERO           0
 #define TALIESIN_CALLBACK_PRIORITY_AUTHENTICATION 1
 #define TALIESIN_CALLBACK_PRIORITY_APPLICATION    2
-#define TALIESIN_CALLBACK_PRIORITY_FILES          3
-#define TALIESIN_CALLBACK_PRIORITY_CLEAN          4
+#define TALIESIN_CALLBACK_PRIORITY_COMPRESSION    3
+#define TALIESIN_CALLBACK_PRIORITY_FILES          4
+#define TALIESIN_CALLBACK_PRIORITY_POST_FILE      5
 
 #define T_OK                 0
 #define T_ERROR              1
@@ -403,46 +405,55 @@ struct _close_jukebox {
 };
 
 struct config_elements {
-  char                             * config_file;
-  char                             * server_remote_address;
-  char                             * api_prefix;
-  unsigned long                      log_mode;
-  unsigned long                      log_level;
-  char                             * log_file;
-  char                             * allow_origin;
-  unsigned int                       use_secure_connection;
-  char                             * secure_connection_key_file;
-  char                             * secure_connection_pem_file;
-  struct _h_connection             * conn;
-  struct _u_instance               * instance;
-  int                                timeout;
-  unsigned short                     use_oauth2_authentication;
-  struct _glewlwyd_resource_config * glewlwyd_resource_config;
-  struct _static_file_config       * static_file_config;
-  char                             * oauth_scope_user;
-  char                             * oauth_scope_admin;
-  pthread_mutex_t                    playlist_lock;
-  unsigned int                       nb_webradio;
-  struct _t_webradio              ** webradio_set;
-  unsigned int                       nb_jukebox;
-  struct _t_jukebox               ** jukebox_set;
-  char                             * stream_format;
-  unsigned short int                 stream_channels;
-  unsigned int                       stream_sample_rate;
-  unsigned int                       stream_bitrate;
-  pthread_mutex_t                    stream_stop_lock;
-  pthread_cond_t                     stream_stop_cond;
-  uint                               nb_refresh_status;
-  struct _refresh_config          ** refresh_status_list;
-  pthread_mutex_t                    refresh_lock;
-  pthread_cond_t                     refresh_cond;
-  unsigned short                     user_can_create_data_source;
-  char                            ** audio_file_extension;
-  char                            ** video_file_extension;
-  char                            ** subtitle_file_extension;
-  char                            ** image_file_extension;
-  char                            ** cover_file_pattern;
-  char                            ** external_player;
+  char                                         * config_file;
+  char                                         * server_remote_address;
+  char                                         * api_prefix;
+  unsigned long                                  log_mode;
+  unsigned long                                  log_level;
+  char                                         * log_file;
+  char                                         * allow_origin;
+  unsigned int                                   use_secure_connection;
+  char                                         * secure_connection_key_file;
+  char                                         * secure_connection_pem_file;
+  struct _h_connection                         * conn;
+  struct _u_instance                           * instance;
+  int                                            timeout;
+  unsigned short                                 use_oidc_authentication;
+  char                                         * oidc_server_remote_config;
+  unsigned short                                 oidc_server_remote_config_verify_cert;
+  char                                         * oidc_server_public_jwks;
+  char                                         * oidc_iss;
+  char                                         * oidc_realm;
+  char                                         * oidc_aud;
+  time_t                                         oidc_dpop_max_iat;
+  unsigned short                                 oidc_configured;
+  struct _iddawc_resource_config               * iddawc_resource_config;
+  struct _iddawc_resource_config               * iddawc_resource_config_admin;
+  struct _u_compressed_inmemory_website_config * static_file_config;
+  char                                         * oauth_scope_user;
+  char                                         * oauth_scope_admin;
+  pthread_mutex_t                                playlist_lock;
+  unsigned int                                   nb_webradio;
+  struct _t_webradio                          ** webradio_set;
+  unsigned int                                   nb_jukebox;
+  struct _t_jukebox                           ** jukebox_set;
+  char                                         * stream_format;
+  unsigned short int                             stream_channels;
+  unsigned int                                   stream_sample_rate;
+  unsigned int                                   stream_bitrate;
+  pthread_mutex_t                                stream_stop_lock;
+  pthread_cond_t                                 stream_stop_cond;
+  uint                                           nb_refresh_status;
+  struct _refresh_config                      ** refresh_status_list;
+  pthread_mutex_t                                refresh_lock;
+  pthread_cond_t                                 refresh_cond;
+  unsigned short                                 user_can_create_data_source;
+  char                                        ** audio_file_extension;
+  char                                        ** video_file_extension;
+  char                                        ** subtitle_file_extension;
+  char                                        ** image_file_extension;
+  char                                        ** cover_file_pattern;
+  char                                        ** external_player;
 };
 
 /**
@@ -463,6 +474,7 @@ long   random_at_most(long max);
 char * rand_string(char * str, size_t size);
 void   redirect_libav_logs(void * avcl, int level, const char * fmt, va_list vl);
 char * get_ip_source(const struct _u_request * request);
+int    check_result_value(json_t * result, const int value);
 
 int check_result_value(json_t * result, const int value);
 
@@ -686,6 +698,7 @@ int callback_taliesin_category_delete_info (const struct _u_request * request, s
 int callback_taliesin_subcategory_get (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_subcategory_list (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_advanced_search (const struct _u_request * request, struct _u_response * response, void * user_data);
+int callback_taliesin_media_get_thumbnails_list (const struct _u_request * request, struct _u_response * response, void * user_data);
 
 int callback_taliesin_playlist_list (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_playlist_get (const struct _u_request * request, struct _u_response * response, void * user_data);
@@ -720,7 +733,7 @@ int callback_taliesin_check_access (const struct _u_request * request, struct _u
 int callback_taliesin_check_admin_access (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_server_configuration (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_taliesin_options (const struct _u_request * request, struct _u_response * response, void * user_data);
+int callback_404_if_necessary (const struct _u_request * request, struct _u_response * response, void * user_data);
 int callback_default (const struct _u_request * request, struct _u_response * response, void * user_data);
-int callback_clean (const struct _u_request * request, struct _u_response * response, void * user_data);
 
 #endif

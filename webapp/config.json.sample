@@ -9,12 +9,12 @@
 		"enabled": true,
 		"storageType": "local", 
 		"responseType": "code", 
-		"serverUrl": "http://localhost:4593/api", 
-		"authUrl": "auth", 
-		"tokenUrl": "token", 
+		"serverUrl": "http://localhost:4593/api/oidc", 
+		"authUrl": "http://localhost:4593/api/oidc/auth", 
+		"tokenUrl": "http://localhost:4593/api/oidc/token", 
 		"clientId": "taliesin", 
 		"redirectUri": "http://localhost:8576/", 
-		"scope": "taliesin taliesin_admin angharad g_profile",
-		"profileUrl": "profile"
+		"scope": "taliesin taliesin_admin angharad",
+		"userinfoUrl": "http://localhost:4593/api/oidc/userinfo"
 	}
 }

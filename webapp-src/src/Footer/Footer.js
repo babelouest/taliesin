@@ -32,45 +32,47 @@ class Footer extends Component {
 		};
 		
 		StateStore.subscribe(() => {
-			var reduxState = StateStore.getState();
-			if (reduxState.lastAction === "setStreamList") {
-				this.setState({streamList: reduxState.streamList, play: false});
-			} else if (reduxState.lastAction === "setExternalPlayerList") {
-				this.setState({playerList: StateStore.getState().externalPlayerList, play: false});
-			} else if (reduxState.lastAction === "setUserList") {
-				this.setState({isAdmin: StateStore.getState().profile.isAdmin, play: false});
-			} else if (reduxState.lastAction === "setCurrentPlayer") {
-				this.setState({currentPlayer: StateStore.getState().profile.currentPlayer, stream: {name: false}, play: false});
-			} else if (reduxState.lastAction === "loadStream") {
-				this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, play: false}, () => {
-					this.buildExternal();
-					this.setWindowTitle();
-				});
-			} else if (reduxState.lastAction === "setStream") {
-				if (StateStore.getState().profile.stream.name === this.state.stream.name) {
-					this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, play: false}, () => {
-						this.buildExternal();
-						this.setWindowTitle();
-					});
-				}
-			} else if (reduxState.lastAction === "loadStreamAndPlay") {
-				this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, jukeboxIndex: StateStore.getState().profile.jukeboxIndex, play: true}, () => {
-					this.buildExternal();
-					this.setWindowTitle();
-				});
-			} else if (reduxState.lastAction === "setJukeboxIndex") {
-				this.setState({jukeboxIndex: StateStore.getState().profile.jukeboxIndex, play: false});
-			} else if (reduxState.lastAction === "setMediaNow") {
-				this.setState({mediaNow: StateStore.getState().profile.mediaNow, play: false}, () => {
-					this.setWindowTitle();
-				});
-			} else if (reduxState.lastAction === "setMediaNext") {
-				this.setState({mediaNext: StateStore.getState().profile.mediaNext, play: false});
-			} else if (reduxState.lastAction === "setStoredValues") {
-				this.setState({currentPlayer: StateStore.getState().profile.currentPlayer, stream: StateStore.getState().profile.stream, mediaNow: false, play: false}, () => {this.buildExternal()});
-			} else if (reduxState.lastAction === "setMediaThumb") {
-				this.setState({imgBlob: StateStore.getState().profile.imgThumbBlob});
-			}
+      if (this._ismounted) {
+        var reduxState = StateStore.getState();
+        if (reduxState.lastAction === "setStreamList") {
+          this.setState({streamList: reduxState.streamList, play: false});
+        } else if (reduxState.lastAction === "setExternalPlayerList") {
+          this.setState({playerList: StateStore.getState().externalPlayerList, play: false});
+        } else if (reduxState.lastAction === "setUserList") {
+          this.setState({isAdmin: StateStore.getState().profile.isAdmin, play: false});
+        } else if (reduxState.lastAction === "setCurrentPlayer") {
+          this.setState({currentPlayer: StateStore.getState().profile.currentPlayer, stream: {name: false}, play: false});
+        } else if (reduxState.lastAction === "loadStream") {
+          this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, play: false}, () => {
+            this.buildExternal();
+            this.setWindowTitle();
+          });
+        } else if (reduxState.lastAction === "setStream") {
+          if (StateStore.getState().profile.stream.name === this.state.stream.name) {
+            this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, play: false}, () => {
+              this.buildExternal();
+              this.setWindowTitle();
+            });
+          }
+        } else if (reduxState.lastAction === "loadStreamAndPlay") {
+          this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, jukeboxIndex: StateStore.getState().profile.jukeboxIndex, play: true}, () => {
+            this.buildExternal();
+            this.setWindowTitle();
+          });
+        } else if (reduxState.lastAction === "setJukeboxIndex") {
+          this.setState({jukeboxIndex: StateStore.getState().profile.jukeboxIndex, play: false});
+        } else if (reduxState.lastAction === "setMediaNow") {
+          this.setState({mediaNow: StateStore.getState().profile.mediaNow, play: false}, () => {
+            this.setWindowTitle();
+          });
+        } else if (reduxState.lastAction === "setMediaNext") {
+          this.setState({mediaNext: StateStore.getState().profile.mediaNext, play: false});
+        } else if (reduxState.lastAction === "setStoredValues") {
+          this.setState({currentPlayer: StateStore.getState().profile.currentPlayer, stream: StateStore.getState().profile.stream, mediaNow: false, play: false}, () => {this.buildExternal()});
+        } else if (reduxState.lastAction === "setMediaThumb") {
+          this.setState({imgBlob: StateStore.getState().profile.imgThumbBlob});
+        }
+      }
 		});
 		
 		this.showFullScreen = this.showFullScreen.bind(this);

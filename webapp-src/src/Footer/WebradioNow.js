@@ -15,19 +15,20 @@ class WebradioNow extends Component {
 		this.loadCover();
 		
 		StateStore.subscribe(() => {
-			var reduxState = StateStore.getState();
-			if (reduxState.lastAction === "showFullScreen") {
-				if (!StateStore.getState().showFullScreen) {
-					this.loadCover();
-				}
-			}
+      if (this._ismounted) {
+        var reduxState = StateStore.getState();
+        if (reduxState.lastAction === "showFullScreen") {
+          if (!StateStore.getState().showFullScreen) {
+            this.loadCover();
+          }
+        }
+      }
 		});
 		
 		this.loadCover = this.loadCover.bind(this);
 	}
 	
 	componentWillUnmount() {
-		this.setState({media: false});
 		this._ismounted = false;
 	}
 	

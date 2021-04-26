@@ -20,14 +20,14 @@ class OAuth2Connector {
 		if (parameters) {
 			this.parameters.storageType = parameters.storageType || "none";
 			this.parameters.responseType = parameters.responseType || "code";
-			this.parameters.serverUrl = parameters.serverUrl || "";
+			this.parameters.oidcConfig = parameters.oidcConfig || "code";
 			this.parameters.scope = parameters.scope || "";
 			this.parameters.authUrl = parameters.authUrl || "";
 			this.parameters.tokenUrl = parameters.tokenUrl || "";
 			this.parameters.clientId = parameters.clientId || "";
 			this.parameters.clientPassword = parameters.clientPassword || "";
 			this.parameters.redirectUri = parameters.redirectUri || "";
-			this.parameters.profileUrl = parameters.profileUrl || "";
+			this.parameters.userinfoUrl = parameters.userinfoUrl || "";
 			if (parameters.changeStatusCb) {
 				this.changeStatusCb.push(parameters.changeStatusCb);
 			}
@@ -264,7 +264,7 @@ class OAuth2Connector {
 		var self = this;
 		$.ajax({
 			type: "POST",
-			url: this.parameters.serverUrl + "/" + this.parameters.tokenUrl,
+			url: this.parameters.tokenUrl,
 			data: {grant_type: "authorization_code", client_id: this.parameters.clientId, redirect_uri: this.parameters.redirectUri, code: code},
 			success: function (result, status, request) {
 				cb(result);
@@ -297,7 +297,9 @@ class OAuth2Connector {
 		if (this.getStoredData().refreshToken) {
 			return this.executeRefreshToken(this.getStoredData().refreshToken, cb);
 		} else {
-			return Promise.reject("disconnected");
+      return new Promise((resolve, reject) => {
+        reject("disconnected");
+      });
 		}
 	}
 	
@@ -305,7 +307,7 @@ class OAuth2Connector {
 		var self = this;
 		return $.ajax({
 			type: "POST",
-			url: self.parameters.serverUrl + "/" + self.parameters.tokenUrl,
+			url: self.parameters.tokenUrl,
 			data: {grant_type: "refresh_token", refresh_token: refreshToken},
 			success: function (result, status, request) {
 				self.accessToken = result;
@@ -342,11 +344,11 @@ class OAuth2Connector {
 	}
 	
 	getConnectedProfile(cb) {
-		if (this.parameters.profileUrl) {
+		if (this.parameters.userinfoUrl) {
 			var self = this;
 			$.ajax({
 				type: "GET",
-				url: self.parameters.serverUrl + "/" + self.parameters.profileUrl,
+				url: self.parameters.userinfoUrl,
 				headers: {"Authorization": "Bearer " + self.accessToken.access_token},
 				success: function (result) {
 					if (cb) {
@@ -377,23 +379,23 @@ class OAuth2Connector {
 			token.accessToken = false;
 			this.storeAccessToken(false);
 			if (this.parameters.responseType === "token") {
-				document.location = this.parameters.serverUrl + "/" + this.parameters.authUrl + "?response_type=token&client_id=" + this.parameters.clientId + "&redirect_uri=" + this.parameters.redirectUri + "&scope=" + this.parameters.scope;
+				document.location = this.parameters.authUrl + "?response_type=token&client_id=" + this.parameters.clientId + "&redirect_uri=" + this.parameters.redirectUri + "&scope=" + this.parameters.scope;
 			} else if (this.parameters.responseType === "code") {
-				document.location = this.parameters.serverUrl + "/" + this.parameters.authUrl + "?response_type=code&client_id=" + this.parameters.clientId + "&redirect_uri=" + this.parameters.redirectUri + "&scope=" + this.parameters.scope;
+				document.location = this.parameters.authUrl + "?response_type=code&client_id=" + this.parameters.clientId + "&redirect_uri=" + this.parameters.redirectUri + "&scope=" + this.parameters.scope;
 			}
 		}
 	}
 	
 	disconnect() {
 		clearTimeout(this.refreshTimeout);
-		this.refreshToken = false;
-		this.accessToken = false;
-		this.broadcastMessage("disconnected");
 		if (this.parameters.storageType === "local") {
 			localStorage.removeItem(this.localStorageKey);
 		} else if (this.parameters.storageType === "cookie") {
 			Cookies.remove(this.localStorageKey);
 		}
+		this.refreshToken = false;
+		this.accessToken = false;
+		this.broadcastMessage("disconnected");
 	}
 }
 

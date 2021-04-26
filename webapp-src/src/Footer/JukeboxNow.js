@@ -18,7 +18,6 @@ class JukeboxNow extends Component {
 	}
 	
 	componentWillUnmount() {
-		this.setState({media: false});
 		this._ismounted = false;
 	}
 	

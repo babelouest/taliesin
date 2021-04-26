@@ -13,10 +13,20 @@ class LoginButton extends Component {
 		this.handleDisconnect = this.handleDisconnect.bind(this);
 		this.handleConnect = this.handleConnect.bind(this);
 		StateStore.subscribe(() => {
-			if (StateStore.getState().lastAction === "connection") {
-				this.setState({status: StateStore.getState().status});
-			}
+      if (this._ismounted) {
+        if (StateStore.getState().lastAction === "connection") {
+          this.setState({status: StateStore.getState().status});
+        }
+      }
 		});
+	}
+	
+	componentDidMount() {
+		this._ismounted = true;
+	}
+
+	componentWillUnmount() {
+		this._ismounted = false;
 	}
 	
 	handleDisconnect(event) {

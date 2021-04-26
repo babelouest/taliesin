@@ -23,7 +23,7 @@ class APIManager {
 					this.counter--;
 				});
 			} else {
-				if (StateStore.getState().oauth2Connector && StateStore.getState().oauth2Connector.runRefreshToken) {
+				if (StateStore.getState().oauth2Connector && StateStore.getState().oauth2Connector.runRefreshToken && StateStore.getState().oauth2Connector.refreshToken) {
 					return StateStore.getState().oauth2Connector.runRefreshToken()
 					.then((res) => {
 						this.oauth2 = res.token;

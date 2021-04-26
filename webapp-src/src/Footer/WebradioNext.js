@@ -14,17 +14,23 @@ class WebradioNext extends Component {
 		this.loadCover();
 		
 		StateStore.subscribe(() => {
-			var reduxState = StateStore.getState();
-			if (reduxState.lastAction === "showFullScreen") {
-				if (!StateStore.getState().showFullScreen) {
-					this.loadCover();
-				}
-			}
+      if (this._ismounted) {
+        var reduxState = StateStore.getState();
+        if (reduxState.lastAction === "showFullScreen") {
+          if (!StateStore.getState().showFullScreen) {
+            this.loadCover();
+          }
+        }
+      }
 		});
 	}
 	
+	componentDidMount() {
+		this._ismounted = true;
+	}
+
 	componentWillUnmount() {
-		this.setState({media: false});
+		this._ismounted = false;
 	}
 	
 	componentWillReceiveProps(nextProps) {
@@ -37,7 +43,7 @@ class WebradioNext extends Component {
 	}
 	
 	loadCover() {
-		if (this.state.media && !StateStore.getState().showFullScreen) {
+		if (this.state.media && !StateStore.getState().showFullScreen && this._ismounted) {
 			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.media.data_source) + "/browse/path/" + encodeURI(this.state.media.path).replace(/#/g, "%23").replace(/\+/g, "%2B") + "?cover&thumbnail&base64")
 			.then((result) => {
 				this.setState({imgThumbBlob: result});

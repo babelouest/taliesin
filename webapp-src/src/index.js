@@ -28,12 +28,12 @@ config.fetchConfig()
 	if (curOauth2Config && curOauth2Config.enabled) {
 		var oauth2Connector = new OAuth2Connector({
 			storageType: getBestStorageAvailable(curOauth2Config.storageType),
-			responseType: curOauth2Config.responseType, 
-			serverUrl: curOauth2Config.serverUrl, 
-			authUrl: curOauth2Config.authUrl, 
-			tokenUrl: curOauth2Config.tokenUrl, 
-			clientId: curOauth2Config.clientId, 
-			redirectUri: curOauth2Config.redirectUri, 
+			responseType: curOauth2Config.responseType,
+			serverUrl: curOauth2Config.serverUrl,
+			authUrl: curOauth2Config.authUrl,
+			tokenUrl: curOauth2Config.tokenUrl,
+			clientId: curOauth2Config.clientId,
+			redirectUri: curOauth2Config.redirectUri,
 			scope: curOauth2Config.scope,
 			profileUrl: curOauth2Config.profileUrl,
 			changeStatusCb: function (newStatus, token, expiration) {
@@ -45,14 +45,14 @@ config.fetchConfig()
 					curConfig.stream = false;
 				}
 				StateStore.dispatch({ type: 'setStoredValues', config: curConfig });
-				StateStore.dispatch({type: "showFullScreen", show: curConfig.fullScreen});
+				StateStore.dispatch({ type: "showFullScreen", show: curConfig.fullScreen });
 				StateStore.dispatch({ type: 'setUseWebsocket', useWebsocket: config.getConfigValue("useWebsocket") });
 				if (newStatus === "connected") {
 					StateStore.dispatch({ type: 'connection', status: newStatus, token: token, expiration: expiration, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), benoicPrefix: config.getConfigValue("benoicPrefix"), carleonPrefix: config.getConfigValue("carleonPrefix"), angharadApiUrl: config.getConfigValue("angharadApiUrl"), oauth2: true});
 					ReactDOM.render(<App/>, document.getElementById('root'));
 				} else if (newStatus === "disconnected") {
-					StateStore.dispatch({ type: "connection", status: newStatus, token: false, expiration: 0, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), benoicPrefix: config.getConfigValue("benoicPrefix"), carleonPrefix: config.getConfigValue("carleonPrefix"), angharadApiUrl: config.getConfigValue("angharadApiUrl"), oauth2: true });
 					StateStore.dispatch({ type: "showFullScreen", show: false });
+					StateStore.dispatch({ type: "connection", status: newStatus, token: false, expiration: 0, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), benoicPrefix: config.getConfigValue("benoicPrefix"), carleonPrefix: config.getConfigValue("carleonPrefix"), angharadApiUrl: config.getConfigValue("angharadApiUrl"), oauth2: true });
 					ReactDOM.render(<App/>, document.getElementById('root'));
 				} else if (newStatus === "refresh") {
 					StateStore.dispatch({ type: "newApiToken", token: token, expiration: expiration});
@@ -89,7 +89,7 @@ StateStore.subscribe(() => {
 					});
 				}
 			});
-			
+
 			// Get external players list
 			StateStore.getState().APIManager.taliesinApiRequest("GET", "/config/external_player")
 			.then((externalPlayerList) => {
@@ -103,7 +103,7 @@ StateStore.subscribe(() => {
 					level: 'error'
 				});
 			});
-			
+
 			// Get current stream list
 			StateStore.getState().APIManager.taliesinApiRequest("GET", "/stream")
 			.then((result) => {
@@ -116,7 +116,7 @@ StateStore.subscribe(() => {
 				});
 				StateStore.dispatch({type: "setStreamList", streamList: []});
 			});
-			
+
 			// Get data source list
 			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source")
 			.then((result) => {
@@ -133,7 +133,7 @@ StateStore.subscribe(() => {
 				});
 				StateStore.dispatch({type: "setDataSourceList", dataSourceList: [], currentDataSource: false, loaded: true});
 			});
-			
+
 			// Get playlist list
 			StateStore.getState().APIManager.taliesinApiRequest("GET", "/playlist")
 			.then((result) => {
@@ -146,7 +146,7 @@ StateStore.subscribe(() => {
 				});
 				StateStore.dispatch({type: "setPlaylists", playlists: []});
 			});
-			
+
 			// Get server default config
       if (config.getLocalConfigValue("serverConfig")) {
         StateStore.dispatch({type: "setServerConfig", config: config.getLocalConfigValue("serverConfig")});
@@ -154,7 +154,7 @@ StateStore.subscribe(() => {
 				StateStore.getState().APIManager.taliesinApiRequest("GET", "/../config")
 				.then((result) => {
 					StateStore.dispatch({type: "setServerConfig", config: result});
-																				config.setLocalConfigValue("serverConfig", result);
+					config.setLocalConfigValue("serverConfig", result);
 				})
 				.fail((result) => {
 					StateStore.getState().NotificationManager.addNotification({
@@ -164,6 +164,6 @@ StateStore.subscribe(() => {
 					StateStore.dispatch({type: "setServerConfig", config: {}});
 				});
       }
-		}
+    }
 	}
 });

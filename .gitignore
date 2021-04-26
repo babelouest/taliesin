@@ -1,7 +1,7 @@
 *.o
 *.err
 *.log
-valgrind.txt
+valgrind*.txt
 taliesin.conf
 taliesin
 data_source_browse_category
@@ -19,3 +19,4 @@ webapp-react
 config
 test/media/
 config.json
+*.jwks

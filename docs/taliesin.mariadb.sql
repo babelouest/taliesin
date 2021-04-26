@@ -72,6 +72,7 @@ CREATE TABLE `t_media` (
 );
 CREATE INDEX `i_tm_name` ON `t_media`(`tm_name`);
 CREATE INDEX `i_tm_type` ON `t_media`(`tm_type`);
+CREATE INDEX `i_tm_last_updated` ON `t_media`(`tm_last_updated`);
 
 CREATE TABLE `t_meta_data` (
   `tmd_id` INT(11) PRIMARY KEY AUTO_INCREMENT,

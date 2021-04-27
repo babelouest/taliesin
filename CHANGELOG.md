@@ -1,5 +1,11 @@
 # Taliesin changelog
 
+## 1.0.19
+
+- Add http compression
+- Update authentication backend to OpenID Connect with JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens
+- Fix small UI Bugs
+
 ## 1.0.18
 
 - Update front-end libraries and adapt code to it

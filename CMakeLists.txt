@@ -24,7 +24,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror")
 
 set(PROGRAM_VERSION_MAJOR "1")
 set(PROGRAM_VERSION_MINOR "0")
-set(PROGRAM_VERSION_PATCH "18")
+set(PROGRAM_VERSION_PATCH "19")
 set(PROJECT_DESCRIPTION "Lightweight audio streaming server")
 set(PROJECT_BUGREPORT_PATH "https://github.com/babelouest/taliesin/issues")
 set(ORCANIA_VERSION_REQUIRED "2.2.0")

@@ -30,6 +30,7 @@
 
 #include "taliesin.h"
 
+#ifndef DISABLE_OAUTH2
 static char * read_file(const char * filename) {
   char * buffer = NULL;
   long length;
@@ -52,6 +53,7 @@ static char * read_file(const char * filename) {
     return NULL;
   }
 }
+#endif
 
 /**
  *

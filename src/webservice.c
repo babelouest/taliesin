@@ -86,9 +86,9 @@ int callback_default (const struct _u_request * request, struct _u_response * re
  * Send mandatory parameters for browsers to call REST APIs
  */
 int callback_taliesin_options (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  u_map_put(response->map_header, "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  u_map_put(response->map_header, "Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Bearer, Authorization");
-  u_map_put(response->map_header, "Access-Control-Max-Age", "1800");
+  ulfius_add_header_to_response(response, "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  ulfius_add_header_to_response(response, "Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Bearer, Authorization");
+  ulfius_add_header_to_response(response, "Access-Control-Max-Age", "1800");
   return U_CALLBACK_COMPLETE;
 }
 
@@ -1106,15 +1106,15 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
             if (ulfius_set_stream_response(response, 200, u_webradio_stream, u_webradio_stream_free, U_STREAM_SIZE_UNKOWN, client_data_webradio->audio_stream->stream_bitrate / 8, client_data_webradio) == U_OK) {
               pthread_setname_np(pthread_self(), request->http_url);
               if (0 == o_strcmp(client_data_webradio->audio_stream->stream_format, "vorbis")) {
-                u_map_put(response->map_header, "Content-Type", "application/ogg");
+                ulfius_add_header_to_response(response, "Content-Type", "application/ogg");
               } else if (0 == o_strcmp(client_data_webradio->audio_stream->stream_format, "flac")) {
-                u_map_put(response->map_header, "Content-Type", "audio/flac");
+                ulfius_add_header_to_response(response, "Content-Type", "audio/flac");
               } else {
-                u_map_put(response->map_header, "Content-Type", "audio/mpeg");
+                ulfius_add_header_to_response(response, "Content-Type", "audio/mpeg");
               }
               if (!client_data_webradio->metadata_send) {
                 snprintf(metaint, 16, "%u", client_data_webradio->audio_stream->stream_bitrate / 8 * TALIESIN_STREAM_METADATA_INTERVAL);
-                u_map_put(response->map_header, "icy-metaint", metaint);
+                ulfius_add_header_to_response(response, "icy-metaint", metaint);
               }
             } else {
               y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error ulfius_set_stream_response");
@@ -1167,11 +1167,11 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
                   if (ulfius_set_stream_response(response, 200, u_jukebox_stream, u_jukebox_stream_free, U_STREAM_SIZE_UNKOWN, current_jukebox->stream_bitrate / 8, client_data_jukebox) == U_OK) {
                     time(&current_jukebox->last_seen);
                     if (0 == o_strcmp(current_jukebox->stream_format, "vorbis")) {
-                      u_map_put(response->map_header, "Content-Type", "application/ogg");
+                      ulfius_add_header_to_response(response, "Content-Type", "application/ogg");
                     } else if (0 == o_strcmp(current_jukebox->stream_format, "flac")) {
-                      u_map_put(response->map_header, "Content-Type", "audio/flac");
+                      ulfius_add_header_to_response(response, "Content-Type", "audio/flac");
                     } else {
-                      u_map_put(response->map_header, "Content-Type", "audio/mpeg");
+                      ulfius_add_header_to_response(response, "Content-Type", "audio/mpeg");
                     }
                   } else {
                     client_data_jukebox->client_present = 0;
@@ -1203,8 +1203,8 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
       if (jukebox_build_m3u(config, current_jukebox, u_map_get(request->map_url, "url_prefix"), &m3u_data) == T_OK) {
         escaped_filename = url_encode(current_jukebox->display_name);
         content_disposition = msprintf("attachment; filename=%s.m3u", escaped_filename);
-        u_map_put(response->map_header, "Content-Type", "audio/mpegurl");
-        u_map_put(response->map_header, "Content-Disposition", content_disposition);
+        ulfius_add_header_to_response(response, "Content-Type", "audio/mpegurl");
+        ulfius_add_header_to_response(response, "Content-Disposition", content_disposition);
         if (ulfius_set_string_body_response(response, 200, m3u_data) != U_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error ulfius_set_string_body_response");
           response->status = 500;
@@ -1534,25 +1534,37 @@ void callback_websocket_stream_incoming_message (const struct _u_request * reque
   
   time(&now);
   if (json_is_object(j_message) && json_is_string(json_object_get(j_message, "command")) && 0 == o_strcasecmp("authorization", json_string_value(json_object_get(j_message, "command")))) {
-    token_value = json_string_value(json_object_get(j_message, "token"));
-    if (token_value != NULL) {
-#ifndef DISABLE_OAUTH2
-      if (i_verify_jwt_access_token(ws_stream->config->iddawc_resource_config->session, ws_stream->config->iddawc_resource_config->aud) == I_OK) {
-        if (jwt_profile_access_token_check_scope(ws_stream->config->iddawc_resource_config, ws_stream->config->iddawc_resource_config->session->access_token_payload) == I_TOKEN_OK) {
-          j_out_message = json_pack("{ssss}", "command", "authorization", "result", "connected");
-          message = json_dumps(j_out_message, JSON_COMPACT);
-          if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
-          }
-          o_free(message);
-          json_decref(j_out_message);
-          ws_stream->is_authenticated = 1;
-          ws_stream->expiration = json_integer_value(json_object_get(ws_stream->config->iddawc_resource_config->session->access_token_payload, "exp"));
-          if (ws_stream->username == NULL) {
-            ws_stream->username = o_strdup(json_string_value(json_object_get(ws_stream->config->iddawc_resource_config->session->access_token_payload, "username")));
+    if (ws_stream->config->use_oidc_authentication) {
+      token_value = json_string_value(json_object_get(j_message, "token"));
+      if (token_value != NULL) {
+        i_set_str_parameter(ws_stream->config->iddawc_resource_config->session, I_OPT_ACCESS_TOKEN, token_value);
+  #ifndef DISABLE_OAUTH2
+        if (i_verify_jwt_access_token(ws_stream->config->iddawc_resource_config->session, ws_stream->config->iddawc_resource_config->aud) == I_OK) {
+          if (jwt_profile_access_token_check_scope(ws_stream->config->iddawc_resource_config, ws_stream->config->iddawc_resource_config->session->access_token_payload) == I_TOKEN_OK) {
+            j_out_message = json_pack("{ssss}", "command", "authorization", "result", "connected");
+            message = json_dumps(j_out_message, JSON_COMPACT);
+            if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
+            }
+            o_free(message);
+            json_decref(j_out_message);
+            ws_stream->is_authenticated = 1;
+            ws_stream->expiration = json_integer_value(json_object_get(ws_stream->config->iddawc_resource_config->session->access_token_payload, "exp"));
+            if (ws_stream->username == NULL) {
+              ws_stream->username = o_strdup(json_string_value(json_object_get(ws_stream->config->iddawc_resource_config->session->access_token_payload, "username")));
+            }
+          } else {
+            j_out_message = json_pack("{ssss}", "command", "authorization", "result", "error_insufficient_scope");
+            message = json_dumps(j_out_message, JSON_COMPACT);
+            if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
+            }
+            o_free(message);
+            json_decref(j_out_message);
+            ws_stream->is_authenticated = 0;
           }
         } else {
-          j_out_message = json_pack("{ssss}", "command", "authorization", "result", "insufficient_scope");
+          j_out_message = json_pack("{ssss}", "command", "authorization", "result", "error_invalid_request");
           message = json_dumps(j_out_message, JSON_COMPACT);
           if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
             y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
@@ -1561,8 +1573,33 @@ void callback_websocket_stream_incoming_message (const struct _u_request * reque
           json_decref(j_out_message);
           ws_stream->is_authenticated = 0;
         }
+  #else
+        if (ws_stream->config->use_oidc_authentication) {
+          j_out_message = json_pack("{ssss}", "command", "authorization", "result", "error_invalid_request");
+          message = json_dumps(j_out_message, JSON_COMPACT);
+          if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
+          }
+          o_free(message);
+          json_decref(j_out_message);
+          ws_stream->is_authenticated = 0;
+        } else {
+          j_out_message = json_pack("{ssss}", "command", "authorization", "result", "connected");
+          message = json_dumps(j_out_message, JSON_COMPACT);
+          if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
+          }
+          o_free(message);
+          json_decref(j_out_message);
+          ws_stream->is_authenticated = 1;
+          ws_stream->expiration = now + 3600;;
+          if (ws_stream->username == NULL) {
+            ws_stream->username = o_strdup(TALIESIN_NO_AUTHENTICATION_USERNAME);
+          }
+        }
+  #endif
       } else {
-        j_out_message = json_pack("{ssss}", "command", "authorization", "result", "invalid_request");
+        j_out_message = json_pack("{ssss}", "command", "authorization", "result", "error_invalid_request");
         message = json_dumps(j_out_message, JSON_COMPACT);
         if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
@@ -1571,43 +1608,9 @@ void callback_websocket_stream_incoming_message (const struct _u_request * reque
         json_decref(j_out_message);
         ws_stream->is_authenticated = 0;
       }
-#else
-      if (ws_stream->config->use_oidc_authentication) {
-        j_out_message = json_pack("{ssss}", "command", "authorization", "result", "invalid_request");
-        message = json_dumps(j_out_message, JSON_COMPACT);
-        if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
-        }
-        o_free(message);
-        json_decref(j_out_message);
-        ws_stream->is_authenticated = 0;
-      } else {
-        j_out_message = json_pack("{ssss}", "command", "authorization", "result", "connected");
-        message = json_dumps(j_out_message, JSON_COMPACT);
-        if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
-        }
-        o_free(message);
-        json_decref(j_out_message);
-        ws_stream->is_authenticated = 1;
-        ws_stream->expiration = now + 3600;;
-        if (ws_stream->username == NULL) {
-          ws_stream->username = o_strdup(TALIESIN_NO_AUTHENTICATION_USERNAME);
-        }
-      }
-#endif
-    } else {
-      j_out_message = json_pack("{ssss}", "command", "authorization", "result", "invalid_request");
-      message = json_dumps(j_out_message, JSON_COMPACT);
-      if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
-      }
-      o_free(message);
-      json_decref(j_out_message);
-      ws_stream->is_authenticated = 0;
     }
   } else if (ws_stream->is_authenticated || !ws_stream->config->use_oidc_authentication) {
-    if (ws_stream->expiration > now) {
+    if (!ws_stream->config->use_oidc_authentication || ws_stream->expiration > now) {
       if (ws_stream->webradio != NULL) {
         j_is_valid = is_webradio_command_valid(ws_stream->config, ws_stream->webradio, j_message, ws_stream->username, ws_stream->is_admin);
       } else if (ws_stream->jukebox != NULL) {
@@ -1635,7 +1638,7 @@ void callback_websocket_stream_incoming_message (const struct _u_request * reque
             o_free(message);
             json_decref(j_out_message);
           } else if (check_result_value(j_result_command, T_ERROR_NOT_FOUND)) {
-            j_out_message = json_pack("{ssss}", "command", json_string_value(json_object_get(j_message, "command")), "result", "not_found");
+            j_out_message = json_pack("{ssss}", "command", json_string_value(json_object_get(j_message, "command")), "result", "error_not_found");
             message = json_dumps(j_out_message, JSON_COMPACT);
             if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
               y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
@@ -1674,7 +1677,7 @@ void callback_websocket_stream_incoming_message (const struct _u_request * reque
         y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error is_webradio_command_valid");
       }
     } else {
-      j_out_message = json_pack("{ssss}", "command", json_string_value(json_object_get(j_message, "command")), "result", "token_expired");
+      j_out_message = json_pack("{ssss}", "command", json_string_value(json_object_get(j_message, "command")), "result", "error_token_expired");
       message = json_dumps(j_out_message, JSON_COMPACT);
       if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
@@ -1683,7 +1686,7 @@ void callback_websocket_stream_incoming_message (const struct _u_request * reque
       json_decref(j_out_message);
     }
   } else {
-    j_out_message = json_pack("{ssss}", "command", json_string_value(json_object_get(j_message, "command")), "result", "not_authenticated");
+    j_out_message = json_pack("{ssss}", "command", json_string_value(json_object_get(j_message, "command")), "result", "error_not_authenticated");
     message = json_dumps(j_out_message, JSON_COMPACT);
     if (ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(message), message) != U_OK) {
       y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_incoming_message - Error ulfius_websocket_send_message");
@@ -2223,8 +2226,8 @@ int callback_taliesin_playlist_export (const struct _u_request * request, struct
   if (check_result_value(j_result, T_OK)) {
     escaped_filename = url_encode(json_string_value(json_object_get(json_object_get(j_result, "playlist"), "name")));
     content_disposition = msprintf("attachment; filename=%s.m3u", escaped_filename);
-    u_map_put(response->map_header, "Content-Type", "application/json");
-    u_map_put(response->map_header, "Content-Disposition", content_disposition);
+    ulfius_add_header_to_response(response, "Content-Type", "application/json");
+    ulfius_add_header_to_response(response, "Content-Disposition", content_disposition);
     if (ulfius_set_json_body_response(response, 200, json_object_get(json_object_get(j_result, "playlist"), "media")) != U_OK) {
       y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_playlist_get - Error setting json response");
       res = U_CALLBACK_ERROR;

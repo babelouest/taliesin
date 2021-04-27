@@ -202,59 +202,63 @@ class AudioPlayer extends Component {
 	}
 	
 	handleCommandResponse(response) {
-		switch (response.command) {
-			case "authorization":
-				if (response.result !== "connected") {
-					this.websocket.onclose = null;
-					this.websocket.close();
-				} else {
-					if (this.state.stream.webradio) {
-						this.sendStreamComand("now");
-					} else {
-						this.sendStreamComand("list", {offset: this.state.jukeboxIndex, limit: 1});
-					}
-				}
-				break;
-			case "now":
-				if (response.result !== "not_found" && response.result !== "invalid_param") {
-					if (response.result.data_source && 
-							response.result.path && 
-								(StateStore.getState().profile.mediaNow.data_source !== response.result.data_source || 
-								StateStore.getState().profile.mediaNow.path !== response.result.path)) {
-						this.setState({media: response.result}, () => {
-								this.sendStreamComand("next");
-								StateStore.dispatch({type: "setMediaNow", media: response.result});
-						});
-					}
-				}
-				break;
-			case "next":
-				if (response.result !== "not_found" && response.result !== "invalid_param") {
-					StateStore.dispatch({type: "setMediaNext", media: response.result});
-				}
-				break;
-			case "stop":
-				break;
-			case "replay":
-				StateStore.getState().NotificationManager.addNotification({
-					message: i18n.t("player.replay"),
-					level: 'success'
-				});
-				break;
-			case "skip":
-				StateStore.getState().NotificationManager.addNotification({
-					message: i18n.t("player.next"),
-					level: 'success'
-				});
-				break;
-			case "list":
-				if (response.result && response.result[0] && response.result[0].data_source && response.result[0].path && (response.result[0].data_source !== StateStore.getState().profile.mediaNow.data_source || response.result[0].path !== StateStore.getState().profile.mediaNow.path)) {
-					StateStore.dispatch({type: "setMediaNow", media: response.result[0]});
-				}
-				break;
-			default:
-				break;
-		}
+    if (JSON.stringify(response.result).startsWith("error")) {
+      console.err("websocket error", response.result);
+    } else {
+      switch (response.command) {
+        case "authorization":
+          if (response.result !== "connected") {
+            this.websocket.onclose = null;
+            this.websocket.close();
+          } else {
+            if (this.state.stream.webradio) {
+              this.sendStreamComand("now");
+            } else {
+              this.sendStreamComand("list", {offset: this.state.jukeboxIndex, limit: 1});
+            }
+          }
+          break;
+        case "now":
+          if (response.result !== "not_found" && response.result !== "invalid_param") {
+            if (response.result.data_source && 
+                response.result.path && 
+                  (StateStore.getState().profile.mediaNow.data_source !== response.result.data_source || 
+                  StateStore.getState().profile.mediaNow.path !== response.result.path)) {
+              this.setState({media: response.result}, () => {
+                  this.sendStreamComand("next");
+                  StateStore.dispatch({type: "setMediaNow", media: response.result});
+              });
+            }
+          }
+          break;
+        case "next":
+          if (response.result !== "not_found" && response.result !== "invalid_param") {
+            StateStore.dispatch({type: "setMediaNext", media: response.result});
+          }
+          break;
+        case "stop":
+          break;
+        case "replay":
+          StateStore.getState().NotificationManager.addNotification({
+            message: i18n.t("player.replay"),
+            level: 'success'
+          });
+          break;
+        case "skip":
+          StateStore.getState().NotificationManager.addNotification({
+            message: i18n.t("player.next"),
+            level: 'success'
+          });
+          break;
+        case "list":
+          if (response.result && response.result[0] && response.result[0].data_source && response.result[0].path && (response.result[0].data_source !== StateStore.getState().profile.mediaNow.data_source || response.result[0].path !== StateStore.getState().profile.mediaNow.path)) {
+            StateStore.dispatch({type: "setMediaNow", media: response.result[0]});
+          }
+          break;
+        default:
+          break;
+      }
+    }
 	}
 	
 	sendStreamComand(command, parameters) {

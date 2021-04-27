@@ -28,6 +28,7 @@ class MediaInfo extends Component {
 	buildTitle(media, index, total) {
 		var title = "";
 		if (!!media) {
+      console.log(media);
 			if (index > -1) {
 				title += ((index+1)<10?"0"+(index+1):(index+1)) + "/" + (total<10?"0"+total:total) + " - ";
 			}
@@ -38,7 +39,7 @@ class MediaInfo extends Component {
 					}
 				}
 				title += (media.tags.title || media.name.replace(/\.[^/.]+$/, ""));
-			} else {
+			} else if (media.name) {
 				title += media.name.replace(/\.[^/.]+$/, "");
 			}
 		}

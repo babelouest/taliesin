@@ -5,6 +5,7 @@
 - Add http compression
 - Update authentication backend to OpenID Connect with JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens
 - Fix small UI Bugs
+- Fix data source refresh bug on updated media
 
 ## 1.0.18
 

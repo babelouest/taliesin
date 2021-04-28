@@ -601,8 +601,8 @@ int data_source_scan_directory(struct config_elements * config, struct _refresh_
                     y_log_message(Y_LOG_LEVEL_ERROR, "data_source_scan_directory - Error insert new media %s", json_string_value(json_object_get(j_element, "name")));
                   }
                 } else if (check_result_value(j_media, T_OK) && !json_is_array(json_object_get(j_media, "media"))) {
-                  // Check if last_modified is newer than the one in the database, if so, update current file rather than creating a new one
-                  if (json_integer_value(json_object_get(json_object_get(j_media, "media"), "last_updated")) < json_integer_value(json_object_get(j_element, "last_modified"))) {
+                  // Check if last_updated is newer than the one in the database, if so, update current file rather than creating a new one
+                  if (json_integer_value(json_object_get(json_object_get(j_media, "media"), "last_updated")) < json_integer_value(json_object_get(j_element, "last_updated"))) {
                     if (0 == o_strcmp("audio", json_string_value(json_object_get(json_object_get(j_media, "media"), "type"))) ||
                         0 == o_strcmp("video", json_string_value(json_object_get(json_object_get(j_media, "media"), "type"))) ||
                         0 == o_strcmp("image", json_string_value(json_object_get(json_object_get(j_media, "media"), "type")))) {

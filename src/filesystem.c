@@ -68,10 +68,10 @@ json_t * fs_directory_read(const char * path) {
         if (stat(full_path, &file_stat) == 0) {
           if (S_ISDIR(file_stat.st_mode) && o_strcmp(ent->d_name, ".") != 0 && o_strcmp(ent->d_name, "..") != 0) {
             // Folder
-            json_array_append_new(j_folder, json_pack("{sssssi}", "type", "folder", "name", ent->d_name, "last_modified", file_stat.st_mtime));
+            json_array_append_new(j_folder, json_pack("{sssssi}", "type", "folder", "name", ent->d_name, "last_updated", file_stat.st_mtime));
           } else if (S_ISREG(file_stat.st_mode)) {
             // File
-            json_array_append_new(j_folder, json_pack("{sssssi}", "type", "file", "name", ent->d_name, "last_modified", file_stat.st_mtime));
+            json_array_append_new(j_folder, json_pack("{sssssi}", "type", "file", "name", ent->d_name, "last_updated", file_stat.st_mtime));
           }
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "fs_directory_read - error reading directory %s", full_path);

@@ -908,9 +908,9 @@ int media_add(struct config_elements * config, json_int_t tds_id, json_int_t tf_
   }
   
   if (config->conn->type == HOEL_DB_TYPE_MARIADB) {
-    clause_last_updated = msprintf("FROM_UNIXTIME(%" JSON_INTEGER_FORMAT ")", json_integer_value(json_object_get(j_media, "last_modified")));
+    clause_last_updated = msprintf("FROM_UNIXTIME(%" JSON_INTEGER_FORMAT ")", json_integer_value(json_object_get(j_media, "last_updated")));
   } else {
-    clause_last_updated = msprintf("%" JSON_INTEGER_FORMAT, json_integer_value(json_object_get(j_media, "last_modified")));
+    clause_last_updated = msprintf("%" JSON_INTEGER_FORMAT, json_integer_value(json_object_get(j_media, "last_updated")));
   }
   
   media_type = json_string_value(json_object_get(json_object_get(json_object_get(j_media, "metadata"), "format"), "media"));
@@ -985,7 +985,7 @@ int media_add(struct config_elements * config, json_int_t tds_id, json_int_t tf_
 }
 
 int media_update(struct config_elements * config, json_int_t tm_id, json_t * j_media) {
-  json_t * j_query, * j_last_id, * j_tag, * j_result;
+  json_t * j_query, * j_tag, * j_result;
   int res, ret = T_OK;
   char * clause_last_updated;
   json_int_t tic_id = 0;
@@ -1027,13 +1027,8 @@ int media_update(struct config_elements * config, json_int_t tm_id, json_t * j_m
                                 cover_crc_str);
           res = h_insert(config->conn, j_query, NULL);
           json_decref(j_query);
-          if (res == H_OK) {
-            j_last_id = h_last_insert_id(config->conn);
-            if (j_last_id != NULL) {
-              // Insert media metadata
-              tic_id = json_integer_value(j_last_id);
-              json_decref(j_last_id);
-            }
+          if (res != H_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "media_update - error executing j_query (4)");
           }
         }
         json_decref(j_result);
@@ -1046,9 +1041,9 @@ int media_update(struct config_elements * config, json_int_t tm_id, json_t * j_m
   }
   
   if (config->conn->type == HOEL_DB_TYPE_MARIADB) {
-    clause_last_updated = msprintf("FROM_UNIXTIME(%" JSON_INTEGER_FORMAT ")", json_integer_value(json_object_get(j_media, "last_modified")));
+    clause_last_updated = msprintf("FROM_UNIXTIME(%" JSON_INTEGER_FORMAT ")", json_integer_value(json_object_get(j_media, "last_updated")));
   } else {
-    clause_last_updated = msprintf("%" JSON_INTEGER_FORMAT, json_integer_value(json_object_get(j_media, "last_modified")));
+    clause_last_updated = msprintf("%" JSON_INTEGER_FORMAT, json_integer_value(json_object_get(j_media, "last_updated")));
   }
   
   j_query = json_pack("{sss{sis{ss}sosI}s{sI}}",
@@ -1084,7 +1079,7 @@ int media_update(struct config_elements * config, json_int_t tm_id, json_t * j_m
         json_decref(j_query);
         if (res == H_OK) {
           // Insert media metadata (if any)
-          if (json_array_size(json_object_get(json_object_get(j_media, "metadata"), "tags")) > 0) {
+          if (json_object_size(json_object_get(json_object_get(j_media, "metadata"), "tags")) > 0) {
             j_query = json_pack("{sss[]}",
                                 "table",
                                 TALIESIN_TABLE_META_DATA,

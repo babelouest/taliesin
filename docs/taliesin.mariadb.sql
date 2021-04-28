@@ -83,7 +83,6 @@ CREATE TABLE `t_meta_data` (
   FOREIGN KEY(`tm_id`) REFERENCES `t_media`(`tm_id`) ON DELETE CASCADE
 );
 CREATE INDEX `i_tmd_key` ON `t_meta_data`(`tmd_key`);
-CREATE INDEX `i_tmd_value` ON `t_meta_data`(`tmd_value`);
 
 CREATE TABLE `t_playlist` (
   `tpl_id` INT(11) PRIMARY KEY AUTO_INCREMENT,

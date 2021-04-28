@@ -24,6 +24,7 @@ CREATE TABLE `t_data_source` (
   `tds_refresh_status` TINYINT DEFAULT 0 -- 0: not running, 1 pending, 2: preparing, 3: runnin, 4: cleaning, 5: error, 6: stop, 7: not found
 );
 CREATE INDEX `i_tds_name` ON `t_data_source`(`tds_name`);
+CREATE INDEX `i_tds_username` ON `t_data_source`(`tds_username`);
 
 CREATE TABLE `t_image_cover` (
   `tic_id` INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -66,6 +67,7 @@ CREATE TABLE `t_media` (
 );
 CREATE INDEX `i_tm_name` ON `t_media`(`tm_name`);
 CREATE INDEX `i_tm_type` ON `t_media`(`tm_type`);
+CREATE INDEX `i_tm_last_updated` ON `t_media`(`tm_last_updated`);
 
 CREATE TABLE `t_meta_data` (
   `tmd_id` INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,7 +78,6 @@ CREATE TABLE `t_meta_data` (
   FOREIGN KEY(`tm_id`) REFERENCES `t_media`(`tm_id`) ON DELETE CASCADE
 );
 CREATE INDEX `i_tmd_key` ON `t_meta_data`(`tmd_key`);
-CREATE INDEX `i_tmd_value` ON `t_meta_data`(`tmd_value`);
 
 CREATE TABLE `t_playlist` (
   `tpl_id` INTEGER PRIMARY KEY AUTOINCREMENT,

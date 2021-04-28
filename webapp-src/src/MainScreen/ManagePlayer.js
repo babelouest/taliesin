@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { DropdownButton, ToggleButtonGroup, ToggleButton, MenuItem, Button, ButtonGroup } from 'react-bootstrap';
+import { DropdownButton, Checkbox, MenuItem, Button, ButtonGroup } from 'react-bootstrap';
 import FontAwesome from 'react-fontawesome';
 
 import StateStore from '../lib/StateStore';
@@ -190,18 +190,7 @@ class ManagePlayer extends Component {
 		
 		this.state.playerList.forEach((player, index) => {
 			var enabledSwitch, switches = [<MenuItem key="0" eventKey="0" onClick={() => this.handleSelectSwitch(player)} className={!player.switch?"bg-success":""}>{i18n.t("common.none")}</MenuItem>];
-			enabledSwitch = <ToggleButtonGroup
-					type="radio"
-					name="player-enabled"
-					value={player.enabled}
-					>
-						<ToggleButton value={true} onClick={(event) => {this.handleChangeEnabled(index, event)}}>
-							{i18n.t("common.enabled")}
-						</ToggleButton>
-						<ToggleButton value={false} onClick={(event) => {this.handleChangeEnabled(index, event)}}>
-							{i18n.t("common.disabled")}
-						</ToggleButton>
-					</ToggleButtonGroup>;
+			enabledSwitch = <Checkbox checked={player.enabled} onChange={() => this.handleChangeEnabled(index, event)}/>
 			
 			this.state.switchList.forEach((switcher, index) => {
 				switches.push(
@@ -225,9 +214,7 @@ class ManagePlayer extends Component {
 					</DropdownButton>
 				</td>
 				<td>
-					<ToggleButtonGroup type="checkbox" defaultValue={[1]}>
-						{enabledSwitch}
-					</ToggleButtonGroup>
+          {enabledSwitch}
 				</td>
 				<td>
 					<ButtonGroup>

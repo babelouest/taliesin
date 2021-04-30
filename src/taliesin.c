@@ -30,6 +30,12 @@
 
 #include "taliesin.h"
 
+/**
+ * global variables to store close condition and mutex
+ */
+pthread_mutex_t global_handler_close_lock;
+pthread_cond_t  global_handler_close_cond;
+
 #ifndef DISABLE_OAUTH2
 static char * read_file(const char * filename) {
   char * buffer = NULL;

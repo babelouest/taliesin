@@ -186,12 +186,6 @@
 #define TALIESIN_MEDIA_LIMIT_DEFAULT 100
 
 /**
- * global variables to store close condition and mutex
- */
-pthread_mutex_t global_handler_close_lock;
-pthread_cond_t  global_handler_close_cond;
-
-/**
  * Application structures
  */
 struct _t_file {

@@ -32,7 +32,7 @@
 
 int has_scope(struct config_elements * config, json_t * scope_value, const char * scope) {
   char ** scope_array = NULL;
-  int ret;
+  int ret = 0;
   
   if (!config->use_oidc_authentication) {
     return 1;

@@ -4,7 +4,7 @@
  *
  * Copyright 2021 Nicolas Mora <mail@babelouest.org>
  *
- * Version 20210419
+ * Version 20210501
  *
  * The MIT License (MIT)
  * 
@@ -57,6 +57,7 @@ struct _iddawc_resource_config {
   time_t              dpop_max_iat;
   unsigned short      accept_access_token;
   unsigned short      accept_client_token;
+  pthread_mutex_t     session_lock;
 };
 
 int jwt_profile_access_token_check_scope(struct _iddawc_resource_config * config, json_t * j_access_token);

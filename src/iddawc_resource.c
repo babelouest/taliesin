@@ -4,7 +4,7 @@
  *
  * Copyright 2021 Nicolas Mora <mail@babelouest.org>
  *
- * Version 20210419
+ * Version 20210501
  *
  * The MIT License (MIT)
  * 
@@ -108,44 +108,51 @@ int callback_check_jwt_profile_access_token (const struct _u_request * request, 
         break;
     }
     if (token_value != NULL) {
-      i_set_str_parameter(config->session, I_OPT_ACCESS_TOKEN, token_value);
-      if (i_verify_jwt_access_token(config->session, config->aud) == I_OK) {
-        j_access_token = json_deep_copy(config->session->access_token_payload);
-        if ((res_validity = jwt_profile_access_token_check_scope(config, j_access_token)) == I_TOKEN_ERROR_INSUFFICIENT_SCOPE) {
-          response_value = msprintf(HEADER_PREFIX_BEARER "%s%s%serror=\"insufficient_scope\",error_description=\"The scope is invalid\"", (config->realm!=NULL?"realm=":""), (config->realm!=NULL?config->realm:""), (config->realm!=NULL?",":""));
-          u_map_put(response->map_header, HEADER_RESPONSE, response_value);
-          o_free(response_value);
-        } else if (res_validity != I_TOKEN_OK) {
-          response_value = msprintf(HEADER_PREFIX_BEARER "%s%s%serror=\"invalid_request\",error_description=\"Internal server error\"", (config->realm!=NULL?"realm=":""), (config->realm!=NULL?config->realm:""), (config->realm!=NULL?",":""));
-          u_map_put(response->map_header, HEADER_RESPONSE, response_value);
-          o_free(response_value);
-        } else {
-          if (json_string_length(json_object_get(json_object_get(j_access_token, "cnf"), "jkt"))) {
-            htu = msprintf("%s%s", config->resource_url_root, request->url_path);
-            if (i_verify_dpop_proof(u_map_get(request->map_header, I_HEADER_DPOP), request->http_verb, htu, config->dpop_max_iat, json_string_value(json_object_get(json_object_get(j_access_token, "cnf"), "jkt"))) == I_OK) {
+      if (!pthread_mutex_lock(&config->session_lock)) {
+        i_set_str_parameter(config->session, I_OPT_ACCESS_TOKEN, token_value);
+        if (i_verify_jwt_access_token(config->session, config->aud) == I_OK) {
+          j_access_token = json_deep_copy(config->session->access_token_payload);
+          if ((res_validity = jwt_profile_access_token_check_scope(config, j_access_token)) == I_TOKEN_ERROR_INSUFFICIENT_SCOPE) {
+            response_value = msprintf(HEADER_PREFIX_BEARER "%s%s%serror=\"insufficient_scope\",error_description=\"The scope is invalid\"", (config->realm!=NULL?"realm=":""), (config->realm!=NULL?config->realm:""), (config->realm!=NULL?",":""));
+            u_map_put(response->map_header, HEADER_RESPONSE, response_value);
+            o_free(response_value);
+          } else if (res_validity != I_TOKEN_OK) {
+            response_value = msprintf(HEADER_PREFIX_BEARER "%s%s%serror=\"invalid_request\",error_description=\"Internal server error\"", (config->realm!=NULL?"realm=":""), (config->realm!=NULL?config->realm:""), (config->realm!=NULL?",":""));
+            u_map_put(response->map_header, HEADER_RESPONSE, response_value);
+            o_free(response_value);
+          } else {
+            if (json_string_length(json_object_get(json_object_get(j_access_token, "cnf"), "jkt"))) {
+              htu = msprintf("%s%s", config->resource_url_root, request->url_path);
+              if (i_verify_dpop_proof(u_map_get(request->map_header, I_HEADER_DPOP), request->http_verb, htu, config->dpop_max_iat, json_string_value(json_object_get(json_object_get(j_access_token, "cnf"), "jkt"))) == I_OK) {
+                res = U_CALLBACK_CONTINUE;
+                if (ulfius_set_response_shared_data(response, json_deep_copy(j_access_token), (void (*)(void *))&json_decref) != U_OK) {
+                  res = U_CALLBACK_ERROR;
+                }
+              } else {
+                response_value = msprintf(HEADER_PREFIX_BEARER "%s%s%serror=\"invalid_request\",error_description=\"The DPoP token is invalid\"", (config->realm!=NULL?"realm=":""), (config->realm!=NULL?config->realm:""), (config->realm!=NULL?",":""));
+                u_map_put(response->map_header, HEADER_RESPONSE, response_value);
+                o_free(response_value);
+              }
+              o_free(htu);
+            } else {
               res = U_CALLBACK_CONTINUE;
               if (ulfius_set_response_shared_data(response, json_deep_copy(j_access_token), (void (*)(void *))&json_decref) != U_OK) {
                 res = U_CALLBACK_ERROR;
               }
-            } else {
-              response_value = msprintf(HEADER_PREFIX_BEARER "%s%s%serror=\"invalid_request\",error_description=\"The DPoP token is invalid\"", (config->realm!=NULL?"realm=":""), (config->realm!=NULL?config->realm:""), (config->realm!=NULL?",":""));
-              u_map_put(response->map_header, HEADER_RESPONSE, response_value);
-              o_free(response_value);
-            }
-            o_free(htu);
-          } else {
-            res = U_CALLBACK_CONTINUE;
-            if (ulfius_set_response_shared_data(response, json_deep_copy(j_access_token), (void (*)(void *))&json_decref) != U_OK) {
-              res = U_CALLBACK_ERROR;
             }
           }
+        } else {
+          response_value = msprintf(HEADER_PREFIX_BEARER "%s%s%serror=\"invalid_request\",error_description=\"The access token is invalid\"", (config->realm!=NULL?"realm=":""), (config->realm!=NULL?config->realm:""), (config->realm!=NULL?",":""));
+          u_map_put(response->map_header, HEADER_RESPONSE, response_value);
+          o_free(response_value);
         }
+        json_decref(j_access_token);
       } else {
-        response_value = msprintf(HEADER_PREFIX_BEARER "%s%s%serror=\"invalid_request\",error_description=\"The access token is invalid\"", (config->realm!=NULL?"realm=":""), (config->realm!=NULL?config->realm:""), (config->realm!=NULL?",":""));
+        response_value = msprintf(HEADER_PREFIX_BEARER "%s%s%serror=\"invalid_request\",error_description=\"Internal server error\"", (config->realm!=NULL?"realm=":""), (config->realm!=NULL?config->realm:""), (config->realm!=NULL?",":""));
         u_map_put(response->map_header, HEADER_RESPONSE, response_value);
         o_free(response_value);
       }
-      json_decref(j_access_token);
+      pthread_mutex_unlock(&config->session_lock);
     } else {
       response_value = msprintf(HEADER_PREFIX_BEARER "%s%s%serror=\"invalid_token\",error_description=\"The access token is missing\"", (config->realm!=NULL?"realm=":""), (config->realm!=NULL?config->realm:""), (config->realm!=NULL?",":""));
       u_map_put(response->map_header, HEADER_RESPONSE, response_value);
@@ -157,6 +164,7 @@ int callback_check_jwt_profile_access_token (const struct _u_request * request, 
 
 int i_jwt_profile_access_token_init_config(struct _iddawc_resource_config * config, unsigned short method, const char * realm, const char * aud, const char * oauth_scope, const char * resource_url_root, unsigned short accept_access_token, unsigned short accept_client_token, time_t dpop_max_iat) {
   int ret;
+  pthread_mutexattr_t mutexattr;
   
   if (config != NULL) {
     config->method = method;
@@ -170,7 +178,14 @@ int i_jwt_profile_access_token_init_config(struct _iddawc_resource_config * conf
     
     if ((config->session = o_malloc(sizeof(struct _i_session))) != NULL) {
       if (i_init_session(config->session) == I_OK) {
-        ret = I_TOKEN_OK;
+        pthread_mutexattr_init ( &mutexattr );
+        pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_RECURSIVE );
+        if (pthread_mutex_init(&config->session_lock, &mutexattr) == 0) {
+          ret = I_TOKEN_OK;
+        } else {
+          ret = I_TOKEN_ERROR_INTERNAL;
+        }
+        pthread_mutexattr_destroy(&mutexattr);
       } else {
         ret = I_TOKEN_ERROR_INTERNAL;
       }
@@ -223,5 +238,6 @@ void i_jwt_profile_access_token_close_config(struct _iddawc_resource_config * co
     o_free(config->oauth_scope);
     o_free(config->resource_url_root);
     o_free(config->session);
+    pthread_mutex_destroy(&config->session_lock);
   }
 }

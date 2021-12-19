@@ -10,6 +10,7 @@ CC=gcc
 CFLAGS=-Wall -D_REENTRANT -DDEBUG -g -O0
 LDFLAGS=-lc -lulfius -lorcania -lrhonabwy -ljansson -lyder -lcheck -lpthread -lm -lrt -lsubunit
 TARGET=config data_source_crud data_source_refresh data_source_create_test_environment data_source_browse_path data_source_browse_category playlist_crud search_simple search_advanced stream_webradio stream_jukebox data_source_delete_test_environment
+VALGRIND_COMMAND=valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all
 
 VERBOSE=0
 MEMCHECK=0

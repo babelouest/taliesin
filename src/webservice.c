@@ -4,7 +4,7 @@
  * 
  * Webservices (endpoints) implementations
  *
- * Copyright 2017-2018 Nicolas Mora <mail@babelouest.org>
+ * Copyright 2017-2021 Nicolas Mora <mail@babelouest.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU GENERAL PUBLIC LICENSE
@@ -119,7 +119,6 @@ int callback_taliesin_server_configuration (const struct _u_request * request, s
                         json_true()
 #endif
                         ));
-  y_log_message(Y_LOG_LEVEL_DEBUG, "body %.*s", response->binary_body_length, response->binary_body);
   return U_CALLBACK_COMPLETE;
 };
 

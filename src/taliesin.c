@@ -4,7 +4,7 @@
  *
  * Main file
  *
- * Copyright 2017-2018 Nicolas Mora <mail@babelouest.org>
+ * Copyright 2017-2021 Nicolas Mora <mail@babelouest.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU GENERAL PUBLIC LICENSE
@@ -164,6 +164,7 @@ int main (int argc, char ** argv) {
     fprintf(stderr, "Error init refresh_lock or refresh_cond\n");
     return 1;
   }
+  i_global_init();
   ulfius_init_instance(config->instance, TALIESIN_DEFAULT_PORT, NULL, NULL);
   config->timeout = TALIESIN_DEFAULT_HTTP_TIMEOUT;
 
@@ -427,7 +428,6 @@ int main (int argc, char ** argv) {
     y_log_message(Y_LOG_LEVEL_ERROR, "Error destroying global_handler_close_lock or global_handler_close_cond");
   }
   y_log_message(Y_LOG_LEVEL_INFO, "Taliesin stopped");
-  y_close_logs();
   exit_server(&config, TALIESIN_STOP);
   return 0;
 }
@@ -482,6 +482,8 @@ void exit_server(struct config_elements ** config, int exit_value) {
     o_free(*config);
     (*config) = NULL;
   }
+  i_global_close();
+  y_close_logs();
   exit(exit_value);
 }
 

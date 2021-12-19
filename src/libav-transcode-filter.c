@@ -4,7 +4,7 @@
  * 
  * Stream functions definitions
  *
- * Copyright 2017-2018 Nicolas Mora <mail@babelouest.org>
+ * Copyright 2017-2021 Nicolas Mora <mail@babelouest.org>
  * Copyright (c) 2013-2017 Andreas Unterweger
  *
  * This file contains parts of Libav.
@@ -340,21 +340,21 @@ int encode_audio_frame_and_return(AVFrame * frame,
   if (frame) {
     frame->pts = *pts;
     *pts += frame->nb_samples;
-  }
-  if ((error = my_encode(output_codec_context, &output_packet, frame, data_present)) < 0) {
-    if (error == AVERROR_EOF) {
-      *data_present = 0;
-      av_packet_unref(&output_packet);
-      return error;
-    } if (error == AVERROR_INVALIDDATA) {
-      *data_present = 0;
-      av_packet_unref(&output_packet);
-      return error;
-    } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "Could not encode frame (error '%s')", get_error_text(error));
-      *data_present = 0;
-      av_packet_unref(&output_packet);
-      return error;
+    if ((error = my_encode(output_codec_context, &output_packet, frame, data_present)) < 0) {
+      if (error == AVERROR_EOF) {
+        *data_present = 0;
+        av_packet_unref(&output_packet);
+        return error;
+      } if (error == AVERROR_INVALIDDATA) {
+        *data_present = 0;
+        av_packet_unref(&output_packet);
+        return error;
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "Could not encode frame (error '%s')", get_error_text(error));
+        *data_present = 0;
+        av_packet_unref(&output_packet);
+        return error;
+      }
     }
   }
   /* Write one audio frame from the temporary packet to the output file. */
@@ -375,6 +375,7 @@ int load_encode_and_return(AVAudioFifo * fifo,
   AVFrame *output_frame;
   const int frame_size = FFMIN(av_audio_fifo_size(fifo), output_codec_context->frame_size);
   if (init_output_frame(&output_frame, output_codec_context, frame_size)) {
+    y_log_message(Y_LOG_LEVEL_ERROR, "Error init_output_frame");
     return AVERROR_EXIT;
   }
   if (av_audio_fifo_read(fifo, (void **)output_frame->data, frame_size) < frame_size) {
@@ -384,6 +385,7 @@ int load_encode_and_return(AVAudioFifo * fifo,
   }
   if (encode_audio_frame_and_return(output_frame, output_codec_context, output_format_context, pts, data_present) < 0) {
     av_frame_free(&output_frame);
+    y_log_message(Y_LOG_LEVEL_ERROR, "Error encode_audio_frame_and_return");
     return AVERROR_EXIT;
   }
   av_frame_free(&output_frame);

@@ -4,7 +4,7 @@
  * 
  * Stream functions definitions for webradio streaming
  *
- * Copyright 2017-2018 Nicolas Mora <mail@babelouest.org>
+ * Copyright 2017-2021 Nicolas Mora <mail@babelouest.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU GENERAL PUBLIC LICENSE
@@ -1704,7 +1704,7 @@ void * webradio_run_thread(void * args) {
   int output_frame_size;
   int finished;
   int error;
-  int data_written;
+  int data_written = 0;
   char * title = NULL;
   json_t * j_media;
   unsigned int current_index;
@@ -1783,7 +1783,7 @@ void * webradio_run_thread(void * args) {
           }
         }
         current_buffer->complete = 1;
-        avcodec_flush_buffers(webradio->audio_stream->output_codec_context);
+        //avcodec_flush_buffers(webradio->audio_stream->output_codec_context);
       }
       o_free(title);
       title = NULL;

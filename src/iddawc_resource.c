@@ -123,7 +123,7 @@ int callback_check_jwt_profile_access_token (const struct _u_request * request, 
           } else {
             if (json_string_length(json_object_get(json_object_get(j_access_token, "cnf"), "jkt"))) {
               htu = msprintf("%s%s", config->resource_url_root, request->url_path);
-              if (i_verify_dpop_proof(u_map_get(request->map_header, I_HEADER_DPOP), request->http_verb, htu, config->dpop_max_iat, json_string_value(json_object_get(json_object_get(j_access_token, "cnf"), "jkt"))) == I_OK) {
+              if (i_verify_dpop_proof(u_map_get(request->map_header, I_HEADER_DPOP), request->http_verb, htu, config->dpop_max_iat, json_string_value(json_object_get(json_object_get(j_access_token, "cnf"), "jkt")), token_value) == I_OK) {
                 res = U_CALLBACK_CONTINUE;
                 if (ulfius_set_response_shared_data(response, json_deep_copy(j_access_token), (void (*)(void *))&json_decref) != U_OK) {
                   res = U_CALLBACK_ERROR;
@@ -228,7 +228,6 @@ int i_jwt_profile_access_token_load_jwks(struct _iddawc_resource_config * config
   
   return ret;
 }
-
 
 void i_jwt_profile_access_token_close_config(struct _iddawc_resource_config * config) {
   if (config != NULL) {

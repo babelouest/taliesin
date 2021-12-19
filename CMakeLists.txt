@@ -3,7 +3,7 @@
 #
 # CMake file used to build program
 #
-# Copyright 2018 Nicolas Mora <mail@babelouest.org>
+# Copyright 2018-2021 Nicolas Mora <mail@babelouest.org>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the MIT License
@@ -27,12 +27,12 @@ set(PROGRAM_VERSION_MINOR "0")
 set(PROGRAM_VERSION_PATCH "19")
 set(PROJECT_DESCRIPTION "Lightweight audio streaming server")
 set(PROJECT_BUGREPORT_PATH "https://github.com/babelouest/taliesin/issues")
-set(ORCANIA_VERSION_REQUIRED "2.2.0")
-set(YDER_VERSION_REQUIRED "1.4.13")
-set(ULFIUS_VERSION_REQUIRED "2.7.3")
-set(IDDAWC_VERSION_REQUIRED "1.0.0")
-set(RHONABWY_VERSION_REQUIRED "0.9.999")
-set(HOEL_VERSION_REQUIRED "1.4.17")
+set(ORCANIA_VERSION_REQUIRED "2.2.1")
+set(YDER_VERSION_REQUIRED "1.4.14")
+set(ULFIUS_VERSION_REQUIRED "2.7.7")
+set(RHONABWY_VERSION_REQUIRED "1.1.2")
+set(IDDAWC_VERSION_REQUIRED "1.1.1")
+set(HOEL_VERSION_REQUIRED "1.4.18")
 
 include(GNUInstallDirs)
 include(CheckSymbolExists)

@@ -147,10 +147,11 @@ int main (int argc, char ** argv) {
   config->stream_sample_rate = TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
   config->stream_bitrate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
 #ifndef DISABLE_OAUTH2
-  if (config->instance == NULL || config->iddawc_resource_config == NULL || config->iddawc_resource_config_admin == NULL || config->static_file_config == NULL) {
+  if (config->instance == NULL || config->iddawc_resource_config == NULL || config->iddawc_resource_config_admin == NULL || config->static_file_config == NULL)
 #else
-  if (config->instance == NULL || config->static_file_config == NULL) {
+  if (config->instance == NULL || config->static_file_config == NULL)
 #endif
+  {
     fprintf(stderr, "Memory error - config->instance || config->iddawc_resource_config || config->iddawc_resource_config_admin || config->static_file_config\n");
     return 1;
   }
@@ -335,7 +336,7 @@ int main (int argc, char ** argv) {
   // Other endpoints
   ulfius_add_endpoint_by_val(config->instance, "GET", NULL, "*", TALIESIN_CALLBACK_PRIORITY_FILES, &callback_static_compressed_inmemory_website, (void*)config->static_file_config);
   ulfius_add_endpoint_by_val(config->instance, "GET", NULL, "*", TALIESIN_CALLBACK_PRIORITY_POST_FILE, &callback_404_if_necessary, NULL);
-  ulfius_add_endpoint_by_val(config->instance, "GET", "/config/", NULL, TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_server_configuration, (void*)config);
+  ulfius_add_endpoint_by_val(config->instance, "GET", "/.well-known/taliesin-configuration/", NULL, TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_server_configuration, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "OPTIONS", NULL, "*", TALIESIN_CALLBACK_PRIORITY_ZERO, &callback_taliesin_options, NULL);
 
   // API output compression
@@ -1089,7 +1090,7 @@ char * get_file_content(const char * file_path) {
  * So I disabled it...
  */
 void redirect_libav_logs(void * avcl, int level, const char * fmt, va_list vl) {
-  /*va_list args_cpy;
+  va_list args_cpy;
   size_t out_len = 0;
   char * out = NULL, * new_fmt;
   unsigned long y_level;
@@ -1126,5 +1127,5 @@ void redirect_libav_logs(void * avcl, int level, const char * fmt, va_list vl) {
     }
     o_free(new_fmt);
     va_end(args_cpy);
-  }*/
+  }
 }

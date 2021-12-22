@@ -23,30 +23,24 @@ libmariadbclient
 libconfig
 ```
 
-For example, to install Taliesin with the `taliesin-full_1.0.12_Debian_stretch_x86_64.tar.gz` package downloaded on the `releases` page, you must execute the following commands:
+For example, to install Taliesin with the `taliesin-full_1.0.19_Debian_stretch_x86_64.tar.gz` package downloaded on the `releases` page, you must execute the following commands:
 
 ```shell
 $ sudo apt install -y autoconf libjansson-dev libssl-dev libavfilter libavcodec libavformat libswresample libavutil libcurl-gnutls libgnutls libgcrypt libsqlite3 libmariadbclient libconfig
-$ wget https://github.com/benmcollins/libjwt/archive/v1.9.0.tar.gz
-$ tar -zxvf v1.9.0.tar.gz
-$ cd libjwt-1.9.0
-$ autoreconf -i
-$ ./configure
-$ make && sudo make install
-$ wget https://github.com/babelouest/taliesin/releases/download/v1.0.12/taliesin-full_1.0.12_Debian_stretch_x86_64.tar.gz
-$ tar xf hoel-dev-full_1.4.0_Debian_stretch_x86_64.tar.gz
-$ sudo dpkg -i liborcania_1.2.0_Debian_stretch_x86_64.deb
-$ sudo dpkg -i libyder_1.2.0_Debian_stretch_x86_64.deb
-$ sudo dpkg -i libhoel_1.4.0_Debian_stretch_x86_64.deb
-$ sudo dpkg -i libulfius_2.3.0_Debian_stretch_x86_64.deb
-$ sudo dpkg -i taliesin_1.0.12_Debian_stretch_x86_64.deb
+$ wget https://github.com/babelouest/taliesin/releases/download/v1.0.19/taliesin-full_1.0.19_Debian_stretch_x86_64.tar.gz
+$ tar xf taliesin-full_1.0.19_Debian_stretch_x86_64.tar.gz
+$ sudo dpkg -i liborcania_2.2.1_Debian_stretch_x86_64.deb
+$ sudo dpkg -i libyder_1.4.14_Debian_stretch_x86_64.deb
+$ sudo dpkg -i libhoel_1.4.18_Debian_stretch_x86_64.deb
+$ sudo dpkg -i libulfius_2.7.7_Debian_stretch_x86_64.deb
+$ sudo dpkg -i taliesin_1.0.19_Debian_stretch_x86_64.deb
 ```
 
 If there's no package available for your distribution, you can recompile it manually using `CMake` or `Makefile`.
 
 ## Docker image
 
-You can install a Docker image based on Alpine Linux 3.7.
+You can install a Docker image based on Alpine Linux 3.150 0 0 .
 
 ### Quickstart with a Taliesin server without authentication and a SQLite3 database
 
@@ -67,7 +61,6 @@ You can update the files `config.json` and `taliesin.conf` with your own setting
 ```shell
 #COPY ["taliesin.sqlite3.sql", "/"]
 #COPY ["taliesin.mariadb.sql", "/"]
-#COPY ["oauth-key.pem", "/var/taliesin/conf/"]
 ```
 
 Then, build the image:
@@ -97,7 +90,7 @@ Taliesin requires [libav](https://libav.org/) version 11, or equivalent ffmpeg, 
 
 ```shell
 $ # Install libraries
-$ apt install -y libjansson-dev libavfilter-dev libavcodec-dev libavformat-dev libswresample-dev libavutil-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libsqlite3-dev libmariadbclient-dev libconfig8-dev
+$ apt install -y libjansson-dev libavfilter-dev libavcodec-dev libavformat-dev libswresample-dev libavutil-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libsqlite3-dev libmariadbclient-dev libconfig-dev zlib1g-dev
 $ git clone https://github.com/benmcollins/libjwt.git
 $ cd libjwt
 $ autoreconf -a && ./configure --without-openssl && make && sudo make install
@@ -114,7 +107,7 @@ $ git clone https://github.com/babelouest/taliesin.git
 $ mkdir taliesin/build
 $ cd taliesin/build
 $ cmake ..
-$ make 
+$ make
 $ sudo make install
 ```
 
@@ -155,6 +148,18 @@ $ make DISABLE_POSTGRESQL=1
 $ sudo make install
 $ cd ../..
 
+# Install Rhonabwy
+$ git clone https://github.com/babelouest/rhonabwy.git
+$ cd rhonabwy/src/
+$ make
+$ sudo make install
+
+# Install Iddawc
+$ git clone https://github.com/babelouest/iddawc.git
+$ cd iddawc/src/
+$ make
+$ sudo make install
+
 $ git clone git@github.com:babelouest/taliesin.git
 $ cd taliesin/src/
 $ make && sudo make install
@@ -177,7 +182,7 @@ Use the dedicated script, `taliesin.mariadb.sql` or `taliesin.sqlite3.sql` to in
 
 ```shell
 $ # Example to install the database with MariaDB
-$ mysql taliesin < taliesin.mariadb.conf 
+$ mysql taliesin < taliesin.mariadb.conf
 $ # Example to install the database with SQLite3
 $ sqlite3 [path/to/taliesin.db] < taliesin.sqlite3.sql
 ```
@@ -205,8 +210,6 @@ The web application is located in `webapp`, its source is located in `webapp-src
 
 You can either use Taliesin built-in static file server or host the web application in another place, e.g. an Apache or nginx instance.
 
-By design, the web application must be accessible on a root path, e.g. `https://taliesin.mydomain.tld/`.
-
 To configure the front-end, rename the file `webapp/config.json.sample` to `webapp/config.json` and modify its content for your configuration.
 
 ```javascript
@@ -215,15 +218,15 @@ To configure the front-end, rename the file `webapp/config.json.sample` to `weba
   "angharadApiUrl": "http://localhost:2473/api", // URL to your Angharad API (optional)
   "storageType": "local",                        // Storage type to keep local config values like last player used, last stream or last data source
   "oauth2Config": {
+    "enabled": true,
     "storageType": "local",                      // local or cookie
     "responseType": "code",                      // code or implicit
-    "serverUrl": "http://localhost:4593/api",    // URL to your Glewlwyd API
-    "authUrl": "auth", 
-    "tokenUrl": "token", 
-    "clientId": "taliesin", 
+    "authUrl": "http://localhost:4593/api/oidc/auth",
+    "tokenUrl": "http://localhost:4593/api/oidc/token",
+    "clientId": "taliesin",
     "redirectUri": "http://localhost:8576/",     // Url to your Taliesin front-end
-    "scope": "taliesin taliesin_admin angharad g_profile"
-    "profileUrl": "profile"
+    "scope": "taliesin taliesin_admin angharad"
+    "userinfoUrl": "http://localhost:4593/api/oidc/userinfo"
   }
 }
 ```
@@ -266,16 +269,16 @@ For the following exemple, it configuration configures a reverse-proxy and encap
 
 ```
 <VirtualHost *:443>
-        ServerName taliesin.my-domain.org
+  ServerName taliesin.my-domain.org
 
-        SSLEngine on
-        SSLCertificateFile    /path/to/cert.pem
-        SSLCertificateKeyFile /path/to/privkey.pem
+  SSLEngine on
+  SSLCertificateFile    /path/to/cert.pem
+  SSLCertificateKeyFile /path/to/privkey.pem
 
-        ProxyPassMatch ^/api/stream/(.*)/ws$ ws://localhost:8576/api/stream/$1/ws
-        ProxyPass / http://localhost:8576/ retry=0 connectiontimeout=30 timeout=300 nocanon
+  ProxyPassMatch ^/api/stream/(.*)/ws$ ws://localhost:8576/api/stream/$1/ws
+  ProxyPass / http://localhost:8576/ retry=0 connectiontimeout=30 timeout=300 nocanon
 
-        ProxyPassReverse / http://localhost:8576/
+  ProxyPassReverse / http://localhost:8576/
 </VirtualHost>
 ```
 

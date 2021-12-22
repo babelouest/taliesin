@@ -730,7 +730,7 @@ int jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukeb
 
 json_t * jukebox_get_clients(struct _t_jukebox * jukebox) {
   json_t * j_clients, * j_return;
-  int i;
+  size_t i;
   
   if (jukebox != NULL) {
     j_clients = json_array();
@@ -860,7 +860,7 @@ int jukebox_remove_media_by_index(struct _t_jukebox * jukebox, int index, json_i
 }
 
 int jukebox_close(struct config_elements * config, struct _t_jukebox * jukebox) {
-  int i;
+  size_t i;
 
   if (jukebox != NULL) {
     for (i=0; i<jukebox->nb_jukebox_audio_buffer; i++) {
@@ -1185,7 +1185,7 @@ json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * ju
     j_result = media_append_list_to_media_list(config, json_object_get(j_command, "parameters"), username);
     if (check_result_value(j_result, T_OK)) {
       if (json_array_size(json_object_get(j_result, "media")) > 0) {
-        if (file_list_add_media_list(config, jukebox->file_list, json_object_get(j_result, "media")) != T_OK) {
+        if (file_list_add_media_list(jukebox->file_list, json_object_get(j_result, "media")) != T_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error appending to jukebox");
           ret = T_ERROR;
         } else if (jukebox_update_db_stream_media_list(config, jukebox) != T_OK) {
@@ -1218,7 +1218,7 @@ json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * ju
       j_result = media_append_list_to_media_list(config, json_object_get(json_object_get(j_command, "parameters"), "media"), username);
       if (check_result_value(j_result, T_OK)) {
         if (json_array_size(json_object_get(j_result, "media")) > 0) {
-          if (file_list_remove_media_list(config, jukebox->file_list, json_object_get(j_result, "media")) == T_OK) {
+          if (file_list_remove_media_list(jukebox->file_list, json_object_get(j_result, "media")) == T_OK) {
             j_media_list = json_array();
             if (j_media_list != NULL) {
               json_array_foreach(json_object_get(j_result, "media"), index, j_element) {
@@ -1372,7 +1372,7 @@ json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * ju
       j_return = json_pack("{si}", "result", T_ERROR);
     }
   } else if (0 == o_strcmp(str_command, "save")) {
-    if ((tpl_id = playlist_add(config, username, json_object_get(j_command, "parameters"), jukebox->file_list)) != -1) {
+    if ((tpl_id = playlist_add(config, username, json_object_get(j_command, "parameters"))) != -1) {
       if (jukebox_set_playlist_db_stream(config, jukebox->name, tpl_id) == T_OK) {
         j_return = json_pack("{sis{ss}}", "result", T_OK, "command", "name", json_string_value(json_object_get(json_object_get(j_command, "parameters"), "name")));
       } else {
@@ -1495,6 +1495,7 @@ void * jukebox_run_thread(void * args) {
 }
 
 ssize_t u_jukebox_stream (void * cls, uint64_t pos, char * buf, size_t max) {
+  UNUSED(pos);
   struct _client_data_jukebox * client_data_jukebox = (struct _client_data_jukebox *)cls;
   size_t len;
   
@@ -1529,7 +1530,7 @@ ssize_t u_jukebox_stream (void * cls, uint64_t pos, char * buf, size_t max) {
 
 void u_jukebox_stream_free(void * cls) {
   struct _client_data_jukebox * client_data_jukebox = (struct _client_data_jukebox *)cls;
-  int i;
+  size_t i;
   
   if (client_data_jukebox->audio_buffer->jukebox->nb_jukebox_audio_buffer > 1) {
     for (i = 0; i < client_data_jukebox->audio_buffer->jukebox->nb_jukebox_audio_buffer; i++) {

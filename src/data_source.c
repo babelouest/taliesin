@@ -692,8 +692,7 @@ int data_source_clean_removed(struct config_elements * config, json_int_t tds_id
 void run_data_source_clean(struct config_elements * config, json_int_t tds_id) {
   json_t * j_query, * j_stream_list, * j_element;
   char * cover_clause = msprintf("`tic_id` IN (SELECT `tic_id` FROM `%s` WHERE `tds_id`=%" JSON_INTEGER_FORMAT ") OR `tic_id` IN (SELECT `tic_id` FROM `%s` WHERE `tds_id`=%" JSON_INTEGER_FORMAT ")", TALIESIN_TABLE_MEDIA, tds_id, TALIESIN_TABLE_FOLDER, tds_id);
-  size_t index;
-  int i;
+  size_t index, i;
   
   j_query = json_pack("{sss{s{ssss}sI}}",
                       "table",
@@ -769,7 +768,7 @@ void * thread_run_refresh_data_source(void * data) {
   struct config_elements * config = refresh_config->config;
   AVCodecContext  * thumbnail_cover_codec_context = NULL;
   json_int_t tds_id = json_integer_value(json_object_get(refresh_config->j_data_source, "tds_id"));
-  int i;
+  size_t i;
   char * root_path;
 
   if (tds_id > 0) {
@@ -916,7 +915,7 @@ int data_source_refresh_run(struct config_elements * config, json_t * j_data_sou
 }
 
 int data_source_refresh_stop(struct config_elements * config, json_t * j_data_source) {
-  int i;
+  size_t i;
   json_int_t tds_id = json_integer_value(json_object_get(j_data_source, "tds_id"));
   
   for (i=0; i<config->nb_refresh_status; i++) {
@@ -929,7 +928,8 @@ int data_source_refresh_stop(struct config_elements * config, json_t * j_data_so
 
 json_t * data_source_get_refresh_status(struct config_elements * config, json_int_t tds_id) {
   json_t * j_query, * j_result = NULL, * j_return = NULL;
-  int res, i;
+  int res;
+  size_t i;
   json_int_t status;
   char * str_status;
   

@@ -29,6 +29,9 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
+/** Macro to avoid compiler warning when some parameters are unused and that's ok **/
+#define UNUSED(x) (void)(x)
+
 #include <libavformat/avformat.h>
 #include <libavutil/audio_fifo.h>
 #include <libswresample/swresample.h>
@@ -402,6 +405,7 @@ struct config_elements {
   char                                         * config_file;
   char                                         * server_remote_address;
   char                                         * api_prefix;
+  char                                         * config_content;
   unsigned long                                  log_mode;
   unsigned long                                  log_level;
   char                                         * log_file;
@@ -427,9 +431,9 @@ struct config_elements {
   char                                         * oauth_scope_user;
   char                                         * oauth_scope_admin;
   pthread_mutex_t                                playlist_lock;
-  unsigned int                                   nb_webradio;
+  size_t                                         nb_webradio;
   struct _t_webradio                          ** webradio_set;
-  unsigned int                                   nb_jukebox;
+  size_t                                         nb_jukebox;
   struct _t_jukebox                           ** jukebox_set;
   char                                         * stream_format;
   unsigned short int                             stream_channels;
@@ -437,7 +441,7 @@ struct config_elements {
   unsigned int                                   stream_bitrate;
   pthread_mutex_t                                stream_stop_lock;
   pthread_cond_t                                 stream_stop_cond;
-  uint                                           nb_refresh_status;
+  size_t                                         nb_refresh_status;
   struct _refresh_config                      ** refresh_status_list;
   pthread_mutex_t                                refresh_lock;
   pthread_cond_t                                 refresh_cond;
@@ -514,9 +518,9 @@ struct _t_file * copy_file(struct _t_file * file);
 int              file_list_init(struct _t_file_list * file_list);
 void             file_list_clean(struct _t_file_list * file_list);
 void             file_list_clean_file(struct _t_file * file);
-int              file_list_add_media_list(struct config_elements * config, struct _t_file_list * file_list, json_t * media_list);
+int              file_list_add_media_list(struct _t_file_list * file_list, json_t * media_list);
 json_t *         file_list_has_media_list(struct config_elements * config, struct _t_file_list * file_list, json_t * media_list, json_int_t offset, json_int_t limit);
-int              file_list_remove_media_list(struct config_elements * config, struct _t_file_list * file_list, json_t * j_media_list);
+int              file_list_remove_media_list(struct _t_file_list * file_list, json_t * j_media_list);
 int              file_list_empty_nolock(struct _t_file_list * file_list);
 
 // Jukebox audio buffer
@@ -538,7 +542,7 @@ struct _t_file * webradio_get_next_file(struct _t_webradio * webradio, unsigned 
 json_t         * webradio_get_clients(struct _t_webradio * webradio);
 json_t         * webradio_get_info(struct _t_webradio * webradio);
 json_t         * webradio_get_file_list(struct config_elements * config, struct _t_webradio * webradio, json_int_t offset, json_int_t limit);
-int              webradio_remove_media_by_index(struct _t_webradio * webradio, int index, json_int_t * tm_id);
+int              webradio_remove_media_by_index(struct _t_webradio * webradio, size_t index, json_int_t * tm_id);
 int              webradio_close(struct config_elements * config, struct _t_webradio * webradio);
 
 int      webradio_open_output_buffer(struct _audio_stream * audio_stream);
@@ -626,7 +630,7 @@ json_t * media_subcategory_list(struct config_elements * config, json_t * j_data
 json_t * media_category_get_info(struct config_elements * config, json_t * j_data_source, const char * level, const char * category);
 int      media_category_set_info(struct config_elements * config, json_t * j_data_source, const char * level, const char * category, json_t * j_info);
 int      media_category_delete_info(struct config_elements * config, json_t * j_data_source, const char * level, const char * category);
-json_t * is_media_category_info_valid(struct config_elements * config, json_t * j_info);
+json_t * is_media_category_info_valid(json_t * j_info);
 
 // Database Playlists functions
 json_t   * playlist_list(struct config_elements * config, const char * username);
@@ -635,7 +639,7 @@ json_t   * playlist_get(struct config_elements * config, const char * username, 
 json_t   * playlist_get_by_id(struct config_elements * config, json_int_t tpl_id);
 json_t   * is_playlist_valid(struct config_elements * config, const char * username, int is_admin, json_t * j_playlist, int update, int with_media);
 json_t   * is_playlist_element_list_valid(struct config_elements * config, int is_admin, const char * username, json_t * j_element_list);
-json_int_t playlist_add(struct config_elements * config, const char * username, json_t * j_playlist, struct _t_file_list * file_list);
+json_int_t playlist_add(struct config_elements * config, const char * username, json_t * j_playlist);
 int        playlist_set(struct config_elements * config, json_int_t tpl_id, json_t * j_playlist);
 int        playlist_delete(struct config_elements * config, json_int_t tpl_id);
 int        playlist_can_update(json_t * j_playlist, int is_admin);

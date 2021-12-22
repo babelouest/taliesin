@@ -25,7 +25,7 @@
 
 json_t * playlist_get_stream_attached(struct config_elements * config, json_int_t tpl_id) {
   json_t * j_return = NULL, * j_stream_array;
-  int i;
+  size_t i;
   
   if (tpl_id) {
     j_stream_array = json_array();
@@ -412,7 +412,7 @@ int playlist_replace_element_list(struct config_elements * config, json_int_t tp
   return ret;
 }
 
-json_int_t playlist_add(struct config_elements * config, const char * username, json_t * j_playlist, struct _t_file_list * file_list) {
+json_int_t playlist_add(struct config_elements * config, const char * username, json_t * j_playlist) {
   json_t * j_query, * j_last_id;
   json_int_t tic_id = 0, tpl_id = -1;
   int res;

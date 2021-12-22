@@ -88,10 +88,10 @@ int file_list_enqueue_new_file(struct _t_file_list * file_list, const char * pat
 }
 
 int file_list_insert_file_at(struct _t_file_list * file_list, struct _t_file * file, unsigned long index) {
-  int i;
+  size_t i;
   struct _t_file * cur_file;
   
-  if (file_list != NULL && file != NULL && index >= 0) {
+  if (file_list != NULL && file != NULL) {
     if (pthread_mutex_lock(&file_list->file_lock)) {
       y_log_message(Y_LOG_LEVEL_ERROR, "Error lock mutex file_list");
       return T_ERROR;
@@ -306,7 +306,7 @@ int file_list_empty_nolock(struct _t_file_list * file_list) {
   }
 }
 
-int file_list_add_media_list(struct config_elements * config, struct _t_file_list * file_list, json_t * media_list) {
+int file_list_add_media_list(struct _t_file_list * file_list, json_t * media_list) {
   json_t * j_media;
   size_t index;
   int ret = T_OK;
@@ -376,7 +376,7 @@ json_t * file_list_has_media_list(struct config_elements * config, struct _t_fil
   return j_return;
 }
 
-int file_list_remove_media_list(struct config_elements * config, struct _t_file_list * file_list, json_t * j_media_list) {
+int file_list_remove_media_list(struct _t_file_list * file_list, json_t * j_media_list) {
   json_t * j_element;
   size_t index;
   struct _t_file * file;

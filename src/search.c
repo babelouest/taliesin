@@ -57,7 +57,7 @@ json_t * playlist_search(struct config_elements * config, const char * username_
 
 json_t * stream_search(struct config_elements * config, const char * username, const char * search_pattern) {
   json_t * j_return = json_pack("{sis[]}", "result", T_OK, "stream");
-  int i;
+  size_t i;
   
   if (j_return != NULL) {
     for (i=0; i<config->nb_webradio && i<TALIESIN_MEDIA_LIMIT_DEFAULT; i++) {

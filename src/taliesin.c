@@ -71,10 +71,10 @@ static char * read_file(const char * filename) {
  */
 int main (int argc, char ** argv) {
   struct config_elements * config = o_malloc(sizeof(struct config_elements));
-  int res, i;
+  int res;
   pthread_mutexattr_t mutexattr;
   json_t * j_stream_list, * j_element;
-  size_t index;
+  size_t index, i;
   int ret_thread_webradio = 0, detach_thread_webradio = 0;
   pthread_t thread_webradio;
   struct _t_webradio * webradio;
@@ -103,6 +103,11 @@ int main (int argc, char ** argv) {
   config->server_remote_address = NULL;
   config->conn = NULL;
   config->instance = o_malloc(sizeof(struct _u_instance));
+  if (config->instance == NULL) {
+    fprintf(stderr, "Memory error - instance\n");
+    return 1;
+  }
+  config->instance->port = TALIESIN_DEFAULT_PORT;
   config->allow_origin = NULL;
   config->use_oidc_authentication = 0;
 #ifndef DISABLE_OAUTH2
@@ -487,7 +492,7 @@ void exit_server(struct config_elements ** config, int exit_value) {
   }
   i_global_close();
   y_close_logs();
-  exit(exit_value);
+  exit(exit_value==TALIESIN_STOP?0:1);
 }
 
 /**
@@ -1026,10 +1031,6 @@ int build_config_from_file(struct config_elements * config) {
  */
 int check_config(struct config_elements * config) {
 
-  if (config->instance->port == -1) {
-    config->instance->port = TALIESIN_DEFAULT_PORT;
-  }
-
   if (config->api_prefix == NULL) {
     config->api_prefix = o_strdup(TALIESIN_DEFAULT_PREFIX);
     if (config->api_prefix == NULL) {
@@ -1092,6 +1093,7 @@ char * get_file_content(const char * file_path) {
  * So I disabled it...
  */
 void redirect_libav_logs(void * avcl, int level, const char * fmt, va_list vl) {
+  UNUSED(avcl);
   va_list args_cpy;
   size_t out_len = 0;
   char * out = NULL, * new_fmt;

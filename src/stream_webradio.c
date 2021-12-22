@@ -1783,7 +1783,7 @@ void * webradio_run_thread(void * args) {
           }
         }
         current_buffer->complete = 1;
-        //avcodec_flush_buffers(webradio->audio_stream->output_codec_context);
+        avcodec_flush_buffers(webradio->audio_stream->output_codec_context);
       }
       o_free(title);
       title = NULL;

@@ -298,7 +298,7 @@ int main (int argc, char ** argv) {
   // TODO remove instance timeout when MHD will support a timeout on a streaming response
   config->instance->timeout = config->timeout;
 
-  //av_log_set_callback(&redirect_libav_logs);
+  av_log_set_callback(&redirect_libav_logs);
 
   // At this point, we declare all API endpoints and configure
 
@@ -1118,10 +1118,7 @@ char * get_file_content(const char * file_path) {
  */
 void redirect_libav_logs(void * avcl, int level, const char * fmt, va_list vl) {
   UNUSED(avcl);
-  UNUSED(level);
-  UNUSED(fmt);
-  UNUSED(vl);
-  /*va_list args_cpy;
+  va_list args_cpy;
   size_t out_len = 0;
   char * out = NULL, * new_fmt;
   unsigned long y_level;
@@ -1158,5 +1155,5 @@ void redirect_libav_logs(void * avcl, int level, const char * fmt, va_list vl) {
     }
     o_free(new_fmt);
     va_end(args_cpy);
-  }*/
+  }
 }

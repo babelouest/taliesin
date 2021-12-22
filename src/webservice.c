@@ -1338,51 +1338,55 @@ int callback_taliesin_stream_manage_ws (const struct _u_request * request, struc
   struct _ws_stream * ws_stream;
   int ret = U_CALLBACK_COMPLETE, i;
   
-  for (i=0; i<config->nb_webradio; i++) {
-    if (0 == o_strcmp(u_map_get(request->map_url, "stream_name"), config->webradio_set[i]->name)) {
-      current_webradio = config->webradio_set[i];
-      break;
-    }
-  }
-  if (current_webradio == NULL) {
-    for (i=0; i<config->nb_jukebox; i++) {
-      if (0 == o_strcmp(u_map_get(request->map_url, "stream_name"), config->jukebox_set[i]->name)) {
-        current_playlist = config->jukebox_set[i];
+  if (config->status == TALIESIN_RUNNING) {
+    for (i=0; i<config->nb_webradio; i++) {
+      if (0 == o_strcmp(u_map_get(request->map_url, "stream_name"), config->webradio_set[i]->name)) {
+        current_webradio = config->webradio_set[i];
         break;
       }
     }
-  }
-  
-  if (current_webradio != NULL || current_playlist != NULL) {
-    ws_stream = o_malloc(sizeof(struct _ws_stream));
-    if (ws_stream != NULL) {
-      ws_stream->config = config;
-      ws_stream->is_admin = has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin);
-      if (ws_stream->is_admin && u_map_get(request->map_url, "username") != NULL) {
-        ws_stream->username = o_strdup(u_map_get(request->map_url, "username"));
-      } else {
-        ws_stream->username = NULL;
+    if (current_webradio == NULL) {
+      for (i=0; i<config->nb_jukebox; i++) {
+        if (0 == o_strcmp(u_map_get(request->map_url, "stream_name"), config->jukebox_set[i]->name)) {
+          current_playlist = config->jukebox_set[i];
+          break;
+        }
       }
-      ws_stream->is_authenticated = 0;
-      ws_stream->expiration = 0;
-      ws_stream->webradio = current_webradio;
-      ws_stream->jukebox = current_playlist;
-      ws_stream->status = TALIESIN_WEBSOCKET_PLAYLIST_STATUS_OPEN;
-      if (ulfius_set_websocket_response(response, "taliesin", "permessage-deflate", &callback_websocket_stream_manager, ws_stream, &callback_websocket_stream_incoming_message, ws_stream, &callback_websocket_stream_onclose, ws_stream) == U_OK) {
-        ulfius_add_websocket_deflate_extension(response);
-        pthread_setname_np(pthread_self(), request->http_url);
-        ret = U_CALLBACK_COMPLETE;
+    }
+    
+    if (current_webradio != NULL || current_playlist != NULL) {
+      ws_stream = o_malloc(sizeof(struct _ws_stream));
+      if (ws_stream != NULL) {
+        ws_stream->config = config;
+        ws_stream->is_admin = has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin);
+        if (ws_stream->is_admin && u_map_get(request->map_url, "username") != NULL) {
+          ws_stream->username = o_strdup(u_map_get(request->map_url, "username"));
+        } else {
+          ws_stream->username = NULL;
+        }
+        ws_stream->is_authenticated = 0;
+        ws_stream->expiration = 0;
+        ws_stream->webradio = current_webradio;
+        ws_stream->jukebox = current_playlist;
+        ws_stream->status = TALIESIN_WEBSOCKET_PLAYLIST_STATUS_OPEN;
+        if (ulfius_set_websocket_response(response, "taliesin", "permessage-deflate", &callback_websocket_stream_manager, ws_stream, &callback_websocket_stream_incoming_message, ws_stream, &callback_websocket_stream_onclose, ws_stream) == U_OK) {
+          ulfius_add_websocket_deflate_extension(response);
+          pthread_setname_np(pthread_self(), request->http_url);
+          ret = U_CALLBACK_COMPLETE;
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_manage_ws - Error ulfius_set_websocket_response");
+          o_free(ws_stream);
+          ret = U_CALLBACK_ERROR;
+        }
       } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_manage_ws - Error ulfius_set_websocket_response");
-        o_free(ws_stream);
+        y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_manage_ws - Error allocating resources for ws_stream");
         ret = U_CALLBACK_ERROR;
       }
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_manage_ws - Error allocating resources for ws_stream");
-      ret = U_CALLBACK_ERROR;
+      response->status = 404;
     }
   } else {
-    response->status = 404;
+    response->status = 400;
   }
   return ret;
 }
@@ -1405,6 +1409,10 @@ void callback_websocket_stream_manager (const struct _u_request * request, struc
       gettimeofday(&tv_now, NULL);
       wait.tv_sec = tv_now.tv_sec + 5;
       wait.tv_nsec = tv_now.tv_usec * 1000;
+      if (wait.tv_nsec > 999999999) {
+        wait.tv_nsec %= 1000000000;
+        wait.tv_sec ++;
+      }
       pthread_mutex_lock(&ws_stream->webradio->message_lock);
       ret_wait = pthread_cond_timedwait(&ws_stream->webradio->message_cond, &ws_stream->webradio->message_lock, &wait);
       pthread_mutex_unlock(&ws_stream->webradio->message_lock);

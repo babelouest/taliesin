@@ -95,6 +95,7 @@ int main (int argc, char ** argv) {
 
   // Init config structure with default values
   config->config_file = NULL;
+  config->status = TALIESIN_RUNNING;
   config->api_prefix = NULL;
   config->log_mode = Y_LOG_MODE_NONE;
   config->log_level = Y_LOG_LEVEL_NONE;
@@ -392,6 +393,7 @@ int main (int argc, char ** argv) {
     pthread_mutex_lock(&global_handler_close_lock);
     pthread_cond_wait(&global_handler_close_cond, &global_handler_close_lock);
     pthread_mutex_unlock(&global_handler_close_lock);
+    config->status = TALIESIN_STOP;
     for (i=0; i<config->nb_webradio; i++) {
       config->webradio_set[i]->audio_stream->status = TALIESIN_STREAM_STATUS_STOPPED;
       if (config->webradio_set[i]->audio_stream->first_buffer != NULL) {

@@ -400,6 +400,7 @@ struct _close_jukebox {
 
 struct config_elements {
   char                                         * config_file;
+  unsigned short                                 status;
   char                                         * server_remote_address;
   char                                         * api_prefix;
   unsigned long                                  log_mode;

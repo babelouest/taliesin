@@ -27,7 +27,7 @@
  * Return the list of available webradio and playlist streams for the specified user
  */
 json_t * stream_list(struct config_elements * config, const char * username) {
-  size_t i;
+  int i;
   json_t * j_result = json_pack("{sis[]}", "result", T_OK, "stream"), * j_stream_info;
   
   if (j_result != NULL) {
@@ -157,8 +157,8 @@ json_t * db_stream_list(struct config_elements * config) {
 }
 
 int db_stream_reload_file_lists(struct config_elements * config) {
-  int ret;
-  size_t index, index2, i;
+  int i, ret;
+  size_t index, index2;
   char * full_path;
   json_t * j_stream, * j_element, * j_stream_list = db_stream_list(config);
   

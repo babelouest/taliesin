@@ -71,10 +71,10 @@ static char * read_file(const char * filename) {
  */
 int main (int argc, char ** argv) {
   struct config_elements * config = o_malloc(sizeof(struct config_elements));
-  int res;
+  int res, i;
   pthread_mutexattr_t mutexattr;
-  json_t * j_stream_list, * j_element, * j_tmp;
-  size_t index, i;
+  json_t * j_stream_list, * j_element;
+  size_t index;
   int ret_thread_webradio = 0, detach_thread_webradio = 0;
   pthread_t thread_webradio;
   struct _t_webradio * webradio;
@@ -96,14 +96,12 @@ int main (int argc, char ** argv) {
   // Init config structure with default values
   config->config_file = NULL;
   config->api_prefix = NULL;
-  config->config_content = NULL;
   config->log_mode = Y_LOG_MODE_NONE;
   config->log_level = Y_LOG_LEVEL_NONE;
   config->log_file = NULL;
   config->server_remote_address = NULL;
   config->conn = NULL;
   config->instance = o_malloc(sizeof(struct _u_instance));
-  config->instance->port = TALIESIN_DEFAULT_PORT;
   config->allow_origin = NULL;
   config->use_oidc_authentication = 0;
 #ifndef DISABLE_OAUTH2
@@ -149,11 +147,10 @@ int main (int argc, char ** argv) {
   config->stream_sample_rate = TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
   config->stream_bitrate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
 #ifndef DISABLE_OAUTH2
-  if (config->instance == NULL || config->iddawc_resource_config == NULL || config->iddawc_resource_config_admin == NULL || config->static_file_config == NULL)
+  if (config->instance == NULL || config->iddawc_resource_config == NULL || config->iddawc_resource_config_admin == NULL || config->static_file_config == NULL) {
 #else
-  if (config->instance == NULL || config->static_file_config == NULL)
+  if (config->instance == NULL || config->static_file_config == NULL) {
 #endif
-  {
     fprintf(stderr, "Memory error - config->instance || config->iddawc_resource_config || config->iddawc_resource_config_admin || config->static_file_config\n");
     return 1;
   }
@@ -213,34 +210,6 @@ int main (int argc, char ** argv) {
     exit_server(&config, TALIESIN_ERROR);
   }
 
-  j_tmp = json_pack("{ss*ss*ss*ss*sisisiso}", 
-                        "api_prefix", 
-                        config->api_prefix,
-                        "oauth_scope_user",
-                        config->oauth_scope_user,
-                        "oauth_scope_admin",
-                        config->oauth_scope_admin,
-                        "default_stream_format",
-                        config->stream_format,
-                        "default_stream_channels",
-                        config->stream_channels,
-                        "default_stream_sample_rate",
-                        config->stream_sample_rate,
-                        "default_stream_bitrate",
-                        config->stream_bitrate,
-                        "use_websockets",
-#ifdef U_DISABLE_WEBSOCKET
-                        json_false()
-#else
-                        json_true()
-#endif
-                        );
-  if ((config->config_content = json_dumps(j_tmp, JSON_COMPACT)) == NULL) {
-    fprintf(stderr, "Error setting config content\n");
-    exit_server(&config, TALIESIN_ERROR);
-  }
-  json_decref(j_tmp);
-  
 #ifndef DISABLE_OAUTH2
   if (config->use_oidc_authentication) {
     y_log_message(Y_LOG_LEVEL_INFO, "OIDC Authentication: enabled");
@@ -366,7 +335,7 @@ int main (int argc, char ** argv) {
   // Other endpoints
   ulfius_add_endpoint_by_val(config->instance, "GET", NULL, "*", TALIESIN_CALLBACK_PRIORITY_FILES, &callback_static_compressed_inmemory_website, (void*)config->static_file_config);
   ulfius_add_endpoint_by_val(config->instance, "GET", NULL, "*", TALIESIN_CALLBACK_PRIORITY_POST_FILE, &callback_404_if_necessary, NULL);
-  ulfius_add_endpoint_by_val(config->instance, "GET", "/.well-known/taliesin-configuration", NULL, TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_server_configuration, (void*)config);
+  ulfius_add_endpoint_by_val(config->instance, "GET", "/config/", NULL, TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_server_configuration, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "OPTIONS", NULL, "*", TALIESIN_CALLBACK_PRIORITY_ZERO, &callback_taliesin_options, NULL);
 
   // API output compression
@@ -478,7 +447,6 @@ void exit_server(struct config_elements ** config, int exit_value) {
     o_free((*config)->config_file);
     o_free((*config)->server_remote_address);
     o_free((*config)->api_prefix);
-    o_free((*config)->config_content);
     o_free((*config)->log_file);
     o_free((*config)->allow_origin);
     o_free((*config)->secure_connection_key_file);
@@ -1055,6 +1023,10 @@ int build_config_from_file(struct config_elements * config) {
  */
 int check_config(struct config_elements * config) {
 
+  if (config->instance->port == -1) {
+    config->instance->port = TALIESIN_DEFAULT_PORT;
+  }
+
   if (config->api_prefix == NULL) {
     config->api_prefix = o_strdup(TALIESIN_DEFAULT_PREFIX);
     if (config->api_prefix == NULL) {
@@ -1117,8 +1089,7 @@ char * get_file_content(const char * file_path) {
  * So I disabled it...
  */
 void redirect_libav_logs(void * avcl, int level, const char * fmt, va_list vl) {
-  UNUSED(avcl);
-  va_list args_cpy;
+  /*va_list args_cpy;
   size_t out_len = 0;
   char * out = NULL, * new_fmt;
   unsigned long y_level;
@@ -1155,5 +1126,5 @@ void redirect_libav_logs(void * avcl, int level, const char * fmt, va_list vl) {
     }
     o_free(new_fmt);
     va_end(args_cpy);
-  }
+  }*/
 }

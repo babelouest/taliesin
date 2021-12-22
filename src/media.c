@@ -153,8 +153,7 @@ json_t * media_folder_get_cover(struct config_elements * config, json_t * j_data
 }
 
 int get_media_cover(AVFormatContext * full_size_cover_format_context, AVCodecContext ** full_size_cover_codec_context, AVPacket * full_size_cover_packet) {
-  size_t i;
-  int ret = T_ERROR;
+  int i, ret = T_ERROR;
   AVCodec * cover_codec = NULL;
   int video_stream;
   
@@ -191,8 +190,7 @@ int get_media_cover(AVFormatContext * full_size_cover_format_context, AVCodecCon
 json_t * get_format(struct config_elements * config, AVFormatContext *fmt_ctx, const char * path) {
   json_t * j_format = json_object();
   AVCodec * input_codec = NULL;
-  int codec_index, file_type = config_get_type_from_path(config, path);
-  size_t i;
+  int codec_index, i, file_type = config_get_type_from_path(config, path);
   
   if (j_format != NULL) {
     if (file_type == TALIESIN_FILE_TYPE_AUDIO || file_type == TALIESIN_FILE_TYPE_VIDEO) {
@@ -2297,7 +2295,7 @@ int is_valid_b64_image(const unsigned char * base64_image) {
   return res;
 }
 
-json_t * is_media_category_info_valid(json_t * j_info) {
+json_t * is_media_category_info_valid(struct config_elements * config, json_t * j_info) {
   json_t * j_result = json_array();
   
   if (j_result != NULL) {

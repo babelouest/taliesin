@@ -65,23 +65,7 @@ int set_response_json_body_and_clean(struct _u_response * response, uint status,
   return res;
 }
 
-/**
- * api description endpoint
- * send the location of prefixes
- */
-int callback_taliesin_server_configuration (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  UNUSED(request);
-  struct config_elements * config = (struct config_elements *)user_data;
-  
-  ulfius_set_response_properties(response, U_OPT_STATUS, 200,
-                                           U_OPT_STRING_BODY, config->config_content,
-                                           U_OPT_HEADER_PARAMETER, ULFIUS_HTTP_HEADER_CONTENT, ULFIUS_HTTP_ENCODING_JSON,
-                                           U_OPT_NONE);
-  return U_CALLBACK_CONTINUE;
-};
-
 int callback_404_if_necessary (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  UNUSED(user_data);
   if (!request->callback_position) {
     response->status = 404;
   }
@@ -93,9 +77,7 @@ int callback_404_if_necessary (const struct _u_request * request, struct _u_resp
  * return an error 404
  */
 int callback_default (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  UNUSED(request);
-  UNUSED(user_data);
-  response->status = 404;
+  set_response_json_body_and_clean(response, 404, json_pack("{ssss}", "error", "resource not found", "message", "no resource available at this address"));
   return U_CALLBACK_CONTINUE;
 }
 
@@ -104,15 +86,41 @@ int callback_default (const struct _u_request * request, struct _u_response * re
  * Send mandatory parameters for browsers to call REST APIs
  */
 int callback_taliesin_options (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  UNUSED(request);
-  UNUSED(user_data);
-  ulfius_set_response_properties(response, U_OPT_STATUS, 200,
-                                           U_OPT_HEADER_PARAMETER, "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS",
-                                           U_OPT_HEADER_PARAMETER, "Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Bearer, Authorization",
-                                           U_OPT_HEADER_PARAMETER, "Access-Control-Max-Age", "1800",
-                                           U_OPT_NONE);
+  ulfius_add_header_to_response(response, "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  ulfius_add_header_to_response(response, "Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Bearer, Authorization");
+  ulfius_add_header_to_response(response, "Access-Control-Max-Age", "1800");
   return U_CALLBACK_COMPLETE;
 }
+
+/**
+ * api description endpoint
+ * send the location of prefixes
+ */
+int callback_taliesin_server_configuration (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  set_response_json_body_and_clean(response, 200, json_pack("{ss*ss*ss*ss*sisisiso}", 
+                        "api_prefix", 
+                        ((struct config_elements *)user_data)->api_prefix,
+                        "oauth_scope_user",
+                        ((struct config_elements *)user_data)->oauth_scope_user,
+                        "oauth_scope_admin",
+                        ((struct config_elements *)user_data)->oauth_scope_admin,
+                        "default_stream_format",
+                        ((struct config_elements *)user_data)->stream_format,
+                        "default_stream_channels",
+                        ((struct config_elements *)user_data)->stream_channels,
+                        "default_stream_sample_rate",
+                        ((struct config_elements *)user_data)->stream_sample_rate,
+                        "default_stream_bitrate",
+                        ((struct config_elements *)user_data)->stream_bitrate,
+                        "use_websockets",
+#ifdef U_DISABLE_WEBSOCKET
+                        json_false()
+#else
+                        json_true()
+#endif
+                        ));
+  return U_CALLBACK_COMPLETE;
+};
 
 /**
  * Authentication endpoint, user scope, redirect to glelwyd authentication callback or build a fake valid user depending on the configuration
@@ -642,7 +650,7 @@ int callback_taliesin_category_set_info (const struct _u_request * request, stru
           0 == o_strcmp(u_map_get(request->map_url, "level"), "album") ||
           0 == o_strcmp(u_map_get(request->map_url, "level"), "year") ||
           0 == o_strcmp(u_map_get(request->map_url, "level"), "genre")) {
-        j_is_valid = is_media_category_info_valid(j_body);
+        j_is_valid = is_media_category_info_valid(config, j_body);
         if (j_is_valid != NULL && json_array_size(j_is_valid) == 0) {
           if (media_category_set_info(config, json_object_get(j_data_source, "data_source"), u_map_get(request->map_url, "level"), u_map_get(request->map_url, "category"), j_body) != T_OK) {
             y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_category_set_info - Error media_category_set_info");
@@ -1237,8 +1245,7 @@ int callback_taliesin_stream_get_list (const struct _u_request * request, struct
 int callback_taliesin_stream_manage (const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct config_elements * config = (struct config_elements *)user_data;
   json_t * j_body = ulfius_get_json_body_request(request, NULL), * j_is_valid, * j_result_command;
-  int res = U_CALLBACK_COMPLETE;
-  size_t i;
+  int res = U_CALLBACK_COMPLETE, i;
   struct _t_webradio * current_webradio = NULL;
   struct _t_jukebox * current_playlist = NULL;
   
@@ -1329,8 +1336,7 @@ int callback_taliesin_stream_manage_ws (const struct _u_request * request, struc
   struct _t_webradio * current_webradio = NULL;
   struct _t_jukebox * current_playlist = NULL;
   struct _ws_stream * ws_stream;
-  int ret = U_CALLBACK_COMPLETE;
-  size_t i;
+  int ret = U_CALLBACK_COMPLETE, i;
   
   for (i=0; i<config->nb_webradio; i++) {
     if (0 == o_strcmp(u_map_get(request->map_url, "stream_name"), config->webradio_set[i]->name)) {
@@ -1382,7 +1388,6 @@ int callback_taliesin_stream_manage_ws (const struct _u_request * request, struc
 }
 
 void callback_websocket_stream_manager (const struct _u_request * request, struct _websocket_manager * websocket_manager, void * websocket_user_data) {
-  UNUSED(request);
   struct _ws_stream * ws_stream = (struct _ws_stream *)websocket_user_data;
   char * message;
   json_t * j_result, * j_message;
@@ -1473,8 +1478,6 @@ void callback_websocket_stream_manager (const struct _u_request * request, struc
 }
 
 void callback_websocket_stream_onclose (const struct _u_request * request, struct _websocket_manager * websocket_manager, void * websocket_user_data) {
-  UNUSED(request);
-  UNUSED(websocket_manager);
   struct _ws_stream * ws_stream = (struct _ws_stream *)websocket_user_data;
   
   if (ws_stream->status != TALIESIN_WEBSOCKET_PLAYLIST_STATUS_CLOSE) {
@@ -1522,7 +1525,6 @@ void callback_websocket_stream_onclose (const struct _u_request * request, struc
 }
 
 void callback_websocket_stream_incoming_message (const struct _u_request * request, struct _websocket_manager * websocket_manager, const struct _websocket_message * last_message, void * websocket_user_data) {
-  UNUSED(request);
   struct _ws_stream * ws_stream = (struct _ws_stream *)websocket_user_data;
   json_t * j_message = json_loadb(last_message->data, last_message->data_len, 0, NULL), * j_is_valid = NULL, * j_result_command = NULL, * j_out_message;
   char * message;
@@ -1704,7 +1706,8 @@ int callback_taliesin_stream_cover (const struct _u_request * request, struct _u
   json_t * j_cover;
   unsigned char * cover_decoded;
   const char * cover_b64;
-  size_t cover_decoded_len, cover_b64_len, i;
+  size_t cover_decoded_len, cover_b64_len;
+  int i;
   
   for (i=0; i<config->nb_webradio; i++) {
     if (0 == o_strcmp(u_map_get(request->map_url, "stream_name"), config->webradio_set[i]->name)) {
@@ -1854,7 +1857,7 @@ int callback_taliesin_playlist_add (const struct _u_request * request, struct _u
       j_result = media_append_list_to_media_list(config, json_object_get(j_body, "media"), get_username(request, response, config));
       if (check_result_value(j_result, T_OK)) {
         json_object_del(j_body, "media");
-        if ((tpl_id = playlist_add(config, get_username(request, response, config), j_body)) == -1) {
+        if ((tpl_id = playlist_add(config, get_username(request, response, config), j_body, NULL)) == -1) {
           y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_playlist_add - Error playlist_add");
           res = U_CALLBACK_ERROR;
         } else {
@@ -2321,7 +2324,6 @@ int callback_taliesin_advanced_search (const struct _u_request * request, struct
  * Config callbacks
  */
 int callback_taliesin_username_get_list (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  UNUSED(request);
   struct config_elements * config = (struct config_elements *)user_data;
   json_t * j_result = username_get_list(config);
   

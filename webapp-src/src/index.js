@@ -151,7 +151,7 @@ StateStore.subscribe(() => {
       if (config.getLocalConfigValue("serverConfig")) {
         StateStore.dispatch({type: "setServerConfig", config: config.getLocalConfigValue("serverConfig")});
       } else {
-				StateStore.getState().APIManager.taliesinApiRequest("GET", "/../config")
+				StateStore.getState().APIManager.taliesinApiRequest("GET", "/../.well-known/taliesin-configuration")
 				.then((result) => {
 					StateStore.dispatch({type: "setServerConfig", config: result});
 					config.setLocalConfigValue("serverConfig", result);

@@ -30,11 +30,14 @@ class ConfigManager {
 	
 	getLocalConfigValue(key) {
 		var storage = false;
-		if (this.config.storageType === "local") {
-			storage = JSON.parse(localStorage.getItem(this.localStorageKey));
-		} else if (this.config.storageType === "cookie") {
-			storage = JSON.parse(Cookies.get(this.localStorageKey));
-		}
+    try {
+      if (this.config.storageType === "local") {
+        storage = JSON.parse(localStorage.getItem(this.localStorageKey));
+      } else if (this.config.storageType === "cookie") {
+        storage = JSON.parse(Cookies.get(this.localStorageKey));
+      }
+    } catch (err) {
+    }
 		
 		if (storage && storage[key]) {
 			return storage[key];
@@ -45,22 +48,28 @@ class ConfigManager {
 	
 	getLocalConfig() {
 		var storage = false;
-		if (this.config.storageType === "local") {
-			storage = JSON.parse(localStorage.getItem(this.localStorageKey));
-		} else if (this.config.storageType === "cookie") {
-			storage = JSON.parse(Cookies.get(this.localStorageKey));
-		}
+    try {
+      if (this.config.storageType === "local") {
+        storage = JSON.parse(localStorage.getItem(this.localStorageKey));
+      } else if (this.config.storageType === "cookie") {
+        storage = JSON.parse(Cookies.get(this.localStorageKey));
+      }
+    } catch (err) {
+    }
 		
 		return storage;
 	}
 	
 	setLocalConfigValue(key, value) {
 		var storage = false;
-		if (this.config.storageType === "local") {
-			storage = JSON.parse(localStorage.getItem(this.localStorageKey));
-		} else if (this.config.storageType === "cookie") {
-			storage = JSON.parse(Cookies.get(this.localStorageKey));
-		}
+    try {
+      if (this.config.storageType === "local") {
+        storage = JSON.parse(localStorage.getItem(this.localStorageKey));
+      } else if (this.config.storageType === "cookie") {
+        storage = JSON.parse(Cookies.get(this.localStorageKey));
+      }
+    } catch (err) {
+    }
 		
 		if (!storage) {
 			storage = {};

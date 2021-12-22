@@ -14,6 +14,13 @@ body {
 	display:block;
 }
 
+.longName {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
 .large-label
 {
 	overflow:hidden;

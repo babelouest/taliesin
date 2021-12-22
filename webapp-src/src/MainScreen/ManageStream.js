@@ -272,12 +272,12 @@ class ManageStream extends Component {
 			}
 			rows.push(
 				<tr key={index}>
-					<td>
-						<a role="button" onClick={() => this.detailsStream(stream)}>
-							{stream.display_name||i18n.t("common.no_name")}
-						</a>
+					<td className="longName">
+            <a role="button" onClick={() => this.detailsStream(stream)}>
+              {stream.display_name||i18n.t("common.no_name")}
+            </a>
 					</td>
-					<td>
+					<td className="hidden-xs">
 						<a role="button" onClick={() => this.detailsStream(stream)}>
 							{type} {random}
 						</a>
@@ -367,7 +367,7 @@ class ManageStream extends Component {
 					<thead>
 						<tr>
 							<th>{i18n.t("common.name")}</th>
-							<th>{i18n.t("common.type")}</th>
+							<th className="hidden-xs">{i18n.t("common.type")}</th>
 							<th className="hidden-xs">{i18n.t("common.elements")}</th>
 							<th className="hidden-xs">{i18n.t("stream.format")}</th>
 							<th>{i18n.t("stream.clients")}</th>

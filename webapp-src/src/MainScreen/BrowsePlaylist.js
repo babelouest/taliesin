@@ -506,14 +506,14 @@ class BrowsePlaylist extends Component {
 				});
 				displayList.push(
 					<tr key={index}>
-						<td>
+						<td className="longName">
 							<a role="button" onClick={() => this.showPlaylist(aPlaylist)}>{aPlaylist.name}</a>
 						</td>
-						<td className="hidden-xs">
+						<td className="hidden-xs longName">
 							{aPlaylist.description}
 						</td>
 						<td className="hidden-xs">
-							{aPlaylist.elements||"N/A"}
+							{aPlaylist.elements||"0"}
 						</td>
 						<td>
 							{aPlaylist.scope==="all"?<FontAwesome name={"users"} />:<FontAwesome name={"user"} />}

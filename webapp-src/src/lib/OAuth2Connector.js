@@ -229,19 +229,26 @@ class OAuth2Connector {
 	getStoredData() {
 		var storage;
 		if (this.parameters.storageType === "local") {
-			storage = JSON.parse(localStorage.getItem(this.localStorageKey));
-			if (storage) {
-				return storage;
-			} else {
-				return {};
-			}
+      try {
+        storage = JSON.parse(localStorage.getItem(this.localStorageKey));
+        if (storage) {
+          return storage;
+        } else {
+          return {};
+        }
+      } catch (err) {
+        return {};
+      }
 		} else if (this.parameters.storageType === "cookie") {
-			storage = JSON.parse(Cookies.get(this.localStorageKey));
-			if (storage) {
-				return storage;
-			} else {
-				return {};
-			}
+      try {
+        if (Cookies.get(this.localStorageKey)) {
+          return JSON.parse(Cookies.get(this.localStorageKey))||{};
+        } else {
+          return {};
+        }
+      } catch (err) {
+        return {};
+      }
 		} else {
 			return {};
 		}

@@ -21,7 +21,7 @@ module.exports = {
         secure: false,
         changeOrigin: true
       },
-      '/config': {
+      '/.well-known/taliesin-configuration': {
         target: 'http://localhost:8576/',
         secure: false,
         changeOrigin: true

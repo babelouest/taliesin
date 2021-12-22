@@ -1118,7 +1118,10 @@ char * get_file_content(const char * file_path) {
  */
 void redirect_libav_logs(void * avcl, int level, const char * fmt, va_list vl) {
   UNUSED(avcl);
-  va_list args_cpy;
+  UNUSED(level);
+  UNUSED(fmt);
+  UNUSED(vl);
+  /*va_list args_cpy;
   size_t out_len = 0;
   char * out = NULL, * new_fmt;
   unsigned long y_level;
@@ -1155,5 +1158,5 @@ void redirect_libav_logs(void * avcl, int level, const char * fmt, va_list vl) {
     }
     o_free(new_fmt);
     va_end(args_cpy);
-  }
+  }*/
 }

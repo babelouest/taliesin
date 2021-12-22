@@ -1,6 +1,6 @@
 {
-	"name": "my-minimal-react",
-	"version": "1.0.0",
+	"name": "Taliesin",
+	"version": "1.1.19",
 	"description": "",
 	"main": "index.js",
 	"scripts": {
@@ -34,9 +34,9 @@
 		"babel-loader": "^7.1.2",
 		"babel-preset-env": "^1.6.1",
 		"babel-preset-react": "^6.24.1",
-		"css-loader": "^1.0.0",
+		"css-loader": "^1.0.1",
 		"style-loader": "^0.23.1",
-		"webpack": "^3.10.0",
+		"webpack": "^3.12.0",
 		"webpack-dev-server": "^2.9.7"
 	}
 }

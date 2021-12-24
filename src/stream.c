@@ -59,7 +59,7 @@ json_t * stream_list(struct config_elements * config, const char * username) {
   return j_result;
 }
 
-json_t * is_stream_parameters_valid(int webradio, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate) {
+json_t * is_stream_parameters_valid(int webradio, const char * scope, int is_admin, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate) {
   json_t * j_result = json_array();
   
   if (j_result != NULL) {
@@ -87,6 +87,10 @@ json_t * is_stream_parameters_valid(int webradio, const char * format, unsigned 
     
     if (0 != o_strcasecmp("flac", format) && bit_rate != 32000 && bit_rate != 96000 && bit_rate != 128000 && bit_rate != 192000 && bit_rate != 256000 && bit_rate != 320000) {
       json_array_append_new(j_result, json_pack("{ss}", "bit_rate", "bit_rate can be 32000, 96000, 128000, 192000, 256000 or 320000"));
+    }
+    
+    if ((!is_admin && 0 == o_strcmp(TALIESIN_SCOPE_ALL, scope)) || (scope != NULL && 0 != o_strcmp(TALIESIN_SCOPE_ME, scope) && 0 != o_strcmp(TALIESIN_SCOPE_ALL, scope))) {
+      json_array_append_new(j_result, json_pack("{ss}", "scope", "scope value is an optional string and can be only " TALIESIN_SCOPE_ALL " or " TALIESIN_SCOPE_ME ", only administrator can add playlists for all users"));
     }
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "is_stream_parameters_valid - Error allocating resources for j_result");

@@ -488,7 +488,7 @@ json_t * add_jukebox_from_path(struct config_elements * config, json_t * j_data_
               }
             }
             if (jukebox_add_db_stream(config, config->jukebox_set[jukebox_index]) == T_OK) {
-              j_result = json_pack("{sis{sssssssosisisosis[]}}",
+              j_result = json_pack("{sis{sssssssosisisosis[]ss}}",
                                     "result",
                                     T_OK,
                                     "stream",
@@ -508,7 +508,9 @@ json_t * add_jukebox_from_path(struct config_elements * config, json_t * j_data_
                                       json_false(),
                                       "elements",
                                       config->jukebox_set[jukebox_index]->file_list->nb_files,
-                                      "clients");
+                                      "clients",
+                                      "scope",
+                                      username!=NULL?"me":"all");
             } else {
               y_log_message(Y_LOG_LEVEL_ERROR, "add_jukebox_from_path - Error jukebox_add_db_stream");
               j_result = json_pack("{si}", "result", T_ERROR);
@@ -572,7 +574,7 @@ json_t * add_jukebox_from_playlist(struct config_elements * config, json_t * j_p
             o_free(full_path);
           }
           if (jukebox_add_db_stream(config, config->jukebox_set[jukebox_index]) == T_OK) {
-            j_result = json_pack("{sis{sssssssosisisosis[]}}",
+            j_result = json_pack("{sis{sssssssosisisosis[]ss}}",
                                   "result",
                                   T_OK,
                                   "stream",
@@ -592,7 +594,9 @@ json_t * add_jukebox_from_playlist(struct config_elements * config, json_t * j_p
                                     json_false(),
                                     "elements",
                                     config->jukebox_set[jukebox_index]->file_list->nb_files,
-                                    "clients");
+                                    "clients",
+                                    "scope",
+                                    username!=NULL?"me":"all");
           } else {
             y_log_message(Y_LOG_LEVEL_ERROR, "add_jukebox_from_playlist - Error jukebox_add_db_stream");
             j_result = json_pack("{si}", "result", T_ERROR);
@@ -758,7 +762,7 @@ json_t * jukebox_get_info(struct _t_jukebox * jukebox) {
   json_t * j_stream = NULL, * j_client;
   
   if (jukebox != NULL) {
-    j_stream = json_pack("{sis{sssssosisssosisisi}}",
+    j_stream = json_pack("{sis{sssssosisssosisisiss}}",
                           "result",
                           T_OK,
                           "jukebox",
@@ -779,7 +783,9 @@ json_t * jukebox_get_info(struct _t_jukebox * jukebox) {
                             "bitrate",
                             jukebox->stream_bitrate,
                             "last_seen",
-                            jukebox->last_seen);
+                            jukebox->last_seen,
+                            "scope",
+                            jukebox->username!=NULL?"me":"all");
     j_client = jukebox_get_clients(jukebox);
     if (check_result_value(j_client, T_OK)) {
       json_object_set(json_object_get(j_stream, "jukebox"), "clients", json_object_get(j_client, "clients"));

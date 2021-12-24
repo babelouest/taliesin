@@ -479,7 +479,7 @@ class AudioPlayer extends Component {
 	}
 	
 	render() {
-		var playButton, duration, volume, metadata, streamName = i18n.t("common.none");
+		var playButton, playButtonXs, duration, volume, metadata, streamName = i18n.t("common.none");
 		if (this.state.stream && this.state.stream.display_name) {
 			if (this.state.stream.display_name.startsWith("{") && this.state.stream.display_name.indexOf("} - ") !== -1) {
 				streamName = this.state.stream.display_name.substring(this.state.stream.display_name.indexOf("} - ") + 3);
@@ -498,17 +498,32 @@ class AudioPlayer extends Component {
 					<Button title={i18n.t("common.play")} disabled={true}>
 						<FontAwesome name={"play"} />
 					</Button>;
+				playButtonXs = 
+          <MenuItem onClick={() => {this.handleNext}} disabled={true}>
+            <FontAwesome name={"play"} className="space-after"/>
+            {i18n.t("common.play")}
+          </MenuItem>
 			} else {
 				if (this.rap.audioEl.paused) {
 					playButton = 
 						<Button title={i18n.t("common.play")} onClick={this.handlePlay}>
 							<FontAwesome name={"play"} />
 						</Button>;
+          playButtonXs = 
+            <MenuItem onClick={() => {this.handleNext}} onClick={this.handlePlay}>
+              <FontAwesome name={"play"} className="space-after"/>
+              {i18n.t("common.play")}
+            </MenuItem>
 				} else {
 					playButton = 
 						<Button title={i18n.t("common.pause")} onClick={this.handlePause}>
 							<FontAwesome name={"pause"} />
 						</Button>;
+          playButtonXs = 
+            <MenuItem onClick={() => {this.handleNext}} onClick={this.handlePause}>
+              <FontAwesome name={"play"} className="space-after"/>
+              {i18n.t("common.pause")}
+            </MenuItem>
 				}
 			}
 			duration = this.displayDuration(this.state.currentTime, this.state.duration);
@@ -517,6 +532,11 @@ class AudioPlayer extends Component {
 				<Button title={i18n.t("common.play")} onClick={this.handlePlay}>
 					<FontAwesome name={"play"} />
 				</Button>;
+      playButtonXs = 
+        <MenuItem onClick={() => {this.handleNext}} onClick={this.handlePlay}>
+          <FontAwesome name={"play"} className="space-after"/>
+          {i18n.t("common.play")}
+        </MenuItem>
 		}
 		if (this.state.volume) {
 			volume = <FontAwesome name={"volume-up"} />;
@@ -526,7 +546,7 @@ class AudioPlayer extends Component {
 		return (
 			<div>
 				<div>
-					<ButtonGroup className="space-after">
+					<ButtonGroup className="space-after hidden-xs">
 						<Button title={i18n.t("player.previous")} onClick={this.handlePrevious}>
 							<FontAwesome name={"fast-backward"} />
 						</Button>
@@ -538,6 +558,23 @@ class AudioPlayer extends Component {
 							<FontAwesome name={"fast-forward"} />
 						</Button>
 					</ButtonGroup>
+          <DropdownButton className="visible-xs" id="audio-player" title={
+            <span><i className="fa fa-cog"></i></span>
+          }>
+            <MenuItem onClick={this.handlePrevious}>
+              <FontAwesome name={"fast-backward"} className="space-after"/>
+              {i18n.t("player.previous")}
+            </MenuItem>
+            <MenuItem onClick={this.handleStop}>
+              <FontAwesome name={"stop"} className="space-after"/>
+              {i18n.t("common.stop")}
+            </MenuItem>
+            {playButtonXs}
+            <MenuItem onClick={this.handleNext}>
+              <FontAwesome name={"fast-forward"} className="space-after"/>
+              {i18n.t("player.next")}
+            </MenuItem>
+          </DropdownButton>
 					<ButtonGroup>
 						<Button title={i18n.t("common.repeat")} onClick={this.handleRepeat} disabled={this.state.stream.webradio} className={(this.state.jukeboxRepeat&&!this.state.stream.webradio)?"btn-primary":""}>
 							<FontAwesome name={"repeat"} />

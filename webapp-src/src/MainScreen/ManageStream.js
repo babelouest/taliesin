@@ -12,7 +12,8 @@ class ManageStream extends Component {
 		super(props);
 		
 		this.state = {
-			streamList: StateStore.getState().streamList, 
+			streamList: StateStore.getState().streamList,
+			isAdmin: StateStore.getState().profile.isAdmin,
 			modalConfirmShow: false, 
 			modalRenameShow: false, 
 			modalSaveShow: false, 
@@ -45,11 +46,13 @@ class ManageStream extends Component {
 		this.reloadStreamList = this.reloadStreamList.bind(this);
 		this.buildStreamExternalList = this.buildStreamExternalList.bind(this);
 		this.buildStreamExternal = this.buildStreamExternal.bind(this);
+		this.canUpdate = this.canUpdate.bind(this);
 	}
 	
 	componentWillReceiveProps(nextProps) {
 		this.setState({
-			streamList: StateStore.getState().streamList, 
+			streamList: StateStore.getState().streamList,
+			isAdmin: StateStore.getState().profile.isAdmin,
 			modalConfirmShow: false, 
 			modalRenameShow: false, 
 			modalSaveShow: false, 
@@ -258,6 +261,10 @@ class ManageStream extends Component {
 		$("#play-external-anchor-"+stream.name)[0].click();
 	}
 	
+	canUpdate(stream) {
+		return this.state.isAdmin || (stream.scope === "me");
+	}
+	
 	render() {
 		var rows = [];
 		this.state.streamList.forEach((stream, index) => {
@@ -289,6 +296,11 @@ class ManageStream extends Component {
 					</td>
 					<td className="hidden-xs">
 						<a role="button" onClick={() => this.detailsStream(stream)}>
+              {stream.scope==="all"?<FontAwesome name={"users"} />:<FontAwesome name={"user"} />}
+						</a>
+					</td>
+					<td className="hidden-xs">
+						<a role="button" onClick={() => this.detailsStream(stream)}>
 							{stream.format + " - " + (stream.stereo?i18n.t("common.stereo"):i18n.t("common.mono")) + " - " + stream.sample_rate + " " + i18n.t("common.khz") + " - " + (stream.bitrate/1000) + " " + i18n.t("common.bps")}
 						</a>
 					</td>
@@ -306,19 +318,19 @@ class ManageStream extends Component {
 							<Button title={i18n.t("common.external")} onClick={() => this.playStreamExternal(stream)}>
 								<FontAwesome name={"external-link"} />
 							</Button>
-							<Button title={i18n.t("common.rename")} onClick={() => this.renameStream(stream)}>
+							<Button title={i18n.t("common.rename")} onClick={() => this.renameStream(stream)} disabled={!this.canUpdate(stream)}>
 								<FontAwesome name={"pencil"} />
 							</Button>
 							<Button title={i18n.t("stream.save_as_playlist")} onClick={() => this.saveStream(stream)}>
 								<FontAwesome name={"floppy-o"} />
 							</Button>
-							<Button title={i18n.t("stream.reload")} onClick={() => this.reloadStream(stream)}>
+							<Button title={i18n.t("stream.reload")} onClick={() => this.reloadStream(stream)} disabled={!this.canUpdate(stream)}>
 								<FontAwesome name={"exchange"} />
 							</Button>
-							<Button title={i18n.t("stream.reset_url")} onClick={() => this.resetStream(stream)}>
+							<Button title={i18n.t("stream.reset_url")} onClick={() => this.resetStream(stream)} disabled={!this.canUpdate(stream)}>
 								<FontAwesome name={"unlock-alt"} />
 							</Button>
-							<Button title={i18n.t("stream.delete")} onClick={() => this.deleteStream(stream)}>
+							<Button title={i18n.t("stream.delete")} onClick={() => this.deleteStream(stream)} disabled={!this.canUpdate(stream)}>
 								<FontAwesome name={"trash"} />
 							</Button>
 						</ButtonGroup>
@@ -333,7 +345,7 @@ class ManageStream extends Component {
 								<FontAwesome name={"external-link"} className="space-after"/>
 								{i18n.t("common.external")}
 							</MenuItem>
-							<MenuItem onClick={() => this.renameStream(stream)}>
+							<MenuItem onClick={() => this.renameStream(stream)} disabled={!this.canUpdate(stream)}>
 								<FontAwesome name={"pencil"} className="space-after"/>
 								{i18n.t("common.rename")}
 							</MenuItem>
@@ -341,15 +353,15 @@ class ManageStream extends Component {
 								<FontAwesome name={"floppy-o"} className="space-after"/>
 								{i18n.t("stream.save_as_playlist")}
 							</MenuItem>
-							<MenuItem onClick={() => this.reloadStream(stream)}>
+							<MenuItem onClick={() => this.reloadStream(stream)} disabled={!this.canUpdate(stream)}>
 								<FontAwesome name={"exchange"} className="space-after"/>
 								{i18n.t("stream.reload")}
 							</MenuItem>
-							<MenuItem onClick={() => this.resetStream(stream)}>
+							<MenuItem onClick={() => this.resetStream(stream)} disabled={!this.canUpdate(stream)}>
 								<FontAwesome name={"unlock-alt"} className="space-after"/>
 								{i18n.t("stream.reset_url")}
 							</MenuItem>
-							<MenuItem onClick={() => this.deleteStream(stream)}>
+							<MenuItem onClick={() => this.deleteStream(stream)} disabled={!this.canUpdate(stream)}>
 								<FontAwesome name={"trash"} className="space-after"/>
 								{i18n.t("stream.delete")}
 							</MenuItem>
@@ -369,6 +381,7 @@ class ManageStream extends Component {
 							<th>{i18n.t("common.name")}</th>
 							<th className="hidden-xs">{i18n.t("common.type")}</th>
 							<th className="hidden-xs">{i18n.t("common.elements")}</th>
+              <th className="hidden-xs">{i18n.t("common.scope")}</th>
 							<th className="hidden-xs">{i18n.t("stream.format")}</th>
 							<th>{i18n.t("stream.clients")}</th>
 							<th></th>

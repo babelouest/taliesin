@@ -35,7 +35,7 @@ config.fetchConfig()
 			clientId: curOauth2Config.clientId,
 			redirectUri: curOauth2Config.redirectUri,
 			scope: curOauth2Config.scope,
-			profileUrl: curOauth2Config.profileUrl,
+			userinfoUrl: curOauth2Config.userinfoUrl,
 			changeStatusCb: function (newStatus, token, expiration) {
 				var curConfig = config.getLocalConfig() || {};
 				if ((curConfig.currentPlayer && curConfig.currentPlayer.type === "external" && !StateStore.getState().externalPlayerList.find((pl) => {return pl.name === curConfig.currentPlayer.name;})) || !curConfig.currentPlayer) {
@@ -48,11 +48,27 @@ config.fetchConfig()
 				StateStore.dispatch({ type: "showFullScreen", show: curConfig.fullScreen });
 				StateStore.dispatch({ type: 'setUseWebsocket', useWebsocket: config.getConfigValue("useWebsocket") });
 				if (newStatus === "connected") {
-					StateStore.dispatch({ type: 'connection', status: newStatus, token: token, expiration: expiration, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), benoicPrefix: config.getConfigValue("benoicPrefix"), carleonPrefix: config.getConfigValue("carleonPrefix"), angharadApiUrl: config.getConfigValue("angharadApiUrl"), oauth2: true});
+					StateStore.dispatch({ type: 'connection',
+                                status: newStatus,
+                                token: token,
+                                expiration: expiration,
+                                taliesinApiUrl: config.getConfigValue("taliesinApiUrl"),
+                                benoicPrefix: config.getConfigValue("benoicPrefix"),
+                                carleonPrefix: config.getConfigValue("carleonPrefix"),
+                                angharadApiUrl: config.getConfigValue("angharadApiUrl"),
+                                oauth2: true});
 					ReactDOM.render(<App/>, document.getElementById('root'));
 				} else if (newStatus === "disconnected") {
 					StateStore.dispatch({ type: "showFullScreen", show: false });
-					StateStore.dispatch({ type: "connection", status: newStatus, token: false, expiration: 0, taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), benoicPrefix: config.getConfigValue("benoicPrefix"), carleonPrefix: config.getConfigValue("carleonPrefix"), angharadApiUrl: config.getConfigValue("angharadApiUrl"), oauth2: true });
+					StateStore.dispatch({ type: "connection",
+                                status: newStatus,
+                                token: false,
+                                expiration: 0,
+                                taliesinApiUrl: config.getConfigValue("taliesinApiUrl"),
+                                benoicPrefix: config.getConfigValue("benoicPrefix"),
+                                carleonPrefix: config.getConfigValue("carleonPrefix"),
+                                angharadApiUrl: config.getConfigValue("angharadApiUrl"),
+                                oauth2: true });
 					ReactDOM.render(<App/>, document.getElementById('root'));
 				} else if (newStatus === "refresh") {
 					StateStore.dispatch({ type: "newApiToken", token: token, expiration: expiration});

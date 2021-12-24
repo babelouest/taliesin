@@ -4,7 +4,7 @@ import { Button, Modal, FormControl, FormGroup, Row, Col, Label } from 'react-bo
 import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
 
-class ModalAddPlaylist extends Component {
+class ModalEditPlaylist extends Component {
 	constructor(props) {
 		super(props);
 		
@@ -179,4 +179,4 @@ class ModalAddPlaylist extends Component {
 	}
 }
 
-export default ModalAddPlaylist;
+export default ModalEditPlaylist;

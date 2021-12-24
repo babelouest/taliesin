@@ -22,14 +22,21 @@
 WEBAPP_DEST=../webapp
 JSC=npm
 
+all: webapp
+
 install-dev:
 	$(JSC) install
 
 dev:
 	$(JSC) run dev
 
+webapp: build-webapp install-webapp
+
 build-webapp:
+	rm -f output/*
 	$(JSC) run build
+
+install-webapp:
 	find $(WEBAPP_DEST) ! -name config.json ! -name webapp -delete
-	cp -R index.html config.json.sample favicon.ico css/ fonts/ images/ js/ locales/ $(WEBAPP_DEST)
+	cp -R index.html config.json.sample favicon.ico robots.txt css/ fonts/ images/ js/ locales/ $(WEBAPP_DEST)
 	cp output/bundle.min.js $(WEBAPP_DEST)/bundle.js

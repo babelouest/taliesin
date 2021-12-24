@@ -24,6 +24,7 @@ class ModalEditStream extends Component {
 			recursive: true,
 			random: true,
 			type: "jukebox",
+      scope: "me",
 			format: StateStore.getState().serverConfig.default_stream_format,
 			channels: StateStore.getState().serverConfig.default_stream_channels,
 			bitrate: StateStore.getState().serverConfig.default_stream_bitrate,
@@ -45,6 +46,7 @@ class ModalEditStream extends Component {
 		this.handleChangeBitrate = this.handleChangeBitrate.bind(this);
 		this.handleChangeSampleRate = this.handleChangeSampleRate.bind(this);
 		this.handleChangePlayNow = this.handleChangePlayNow.bind(this);
+		this.handleChangeScope = this.handleChangeScope.bind(this);
 	}
 	
 	componentWillReceiveProps(nextProps) {
@@ -92,7 +94,8 @@ class ModalEditStream extends Component {
 				channels: this.state.channels,
 				bitrate: this.state.bitrate,
 				sampleRate: this.state.sampleRate,
-				playNow: this.state.playNow
+				playNow: this.state.playNow,
+        scope: this.state.scope
 			});
 		} else {
 			this.state.onCloseCb(false);
@@ -136,6 +139,10 @@ class ModalEditStream extends Component {
 			newStatus.bitrateDisabled = false;
 		}
 		this.setState(newStatus);
+	}
+	
+	handleChangeScope(e) {
+		this.setState({ scope: e.target.value });
 	}
 	
 	handleChangeChannels(e) {
@@ -268,6 +275,21 @@ class ModalEditStream extends Component {
 				</Row>
 			</div>
 		}
+		var scopeInput;
+		if (StateStore.getState().profile.isAdmin) {
+			scopeInput =
+				<FormControl
+					value={this.state.scope}
+					onChange={this.handleChangeScope}
+					componentClass="select"
+					placeholder={i18n.t("common.select")}
+				>
+					<option value={"me"}>{i18n.t("common.scope_me")}</option>
+					<option value={"all"}>{i18n.t("common.scope_all")}</option>
+				</FormControl>;
+		} else {
+      scopeInput = <span>{this.state.scope==="me"?i18n.t("common.scope_me"):i18n.t("common.scope_all")}</span>;
+		}
 		return (
 			<Modal show={this.state.show}>
 				<Modal.Header>
@@ -287,6 +309,15 @@ class ModalEditStream extends Component {
 									placeholder={i18n.t("modal.name")}
 									onChange={this.handleChangeName}
 								/>
+							</Col>
+						</Row>
+						<hr/>
+						<Row>
+							<Col md={4}>
+								<Label>{i18n.t("common.scope")}</Label>
+							</Col>
+							<Col md={8}>
+								{scopeInput}
 							</Col>
 						</Row>
 						<hr/>

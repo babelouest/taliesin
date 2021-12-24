@@ -73,8 +73,8 @@ function stateStoreManager(state = defaultState, action) {
 			break;
 		case "setProfile":
 			state.profile.oauth2Profile = action.profile;
-			state.profile.currentUser = action.profile.login;
-			state.profile.connectedUser = action.profile.login;
+			state.profile.currentUser = action.profile.sub;
+			state.profile.connectedUser = action.profile.sub;
 			break;
 		case "newApiToken":
                         if (action.token) {

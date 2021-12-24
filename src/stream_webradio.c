@@ -1767,8 +1767,13 @@ void * webradio_run_thread(void * args) {
               }
             }
             if (finished && !error) {
+              data_written = 0;
               do {
-                if (encode_audio_frame_and_return(NULL, webradio->audio_stream->output_codec_context, webradio->audio_stream->output_format_context, &webradio->audio_stream->pts, &data_written)) {
+                if (encode_audio_frame_and_return(NULL,
+                                                  webradio->audio_stream->output_codec_context,
+                                                  webradio->audio_stream->output_format_context,
+                                                  &webradio->audio_stream->pts,
+                                                  &data_written)) {
                   error = 1;
                 } else {
                   if (pthread_mutex_lock(&current_buffer->buffer_lock)) {

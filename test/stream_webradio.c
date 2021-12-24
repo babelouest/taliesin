@@ -796,6 +796,7 @@ START_TEST(test_webradio_get_playlist_saved_ok)
 END_TEST
 
 START_TEST(test_webradio_cover_ok)
+{
   if (get_stream_name()) {
     char * url = msprintf(TALIESIN_SERVER_URI "/stream/%s/cover", valid_stream_name);
     
@@ -808,6 +809,7 @@ START_TEST(test_webradio_cover_ok)
     free(url);
     ck_assert_int_eq(res, 1);
   }
+}
 END_TEST
 
 START_TEST(test_webradio_delete_playlist_saved_ok)
@@ -902,7 +904,7 @@ int main(int argc, char *argv[])
     r_jwt_init(&jwt);
     r_jwt_set_header_str_value(jwt, "typ", "at+jwt");
     r_jwks_init(&jwks);
-    r_jwks_import_from_str(jwks, str_jwks);
+    r_jwks_import_from_json_str(jwks, str_jwks);
     r_jwt_add_sign_jwks(jwt, jwks, NULL);
     o_free(str_jwks);
     

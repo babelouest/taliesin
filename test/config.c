@@ -324,7 +324,7 @@ int main(int argc, char *argv[])
     r_jwt_init(&jwt);
     r_jwt_set_header_str_value(jwt, "typ", "at+jwt");
     r_jwks_init(&jwks);
-    r_jwks_import_from_str(jwks, str_jwks);
+    r_jwks_import_from_json_str(jwks, str_jwks);
     r_jwt_add_sign_jwks(jwt, jwks, NULL);
     o_free(str_jwks);
     

@@ -48,6 +48,7 @@ var defaultState = {
 		currentPlayerRepeat: false,
 		currentPlayerRandom: false,
 		currentPlayerVolume: 0,
+    currentPlayerSwitch: false,
 		playerAction: false,
 		playerActionParameter: false
 	}
@@ -169,6 +170,9 @@ function stateStoreManager(state = defaultState, action) {
 			break;
 		case "setJukeboxIndex":
 			state.profile.jukeboxIndex = action.index;
+			break;
+		case "setJukeboxSwitch":
+			state.profile.currentPlayerSwitch = action.status;
 			break;
 		case "setUserList":
 			state.userList = action.userList;

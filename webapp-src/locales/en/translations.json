@@ -6,6 +6,7 @@
 		"cover": "Cover",
 		"tags": "Tags",
 		"title": "Title",
+		"title_next": "Next",
 		"duration": "Duration",
 		"artist": "Artist",
 		"album": "Album",

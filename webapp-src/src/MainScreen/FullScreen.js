@@ -12,15 +12,18 @@ class FullScreen extends Component {
 		this.state = {
 			stream: StateStore.getState().profile.stream,
 			media: StateStore.getState().profile.mediaNow,
+			mediaNext: StateStore.getState().profile.mediaNext,
 			jukeboxIndex: StateStore.getState().profile.jukeboxIndex,
 			currentPlayer: StateStore.getState().profile.currentPlayer,
 			show: StateStore.getState().showFullScreen,
 			title: "",
+			titleNext: "",
 			imgBlob: false,
 			status: StateStore.getState().profile.currentPlayerStatus,
 			repeat: StateStore.getState().profile.currentPlayerRepeat,
 			random: StateStore.getState().profile.currentPlayerRandom,
-			volume: StateStore.getState().profile.currentPlayerVolume
+			volume: StateStore.getState().profile.currentPlayerVolume,
+			playerSwitch: StateStore.getState().profile.currentPlayerSwitch
 		};
 		
 		StateStore.subscribe(() => {
@@ -30,42 +33,44 @@ class FullScreen extends Component {
 				} else if (StateStore.getState().lastAction === "setJukeboxIndex") {
 					this.setState({jukeboxIndex: StateStore.getState().profile.jukeboxIndex}, () => {this.loadMedia();});
 				} else if (StateStore.getState().lastAction === "setMediaNow") {
-					this.setState({media: StateStore.getState().profile.mediaNow}, () => {this.loadMedia();});
+					this.setState({media: StateStore.getState().profile.mediaNow,}, () => {this.loadMedia();});
+				} else if (StateStore.getState().lastAction === "setMediaNext") {
+					this.setState({mediaNext: StateStore.getState().profile.mediaNext}, () => {this.loadMedia();});
 				} else if (StateStore.getState().lastAction === "setCurrentPlayerStatus") {
 					this.setState({
 						status: StateStore.getState().profile.currentPlayerStatus,
 						repeat: StateStore.getState().profile.currentPlayerRepeat,
 						random: StateStore.getState().profile.currentPlayerRandom,
-						volume: StateStore.getState().profile.currentPlayerVolume
+						volume: StateStore.getState().profile.currentPlayerVolume,
+            playerSwitch: StateStore.getState().profile.currentPlayerSwitch
 					});
 				} else if (StateStore.getState().lastAction === "showFullScreen") {
 					this.setState({
 						stream: StateStore.getState().profile.stream,
 						media: StateStore.getState().profile.mediaNow,
+						mediaNext: StateStore.getState().profile.mediaNext,
 						jukeboxIndex: StateStore.getState().profile.jukeboxIndex,
 						show: StateStore.getState().showFullScreen,
 						title: "",
+						titleNext: "",
 						imgBlob: false,
 						status: StateStore.getState().profile.currentPlayerStatus,
 						repeat: StateStore.getState().profile.currentPlayerRepeat,
 						random: StateStore.getState().profile.currentPlayerRandom,
-						volume: StateStore.getState().profile.currentPlayerVolume
+						volume: StateStore.getState().profile.currentPlayerVolume,
+            playerSwitch: StateStore.getState().profile.currentPlayerSwitch
 					}, () => {this.loadMedia();});
 				} else if (StateStore.getState().lastAction === "loadStream" || StateStore.getState().lastAction === "loadStreamAndPlay") {
 					this.setState({stream: StateStore.getState().profile.stream}, () => {this.loadMedia();});
-				} else if (StateStore.getState().lastAction === "setCurrentPlayerStatus") {
-					this.setState({
-						status: StateStore.getState().profile.currentPlayerStatus,
-						repeat: StateStore.getState().profile.currentPlayerRepeat,
-						random: StateStore.getState().profile.currentPlayerRandom,
-						volume: StateStore.getState().profile.currentPlayerVolume
-					});
+				} else if (StateStore.getState().lastAction === "setJukeboxSwitch") {
+					this.setState({playerSwitch: StateStore.getState().profile.currentPlayerSwitch});
 				}
 			}
 		});
 		
 		this.loadMedia = this.loadMedia.bind(this);
 		this.buildTitle = this.buildTitle.bind(this);
+		this.buildTitleNext = this.buildTitleNext.bind(this);
 		this.handleClose = this.handleClose.bind(this);
 		this.getMediaCover = this.getMediaCover.bind(this);
 		this.handleSelectArtist = this.handleSelectArtist.bind(this);
@@ -84,14 +89,17 @@ class FullScreen extends Component {
 		this.setState({
 			stream: StateStore.getState().profile.stream,
 			media: StateStore.getState().profile.mediaNow,
+			mediaNext: StateStore.getState().profile.mediaNext,
 			jukeboxIndex: StateStore.getState().profile.jukeboxIndex,
 			show: StateStore.getState().showFullScreen,
 			title: "",
+			titleNext: "",
 			imgBlob: false,
 			status: StateStore.getState().profile.currentPlayerStatus,
 			repeat: StateStore.getState().profile.currentPlayerRepeat,
 			random: StateStore.getState().profile.currentPlayerRandom,
-			volume: StateStore.getState().profile.currentPlayerVolume
+			volume: StateStore.getState().profile.currentPlayerVolume,
+      playerSwitch: StateStore.getState().profile.currentPlayerSwitch
 		}, () => {
 			this.loadMedia();
 		});
@@ -107,7 +115,7 @@ class FullScreen extends Component {
 
 	loadMedia() {
 		if (this._ismounted) {
-			this.setState({title: this.buildTitle()});
+			this.setState({title: this.buildTitle(), titleNext: this.buildTitleNext()});
 			this.getMediaCover();
 			this.getMediaFolder();
 		}
@@ -127,6 +135,24 @@ class FullScreen extends Component {
 		}
 		return title;
 	}
+  
+  buildTitleNext() {
+		var title = "";
+		if (!!this.state.mediaNext) {
+      if (this.state.mediaNext.tags.artist) {
+        title += this.state.mediaNext.tags.artist + " - ";
+      }
+			if (this.state.jukeboxIndex > -1 && !this.state.stream.webradio) {
+				title += ((this.state.jukeboxIndex+1)<10?"0"+(this.state.jukeboxIndex+1):(this.state.jukeboxIndex+1)) + "/" + (this.state.stream.elements<10?"0"+this.state.stream.elements:this.state.stream.elements) + " - ";
+			}
+			if (!!this.state.mediaNext.tags && !!this.state.mediaNext.tags.title) {
+				title += this.state.mediaNext.tags.title;
+			} else {
+				title += this.state.mediaNext.name.replace(/\.[^/.]+$/, "");
+			}
+		}
+		return title;
+  }
 	
 	handleClose() {
 		StateStore.dispatch({type: "showFullScreen", show: false});
@@ -212,7 +238,7 @@ class FullScreen extends Component {
 	}
 	
 	render() {
-		var mediaImage, metadata = [], separator, playButton, playButtonLarge;
+		var mediaImage, metadata = [], separator, playButton, playButtonLarge, switchButton, switchButtonXs;
 		if (this.state.imgBlob) {
 			mediaImage = <Image src={"data:image/jpeg;base64," + this.state.imgBlob} className="cover-image-full center-block" responsive />;
 		} else {
@@ -338,7 +364,28 @@ class FullScreen extends Component {
 					</Col>
 				</Row>
 			);
+			if (this.state.titleNext) {
+				metadata.push(
+					<Row key={7}>
+						<Col xs={6} className="text-right">
+							<label className="text-fullscreen">{i18n.t("common.title_next")}</label>
+						</Col>
+						<Col xs={6}>
+							<span className="text-fullscreen">{this.state.titleNext}</span>
+						</Col>
+					</Row>);
+			}
 		}
+    if (StateStore.getState().profile.currentPlayer.type === "carleon") {
+      switchButton =
+        <Button title={i18n.t("player.switch")} onClick={() => {this.handlePlayerAction("switch")}} className={(this.state.playerSwitch)?"btn-primary":""}>
+          <FontAwesome name={"power-off"} />
+        </Button>
+      switchButtonXs =
+        <Button bsSize="large" title={i18n.t("player.switch")} onClick={() => {this.handlePlayerAction("switch")}} className={(this.state.playerSwitch)?"btn-primary":""}>
+          <FontAwesome name={"power-off"} />
+        </Button>
+    }
 		return (
 			<div className={"fullscreen" + (!this.state.show?" hidden":"")} >
 				<div className="media-background-fullscreen" style={{backgroundImage:this.state.imgBlob?"url(data:image/png;base64,"+this.state.imgBlob+")":"" }}>
@@ -374,6 +421,7 @@ class FullScreen extends Component {
 								<MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-1)}}>{i18n.t("common.volume_minus_1")}</MenuItem>
 								<MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-5)}}>{i18n.t("common.volume_minus_5")}</MenuItem>
 							</DropdownButton>
+              {switchButton}
 						</ButtonGroup>
 					</Col>
 					<Col md={12} className="text-center visible-sm visible-xs">
@@ -395,6 +443,7 @@ class FullScreen extends Component {
 								<MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-1)}}>{i18n.t("common.volume_minus_1")}</MenuItem>
 								<MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(-5)}}>{i18n.t("common.volume_minus_5")}</MenuItem>
 							</DropdownButton>
+              {switchButtonXs}
 						</ButtonGroup>
 					</Col>
 				</Row>

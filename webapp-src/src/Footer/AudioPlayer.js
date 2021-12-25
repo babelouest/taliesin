@@ -499,7 +499,7 @@ class AudioPlayer extends Component {
 						<FontAwesome name={"play"} />
 					</Button>;
 				playButtonXs = 
-          <MenuItem onClick={() => {this.handleNext}} disabled={true}>
+          <MenuItem disabled={true}>
             <FontAwesome name={"play"} className="space-after"/>
             {i18n.t("common.play")}
           </MenuItem>
@@ -510,7 +510,7 @@ class AudioPlayer extends Component {
 							<FontAwesome name={"play"} />
 						</Button>;
           playButtonXs = 
-            <MenuItem onClick={() => {this.handleNext}} onClick={this.handlePlay}>
+            <MenuItem onClick={this.handlePlay}>
               <FontAwesome name={"play"} className="space-after"/>
               {i18n.t("common.play")}
             </MenuItem>
@@ -520,7 +520,7 @@ class AudioPlayer extends Component {
 							<FontAwesome name={"pause"} />
 						</Button>;
           playButtonXs = 
-            <MenuItem onClick={() => {this.handleNext}} onClick={this.handlePause}>
+            <MenuItem onClick={this.handlePause}>
               <FontAwesome name={"play"} className="space-after"/>
               {i18n.t("common.pause")}
             </MenuItem>
@@ -559,7 +559,7 @@ class AudioPlayer extends Component {
 						</Button>
 					</ButtonGroup>
           <DropdownButton className="visible-xs" id="audio-player" title={
-            <span><i className="fa fa-cog"></i></span>
+            <span><i className="fa fa-play"></i></span>
           }>
             <MenuItem onClick={this.handlePrevious}>
               <FontAwesome name={"fast-backward"} className="space-after"/>

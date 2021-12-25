@@ -40,27 +40,18 @@ class PlayerSelector extends Component {
 				)
 			}
 		});
-		var playerName;
-		if (this.state.player.name) {
-			playerName = this.state.player.name;
-		} else {
-			playerName = i18n.t("player." + this.state.player.type);
-		}
-		if (playerName.length > 10) {
-			playerName = playerName.substring(0, 10) + "...";
-		}
 		if (this.state.isAdmin && StateStore.getState().angharadApiUrl) {
 			separator = <MenuItem divider />;
 			manager = <MenuItem onClick={this.handleManagePlayers}>{i18n.t("player.manage")}</MenuItem>;
 		}
 		return (
-			<div>
-				<DropdownButton title={playerName} id="playerList">
-					{playerList}
-					{separator}
-					{manager}
-				</DropdownButton>
-			</div>
+      <DropdownButton title={
+        <span><i className="fa fa-headphones"></i></span>
+      } id="playerList">
+        {playerList}
+        {separator}
+        {manager}
+      </DropdownButton>
 		);
 	}
 }

@@ -203,36 +203,31 @@ class Footer extends Component {
 			streamSelector =
 				<Col md={2} sm={4} xs={4}>
 					<ButtonGroup>
-						<StreamSelector streamList={this.state.streamList} stream={this.state.stream} />
 						<PlayerSelector player={this.state.currentPlayer} currentList={this.state.playerList} isAdmin={this.state.isAdmin} />
+						<StreamSelector streamList={this.state.streamList} stream={this.state.stream} />
 					</ButtonGroup>
 				</Col>;
 			if (this.state.currentPlayer.type==="carleon") {
 				audioPlayer =
-					<Col md={3} sm={5} xs={5} className="player-box">
+					<Col md={3} sm={6} xs={6} className="player-box">
 						<MPDController player={this.state.currentPlayer} stream={this.state.stream} play={this.state.play} index={this.state.jukeboxIndex} />
 					</Col>;
 			} else if (this.state.currentPlayer.type==="internal") {
 				audioPlayer =
-					<Col md={3} sm={5} xs={5} className="player-box">
+					<Col md={3} sm={6} xs={6} className="player-box">
 						<AudioPlayer stream={this.state.stream} play={this.state.play} index={this.state.jukeboxIndex} duration={this.state.stream.webradio?0:(this.state.mediaNow.duration/1000)} />
 					</Col>;
 			} else { // External
 				audioPlayer =
-					<Col md={3} sm={5} xs={5} className="player-box">
+					<Col md={3} sm={6} xs={6} className="player-box">
 					</Col>;
 			}
 			if (this.state.stream.name) {
 				middleButtons =
-					<Col md={2} sm={3} xs={3} className="text-center">
-						<ButtonGroup>
-							<Button title={i18n.t("player.list_media")} onClick={ ()=> this.showMediaList()}>
-								<FontAwesome name={"list"} />
-							</Button>
-							<Button title={i18n.t("player.full_screen")} onClick={ ()=> this.showFullScreen()}>
-								<FontAwesome name={"arrows-alt"} />
-							</Button>
-						</ButtonGroup>
+					<Col md={2} sm={1} xs={1} className="text-center">
+            <Button title={i18n.t("player.full_screen")} onClick={ ()=> this.showFullScreen()}>
+              <FontAwesome name={"arrows-alt"} />
+            </Button>
 					</Col>;
 			}
 			return (

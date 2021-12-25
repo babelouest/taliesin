@@ -78,6 +78,9 @@ class MPDController extends Component {
 						case "volume":
 							this.handleChangeVolume(reduxState.profile.playerActionParameter);
 							break;
+						case "switch":
+							this.handlePlayerSwitch();
+							break;
 						default:
 							break;
 					}
@@ -163,6 +166,7 @@ class MPDController extends Component {
 		if (this.state.player.switch) {
 			StateStore.getState().APIManager.benoicApiRequest("GET", "/device/" + encodeURIComponent(this.state.player.switch.device) + "/switch/" + encodeURIComponent(this.state.player.switch.name))
 			.then((status) => {
+        StateStore.dispatch({ type: "setJukeboxSwitch", status: !!status.value });
 				this.setState({switchOn: !!status.value});
 			});
 		}
@@ -349,6 +353,7 @@ class MPDController extends Component {
 		if (this.state.player.switch) {
 			StateStore.getState().APIManager.benoicApiRequest("GET", "/device/" + encodeURIComponent(this.state.player.switch.device) + "/switch/" + encodeURIComponent(this.state.player.switch.name) + "/" + (this.state.switchOn?"0":"1"))
 			.then(() => {
+        StateStore.dispatch({ type: "setJukeboxSwitch", status: !this.state.switchOn });
 				this.setState({switchOn: !this.state.switchOn});
 			});
 		}
@@ -362,24 +367,39 @@ class MPDController extends Component {
 	}
 	
 	render() {
-		var playButton, volume, switchButton, streamName;
+		var playButton, playButtonXs, volume, switchButton, streamName;
 		if (this.state.play) {
 			if (this.state.stream.webradio) {
 				playButton = 
 					<Button title={i18n.t("common.play")} disabled={true}>
 						<FontAwesome name={"play"} />
 					</Button>;
+				playButtonXs = 
+          <MenuItem disabled={true}>
+            <FontAwesome name={"play"} className="space-after"/>
+            {i18n.t("common.play")}
+          </MenuItem>
 			} else {
 				playButton = 
 					<Button title={i18n.t("common.play")} onClick={this.handlePause}>
 						<FontAwesome name={"pause"} />
 					</Button>;
+				playButtonXs = 
+          <MenuItem onClick={() => {this.handlePause}}>
+            <FontAwesome name={"pause"} className="space-after"/>
+            {i18n.t("common.play")}
+          </MenuItem>
 			}
 		} else {
 			playButton = 
 				<Button title={i18n.t("common.play")} onClick={this.handlePlay}>
 					<FontAwesome name={"play"} />
 				</Button>;
+      playButtonXs = 
+        <MenuItem onClick={() => {this.handlePlay}}>
+          <FontAwesome name={"play"} className="space-after"/>
+          {i18n.t("common.play")}
+        </MenuItem>
 		}
 		if (this.state.volume) {
 			volume = <FontAwesome name={"volume-up"} />;
@@ -402,7 +422,7 @@ class MPDController extends Component {
 		return (
 			<div>
 				<div>
-					<ButtonGroup className="space-after">
+					<ButtonGroup className="space-after hidden-xs">
 						<Button title={i18n.t("player.previous")} onClick={this.handlePrevious}>
 							<FontAwesome name={"fast-backward"} />
 						</Button>
@@ -414,13 +434,42 @@ class MPDController extends Component {
 							<FontAwesome name={"fast-forward"} />
 						</Button>
 					</ButtonGroup>
+          <DropdownButton className="visible-xs" id="audio-player" title={
+            <span><i className="fa fa-play"></i></span>
+          }>
+            <MenuItem onClick={this.handlePrevious}>
+              <FontAwesome name={"fast-backward"} className="space-after"/>
+              {i18n.t("player.previous")}
+            </MenuItem>
+            <MenuItem onClick={this.handleStop}>
+              <FontAwesome name={"stop"} className="space-after"/>
+              {i18n.t("common.stop")}
+            </MenuItem>
+            {playButtonXs}
+            <MenuItem onClick={this.handleNext}>
+              <FontAwesome name={"fast-forward"} className="space-after"/>
+              {i18n.t("player.next")}
+            </MenuItem>
+          </DropdownButton>
 					<ButtonGroup>
-						<Button title={i18n.t("common.repeat")} onClick={this.handleRepeat} className={(this.state.jukeboxRepeat&&!this.state.stream.webradio)?"btn-primary":""}>
+						<Button title={i18n.t("common.repeat")} onClick={this.handleRepeat} className={(this.state.jukeboxRepeat)?"btn-primary hidden-xs":"hidden-xs"}>
 							<FontAwesome name={"repeat"} />
 						</Button>
-						<Button title={i18n.t("common.random")} onClick={this.handleRandom} className={(this.state.jukeboxRandom&&!this.state.stream.webradio)?"btn-primary":""}>
+						<Button title={i18n.t("common.random")} onClick={this.handleRandom} className={(this.state.jukeboxRandom)?"btn-primary hidden-xs":"hidden-xs"}>
 							<FontAwesome name={"random"} />
 						</Button>
+            <DropdownButton className="visible-xs" id="audio-player" title={
+              <span><i className="fa fa-cog"></i></span>
+            }>
+              <MenuItem onClick={this.handleRepeat} active={!!this.state.jukeboxRepeat}>
+                <FontAwesome name={"repeat"} className="space-after"/>
+                {i18n.t("common.repeat")}
+              </MenuItem>
+              <MenuItem onClick={this.handleRandom} active={!!this.state.jukeboxRandom}>
+                <FontAwesome name={"random"} className="space-after"/>
+                {i18n.t("common.random")}
+              </MenuItem>
+            </DropdownButton>
 						<DropdownButton title={volume} id="dropdown-volume">
 							<MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(5)}}>{i18n.t("common.volume_plus_5")}</MenuItem>
 							<MenuItem eventKey="1" className="text-center" onClick={() => {this.handleChangeVolume(1)}}>{i18n.t("common.volume_plus_1")}</MenuItem>

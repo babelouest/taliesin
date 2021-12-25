@@ -242,7 +242,16 @@ class MPDController extends Component {
 	}
 	
 	handlePrevious() {
-		if (!this.state.stream.webradio) {
+		if (this.state.stream.webradio) {
+			StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "replay"})
+			.then((result) => {
+				StateStore.getState().NotificationManager.addNotification({
+					message: i18n.t("player.previous"),
+					level: 'success'
+				});
+				this.MPDStatus();
+			});
+		} else {
 			StateStore.getState().APIManager.carleonApiRequest("PUT", "/service-mpd/" + encodeURIComponent(this.state.player.name) + "/action/previous/")
 			.then(() => {
 				StateStore.getState().NotificationManager.addNotification({

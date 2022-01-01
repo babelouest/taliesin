@@ -52,10 +52,10 @@ const char * get_username(const struct _u_request * request, struct _u_response 
     if (u_map_get(request->map_url, "username") != NULL) {
       username = u_map_get(request->map_url, "username");
     } else {
-      username = json_string_value(json_object_get((json_t *)response->shared_data, "sub"));
+      username = json_string_value(json_object_get((json_t *)response->shared_data, config->oidc_claim_user_id));
     }
   } else {
-    username = json_string_value(json_object_get((json_t *)response->shared_data, "sub"));
+    username = json_string_value(json_object_get((json_t *)response->shared_data, config->oidc_claim_user_id));
   }
   return username;
 }
@@ -142,7 +142,7 @@ int callback_taliesin_check_access (const struct _u_request * request, struct _u
     return callback_check_jwt_profile_access_token(request, response, config->iddawc_resource_config);
 #endif
   } else {
-    ulfius_set_response_shared_data(response, json_pack("{ssss++}", "sub", TALIESIN_NO_AUTHENTICATION_USERNAME, "scope", config->oauth_scope_user, " ", config->oauth_scope_admin), (void (*)(void *))&json_decref);
+    ulfius_set_response_shared_data(response, json_pack("{ssss++}", config->oidc_claim_user_id, TALIESIN_NO_AUTHENTICATION_USERNAME, "scope", config->oauth_scope_user, " ", config->oauth_scope_admin), (void (*)(void *))&json_decref);
     return U_CALLBACK_CONTINUE;
   }
 }
@@ -160,7 +160,7 @@ int callback_taliesin_check_admin_access (const struct _u_request * request, str
     return callback_check_jwt_profile_access_token(request, response, config->iddawc_resource_config_admin);
 #endif
   } else {
-    ulfius_set_response_shared_data(response, json_pack("{ssss++}", "sub", TALIESIN_NO_AUTHENTICATION_USERNAME, "scope", config->oauth_scope_user, " ", config->oauth_scope_admin), (void (*)(void *))&json_decref);
+    ulfius_set_response_shared_data(response, json_pack("{ssss++}", config->oidc_claim_user_id, TALIESIN_NO_AUTHENTICATION_USERNAME, "scope", config->oauth_scope_user, " ", config->oauth_scope_admin), (void (*)(void *))&json_decref);
     return U_CALLBACK_CONTINUE;
   }
 }

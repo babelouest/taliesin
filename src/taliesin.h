@@ -92,6 +92,7 @@
 #define TALIESIN_SCOPE_ALL "all"
 #define TALIESIN_SCOPE_ME  "me"
 #define TALIESIN_NO_AUTHENTICATION_USERNAME "Myrddin"
+#define TALIESIN_DEFAULT_CLAIM_USER_ID "sub"
 
 #define TALIESIN_MEDIUMBLOB_MAX_SIZE 16777215
 
@@ -425,6 +426,7 @@ struct config_elements {
   char                                         * oidc_aud;
   time_t                                         oidc_dpop_max_iat;
   unsigned short                                 oidc_configured;
+  char                                         * oidc_claim_user_id;
   struct _iddawc_resource_config               * iddawc_resource_config;
   struct _iddawc_resource_config               * iddawc_resource_config_admin;
   struct _u_compressed_inmemory_website_config * static_file_config;

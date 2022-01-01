@@ -461,6 +461,7 @@ void exit_server(struct config_elements ** config, int exit_value) {
     o_free((*config)->secure_connection_pem_file);
     o_free((*config)->oauth_scope_user);
     o_free((*config)->oauth_scope_admin);
+    o_free((*config)->oidc_claim_user_id);
 #ifndef DISABLE_OAUTH2
     if ((*config)->oidc_configured) {
       i_jwt_profile_access_token_close_config((*config)->iddawc_resource_config);
@@ -701,7 +702,8 @@ int build_config_from_file(struct config_elements * config) {
   const char * cur_server_remote_address, * cur_prefix, * cur_log_mode, * cur_log_level, * cur_log_file = NULL, * one_log_mode, * cur_allow_origin,
              * db_type, * db_sqlite_path, * db_mariadb_host = NULL, * db_mariadb_user = NULL,
              * db_mariadb_password = NULL, * db_mariadb_dbname = NULL, * cur_static_files_path = NULL,
-             * cur_oauth_scope_user = NULL, * cur_oauth_scope_admin = NULL, * extension = NULL, * mime_type_value = NULL, * cur_stream_format = NULL;
+             * cur_oauth_scope_user = NULL, * cur_oauth_scope_admin = NULL, * extension = NULL, * mime_type_value = NULL, * cur_stream_format = NULL,
+             * cur_oidc_claim_user_id = NULL;
   int db_mariadb_port = 0, cur_stream_channels = 0, cur_stream_sample_rate = 0, cur_stream_bit_rate = 0, cur_use_oidc_authentication = 1, cur_user_can_create_data_source = 0, cur_timeout = 0, i = 0;
 #ifndef DISABLE_OAUTH2
   config_setting_t * oidc_cfg;
@@ -961,6 +963,15 @@ int build_config_from_file(struct config_elements * config) {
     }
   }
 
+  if (config_lookup_string(&cfg, "oidc_claim_user_id", &cur_oidc_claim_user_id)) {
+    config->oidc_claim_user_id = o_strdup(cur_oidc_claim_user_id);
+    if (config->oidc_claim_user_id == NULL) {
+      fprintf(stderr, "Error allocating config->oidc_claim_user_id, exiting\n");
+      config_destroy(&cfg);
+      return 0;
+    }
+  }
+
   if (config_lookup_string(&cfg, "stream_format", &cur_stream_format)) {
     if (0 == o_strcasecmp(cur_stream_format, "mp3") || 0 == o_strcasecmp(cur_stream_format, "vorbis") || 0 == o_strcasecmp(cur_stream_format, "flac")) {
       o_free(config->stream_format);
@@ -1051,6 +1062,10 @@ int check_config(struct config_elements * config) {
     fprintf(stderr, "Error, you must specify a log file if log mode is set to file\n");
     print_help(stderr);
     return 0;
+  }
+
+  if (config->oidc_claim_user_id == NULL) {
+    config->oidc_claim_user_id = o_strdup(TALIESIN_DEFAULT_CLAIM_USER_ID);
   }
 
   return 1;

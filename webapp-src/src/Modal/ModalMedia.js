@@ -323,6 +323,17 @@ class ModalMedia extends Component {
 						</Col>
 					</Row>);
 			}
+			if (this.state.media.tags && this.state.media.tags.copyright) {
+				metadata.push(
+					<Row key={4}>
+						<Col xs={6}>
+							<label>{i18n.t("common.copyright")}</label>
+						</Col>
+						<Col xs={6}>
+							<span>{this.state.media.tags.copyright}</span>
+						</Col>
+					</Row>);
+			}
 			if (metadata.length) {
 				separator = <Row><hr/></Row>;
 			}

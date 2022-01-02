@@ -12,6 +12,7 @@
 		"album": "Album",
 		"year": "Année",
 		"genre": "Genre",
+    "copyright": "Copyright",
 		"nb_play": "Joué",
 		"times": "fois",
 		"playlist": "Playlist",

@@ -354,6 +354,17 @@ class FullScreen extends Component {
 						</Col>
 					</Row>);
 			}
+			if (this.state.media.tags.copyright) {
+				metadata.push(
+					<Row key={5}>
+						<Col xs={6} className="text-right">
+							<label className="text-fullscreen">{i18n.t("common.copyright")}</label>
+						</Col>
+						<Col xs={6}>
+							<span>{this.state.media.tags.copyright}</span>
+						</Col>
+					</Row>);
+			}
 			metadata.push(
 				<Row key={6}>
 					<Col xs={6} className="text-right">

@@ -104,7 +104,7 @@ int callback_taliesin_options (const struct _u_request * request, struct _u_resp
  */
 int callback_taliesin_server_configuration (const struct _u_request * request, struct _u_response * response, void * user_data) {
   UNUSED(request);
-  set_response_json_body_and_clean(response, 200, json_pack("{ss*ss*ss*ss*sisisiso}", 
+  set_response_json_body_and_clean(response, 200, json_pack("{ss*ss*ss*ss*sisisissso}", 
                         "api_prefix", 
                         ((struct config_elements *)user_data)->api_prefix,
                         "oauth_scope_user",
@@ -119,6 +119,8 @@ int callback_taliesin_server_configuration (const struct _u_request * request, s
                         ((struct config_elements *)user_data)->stream_sample_rate,
                         "default_stream_bitrate",
                         ((struct config_elements *)user_data)->stream_bitrate,
+                        "oidc_claim_user_id",
+                        ((struct config_elements *)user_data)->oidc_claim_user_id,
                         "use_websockets",
 #ifdef U_DISABLE_WEBSOCKET
                         json_false()

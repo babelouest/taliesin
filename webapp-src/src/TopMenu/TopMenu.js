@@ -423,9 +423,9 @@ class TopMenu extends Component {
 						}
 						if (this.state.currentUser === user.username) {
 							selected = true;
-							userList.push(<MenuItem key={index} className="bg-success">{user.username}{StateStore.getState().profile.oauth2Profile.login===user.username?" ("+i18n.t("topmenu.me")+")":""}</MenuItem>);
+							userList.push(<MenuItem key={index} className="bg-success">{user.username}{StateStore.getState().profile.oauth2Profile[StateStore.getState().serverConfig.oidc_claim_user_id]===user.username?" ("+i18n.t("topmenu.me")+")":""}</MenuItem>);
 						} else {
-							userList.push(<MenuItem key={index} onClick={() => {this.handlechangeUser(user.username)}}>{user.username}{StateStore.getState().profile.oauth2Profile.login===user.username?" ("+i18n.t("topmenu.me")+")":""}</MenuItem>);
+							userList.push(<MenuItem key={index} onClick={() => {this.handlechangeUser(user.username)}}>{user.username}{StateStore.getState().profile.oauth2Profile[StateStore.getState().serverConfig.oidc_claim_user_id]===user.username?" ("+i18n.t("topmenu.me")+")":""}</MenuItem>);
 						}
 					});
 					if (!foundMe) {

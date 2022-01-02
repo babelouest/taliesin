@@ -123,7 +123,7 @@ class FullScreen extends Component {
 	
 	buildTitle() {
 		var title = "";
-		if (!!this.state.media) {
+		if (!!this.state.media && !!this.state.media.tags) {
 			if (this.state.jukeboxIndex > -1 && !this.state.stream.webradio) {
 				title += ((this.state.jukeboxIndex+1)<10?"0"+(this.state.jukeboxIndex+1):(this.state.jukeboxIndex+1)) + "/" + (this.state.stream.elements<10?"0"+this.state.stream.elements:this.state.stream.elements) + " - ";
 			}
@@ -138,7 +138,7 @@ class FullScreen extends Component {
   
   buildTitleNext() {
 		var title = "";
-		if (!!this.state.mediaNext) {
+		if (!!this.state.mediaNext && !!this.state.mediaNext.tags) {
       if (this.state.mediaNext.tags.artist) {
         title += this.state.mediaNext.tags.artist + " - ";
       }

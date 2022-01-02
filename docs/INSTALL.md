@@ -187,17 +187,25 @@ $ # Example to install the database with SQLite3
 $ sqlite3 [path/to/taliesin.db] < taliesin.sqlite3.sql
 ```
 
-##### Glewlwyd OAuth2 token validation
+##### OAuth2 token validation
 
-If you set the config parameter `use_oauth2_authentication` to true, you must set the configuration values to correspond with your OAuth2 Glewlwyd server. The Glewlwyd configuration block is labelled `jwt`.
+If you set the config parameter `use_oidc_authentication` to true, you must set the configuration values to verify the access tokens provided by the OAuth2 server.
 
-In this block, you must set the value `use_rsa` to `true` if you use RSA signatures for the tokens, then specify the path to the RSA public key file in the value `rsa_pub_file`. If you use an ECDSA signature, set the parameter `use_ecdsa` to true and set the path to your ECDSA public key file. If you use `sha` digest as signature, set `use_sha` to `true`, then specify the secret used to encode the tokens in the value `sha_secret`.
+In the `oidc` block, you must set `server_remote_config` or `server_public_jwks`:
+
+- `server_remote_config`: address to the `.well-known/openid-configuration` url of the OAuth2 server
+- `server_remote_config_verify_cert`: set to false if you want to ignore TLS certificate error in the `.well-known/openid-configuration` url
+- `server_public_jwks`: path to the OAuth2 server public keys to validate the access token signature
+- `iss`: issuer to verify when checking access tokens, mandatory if `server_public_jwks` is set
+- `realm` realm claim to verify, optional
+- `aud` aud claim to verify, optional
+- `dpop_max_iat`: maximum duration for a DPoP token, optional
 
 #### webapp/config.json file
 
 Copy `webapp/config.json.sample` to `webapp/config.json` and edit the file `webapp/config.json` with your own settings.
 
-If you want to setup Taliesin without OAuth2, you can use have a `config.json` like this:
+If you want to setup Taliesin without OAuth2 authentication, you can use have a `config.json` like this:
 
 ```javascript
 {
@@ -251,13 +259,13 @@ $ sudo systemctl enable taliesin
 $ sudo systemctl start taliesin
 ```
 
-#### Setup Taliesin in your Glewlwyd Oauth2 server
+#### Setup Taliesin in your Oauth2 server
 
-If you use a [Glewlwyd](https://github.com/babelouest/glewlwyd) instance as Oauth2 server, you must setup a new client, don't forget to setup properly the new scope, here set to `taliesin` and `taliesin_admin`, the `client_id` and at least one correct `redirect_uri` value.
+If you use a [Glewlwyd](https://babelouest.io/glewlwyd/) instance as Oauth2 server, you must setup a new client, don't forget to setup properly the new scope, here set to `taliesin` and `taliesin_admin`, the `client_id` and at least one correct `redirect_uri` value.
 
 Taliesin front-end is a React JS application with Redux, it will need a non confidential client_id, and the authorization types `code` and/or `token`.
 
-![glewlwyd client configuration](https://github.com/babelouest/taliesin/raw/master/docs/images/glewlwyd.png)
+![glewlwyd client configuration](images/glewlwyd.png)
 
 #### Protect behind Apache mod_proxy
 

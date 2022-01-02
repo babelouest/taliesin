@@ -19,6 +19,72 @@ server_remote_address = "http://localhost:8576/"
 # path to static files to access webapp
 app_files_path="/usr/share/taliesin/webapp"
 
+# access-control-allow-origin value
+allow_origin="*"
+
+# log mode (console, syslog, file)
+log_mode="file"
+
+# log level: NONE, ERROR, WARNING, INFO, DEBUG
+log_level="INFO"
+
+# output to log file (required if log_mode is file)
+log_file="/tmp/taliesin.log"
+
+# what access token claim should be used to identify the user, default sub
+oidc_claim_user_id = "sub"
+
+# scopes required
+oauth_scope_user="taliesin"
+oauth_scope_admin="taliesin_admin"
+
+# TLS/SSL configuration values
+use_secure_connection=false
+secure_connection_key_file="/usr/etc/taliesin/cert.key"
+secure_connection_pem_file="/usr/etc/taliesin/cert.pem"
+
+# MariaDB/Mysql database connection
+#database =
+#{
+#  type = "mariadb";
+#  host = "localhost";
+#  user = "taliesin";
+#  password = "taliesin";
+#  dbname = "taliesin";
+#  port = 0;
+#};
+
+# SQLite database connection
+database =
+{
+   type               = "sqlite3";
+   path               = "/var/cache/taliesin/taliesin.db";
+};
+
+# security parameters
+user_can_create_data_source = false # default false, only administrator can create data_source
+use_oidc_authentication     = false # default true, on false no authentication is required and all users are admin
+
+# streaming default parameters
+stream_format      = "mp3"   # use values 'mp3', 'vorbis' or 'flac'
+stream_channels    = 2       # use values 1 or 2
+stream_sample_rate = 44100   # use values 8000, 11025, 22050, 32000, 44100 or 48000
+stream_bitrate     = 128000  # use values 32000, 96000, 128000, 192000, 256000 or 320000
+timeout            = 20      # timeout in seconds to automatically disconnect idle streams
+
+# oidc parameters
+# either server_remote_config or server_public_jwks is mandatory
+oidc =
+{
+#  server_remote_config = "https://glewlwyd.tld/api/oidc/.well-known/openid-configuration"
+#  server_remote_config_verify_cert = true     # optional, default true
+#  server_public_jwks = "/path/to/public.jwks"
+#  iss = "https://glewlwyd.tld/"               # optional, but recommended
+#  realm = "taliesin"                          # optional
+#  aud = "me"                                  # optional
+#  dpop_max_iat = 60                           # optional, default 0 (disabled)
+}
+
 # mime types for webapp files
 app_files_mime_types =
 (
@@ -71,67 +137,3 @@ app_files_mime_types =
     type = "image/x-icon"
   }
 )
-
-# access-control-allow-origin value
-allow_origin="*"
-
-# log mode (console, syslog, file)
-log_mode="file"
-
-# log level: NONE, ERROR, WARNING, INFO, DEBUG
-log_level="INFO"
-
-# output to log file (required if log_mode is file)
-log_file="/tmp/taliesin.log"
-
-# scopes required
-oauth_scope_user="taliesin"
-oauth_scope_admin="taliesin_admin"
-
-# TLS/SSL configuration values
-use_secure_connection=false
-secure_connection_key_file="/usr/etc/taliesin/cert.key"
-secure_connection_pem_file="/usr/etc/taliesin/cert.pem"
-
-# MariaDB/Mysql database connection
-#database =
-#{
-#  type = "mariadb";
-#  host = "localhost";
-#  user = "taliesin";
-#  password = "taliesin";
-#  dbname = "taliesin";
-#  port = 0;
-#};
-
-# SQLite database connection
-database =
-{
-   type               = "sqlite3";
-   path               = "/var/cache/taliesin/taliesin.db";
-};
-
-# security parameters
-user_can_create_data_source = false # default false, only administrator can create data_source
-use_oauth2_authentication   = false # default false, on false, no authentication is required and all users have all the scopes, on true, an OAuth2 service is required for authentication, see https://github.com/babelouest/glewlwyd
-
-# streaming default parameters
-stream_format      = "mp3"   # use values 'mp3', 'vorbis' or 'flac'
-stream_channels    = 2       # use values 1 or 2
-stream_sample_rate = 44100   # use values 8000, 11025, 22050, 32000, 44100 or 48000
-stream_bitrate     = 128000  # use values 32000, 96000, 128000, 192000, 256000 or 320000
-timeout            = 20      # timeout in seconds to automatically disconnect idle streams
-
-# oidc parameters
-use_oidc_authentication = false # default true, on false no authentication is required and all users are admin
-# either server_remote_config or server_public_jwks is mandatory
-oidc =
-{
-#  server_remote_config = "https://glewlwyd.tld/api/oidc/.well-known/openid-configuration"
-#  server_remote_config_verify_cert = true     # optional, default true
-#  server_public_jwks = "/path/to/public.jwks"
-#  iss = "https://glewlwyd.tld/"               # optional, but recommended
-#  realm = "taliesin"                          # optional
-#  aud = "me"                                  # optional
-#  dpop_max_iat = 60                           # optional, default 0 (disabled)
-}

@@ -23,24 +23,24 @@ libmariadbclient
 libconfig
 ```
 
-For example, to install Taliesin with the `taliesin-full_1.0.19_Debian_stretch_x86_64.tar.gz` package downloaded on the `releases` page, you must execute the following commands:
+For example, to install Taliesin with the `taliesin-full_1.0.19_Debian_bullseye_x86_64.tar.gz` package downloaded on the `releases` page, you must execute the following commands:
 
 ```shell
-$ sudo apt install -y autoconf libjansson-dev libssl-dev libavfilter libavcodec libavformat libswresample libavutil libcurl-gnutls libgnutls libgcrypt libsqlite3 libmariadbclient libconfig
-$ wget https://github.com/babelouest/taliesin/releases/download/v1.0.19/taliesin-full_1.0.19_Debian_stretch_x86_64.tar.gz
-$ tar xf taliesin-full_1.0.19_Debian_stretch_x86_64.tar.gz
-$ sudo dpkg -i liborcania_2.2.1_Debian_stretch_x86_64.deb
-$ sudo dpkg -i libyder_1.4.14_Debian_stretch_x86_64.deb
-$ sudo dpkg -i libhoel_1.4.18_Debian_stretch_x86_64.deb
-$ sudo dpkg -i libulfius_2.7.7_Debian_stretch_x86_64.deb
-$ sudo dpkg -i taliesin_1.0.19_Debian_stretch_x86_64.deb
+$ sudo apt install -y libjansson4 libavcodec58 libavfilter7 libavformat58 libswresample3 libavutil56 libcurl-gnutls libgnutls libsqlite3-0 libpq5 default-mysql-client zlib1g libconfig9
+$ wget https://github.com/babelouest/taliesin/releases/download/v1.0.19/taliesin-full_1.0.19_Debian_bullseye_x86_64.tar.gz
+$ tar xf taliesin-full_1.0.19_Debian_bullseye_x86_64.tar.gz
+$ sudo dpkg -i liborcania_2.2.1_Debian_bullseye_x86_64.deb
+$ sudo dpkg -i libyder_1.4.14_Debian_bullseye_x86_64.deb
+$ sudo dpkg -i libhoel_1.4.18_Debian_bullseye_x86_64.deb
+$ sudo dpkg -i libulfius_2.7.7_Debian_bullseye_x86_64.deb
+$ sudo dpkg -i taliesin_1.0.19_Debian_bullseye_x86_64.deb
 ```
 
 If there's no package available for your distribution, you can recompile it manually using `CMake` or `Makefile`.
 
 ## Docker image
 
-You can install a Docker image based on Alpine Linux 3.150 0 0 .
+You can install a Docker image based on Alpine Linux 3.15
 
 ### Quickstart with a Taliesin server without authentication and a SQLite3 database
 

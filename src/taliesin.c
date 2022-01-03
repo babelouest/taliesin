@@ -704,7 +704,7 @@ int build_config_from_file(struct config_elements * config) {
              * db_mariadb_password = NULL, * db_mariadb_dbname = NULL, * cur_static_files_path = NULL,
              * cur_oauth_scope_user = NULL, * cur_oauth_scope_admin = NULL, * extension = NULL, * mime_type_value = NULL, * cur_stream_format = NULL,
              * cur_oidc_claim_user_id = NULL;
-  int db_mariadb_port = 0, cur_stream_channels = 0, cur_stream_sample_rate = 0, cur_stream_bit_rate = 0, cur_use_oidc_authentication = 1, cur_user_can_create_data_source = 0, cur_timeout = 0, i = 0;
+  int db_mariadb_port = 0, cur_stream_channels = 0, cur_stream_sample_rate = 0, cur_stream_bit_rate = 0, cur_use_oidc_authentication = 1, cur_user_can_create_data_source = 0, cur_timeout = 0, compress = 0, i = 0;
 #ifndef DISABLE_OAUTH2
   config_setting_t * oidc_cfg;
   const char * cur_oidc_server_remote_config = NULL, * cur_oidc_server_public_jwks = NULL, * cur_oidc_iss = NULL, * cur_oidc_realm = NULL, * cur_oidc_aud = NULL;
@@ -884,8 +884,16 @@ int build_config_from_file(struct config_elements * config) {
     for (i=0; i<config_setting_length(mime_type_list); i++) {
       mime_type = config_setting_get_elem(mime_type_list, i);
       if (mime_type != NULL) {
-        if (config_setting_lookup_string(mime_type, "extension", &extension) && config_setting_lookup_string(mime_type, "type", &mime_type_value)) {
+        if (config_setting_lookup_string(mime_type, "extension", &extension) == CONFIG_TRUE &&
+            config_setting_lookup_string(mime_type, "mime_type", &mime_type_value) == CONFIG_TRUE) {
           u_map_put(&config->static_file_config->mime_types, extension, mime_type_value);
+          if (config_setting_lookup_int(mime_type, "compress", &compress) == CONFIG_TRUE) {
+            if (compress && u_add_mime_types_compressed(config->static_file_config, mime_type_value) != U_OK) {
+              fprintf(stderr, "Error setting mime_type %s to compressed list, exiting\n", mime_type_value);
+              config_destroy(&cfg);
+              return 0;
+            }
+          }
         }
       }
     }

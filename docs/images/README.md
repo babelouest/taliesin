@@ -1,6 +1,6 @@
 # Taliesin screenshots
 
-These are some examples of what Taliesin looks like when used via its dedicated Web Application.
+These are some examples of what Taliesin looks like when used.
 
 ## Dashboard
 
@@ -26,12 +26,6 @@ When browsing media files, the user can browse via file path, or categories. For
 
 ![Browse path list](https://github.com/babelouest/taliesin/raw/master/docs/images/browse_list.png)
 
-## Category details
-
-A category can be edited to store an image and/or text, to get more information about the selected category.
-
-![Category details](https://github.com/babelouest/taliesin/raw/master/docs/images/artist_details.png)
-
 ## Media details
 
 You can also display the details of a media file
@@ -40,11 +34,7 @@ You can also display the details of a media file
 
 ## Player
 
-The player controls is available at the bottom of the screen. Clicking on the "full screen" button displays a full-screen player where you can see the current song. Clicking on the "list media" button shows the list of the media in the current stream, set to the current song played.
-
-![Player folded](https://github.com/babelouest/taliesin/raw/master/docs/images/player_folded.png)
-
-![Player extended](https://github.com/babelouest/taliesin/raw/master/docs/images/player_extended.png)
+The player controls is available at the bottom of the screen. Clicking on the "full screen" button displays a full-screen player where you can see the current song.
 
 ![Full screen player](https://github.com/babelouest/taliesin/raw/master/docs/images/player_fullscreen.png)
 

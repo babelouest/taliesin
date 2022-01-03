@@ -4,7 +4,7 @@
  * 
  * Filesystem functions definitions
  *
- * Copyright 2017-2021 Nicolas Mora <mail@babelouest.org>
+ * Copyright 2017-2022 Nicolas Mora <mail@babelouest.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU GENERAL PUBLIC LICENSE

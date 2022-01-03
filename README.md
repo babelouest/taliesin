@@ -43,4 +43,4 @@ Screenshots examples are available in the [images](https://github.com/babelouest
 
 Pull requests are welcome if you want to help, you can open an issue or send an e-mail (mail@babelouest.org) if you have questions or problems.
 
-Copyright 2017-2018 - Nicolas Mora <mail@babelouest.org>
+Copyright 2017-2022 - Nicolas Mora <mail@babelouest.org>

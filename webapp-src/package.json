@@ -7,7 +7,7 @@
 		"dev": "webpack-dev-server --config webpack.dev.config.js",
 		"build": "webpack"
 	},
-	"author": "",
+	"author": "Nicolas Mora",
 	"license": "ISC",
 	"dependencies": {
 		"i18next": "^11.9.1",

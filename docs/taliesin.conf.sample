@@ -32,7 +32,7 @@ log_level="INFO"
 log_file="/tmp/taliesin.log"
 
 # what userinfo and access token claim should be used to identify the user, default sub
-oidc_claim_user_id = "sub"
+oidc_claim_user_id="sub"
 
 # scopes required
 oauth_scope_user="taliesin"
@@ -90,50 +90,72 @@ app_files_mime_types =
 (
   {
     extension = ".html"
-    type = "text/html"
+    mime_type = "text/html"
+    compress = 1
   },
   {
     extension = ".css"
-    type = "text/css"
+    mime_type = "text/css"
+    compress = 1
   },
   {
     extension = ".js"
-    type = "application/javascript"
-  },
-  {
-    extension = ".png"
-    type = "image/png"
-  },
-  {
-    extension = ".jpg"
-    type = "image/jpeg"
-  },
-  {
-    extension = ".jpeg"
-    type = "image/jpeg"
-  },
-  {
-    extension = ".ttf"
-    type = "font/ttf"
-  },
-  {
-    extension = ".woff"
-    type = "font/woff"
-  },
-  {
-    extension = ".woff2"
-    type = "font/woff2"
-  },
-  {
-    extension = ".map"
-    type = "application/octet-stream"
+    mime_type = "application/javascript"
+    compress = 1
   },
   {
     extension = ".json"
-    type = "text/json"
+    mime_type = "application/json"
+    compress = 1
+  },
+  {
+    extension = ".png"
+    mime_type = "image/png"
+    compress = 0
+  },
+  {
+    extension = ".jpg"
+    mime_type = "image/jpeg"
+    compress = 0
+  },
+  {
+    extension = ".jpeg"
+    mime_type = "image/jpeg"
+    compress = 0
+  },
+  {
+    extension = ".ttf"
+    mime_type = "font/ttf"
+    compress = 0
+  },
+  {
+    extension = ".woff"
+    mime_type = "font/woff"
+    compress = 0
+  },
+  {
+    extension = ".woff2"
+    mime_type = "font/woff2"
+    compress = 0
+  },
+  {
+    extension = ".otf"
+    mime_type = "font/otf"
+    compress = 0
+  },
+  {
+    extension = ".eot"
+    mime_type = "application/vnd.ms-fontobject"
+    compress = 0
+  },
+  {
+    extension = ".map"
+    mime_type = "application/octet-stream"
+    compress = 0
   },
   {
     extension = ".ico"
-    type = "image/x-icon"
+    mime_type = "image/x-icon"
+    compress = 0
   }
 )

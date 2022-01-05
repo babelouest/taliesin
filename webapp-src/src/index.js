@@ -36,6 +36,7 @@ config.fetchConfig()
 			redirectUri: curOauth2Config.redirectUri,
 			scope: curOauth2Config.scope,
 			userinfoUrl: curOauth2Config.userinfoUrl,
+			usePkce: curOauth2Config.usePkce,
 			changeStatusCb: function (newStatus, token, expiration) {
 				var curConfig = config.getLocalConfig() || {};
 				if ((curConfig.currentPlayer && curConfig.currentPlayer.type === "external" && !StateStore.getState().externalPlayerList.find((pl) => {return pl.name === curConfig.currentPlayer.name;})) || !curConfig.currentPlayer) {

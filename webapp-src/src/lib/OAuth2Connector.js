@@ -28,6 +28,7 @@ class OAuth2Connector {
 			this.parameters.clientPassword = parameters.clientPassword || "";
 			this.parameters.redirectUri = parameters.redirectUri || "";
 			this.parameters.userinfoUrl = parameters.userinfoUrl || "";
+      this.parameters.usePkce = !!parameters.usePkce;
 			if (parameters.changeStatusCb) {
 				this.changeStatusCb.push(parameters.changeStatusCb);
 			}
@@ -254,6 +255,39 @@ class OAuth2Connector {
 		}
 	}
 	
+  storePkce(pkce) {
+    var storedObject = this.getStoredData();
+    if (!storedObject) {
+      storedObject = {};
+    }
+    storedObject.pkce = pkce;
+
+    if (this.parameters.storageType === "local") {
+      return localStorage.setItem(this.localStorageKey, JSON.stringify(storedObject));
+    } else if (this.parameters.storageType === "cookie") {
+      return Cookies.set(this.localStorageKey, JSON.stringify(storedObject));
+    } else {
+      return false;
+    }
+  }
+
+  makeRandomString(length) {
+    var array            = new Uint8Array(length);
+    var result           = '';
+    var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    window.crypto.getRandomValues(array);
+    for ( var i = 0; i < length; i++ ) {
+      while (array[i] >= charactersLength) {
+        var oneValue = new Uint8Array(1);
+        window.crypto.getRandomValues(oneValue);
+        array[i] = oneValue[0];
+      }
+      result += characters.charAt(array[i]);
+   }
+   return result;
+  }
+
 	onChangeStatus(cb) {
 		this.changeStatusCb.push(cb);
 	}
@@ -269,10 +303,19 @@ class OAuth2Connector {
 	
 	getRefreshTokenFromCode(code, cb) {
 		var self = this;
+    var data = {
+      grant_type: "authorization_code",
+      client_id: this.parameters.clientId,
+      redirect_uri: this.parameters.redirectUri,
+      code: code};
+    var storedData = this.getStoredData();
+    if (this.parameters.usePkce && storedData.pkce) {
+      data.code_verifier = storedData.pkce;
+    }
 		$.ajax({
 			type: "POST",
 			url: this.parameters.tokenUrl,
-			data: {grant_type: "authorization_code", client_id: this.parameters.clientId, redirect_uri: this.parameters.redirectUri, code: code},
+			data: data,
 			success: function (result, status, request) {
 				cb(result);
 			},
@@ -388,7 +431,18 @@ class OAuth2Connector {
 			if (this.parameters.responseType === "token") {
 				document.location = this.parameters.authUrl + "?response_type=token&client_id=" + this.parameters.clientId + "&redirect_uri=" + this.parameters.redirectUri + "&scope=" + this.parameters.scope;
 			} else if (this.parameters.responseType === "code") {
-				document.location = this.parameters.authUrl + "?response_type=code&client_id=" + this.parameters.clientId + "&redirect_uri=" + this.parameters.redirectUri + "&scope=" + this.parameters.scope;
+        if (this.parameters.usePkce) {
+          let pkce = this.makeRandomString(64);
+          this.storePkce(pkce);
+          const encoder = new TextEncoder();
+          crypto.subtle.digest("SHA-256", encoder.encode(pkce))
+          .then(pkceHashed => {
+            let pkceHashedB64 = this.base64UrlArrayBuffer(pkceHashed);
+            document.location = this.parameters.authUrl + "?response_type=code&client_id=" + this.parameters.clientId + "&redirect_uri=" + this.parameters.redirectUri + "&scope=" + this.parameters.scope + "&code_challenge_method=S256&code_challenge=" + pkceHashedB64;
+          });
+        } else {
+          document.location = this.parameters.authUrl + "?response_type=code&client_id=" + this.parameters.clientId + "&redirect_uri=" + this.parameters.redirectUri + "&scope=" + this.parameters.scope;
+        }
 			}
 		}
 	}
@@ -404,6 +458,75 @@ class OAuth2Connector {
 		this.accessToken = false;
 		this.broadcastMessage("disconnected");
 	}
+
+  /**
+   * base64UrlArrayBuffer
+   *
+   * MIT LICENSE
+   *
+   * Copyright 2011 Jon Leighton
+   * Copyright 2021 Nicolas Mora
+   *
+   * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
+   * to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   * and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+   * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+   * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+   * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+   * OR OTHER DEALINGS IN THE SOFTWARE.
+  */
+  base64UrlArrayBuffer(arrayBuffer) {
+    var base64    = ''
+    var encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
+
+    var bytes         = new Uint8Array(arrayBuffer)
+    var byteLength    = bytes.byteLength
+    var byteRemainder = byteLength % 3
+    var mainLength    = byteLength - byteRemainder
+
+    var a, b, c, d
+    var chunk
+
+    // Main loop deals with bytes in chunks of 3
+    for (var i = 0; i < mainLength; i = i + 3) {
+      // Combine the three bytes into a single integer
+      chunk = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2]
+
+      // Use bitmasks to extract 6-bit segments from the triplet
+      a = (chunk & 16515072) >> 18 // 16515072 = (2^6 - 1) << 18
+      b = (chunk & 258048)   >> 12 // 258048   = (2^6 - 1) << 12
+      c = (chunk & 4032)     >>  6 // 4032     = (2^6 - 1) << 6
+      d = chunk & 63               // 63       = 2^6 - 1
+
+      // Convert the raw binary segments to the appropriate ASCII encoding
+      base64 += encodings[a] + encodings[b] + encodings[c] + encodings[d]
+    }
+
+    // Deal with the remaining bytes and padding
+    if (byteRemainder == 1) {
+      chunk = bytes[mainLength]
+
+      a = (chunk & 252) >> 2 // 252 = (2^6 - 1) << 2
+
+      // Set the 4 least significant bits to zero
+      b = (chunk & 3)   << 4 // 3   = 2^2 - 1
+
+      base64 += encodings[a] + encodings[b]
+    } else if (byteRemainder == 2) {
+      chunk = (bytes[mainLength] << 8) | bytes[mainLength + 1]
+
+      a = (chunk & 64512) >> 10 // 64512 = (2^6 - 1) << 10
+      b = (chunk & 1008)  >>  4 // 1008  = (2^6 - 1) << 4
+
+      // Set the 2 least significant bits to zero
+      c = (chunk & 15)    <<  2 // 15    = 2^4 - 1
+
+      base64 += encodings[a] + encodings[b] + encodings[c]
+    }
+
+    return base64
+  }
 }
 
 export default OAuth2Connector;

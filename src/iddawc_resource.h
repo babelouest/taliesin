@@ -2,9 +2,9 @@
  *
  * Iddawc OIDC Access Token token check
  *
- * Copyright 2021 Nicolas Mora <mail@babelouest.org>
+ * Copyright 2021-2022 Nicolas Mora <mail@babelouest.org>
  *
- * Version 20210501
+ * Version 20220104
  *
  * The MIT License (MIT)
  * 

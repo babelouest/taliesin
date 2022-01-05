@@ -2,9 +2,9 @@
  *
  * Iddawc OIDC Access Token token check
  *
- * Copyright 2021 Nicolas Mora <mail@babelouest.org>
+ * Copyright 2021-2022 Nicolas Mora <mail@babelouest.org>
  *
- * Version 20210501
+ * Version 20220104
  *
  * The MIT License (MIT)
  * 
@@ -183,13 +183,16 @@ int i_jwt_profile_access_token_init_config(struct _iddawc_resource_config * conf
         if (pthread_mutex_init(&config->session_lock, &mutexattr) == 0) {
           ret = I_TOKEN_OK;
         } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_jwt_profile_access_token_init_config - Error pthread_mutex_init");
           ret = I_TOKEN_ERROR_INTERNAL;
         }
         pthread_mutexattr_destroy(&mutexattr);
       } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_jwt_profile_access_token_init_config - Error i_init_session");
         ret = I_TOKEN_ERROR_INTERNAL;
       }
     } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_jwt_profile_access_token_init_config - Error o_malloc session");
       ret = I_TOKEN_ERROR_INTERNAL;
     }
   } else {

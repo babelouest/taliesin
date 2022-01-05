@@ -15,6 +15,7 @@
 		"clientId": "taliesin", 
 		"redirectUri": "http://localhost:8576/", 
 		"scope": "taliesin taliesin_admin angharad",
-		"userinfoUrl": "http://localhost:4593/api/oidc/userinfo"
+		"userinfoUrl": "http://localhost:4593/api/oidc/userinfo",
+    "usePkce": true
 	}
 }

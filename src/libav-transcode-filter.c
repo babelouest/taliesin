@@ -208,16 +208,16 @@ int decode_audio_frame(AVFrame *frame,
       if (error == AVERROR_EOF) {
         *finished = 1;
         *data_present = 0;
-        av_packet_unref(input_packet);
+        av_packet_free(&input_packet);
         return error;
       } if (error == AVERROR_INVALIDDATA) {
         *data_present = 0;
-        av_packet_unref(input_packet);
+        av_packet_free(&input_packet);
         return error;
       } else {
         y_log_message(Y_LOG_LEVEL_ERROR, "Could not decode frame (error '%s')", get_error_text(error));
         *data_present = 0;
-        av_packet_unref(input_packet);
+        av_packet_free(&input_packet);
         return error;
       }
     }
@@ -226,7 +226,7 @@ int decode_audio_frame(AVFrame *frame,
     if (*finished && *data_present) {
       *finished = 0;
     }
-    av_packet_unref(input_packet);
+    av_packet_free(&input_packet);
   } else {
     error = AVERROR_INVALIDDATA;
   }
@@ -347,16 +347,16 @@ int encode_audio_frame_and_return(AVFrame * frame,
       if ((error = my_encode(output_codec_context, output_packet, frame, data_present)) < 0) {
         if (error == AVERROR_EOF) {
           *data_present = 0;
-          av_packet_unref(output_packet);
+          av_packet_free(&output_packet);
           return error;
         } if (error == AVERROR_INVALIDDATA) {
           *data_present = 0;
-          av_packet_unref(output_packet);
+          av_packet_free(&output_packet);
           return error;
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "Could not encode frame (error '%s')", get_error_text(error));
           *data_present = 0;
-          av_packet_unref(output_packet);
+          av_packet_free(&output_packet);
           return error;
         }
       }
@@ -367,7 +367,7 @@ int encode_audio_frame_and_return(AVFrame * frame,
         y_log_message(Y_LOG_LEVEL_ERROR, "Could not write frame (error '%s')", get_error_text(error));
       }
     }
-    av_packet_unref(output_packet);
+    av_packet_free(&output_packet);
   } else {
     error = AVERROR_INVALIDDATA;
   }

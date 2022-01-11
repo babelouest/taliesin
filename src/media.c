@@ -269,7 +269,7 @@ unsigned char * media_get_cover_from_path(const char * path, size_t * size) {
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "media_get_cover_from_path - Error get_media_cover for path %s", path);
         }
-        av_packet_unref(full_size_cover_packet);
+        av_packet_free(&full_size_cover_packet);
         avcodec_free_context(&full_size_cover_codec_context);
         avformat_close_input(&full_size_cover_format_context);
       } else {
@@ -329,8 +329,8 @@ json_t * media_get_metadata(struct config_elements * config, AVCodecContext * th
                 } else if (ret != T_ERROR_NOT_FOUND) {
                   y_log_message(Y_LOG_LEVEL_ERROR, "media_get_metadata - Error get_media_cover for %s", path);
                 }
-                av_packet_unref(full_size_cover_packet);
-                av_packet_unref(thumbnail_cover_packet);
+                av_packet_free(&full_size_cover_packet);
+                av_packet_free(&thumbnail_cover_packet);
                 avcodec_free_context(&full_size_cover_codec_context);
               } else {
                 y_log_message(Y_LOG_LEVEL_ERROR, "media_get_metadata - Error av_packet_alloc for %s", path);
@@ -2518,7 +2518,7 @@ int media_has_cover_from_path(const char * path) {
         if (get_media_cover(full_size_cover_format_context, &full_size_cover_codec_context, full_size_cover_packet) != T_OK) {
           ret = T_ERROR;
         }
-        av_packet_unref(full_size_cover_packet);
+        av_packet_free(&full_size_cover_packet);
         avcodec_free_context(&full_size_cover_codec_context);
         avformat_close_input(&full_size_cover_format_context);
       } else {

@@ -21,6 +21,7 @@
 
 TALIESIN_SOURCE=./src
 TALIESIN_TESTS=./test
+TALIESIN_DOCKER=./docker
 
 all:
 	cd $(TALIESIN_SOURCE) && $(MAKE)
@@ -43,3 +44,13 @@ test:
 clean:
 	cd $(TALIESIN_SOURCE) && $(MAKE) clean
 	cd $(TALIESIN_TESTS) && $(MAKE) clean
+	cd $(TALIESIN_DOCKER) && $(MAKE) clean
+
+docker-custom:
+	cd $(TALIESIN_DOCKER) && $(MAKE) docker-custom TALIESIN_VERSION=$(TALIESIN_VERSION)
+
+docker-quickstart:
+	cd $(TALIESIN_DOCKER) && $(MAKE) docker-quickstart TALIESIN_VERSION=$(TALIESIN_VERSION)
+
+docker-quickstart-run:
+	cd $(TALIESIN_DOCKER) && $(MAKE) docker-quickstart-run

@@ -93,20 +93,13 @@ Then, in another terminal, go to the folder `test/` and run the command `make te
 The default options values are:
 
 ```
-PARAM_USER=user1
-PARAM_PASSWORD=MyUser1Password!
-PARAM_SCOPE=taliesin
-PARAM_ADM_USER=admin
-PARAM_ADM_PASSWORD=MyAdminPassword2016!
-PARAM_ADM_SCOPE=taliesin_admin
-PARAM_GLEWLWYD_URL=http://localhost:4593/api
 PARAM_MEDIA_FOLDER=/tmp/media
 ```
 
 To set a parameter, append to the make command `KEY=value`, example:
 
 ```shell
-$ make test PARAM_PASSWORD=user_password PARAM_ADM_PASSWORD=admin_password PARAM_GLEWLWYD_URL=http://glewlwyd_server:4593/api PARAM_MEDIA_FOLDER=/new/path/to/test/folder
+$ make test PARAM_MEDIA_FOLDER=/new/path/to/test/folder
 ```
 
 You can also run one single test at a time, run `maks test_[test_name]`, example:

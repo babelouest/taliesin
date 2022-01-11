@@ -6,7 +6,7 @@ Follow the documentation [docs/minimal/README.md](https://github.com/babelouest/
 
 ## Pre-compiled packages
 
-You can install Taliesin with a pre-compiled package available in the [release pages](https://github.com/babelouest/taliesin/releases/latest/). The package files `taliesin-full_*` contain the package libraries of `orcania`, `yder`, `ulfius` and `hoel` precompiled for `taliesin`, plus `taliesin` package. To install a pre-compiled package, you need to have installed the following libraries:
+You can install Taliesin with a pre-compiled package available in the [release pages](https://github.com/babelouest/taliesin/releases/latest/). The package files `taliesin-full_*` contain the package libraries of `orcania`, `yder`, `ulfius`, `hoel`, `rhonabwy` and `iddawc` precompiled for `taliesin`, plus `taliesin` package. To install a pre-compiled package, you need to have installed the following libraries:
 
 ```
 libjansson

@@ -279,30 +279,21 @@ int data_source_add(struct config_elements * config, const char * username, json
   } else {
     j_profile_clause = json_string(username);
   }
-  j_query = json_pack("{sss{sossssssss}}",
-                      "table",
-                      TALIESIN_TABLE_DATA_SOURCE,
+  j_query = json_pack("{sss{so sO sO* sO sO*}}",
+                      "table", TALIESIN_TABLE_DATA_SOURCE,
                       "values",
-                        "tds_username",
-                        j_profile_clause,
-                        "tds_name",
-                        json_string_value(json_object_get(j_data_source, "name")),
-                        "tds_description",
-                        json_object_get(j_data_source, "description")!=NULL?json_string_value(json_object_get(j_data_source, "description")):"",
-                        "tds_path",
-                        json_string_value(json_object_get(j_data_source, "path")),
-                        "tds_icon",
-                        json_object_get(j_data_source, "icon")!=NULL?json_string_value(json_object_get(j_data_source, "icon")):"");
-  if (j_query != NULL) {
-    res = h_insert(config->conn, j_query, NULL);
-    json_decref(j_query);
-    if (res == H_OK) {
-      to_return = T_OK;
-    } else {
-      to_return = T_ERROR_DB;
-    }
+                        "tds_username", j_profile_clause,
+                        "tds_name", json_object_get(j_data_source, "name"),
+                        "tds_description", json_object_get(j_data_source, "description"),
+                        "tds_path", json_object_get(j_data_source, "path"),
+                        "tds_icon", json_object_get(j_data_source, "icon"));
+  res = h_insert(config->conn, j_query, NULL);
+  json_decref(j_query);
+  if (res == H_OK) {
+    to_return = T_OK;
   } else {
-    to_return = T_ERROR_MEMORY;
+    y_log_message(Y_LOG_LEVEL_ERROR, "data_source_add - Error executing j_query");
+    to_return = T_ERROR_DB;
   }
   return to_return;
 }

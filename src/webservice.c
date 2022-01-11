@@ -57,6 +57,9 @@ const char * get_username(const struct _u_request * request, struct _u_response 
   } else {
     username = json_string_value(json_object_get((json_t *)response->shared_data, config->oidc_claim_user_id));
   }
+  if (username == NULL) {
+    username = TALIESIN_NO_AUTHENTICATION_USERNAME;
+  }
   return username;
 }
 

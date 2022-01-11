@@ -251,32 +251,35 @@ json_t * get_format(struct config_elements * config, AVFormatContext *fmt_ctx, c
 unsigned char * media_get_cover_from_path(const char * path, size_t * size) {
   AVFormatContext * full_size_cover_format_context = NULL;
   AVCodecContext  * full_size_cover_codec_context  = NULL;
-  AVPacket          full_size_cover_packet;
+  AVPacket        * full_size_cover_packet = av_packet_alloc();
   unsigned char * cover = NULL;
   int ret;
   
-  if (path != NULL && size != NULL) {
-    if (!avformat_open_input(&full_size_cover_format_context, path, NULL, NULL)) {
-      av_init_packet(&full_size_cover_packet);
-      if ((ret = get_media_cover(full_size_cover_format_context, &full_size_cover_codec_context, &full_size_cover_packet)) == T_OK) {
-        cover = o_malloc(full_size_cover_packet.size);
-        if (cover != NULL) {
-          memcpy(cover, full_size_cover_packet.data, full_size_cover_packet.size);
-          *size = full_size_cover_packet.size;
+  if (full_size_cover_packet != NULL) {
+    if (path != NULL && size != NULL) {
+      if (!avformat_open_input(&full_size_cover_format_context, path, NULL, NULL)) {
+        if ((ret = get_media_cover(full_size_cover_format_context, &full_size_cover_codec_context, full_size_cover_packet)) == T_OK) {
+          cover = o_malloc(full_size_cover_packet->size);
+          if (cover != NULL) {
+            memcpy(cover, full_size_cover_packet->data, full_size_cover_packet->size);
+            *size = full_size_cover_packet->size;
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "media_get_cover_from_path - Error allocating resources for cover");
+          }
         } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "media_get_cover_from_path - Error allocating resources for cover");
+          y_log_message(Y_LOG_LEVEL_ERROR, "media_get_cover_from_path - Error get_media_cover for path %s", path);
         }
+        av_packet_unref(full_size_cover_packet);
+        avcodec_free_context(&full_size_cover_codec_context);
+        avformat_close_input(&full_size_cover_format_context);
       } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "media_get_cover_from_path - Error get_media_cover for path %s", path);
+        y_log_message(Y_LOG_LEVEL_ERROR, "media_get_cover_from_path - Error avformat_open_input for path %s", path);
       }
-      av_packet_unref(&full_size_cover_packet);
-      avcodec_free_context(&full_size_cover_codec_context);
-      avformat_close_input(&full_size_cover_format_context);
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "media_get_cover_from_path - Error avformat_open_input for path %s", path);
+      y_log_message(Y_LOG_LEVEL_ERROR, "media_get_cover_from_path - Error, path is NULL");
     }
   } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "media_get_cover_from_path - Error, path is NULL");
+    y_log_message(Y_LOG_LEVEL_ERROR, "media_get_cover_from_path - Error, full_size_cover_packet is NULL");
   }
   return cover;
 }
@@ -285,7 +288,7 @@ json_t * media_get_metadata(struct config_elements * config, AVCodecContext * th
   AVFormatContext * full_size_cover_format_context = NULL;
   json_t * j_metadata = json_object(), * j_format;
   AVCodecContext  * full_size_cover_codec_context  = NULL;
-  AVPacket          full_size_cover_packet, thumbnail_cover_packet;
+  AVPacket        * full_size_cover_packet, * thumbnail_cover_packet;
   int ret;
   unsigned char * cover_b64 = NULL;
   size_t cover_b64_len;
@@ -301,33 +304,37 @@ json_t * media_get_metadata(struct config_elements * config, AVCodecContext * th
           j_format = get_format(config, full_size_cover_format_context, path);
           if (j_format != NULL) {
             if (0 == o_strcmp("audio", json_string_value(json_object_get(j_format, "media"))) || 0 == o_strcmp("image", json_string_value(json_object_get(j_format, "media")))) {
-              av_init_packet(&full_size_cover_packet);
-              av_init_packet(&thumbnail_cover_packet);
-              if ((ret = get_media_cover(full_size_cover_format_context, &full_size_cover_codec_context, &full_size_cover_packet)) == T_OK) {
-                if (resize_image(full_size_cover_codec_context, thumbnail_cover_codec_context, &full_size_cover_packet, &thumbnail_cover_packet, TALIESIN_COVER_THUMB_WIDTH, TALIESIN_COVER_THUMB_HEIGHT) >= 0) {
-                  cover_b64 = o_malloc(2 * full_size_cover_packet.size * sizeof(char));
-                  if (cover_b64 != NULL) {
-                    if (o_base64_encode(full_size_cover_packet.data, full_size_cover_packet.size, cover_b64, &cover_b64_len)) {
-                      json_object_set_new(j_metadata, "cover", json_stringn((const char *)cover_b64, cover_b64_len));
+              full_size_cover_packet = av_packet_alloc();
+              thumbnail_cover_packet = av_packet_alloc();
+              if (full_size_cover_packet != NULL && thumbnail_cover_packet != NULL) {
+                if ((ret = get_media_cover(full_size_cover_format_context, &full_size_cover_codec_context, full_size_cover_packet)) == T_OK) {
+                  if (resize_image(full_size_cover_codec_context, thumbnail_cover_codec_context, full_size_cover_packet, thumbnail_cover_packet, TALIESIN_COVER_THUMB_WIDTH, TALIESIN_COVER_THUMB_HEIGHT) >= 0) {
+                    cover_b64 = o_malloc(2 * full_size_cover_packet->size * sizeof(char));
+                    if (cover_b64 != NULL) {
+                      if (o_base64_encode(full_size_cover_packet->data, full_size_cover_packet->size, cover_b64, &cover_b64_len)) {
+                        json_object_set_new(j_metadata, "cover", json_stringn((const char *)cover_b64, cover_b64_len));
+                      }
+                      o_free(cover_b64);
                     }
-                    o_free(cover_b64);
-                  }
-                  cover_b64 = o_malloc(2 * thumbnail_cover_packet.size * sizeof(char));
-                  if (cover_b64 != NULL) {
-                    if (o_base64_encode(thumbnail_cover_packet.data, thumbnail_cover_packet.size, cover_b64, &cover_b64_len)) {
-                      json_object_set_new(j_metadata, "cover_thumbnail", json_stringn((const char *)cover_b64, cover_b64_len));
+                    cover_b64 = o_malloc(2 * thumbnail_cover_packet->size * sizeof(char));
+                    if (cover_b64 != NULL) {
+                      if (o_base64_encode(thumbnail_cover_packet->data, thumbnail_cover_packet->size, cover_b64, &cover_b64_len)) {
+                        json_object_set_new(j_metadata, "cover_thumbnail", json_stringn((const char *)cover_b64, cover_b64_len));
+                      }
+                      o_free(cover_b64);
                     }
-                    o_free(cover_b64);
+                  } else {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "media_get_metadata - Error resize_image for %s", path);
                   }
-                } else {
-                  y_log_message(Y_LOG_LEVEL_ERROR, "media_get_metadata - Error resize_image for %s", path);
+                } else if (ret != T_ERROR_NOT_FOUND) {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "media_get_metadata - Error get_media_cover for %s", path);
                 }
-              } else if (ret != T_ERROR_NOT_FOUND) {
-                y_log_message(Y_LOG_LEVEL_ERROR, "media_get_metadata - Error get_media_cover for %s", path);
+                av_packet_unref(full_size_cover_packet);
+                av_packet_unref(thumbnail_cover_packet);
+                avcodec_free_context(&full_size_cover_codec_context);
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "media_get_metadata - Error av_packet_alloc for %s", path);
               }
-              av_packet_unref(&full_size_cover_packet);
-              av_packet_unref(&thumbnail_cover_packet);
-              avcodec_free_context(&full_size_cover_codec_context);
             }
             json_object_set_new(j_metadata, "format", j_format);
           }
@@ -2499,20 +2506,25 @@ json_t * media_append_list_to_media_list(struct config_elements * config, json_t
 int media_has_cover_from_path(const char * path) {
   AVFormatContext * full_size_cover_format_context = NULL;
   AVCodecContext  * full_size_cover_codec_context  = NULL;
-  AVPacket          full_size_cover_packet;
+  AVPacket        * full_size_cover_packet;
   int ret = T_OK;
 
   if (path != NULL) {
     if (access(path, F_OK) == -1) {
       ret = T_ERROR_NOT_FOUND;
     } else if (!avformat_open_input(&full_size_cover_format_context, path, NULL, NULL)) {
-      av_init_packet(&full_size_cover_packet);
-      if (get_media_cover(full_size_cover_format_context, &full_size_cover_codec_context, &full_size_cover_packet) != T_OK) {
+      full_size_cover_packet = av_packet_alloc();
+      if (full_size_cover_packet != NULL) {
+        if (get_media_cover(full_size_cover_format_context, &full_size_cover_codec_context, full_size_cover_packet) != T_OK) {
+          ret = T_ERROR;
+        }
+        av_packet_unref(full_size_cover_packet);
+        avcodec_free_context(&full_size_cover_codec_context);
+        avformat_close_input(&full_size_cover_format_context);
+      } else {
         ret = T_ERROR;
+        y_log_message(Y_LOG_LEVEL_ERROR, "media_get_cover_from_path - Error, full_size_cover_packet is NULL");
       }
-      av_packet_unref(&full_size_cover_packet);
-      avcodec_free_context(&full_size_cover_codec_context);
-      avformat_close_input(&full_size_cover_format_context);
     } else {
       ret = T_ERROR;
       y_log_message(Y_LOG_LEVEL_ERROR, "media_get_cover_from_path - Error avformat_open_input for path %s", path);

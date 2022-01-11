@@ -114,7 +114,6 @@ int open_input_file(const char *filename, AVFormatContext **input_format_context
 }
 
 void init_packet(AVPacket *packet) {
-  av_init_packet(packet);
   /* Set the packet data and size so that it is recognized as being empty. */
   packet->data = NULL;
   packet->size = 0;
@@ -188,44 +187,49 @@ int decode_audio_frame(AVFrame *frame,
                        AVCodecContext *input_codec_context,
                        int *data_present, int *finished) {
   /* Packet used for temporary storage. */
-  AVPacket input_packet;
+  AVPacket * input_packet = av_packet_alloc();
   int error;
-  init_packet(&input_packet);
-  /* Read one audio frame from the input file into a temporary packet. */
-  if ((error = av_read_frame(input_format_context, &input_packet)) < 0) {
-    /* If we are the the end of the file, flush the decoder below. */
-    if (error == AVERROR_EOF) {
-      *finished = 1;
-    } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "Could not read frame (error '%s')",
-              get_error_text(error));
-      *data_present = 0;
-      return 0;
+  
+  if (input_packet != NULL) {
+    init_packet(input_packet);
+    /* Read one audio frame from the input file into a temporary packet. */
+    if ((error = av_read_frame(input_format_context, input_packet)) < 0) {
+      /* If we are the the end of the file, flush the decoder below. */
+      if (error == AVERROR_EOF) {
+        *finished = 1;
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "Could not read frame (error '%s')",
+                get_error_text(error));
+        *data_present = 0;
+        return 0;
+      }
     }
-  }
-  if ((error = my_decode(input_codec_context, frame, data_present, &input_packet)) < 0) {
-    if (error == AVERROR_EOF) {
-      *finished = 1;
-      *data_present = 0;
-      av_packet_unref(&input_packet);
-      return error;
-    } if (error == AVERROR_INVALIDDATA) {
-      *data_present = 0;
-      av_packet_unref(&input_packet);
-      return error;
-    } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "Could not decode frame (error '%s')", get_error_text(error));
-      *data_present = 0;
-      av_packet_unref(&input_packet);
-      return error;
+    if ((error = my_decode(input_codec_context, frame, data_present, input_packet)) < 0) {
+      if (error == AVERROR_EOF) {
+        *finished = 1;
+        *data_present = 0;
+        av_packet_unref(input_packet);
+        return error;
+      } if (error == AVERROR_INVALIDDATA) {
+        *data_present = 0;
+        av_packet_unref(input_packet);
+        return error;
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "Could not decode frame (error '%s')", get_error_text(error));
+        *data_present = 0;
+        av_packet_unref(input_packet);
+        return error;
+      }
     }
+    /* If the decoder has not been flushed completely, we are not finished,
+     * so that this function has to be called again. */
+    if (*finished && *data_present) {
+      *finished = 0;
+    }
+    av_packet_unref(input_packet);
+  } else {
+    error = AVERROR_INVALIDDATA;
   }
-  /* If the decoder has not been flushed completely, we are not finished,
-   * so that this function has to be called again. */
-  if (*finished && *data_present) {
-    *finished = 0;
-  }
-  av_packet_unref(&input_packet);
   return error;
 }
 
@@ -334,36 +338,39 @@ int encode_audio_frame_and_return(AVFrame * frame,
                                   int64_t * pts,
                                   int * data_present) {
   int error;
-  AVPacket output_packet;
-  init_packet(&output_packet);
+  AVPacket * output_packet = av_packet_alloc();
   
-  if (frame) {
-    frame->pts = *pts;
-    *pts += frame->nb_samples;
-    if ((error = my_encode(output_codec_context, &output_packet, frame, data_present)) < 0) {
-      if (error == AVERROR_EOF) {
-        *data_present = 0;
-        av_packet_unref(&output_packet);
-        return error;
-      } if (error == AVERROR_INVALIDDATA) {
-        *data_present = 0;
-        av_packet_unref(&output_packet);
-        return error;
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "Could not encode frame (error '%s')", get_error_text(error));
-        *data_present = 0;
-        av_packet_unref(&output_packet);
-        return error;
+  if (output_packet != NULL) {
+    if (frame) {
+      frame->pts = *pts;
+      *pts += frame->nb_samples;
+      if ((error = my_encode(output_codec_context, output_packet, frame, data_present)) < 0) {
+        if (error == AVERROR_EOF) {
+          *data_present = 0;
+          av_packet_unref(output_packet);
+          return error;
+        } if (error == AVERROR_INVALIDDATA) {
+          *data_present = 0;
+          av_packet_unref(output_packet);
+          return error;
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "Could not encode frame (error '%s')", get_error_text(error));
+          *data_present = 0;
+          av_packet_unref(output_packet);
+          return error;
+        }
       }
     }
-  }
-  /* Write one audio frame from the temporary packet to the output file. */
-  if (*data_present) {
-    if ((error = av_write_frame(output_format_context, &output_packet)) < 0) {
-      y_log_message(Y_LOG_LEVEL_ERROR, "Could not write frame (error '%s')", get_error_text(error));
+    /* Write one audio frame from the temporary packet to the output file. */
+    if (*data_present) {
+      if ((error = av_write_frame(output_format_context, output_packet)) < 0) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "Could not write frame (error '%s')", get_error_text(error));
+      }
     }
+    av_packet_unref(output_packet);
+  } else {
+    error = AVERROR_INVALIDDATA;
   }
-  av_packet_unref(&output_packet);
   return error;
 }
 

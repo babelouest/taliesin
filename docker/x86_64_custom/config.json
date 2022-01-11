@@ -1,0 +1,5 @@
+{
+	"taliesinApiUrl": "http://localhost:8576/api",
+	"storageType": "local", 
+	"useWebsockets": true
+}

@@ -329,9 +329,10 @@ int main(int argc, char *argv[])
     o_free(str_jwks);
     
     time(&now);
-    j_claims = json_pack("{ss ss ss ss ss si si si ss}",
+    j_claims = json_pack("{ss ss ss ss ss ss si si si ss}",
                          "iss", "https://glewlwyd.tld/",
                          "sub", USER_LOGIN,
+                         "username", USER_LOGIN,
                          "client_id", "client",
                          "jti", "abcdxyz1234",
                          "type", "access_token",
@@ -348,6 +349,7 @@ int main(int argc, char *argv[])
     
     json_object_set_new(j_claims, "scope", json_string("taliesin taliesin_admin"));
     json_object_set_new(j_claims, "sub", json_string(ADMIN_LOGIN));
+    json_object_set_new(j_claims, "username", json_string(ADMIN_LOGIN));
     r_jwt_set_full_claims_json_t(jwt, j_claims);
     token = r_jwt_serialize_signed(jwt, NULL, 0);
     bearer_token = msprintf("Bearer %s", token);

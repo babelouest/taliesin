@@ -43,8 +43,8 @@ json_t * media_get_tags(AVFormatContext * fmt_ctx) {
 
   if (to_return != NULL) {
     while ((tag = av_dict_get(fmt_ctx->metadata, "", tag, AV_DICT_IGNORE_SUFFIX))) {
-      key = o_strndup(tag->key, MIN(TALIESIN_TAG_KEY_LENGTH, strlen(tag->key)));
-      value = o_strndup(tag->value, MIN(TALIESIN_TAG_VALUE_LENGTH, strlen(tag->value)));
+      key = o_strndup(tag->key, MIN(TALIESIN_TAG_KEY_LENGTH, o_strlen(tag->key)));
+      value = o_strndup(tag->value, MIN(TALIESIN_TAG_VALUE_LENGTH, o_strlen(tag->value)));
       int i;
       for(i = 0; key[i]; i++){
         key[i] = tolower(key[i]);
@@ -821,7 +821,7 @@ json_int_t cover_save_new_or_get_id(struct config_elements * config, json_int_t 
   
   cover = json_string_value(json_object_get(json_object_get(j_media, "metadata"), "cover"));
   cover_thumbnail = json_string_value(json_object_get(json_object_get(j_media, "metadata"), "cover_thumbnail"));
-  cover_crc = crc32(cover_crc, (const unsigned char *)cover, strlen(cover));
+  cover_crc = crc32(cover_crc, (const unsigned char *)cover, o_strlen(cover));
   sprintf(cover_crc_str, "0x%08lx", cover_crc);
   j_query = json_pack("{sss[ss]s{ssso}}",
                       "table",
@@ -1006,7 +1006,7 @@ int media_update(struct config_elements * config, json_int_t tm_id, json_t * j_m
   if (json_object_get(json_object_get(j_media, "metadata"), "cover")) {
     cover = json_string_value(json_object_get(json_object_get(j_media, "metadata"), "cover"));
     cover_thumbnail = json_string_value(json_object_get(json_object_get(j_media, "metadata"), "cover_thumbnail"));
-    cover_crc = crc32(cover_crc, (const unsigned char *)cover, strlen(cover));
+    cover_crc = crc32(cover_crc, (const unsigned char *)cover, o_strlen(cover));
     sprintf(cover_crc_str, "0x%08lx", cover_crc);
     j_query = json_pack("{sss[s]s{ss}}",
                         "table",

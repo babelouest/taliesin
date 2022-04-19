@@ -43,7 +43,7 @@ static int get_stream_name() {
     o_strcpy(valid_stream_name, "");
     o_strcpy(valid_stream_name, json_string_value(json_object_get(json_array_get(j_result, 0), "name")));
     json_decref(j_result);
-    return strlen(valid_stream_name);
+    return o_strlen(valid_stream_name);
   } else {
     return 0;
   }

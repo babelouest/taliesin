@@ -492,8 +492,8 @@ int callback_taliesin_media_get_path (const struct _u_request * request, struct 
         while (decode_path[0] == '/') {
           decode_path++;
         }
-        while (decode_path[strlen(decode_path) - 1] == '/') {
-          decode_path[strlen(decode_path) - 1] = '\0';
+        while (decode_path[o_strlen(decode_path) - 1] == '/') {
+          decode_path[o_strlen(decode_path) - 1] = '\0';
         }
         j_result = media_get(config, json_object_get(j_data_source, "data_source"), decode_path);
         if (check_result_value(j_result, T_OK)) {

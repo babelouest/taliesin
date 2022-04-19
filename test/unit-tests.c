@@ -106,10 +106,10 @@ char * print_map(const struct _u_map * map) {
       line = malloc((len+1)*sizeof(char));
       snprintf(line, (len+1), "key is %s, value is %s\n", keys[i], u_map_get(map, keys[i]));
       if (to_return != NULL) {
-        len = strlen(to_return) + strlen(line) + 1;
+        len = o_strlen(to_return) + o_strlen(line) + 1;
         to_return = realloc(to_return, (len+1)*sizeof(char));
       } else {
-        to_return = malloc((strlen(line) + 1)*sizeof(char));
+        to_return = malloc((o_strlen(line) + 1)*sizeof(char));
         to_return[0] = 0;
       }
       strcat(to_return, line);
@@ -234,7 +234,7 @@ char to_hex(char code) {
  * http://www.geekhideout.com/urlcode.shtml
  */
 char * url_encode(const char * str) {
-  char * pstr = (char*)str, * buf = malloc(strlen(str) * 3 + 1), * pbuf = buf;
+  char * pstr = (char*)str, * buf = malloc(o_strlen(str) * 3 + 1), * pbuf = buf;
   while (* pstr) {
     if (isalnum(* pstr) || * pstr == '-' || * pstr == '_' || * pstr == '.' || * pstr == '~') 
       * pbuf++ = * pstr;
@@ -255,7 +255,7 @@ char * url_encode(const char * str) {
  * http://www.geekhideout.com/urlcode.shtml
  */
 char * url_decode(const char * str) {
-  char * pstr = (char*)str, * buf = malloc(strlen(str) + 1), * pbuf = buf;
+  char * pstr = (char*)str, * buf = malloc(o_strlen(str) + 1), * pbuf = buf;
   while (* pstr) {
     if (* pstr == '%') {
       if (pstr[1] && pstr[2]) {

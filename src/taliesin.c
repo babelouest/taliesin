@@ -220,7 +220,7 @@ int main (int argc, char ** argv) {
 #ifndef DISABLE_OAUTH2
   if (config->use_oidc_authentication) {
     y_log_message(Y_LOG_LEVEL_INFO, "OIDC Authentication: enabled");
-    if (i_jwt_profile_access_token_init_config(config->iddawc_resource_config, I_METHOD_HEADER, NULL, NULL, config->oauth_scope_user, config->server_remote_address, 1, 0, config->oidc_dpop_max_iat) != I_TOKEN_OK) {
+    if (i_jwt_profile_access_token_init_config(config->iddawc_resource_config, I_METHOD_HEADER, NULL, NULL, config->oauth_scope_user, config->server_remote_address, config->oidc_dpop_max_iat) != I_TOKEN_OK) {
       y_log_message(Y_LOG_LEVEL_ERROR, "Error i_jwt_profile_access_token_init_config");
       exit_server(&config, TALIESIN_ERROR);
     } else {
@@ -264,8 +264,6 @@ int main (int argc, char ** argv) {
     config->iddawc_resource_config_admin->realm = NULL;
     config->iddawc_resource_config_admin->aud = NULL;
     config->iddawc_resource_config_admin->resource_url_root = config->iddawc_resource_config->resource_url_root;
-    config->iddawc_resource_config_admin->accept_access_token = 1;
-    config->iddawc_resource_config_admin->accept_client_token = 0;
   } else {
     y_log_message(Y_LOG_LEVEL_INFO, "OIDC Authentication: disabled");
   }

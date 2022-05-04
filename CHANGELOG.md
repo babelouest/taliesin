@@ -1,5 +1,9 @@
 # Taliesin changelog
 
+## 1.0.20
+
+- Allow to disable static files server
+
 ## 1.0.19
 
 - Add http compression

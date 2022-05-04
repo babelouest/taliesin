@@ -24,7 +24,7 @@
 #ifndef __TALIESIN_H_
 #define __TALIESIN_H_
 
-#define _TALIESIN_VERSION_ "1.0.19"
+#define _TALIESIN_VERSION_ "1.0.20"
 
 /** Macro to avoid compiler warning when some parameters are unused and that's ok **/
 #define UNUSED(x) (void)(x)

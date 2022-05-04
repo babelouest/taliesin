@@ -338,7 +338,9 @@ int main (int argc, char ** argv) {
   ulfius_add_endpoint_by_val(config->instance, "PUT", config->api_prefix, "/search/", TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_advanced_search, (void*)config);
 
   // Other endpoints
-  ulfius_add_endpoint_by_val(config->instance, "GET", NULL, "*", TALIESIN_CALLBACK_PRIORITY_FILES, &callback_static_compressed_inmemory_website, (void*)config->static_file_config);
+  if (config->static_file_config->files_path != NULL) {
+    ulfius_add_endpoint_by_val(config->instance, "GET", NULL, "*", TALIESIN_CALLBACK_PRIORITY_FILES, &callback_static_compressed_inmemory_website, (void*)config->static_file_config);
+  }
   ulfius_add_endpoint_by_val(config->instance, "GET", NULL, "*", TALIESIN_CALLBACK_PRIORITY_POST_FILE, &callback_404_if_necessary, NULL);
   ulfius_add_endpoint_by_val(config->instance, "GET", "/.well-known/taliesin-configuration/", NULL, TALIESIN_CALLBACK_PRIORITY_APPLICATION, &callback_taliesin_server_configuration, (void*)config);
   ulfius_add_endpoint_by_val(config->instance, "OPTIONS", NULL, "*", TALIESIN_CALLBACK_PRIORITY_ZERO, &callback_taliesin_options, NULL);

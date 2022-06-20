@@ -27,19 +27,20 @@ set(PROGRAM_VERSION_MINOR "0")
 set(PROGRAM_VERSION_PATCH "20")
 set(PROJECT_DESCRIPTION "Lightweight audio streaming server")
 set(PROJECT_BUGREPORT_PATH "https://github.com/babelouest/taliesin/issues")
-set(ORCANIA_VERSION_REQUIRED "2.2.2")
-set(YDER_VERSION_REQUIRED "1.4.15")
-set(HOEL_VERSION_REQUIRED "1.4.23")
-set(ULFIUS_VERSION_REQUIRED "2.7.9")
-set(RHONABWY_VERSION_REQUIRED "1.1.5")
-set(IDDAWC_VERSION_REQUIRED "1.1.3")
+set(ORCANIA_VERSION_REQUIRED "2.3.0")
+set(YDER_VERSION_REQUIRED "1.4.17")
+set(ULFIUS_VERSION_REQUIRED "2.7.10")
+set(HOEL_VERSION_REQUIRED "1.4.25")
+set(RHONABWY_VERSION_REQUIRED "1.1.6")
+set(IDDAWC_VERSION_REQUIRED "1.1.4")
 
 include(GNUInstallDirs)
 include(CheckSymbolExists)
 
 # cmake modules
 
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules)
+set(T_CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules)
+list(APPEND CMAKE_MODULE_PATH "${T_CMAKE_MODULE_PATH}")
 
 # check if _GNU_SOURCE is available
 
@@ -356,7 +357,7 @@ if (BUILD_TESTING)
 				set(TESTS config data_source_crud data_source_refresh data_source_create_environment data_source_browse_path data_source_browse_category playlist_crud search_simple search_advanced stream_webradio stream_jukebox data_source_delete_environment )
 
         configure_file(
-                "${CMAKE_MODULE_PATH}/CTestCustom.cmake.in"
+                "${T_CMAKE_MODULE_PATH}/CTestCustom.cmake.in"
                 "${CMAKE_CURRENT_BINARY_DIR}/CTestCustom.cmake"
                 @ONLY)
 
@@ -406,7 +407,7 @@ install(TARGETS ${TARGETS}
 
 if (NOT TARGET uninstall)
     configure_file(
-            "${CMAKE_MODULE_PATH}/CMakeUninstall.cmake.in"
+            "${T_CMAKE_MODULE_PATH}/CMakeUninstall.cmake.in"
             "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
             IMMEDIATE @ONLY)
     add_custom_target(uninstall

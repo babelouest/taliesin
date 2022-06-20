@@ -2,21 +2,15 @@ FROM alpine:latest
 
 # Install required packages
 RUN apk add --no-cache \
-		autoconf \
-		automake \
-		libtool \
 		libcurl \
-		jansson-dev \
-		make \
+		jansson \
 		gcc \
-		g++ \
-		gnutls-dev \
+		gnutls \
 		libconfig \
 		libgcrypt \
 		libmicrohttpd \
 		sqlite-libs \
 		mariadb-connector-c \
-		libpq \
 		wget \
 		ffmpeg-libs \
 		zlib \
@@ -27,7 +21,6 @@ ARG ALPINE_VERSION
 
 COPY ["taliesin-full_${TALIESIN_VERSION}_alpine_${ALPINE_VERSION}_x86_64.tar.gz", "/opt"]
 
-# libtool and autoconf may be required, install them with 'sudo apt-get install libtool autoconf'
 RUN cd /opt && \
 		tar -xf taliesin-full_${TALIESIN_VERSION}_alpine_${ALPINE_VERSION}_x86_64.tar.gz && \
 		rm taliesin-full_${TALIESIN_VERSION}_alpine_${ALPINE_VERSION}_x86_64.tar.gz && \
@@ -49,7 +42,7 @@ RUN cd /opt && \
 		mv taliesin_*/etc/taliesin/taliesin.conf /etc/taliesin/ && \
 		mv taliesin_*/share/taliesin/webapp/ /usr/share/taliesin/ && \
 		mv /usr/share/taliesin/webapp/config.json /etc/taliesin/ && \
-		ln -s /etc/taliesin/config.json /usr/share/taliesin/ && \
+		cp /etc/taliesin/config.json /usr/share/taliesin/ && \
 		rm -rf *
 
 COPY ["entrypoint.sh", "/"]

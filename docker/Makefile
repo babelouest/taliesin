@@ -25,7 +25,7 @@ TALIESIN_PACKAGE=taliesin-full_$(TALIESIN_VERSION)_alpine_$(ALPINE_VERSION)_x86_
 MEDIA=/tmp/media
 
 TALIESIN_VERSION=$(shell curl -s https://api.github.com/repos/babelouest/taliesin/releases/latest | grep tag_name | cut -d '"' -f 4 | cut -c 2-)
-ALPINE_VERSION=3.15.0
+ALPINE_VERSION=3.15.4
 
 $(TALIESIN_PACKAGE):
 	wget https://github.com/babelouest/taliesin/releases/download/v$(TALIESIN_VERSION)/$(TALIESIN_PACKAGE)

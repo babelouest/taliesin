@@ -165,7 +165,7 @@ StateStore.subscribe(() => {
 			});
 
 			// Get server config
-      StateStore.getState().APIManager.taliesinApiRequest("GET", "/../.well-known/taliesin-configuration")
+      StateStore.getState().APIManager.APIRequest("GET", "/.well-known/taliesin-configuration")
       .then((result) => {
         StateStore.dispatch({type: "setServerConfig", config: result});
       })

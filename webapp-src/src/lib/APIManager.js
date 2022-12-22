@@ -46,7 +46,7 @@ class APIManager {
 	APIRequestExecute(method, url, data) {
 		return $.ajax({
 			method: method,
-			url: url,
+			url: url.replace(/([^:]\/)\/+/g, "$1"),
 			data: JSON.stringify(data),
 			contentType: data?"application/json; charset=utf-8":null,
 			headers: {"Authorization": "Bearer " + StateStore.getState().token}

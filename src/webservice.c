@@ -1465,29 +1465,16 @@ void callback_websocket_stream_manager (const struct _u_request * request, struc
   char * message;
   json_t * j_result, * j_message;
   time_t now;
-  struct timespec wait;
-  struct timeval tv_now;
-  int ret_wait;
   
   websocket_manager->keep_messages = U_WEBSOCKET_KEEP_NONE;
 
   if (ws_stream->webradio != NULL) {
     ws_stream->webradio->nb_websocket++;
     // Loop until websocket is closed by the server or the client
-    while (websocket_manager->connected && ws_stream->status == TALIESIN_WEBSOCKET_PLAYLIST_STATUS_OPEN && ws_stream->webradio->audio_stream->status != TALIESIN_STREAM_STATUS_STOPPED) {
-      gettimeofday(&tv_now, NULL);
-      wait.tv_sec = tv_now.tv_sec + 5;
-      wait.tv_nsec = tv_now.tv_usec * 1000;
-      if (wait.tv_nsec > 999999999) {
-        wait.tv_nsec %= 1000000000;
-        wait.tv_sec ++;
-      }
-      pthread_mutex_lock(&ws_stream->webradio->message_lock);
-      ret_wait = pthread_cond_timedwait(&ws_stream->webradio->message_cond, &ws_stream->webradio->message_lock, &wait);
-      pthread_mutex_unlock(&ws_stream->webradio->message_lock);
+    while (ulfius_websocket_wait_close(websocket_manager, 50) == U_WEBSOCKET_STATUS_OPEN && ws_stream->webradio->audio_stream->status != TALIESIN_STREAM_STATUS_STOPPED) {
       
       time(&now);
-      if (ret_wait != ETIMEDOUT && websocket_manager->connected && ((ws_stream->is_authenticated && ws_stream->expiration && ws_stream->expiration > now) || !ws_stream->config->use_oidc_authentication)) {
+      if (((ws_stream->is_authenticated && ws_stream->expiration && ws_stream->expiration > now) || !ws_stream->config->use_oidc_authentication)) {
         if (ws_stream->webradio->message_type == TALIESIN_PLAYLIST_MESSAGE_TYPE_NEW_MEDIA) {
           j_result = media_get_by_id(ws_stream->config, ws_stream->webradio->audio_stream->first_buffer->file->tm_id);
           if (check_result_value(j_result, T_OK)) {
@@ -1527,12 +1514,9 @@ void callback_websocket_stream_manager (const struct _u_request * request, struc
   } else if (ws_stream->jukebox != NULL) {
     ws_stream->jukebox->nb_websocket++;
     // Loop until websocket is closed by the server or the client
-    while (websocket_manager->connected && ws_stream->status == TALIESIN_WEBSOCKET_PLAYLIST_STATUS_OPEN) {
-      pthread_mutex_lock(&ws_stream->jukebox->message_lock);
-      pthread_cond_wait(&ws_stream->jukebox->message_cond, &ws_stream->jukebox->message_lock);
-      pthread_mutex_unlock(&ws_stream->jukebox->message_lock);
+    while (ws_stream->jukebox->message_type != TALIESIN_PLAYLIST_MESSAGE_TYPE_CLOSING && ulfius_websocket_wait_close(websocket_manager, 50) == U_WEBSOCKET_STATUS_OPEN) {
       
-      if (websocket_manager->connected && ws_stream->is_authenticated) {
+      if (ws_stream->is_authenticated) {
         if (ws_stream->jukebox->message_type == TALIESIN_PLAYLIST_MESSAGE_TYPE_CLOSING) {
           j_message = json_pack("{ss}", "command", "quit");
           message = json_dumps(j_message, JSON_COMPACT);

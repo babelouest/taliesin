@@ -99,19 +99,17 @@ json_t * is_stream_parameters_valid(int webradio, const char * scope, int is_adm
 }
 
 static json_t * db_stream_get_media_list(struct config_elements * config, json_int_t ts_id) {
-  json_t * j_result, * j_return;
+  json_t * j_query, * j_result, * j_return;
   int res;
-  char * query;
   
-  query = msprintf("SELECT `%s`.`tds_path` AS tds_path, `%s`.`tds_name` AS data_source, `%s`.`tm_id` AS tm_id, `%s`.`tm_path` AS path FROM `%s`, `%s`, `%s` "
-                   "WHERE `%s`.`ts_id`=%" JSON_INTEGER_FORMAT " AND `%s`.`tm_id`=`%s`.`tm_id` "
-                   "AND `%s`.`tds_id`=`%s`.`tds_id` ORDER BY `%s`.`tse_id`",
-                   TALIESIN_TABLE_DATA_SOURCE, TALIESIN_TABLE_DATA_SOURCE, TALIESIN_TABLE_MEDIA, TALIESIN_TABLE_MEDIA, 
-                   TALIESIN_TABLE_DATA_SOURCE, TALIESIN_TABLE_MEDIA, TALIESIN_TABLE_STREAM_ELEMENT, 
-                   TALIESIN_TABLE_STREAM_ELEMENT, ts_id, TALIESIN_TABLE_STREAM_ELEMENT, TALIESIN_TABLE_MEDIA,
-                   TALIESIN_TABLE_MEDIA, TALIESIN_TABLE_DATA_SOURCE, TALIESIN_TABLE_STREAM_ELEMENT);
-  res = h_execute_query_json(config->conn, query, &j_result);
-  o_free(query);
+  j_query = json_pack("{sss[s]s{sI}}",
+                      "table", TALIESIN_TABLE_STREAM_ELEMENT,
+                      "columns",
+                        "tm_id",
+                      "where",
+                        "ts_id", ts_id);
+  res = h_select(config->conn, j_query, &j_result, NULL);
+  json_decref(j_query);
   if (res == H_OK) {
     j_return = json_pack("{siso}", "result", T_OK, "media", j_result);
   } else {
@@ -163,7 +161,6 @@ json_t * db_stream_list(struct config_elements * config) {
 int db_stream_reload_file_lists(struct config_elements * config) {
   int ret;
   size_t index, index2, i;
-  char * full_path;
   json_t * j_stream, * j_element, * j_stream_list = db_stream_list(config);
   
   if (check_result_value(j_stream_list, T_OK)) {
@@ -176,11 +173,9 @@ int db_stream_reload_file_lists(struct config_elements * config) {
             } else {
               if (file_list_empty_nolock(config->webradio_set[i]->file_list) == T_OK) {
                 json_array_foreach(json_object_get(j_stream, "media"), index2, j_element) {
-                  full_path = msprintf("%s/%s", json_string_value(json_object_get(j_element, "tds_path")), json_string_value(json_object_get(j_element, "path")));
-                  if (file_list_enqueue_new_file_nolock(config->webradio_set[i]->file_list, full_path, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
+                  if (file_list_enqueue_new_file_nolock(config->webradio_set[i]->file_list, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
                     y_log_message(Y_LOG_LEVEL_ERROR, "add_webradio_from_playlist - Error adding file %s", json_string_value(json_object_get(j_element, "full_path")));
                   }
-                  o_free(full_path);
                 }
               } else {
                 y_log_message(Y_LOG_LEVEL_ERROR, "db_stream_reload_file_lists - Error file_list_empty_nolock stream %s", config->webradio_set[i]->display_name);
@@ -198,11 +193,9 @@ int db_stream_reload_file_lists(struct config_elements * config) {
             } else {
               if (file_list_empty_nolock(config->jukebox_set[i]->file_list) == T_OK) {
                 json_array_foreach(json_object_get(j_stream, "media"), index2, j_element) {
-                  full_path = msprintf("%s/%s", json_string_value(json_object_get(j_element, "tds_path")), json_string_value(json_object_get(j_element, "path")));
-                  if (file_list_enqueue_new_file_nolock(config->jukebox_set[i]->file_list, full_path, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
+                  if (file_list_enqueue_new_file_nolock(config->jukebox_set[i]->file_list, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
                     y_log_message(Y_LOG_LEVEL_ERROR, "add_webradio_from_playlist - Error adding file %s", json_string_value(json_object_get(j_element, "full_path")));
                   }
-                  o_free(full_path);
                 }
               } else {
                 y_log_message(Y_LOG_LEVEL_ERROR, "db_stream_reload_file_lists - Error file_list_empty_nolock stream %s", config->jukebox_set[i]->display_name);

@@ -64,26 +64,20 @@ int file_list_enqueue_file(struct _t_file_list * file_list, struct _t_file * fil
   }
 }
 
-int file_list_enqueue_new_file(struct _t_file_list * file_list, const char * path, json_int_t tm_id) {
-  struct _t_file * file;
-  if (path != NULL) {
-    file = o_malloc(sizeof(struct _t_file));
-    if (file != NULL) {
-      file->path = o_strdup(path);
-      file->next = NULL;
-      file->tm_id = tm_id;
-      if (file_list_enqueue_file(file_list, file) == T_OK) {
-        return T_OK;
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "file_list_enqueue_new_file - Error file_list_enqueue_file");
-        return T_ERROR;
-      }
+int file_list_enqueue_new_file(struct _t_file_list * file_list/*, const char * path*/, json_int_t tm_id) {
+  struct _t_file * file = o_malloc(sizeof(struct _t_file));
+  if (file != NULL) {
+    file->next = NULL;
+    file->tm_id = tm_id;
+    if (file_list_enqueue_file(file_list, file) == T_OK) {
+      return T_OK;
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "file_list_enqueue_new_file - Error allocating resources for file");
-      return T_ERROR_MEMORY;
+      y_log_message(Y_LOG_LEVEL_ERROR, "file_list_enqueue_new_file - Error file_list_enqueue_file");
+      return T_ERROR;
     }
   } else {
-    return T_ERROR_PARAM;
+    y_log_message(Y_LOG_LEVEL_ERROR, "file_list_enqueue_new_file - Error allocating resources for file");
+    return T_ERROR_MEMORY;
   }
 }
 
@@ -132,7 +126,6 @@ struct _t_file * copy_file(struct _t_file * file) {
   if (file != NULL) {
     new_file = malloc(sizeof(struct _t_file));
     if (new_file != NULL) {
-      new_file->path = o_strdup(file->path);
       new_file->tm_id = file->tm_id;
       new_file->next = NULL;
     } else {
@@ -231,8 +224,6 @@ struct _t_file * file_list_get_file(struct _t_file_list * file_list, unsigned lo
 
 void file_list_clean_file(struct _t_file * file) {
   if (file != NULL) {
-    o_free(file->path);
-    file->path = NULL;
     if (file->next != NULL) {
       file_list_clean_file(file->next);
       file->next = NULL;
@@ -272,26 +263,20 @@ int file_list_enqueue_file_nolock(struct _t_file_list * file_list, struct _t_fil
   }
 }
 
-int file_list_enqueue_new_file_nolock(struct _t_file_list * file_list, const char * path, json_int_t tm_id) {
-  struct _t_file * file;
-  if (path != NULL) {
-    file = o_malloc(sizeof(struct _t_file));
-    if (file != NULL) {
-      file->path = o_strdup(path);
-      file->next = NULL;
-      file->tm_id = tm_id;
-      if (file_list_enqueue_file_nolock(file_list, file) == T_OK) {
-        return T_OK;
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "file_list_enqueue_new_file - Error file_list_enqueue_file");
-        return T_ERROR;
-      }
+int file_list_enqueue_new_file_nolock(struct _t_file_list * file_list/*, const char * path*/, json_int_t tm_id) {
+  struct _t_file * file = o_malloc(sizeof(struct _t_file));
+  if (file != NULL) {
+    file->next = NULL;
+    file->tm_id = tm_id;
+    if (file_list_enqueue_file_nolock(file_list, file) == T_OK) {
+      return T_OK;
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "file_list_enqueue_new_file - Error allocating resources for file");
-      return T_ERROR_MEMORY;
+      y_log_message(Y_LOG_LEVEL_ERROR, "file_list_enqueue_new_file - Error file_list_enqueue_file");
+      return T_ERROR;
     }
   } else {
-    return T_ERROR_PARAM;
+    y_log_message(Y_LOG_LEVEL_ERROR, "file_list_enqueue_new_file - Error allocating resources for file");
+    return T_ERROR_MEMORY;
   }
 }
 
@@ -314,7 +299,7 @@ int file_list_add_media_list(struct _t_file_list * file_list, json_t * media_lis
   
   json_array_foreach(media_list, index, j_media) {
     full_path = msprintf("%s/%s", json_string_value(json_object_get(j_media, "data_source_path")), json_string_value(json_object_get(j_media, "path")));
-    if (file_list_enqueue_new_file(file_list, full_path, json_integer_value(json_object_get(j_media, "tm_id"))) != T_OK) {
+    if (file_list_enqueue_new_file(file_list/*, full_path*/, json_integer_value(json_object_get(j_media, "tm_id"))) != T_OK) {
       y_log_message(Y_LOG_LEVEL_ERROR, "file_list_add_media_list - Error file_list_enqueue_new_file for %s", full_path);
       ret = T_ERROR;
       break;

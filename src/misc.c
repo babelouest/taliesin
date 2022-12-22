@@ -100,7 +100,7 @@ long random_at_most(long max) {
 
   long x;
   do {
-   x = random();
+    x = random();
   }
   // This is carefully written not to overflow
   while (num_rand - defect <= (unsigned long)x);

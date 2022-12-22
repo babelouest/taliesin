@@ -193,7 +193,6 @@
  * Application structures
  */
 struct _t_file {
-  char                    * path;
   json_int_t                tm_id;
   struct _t_file          * next;
 };
@@ -475,6 +474,7 @@ char * rand_string(char * str, size_t size);
 void   redirect_libav_logs(void * avcl, int level, const char * fmt, va_list vl);
 char * get_ip_source(const struct _u_request * request);
 int    check_result_value(json_t * result, const int value);
+char * rand_string_from_charset(char * str, size_t str_size, const char * charset);
 
 int check_result_value(json_t * result, const int value);
 
@@ -509,9 +509,9 @@ int        data_source_can_update(json_t * j_data_source, int is_admin);
 json_t *   media_scan_path(struct config_elements * config, json_t * j_data_source, const char * path, int recursive);
 
 // struct _t_file_list functions
-int              file_list_enqueue_new_file(struct _t_file_list * file_list, const char * path, json_int_t tm_id);
+int              file_list_enqueue_new_file(struct _t_file_list * file_list, json_int_t tm_id);
 int              file_list_enqueue_file(struct _t_file_list * file_list, struct _t_file * file);
-int              file_list_enqueue_new_file_nolock(struct _t_file_list * file_list, const char * path, json_int_t tm_id);
+int              file_list_enqueue_new_file_nolock(struct _t_file_list * file_list, json_int_t tm_id);
 int              file_list_enqueue_file_nolock(struct _t_file_list * file_list, struct _t_file * file);
 int              file_list_insert_file_at(struct _t_file_list * file_list, struct _t_file * file, unsigned long index);
 struct _t_file * file_list_dequeue_file(struct _t_file_list * file_list, unsigned long index);
@@ -593,6 +593,7 @@ int      jukebox_remove_media_by_index(struct _t_jukebox * jukebox, int index, j
 // Media functions
 json_t        * media_get(struct config_elements * config, json_t * j_data_source, const char * path);
 json_t        * media_get_by_id(struct config_elements * config, json_int_t tm_id);
+json_t        * media_get_by_id_for_stream(struct config_elements * config, json_int_t tm_id);
 json_t        * media_get_full(struct config_elements * config, json_t * j_data_source, const char * path);
 json_t        * media_get_file_list_from_path(struct config_elements * config, json_t * j_data_source, const char * path, int recursive);
 json_t        * media_get_audio_list_from_path(struct config_elements * config, json_t * j_data_source, const char * path, int recursive);

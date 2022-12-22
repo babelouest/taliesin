@@ -354,6 +354,7 @@ int main (int argc, char ** argv) {
   u_map_put(config->instance->default_headers, "Cache-Control", "no-store");
   u_map_put(config->instance->default_headers, "Pragma", "no-cache");
 
+  y_log_message(Y_LOG_LEVEL_INFO, "Loading streams");
   j_stream_list = db_stream_list(config);
   if (check_result_value(j_stream_list, T_OK)) {
     json_array_foreach(json_object_get(j_stream_list, "stream"), index, j_element) {
@@ -372,6 +373,7 @@ int main (int argc, char ** argv) {
           y_log_message(Y_LOG_LEVEL_ERROR, "Error adding jukebox stream");
         }
       }
+      y_log_message(Y_LOG_LEVEL_INFO, "stream %s (%s) loaded", json_string_value(json_object_get(j_element, "display_name")), json_string_value(json_object_get(j_element, "name")));
     }
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "Error getting startup stream lists");
@@ -1117,7 +1119,7 @@ char * get_file_content(const char * file_path) {
  */
 void redirect_libav_logs(void * avcl, int level, const char * fmt, va_list vl) {
   UNUSED(avcl);
-  va_list args_cpy;
+  va_list args_cpy, args_cpy2;
   size_t out_len = 0;
   char * out = NULL, * new_fmt;
   unsigned long y_level;
@@ -1144,15 +1146,17 @@ void redirect_libav_logs(void * avcl, int level, const char * fmt, va_list vl) {
 
   if (y_level != Y_LOG_LEVEL_NONE) {
     va_copy(args_cpy, vl);
+    va_copy(args_cpy2, vl);
     new_fmt = msprintf("LIBAV - %s", fmt);
     out_len = vsnprintf(NULL, 0, new_fmt, args_cpy);
     out = o_malloc((out_len)*sizeof(char));
     if (out != NULL) {
-      vsnprintf(out, (out_len), new_fmt, args_cpy);
+      vsnprintf(out, (out_len), new_fmt, args_cpy2);
       y_log_message(y_level, out);
       o_free(out);
     }
     o_free(new_fmt);
     va_end(args_cpy);
+    va_end(args_cpy2);
   }
 }

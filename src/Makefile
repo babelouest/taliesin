@@ -29,9 +29,10 @@ endif
 CC=gcc
 #CC=clang
 CFLAGS=-c -Wall -Werror -Wextra $(ADDITIONALFLAGS)
-LIBS=-lc -lulfius -lyder -ljansson -lorcania -lhoel -liddawc -lconfig -lpthread -lavcodec -lavutil -lswresample -lavformat -lswscale -lz $(INITIAL_LIBS)
+LIBS=-lc $(shell pkg-config --libs liborcania) $(shell pkg-config --libs libyder) $(shell pkg-config --libs libulfius) $(shell pkg-config --libs libhoel) $(shell pkg-config --libs librhonabwy) $(shell pkg-config --libs libiddawc) $(shell pkg-config --libs jansson) $(shell pkg-config --libs gnutls) $(shell pkg-config --libs libconfig) $(shell pkg-config --libs nettle) $(shell pkg-config --libs hogweed) -lpthread -lavcodec -lavutil -lswresample -lavformat -lswscale -lz $(INITIAL_LIBS)
 OBJECTS=$(OAUTH2_OBJECTS) taliesin.o webservice.o static_compressed_inmemory_website_callback.o http_compression_callback.o misc.o libav-transcode-filter.o config.o file_list.o filesystem.o data_source.o media.o playlist.o stream.o stream_jukebox.o stream_webradio.o search.o
 PREFIX=/usr/local
+#CONFIG_FILE=../taliesin-ivonet.conf
 CONFIG_FILE=../taliesin.conf
 
 all: release

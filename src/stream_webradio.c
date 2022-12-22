@@ -565,7 +565,7 @@ json_t * add_webradio_from_path(struct config_elements * config, json_t * j_data
             config->webradio_set[webradio_index]->random = random;
             config->webradio_set[webradio_index]->display_name = o_strdup(display_name);
             json_array_foreach(json_object_get(j_media_list, "media_list"), index, j_element) {
-              if (file_list_enqueue_new_file(config->webradio_set[webradio_index]->file_list, json_string_value(json_object_get(j_element, "full_path")), json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
+              if (file_list_enqueue_new_file(config->webradio_set[webradio_index]->file_list, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
                 y_log_message(Y_LOG_LEVEL_ERROR, "add_webradio_from_path - Error adding file %s", json_string_value(json_object_get(j_element, "full_path")));
               }
             }
@@ -631,7 +631,6 @@ json_t * add_webradio_from_path(struct config_elements * config, json_t * j_data
 json_t * add_webradio_from_playlist(struct config_elements * config, json_t * j_playlist, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, short int random, const char * name, struct _t_webradio ** new_webradio) {
   json_t * j_result = NULL, * j_element;
   size_t index;
-  char * full_path;
   int webradio_index;
   
   if (!pthread_mutex_lock(&config->playlist_lock)) {
@@ -653,11 +652,9 @@ json_t * add_webradio_from_playlist(struct config_elements * config, json_t * j_
           config->webradio_set[webradio_index]->playlist_name = o_strdup(json_string_value(json_object_get(j_playlist, "name")));
           config->webradio_set[webradio_index]->tpl_id = json_integer_value(json_object_get(j_playlist, "tpl_id"));
           json_array_foreach(json_object_get(j_playlist, "media"), index, j_element) {
-            full_path = msprintf("%s/%s", json_string_value(json_object_get(j_element, "tds_path")), json_string_value(json_object_get(j_element, "path")));
-            if (file_list_enqueue_new_file(config->webradio_set[webradio_index]->file_list, full_path, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
+            if (file_list_enqueue_new_file(config->webradio_set[webradio_index]->file_list, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
               y_log_message(Y_LOG_LEVEL_ERROR, "add_webradio_from_playlist - Error adding file %s", json_string_value(json_object_get(j_element, "full_path")));
             }
-            o_free(full_path);
           }
           if (new_webradio != NULL) {
             *new_webradio = config->webradio_set[webradio_index];
@@ -714,7 +711,6 @@ json_t * add_webradio_from_playlist(struct config_elements * config, json_t * j_
 int add_webradio_from_db_stream(struct config_elements * config, json_t * j_stream, struct _t_webradio ** new_webradio) {
   json_t * j_element, * j_playlist;
   size_t index;
-  char * full_path;
   int webradio_index, ret;
   
   if (!pthread_mutex_lock(&config->playlist_lock)) {
@@ -739,13 +735,13 @@ int add_webradio_from_db_stream(struct config_elements * config, json_t * j_stre
             }
             json_decref(j_playlist);
           }
+          y_log_message(Y_LOG_LEVEL_DEBUG, "Info loaded for stream %s", config->webradio_set[webradio_index]->display_name);
           json_array_foreach(json_object_get(j_stream, "media"), index, j_element) {
-            full_path = msprintf("%s/%s", json_string_value(json_object_get(j_element, "tds_path")), json_string_value(json_object_get(j_element, "path")));
-            if (file_list_enqueue_new_file(config->webradio_set[webradio_index]->file_list, full_path, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
+            if (file_list_enqueue_new_file(config->webradio_set[webradio_index]->file_list, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
               y_log_message(Y_LOG_LEVEL_ERROR, "add_webradio_from_playlist - Error adding file %s", json_string_value(json_object_get(j_element, "full_path")));
             }
-            o_free(full_path);
           }
+          y_log_message(Y_LOG_LEVEL_DEBUG, "%zu media loaded for stream %s", json_array_size(json_object_get(j_stream, "media")), config->webradio_set[webradio_index]->display_name);
           if (new_webradio != NULL) {
             *new_webradio = config->webradio_set[webradio_index];
           }
@@ -917,7 +913,7 @@ int webradio_remove_media_by_index(struct _t_webradio * webradio, unsigned long 
 int webradio_add_media(struct config_elements * config, struct _t_webradio * webradio, const char * username, const char * data_source, const char * path) {
   json_t * j_data_source, * j_media;
   int res = T_OK;
-  char * full_path, * save_path;
+  char * save_path;
   
   j_data_source = data_source_get(config, username, data_source, 1);
   if (check_result_value(j_data_source, T_OK)) {
@@ -927,12 +923,10 @@ int webradio_add_media(struct config_elements * config, struct _t_webradio * web
     }
     j_media = media_get_full(config, json_object_get(j_data_source, "data_source"), save_path);
     if (check_result_value(j_media, T_OK)) {
-      full_path = msprintf("%s/%s", json_string_value(json_object_get(json_object_get(j_data_source, "data_source"), "path")), path);
-      if (file_list_enqueue_new_file(webradio->file_list, full_path, json_integer_value(json_object_get(json_object_get(j_media, "media"), "tm_id"))) != T_OK) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "webradio_add_media - Error file_list_enqueue_new_file for %s", full_path);
+      if (file_list_enqueue_new_file(webradio->file_list, json_integer_value(json_object_get(json_object_get(j_media, "media"), "tm_id"))) != T_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "webradio_add_media - Error file_list_enqueue_new_file for %s", path);
         res = T_ERROR;
       }
-      o_free(full_path);
     } else {
       y_log_message(Y_LOG_LEVEL_ERROR, "webradio_add_media - Error media_get_full %s/%s", json_string_value(json_object_get(json_object_get(j_data_source, "data_source"), "path")), path);
       res = T_ERROR;
@@ -1358,7 +1352,7 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
   size_t index, i;
   struct _audio_buffer * audio_buffer;
   struct _t_file * file;
-  char * full_path, old_name[TALIESIN_PLAYLIST_NAME_LENGTH + 1] = {0};
+  char old_name[TALIESIN_PLAYLIST_NAME_LENGTH + 1] = {0};
   
   if (0 == o_strcmp(str_command, "stop")) {
     webradio_close(config, webradio);
@@ -1608,11 +1602,9 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
               webradio->file_list->nb_files = 0;
             }
             json_array_foreach(json_object_get(json_object_get(j_playlist, "playlist"), "media"), index, j_element) {
-              full_path = msprintf("%s/%s", json_string_value(json_object_get(j_element, "tds_path")), json_string_value(json_object_get(j_element, "path")));
-              if (file_list_enqueue_new_file(webradio->file_list, full_path, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
+              if (file_list_enqueue_new_file(webradio->file_list, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
                 y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error adding file %s", json_string_value(json_object_get(j_element, "full_path")));
               }
-              o_free(full_path);
             }
             pthread_mutex_unlock(&webradio->file_list->file_lock);
             if (webradio_update_db_stream_media_list(config, webradio) == T_OK) {
@@ -1712,7 +1704,7 @@ void * webradio_run_thread(void * args) {
   int finished;
   int error;
   int data_written = 0;
-  char * title = NULL;
+  char * title = NULL, * path = NULL;
   json_t * j_media;
   unsigned int current_index;
   
@@ -1721,15 +1713,15 @@ void * webradio_run_thread(void * args) {
   webradio->audio_stream->pts              = 0;
   while ((current_file = webradio_get_next_file(webradio, &current_index)) != NULL &&
           webradio->audio_stream->status != TALIESIN_STREAM_STATUS_STOPPED) {
-    if (!open_input_file(current_file->path, &input_format_context, &input_codec_context, AVMEDIA_TYPE_AUDIO)) {
+    j_media = media_get_by_id_for_stream(config, current_file->tm_id);
+    if (check_result_value(j_media, T_OK)) {
+      title = build_icy_title(json_object_get(j_media, "media"));
+    } else {
+      title = o_strdup(webradio->display_name);
+    }
+    path = msprintf("%s/%s", json_string_value(json_object_get(json_object_get(j_media, "media"), "path_ds")), json_string_value(json_object_get(json_object_get(j_media, "media"), "path_media")));
+    if (!open_input_file(path, &input_format_context, &input_codec_context, AVMEDIA_TYPE_AUDIO)) {
       duration = (input_format_context->duration/AV_TIME_BASE);
-      j_media = media_get_by_id(config, current_file->tm_id);
-      if (check_result_value(j_media, T_OK)) {
-        title = build_icy_title(json_object_get(j_media, "media"));
-      } else {
-        title = o_strdup(webradio->display_name);
-      }
-      json_decref(j_media);
       if (audio_stream_enqueue_buffer(webradio, ((duration + 1) * webradio->audio_stream->stream_bitrate / 8), title, current_file, current_index) != T_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "Error enqueing buffer_stream of size %u", ((duration + 1) * webradio->audio_stream->stream_bitrate / 8));
       } else {
@@ -1797,11 +1789,13 @@ void * webradio_run_thread(void * args) {
         current_buffer->complete = 1;
         avcodec_flush_buffers(webradio->audio_stream->output_codec_context);
       }
-      o_free(title);
-      title = NULL;
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "Error opening file %s", current_file->path);
+      y_log_message(Y_LOG_LEVEL_ERROR, "Error opening file %s", path);
     }
+    o_free(path);
+    path = NULL;
+    o_free(title);
+    title = NULL;
     if (resample_context) {
       swr_close(resample_context);
       swr_free(&resample_context);
@@ -1815,6 +1809,7 @@ void * webradio_run_thread(void * args) {
       avformat_close_input(&input_format_context);
       input_format_context = NULL;
     }
+    json_decref(j_media);
   }
   webradio->audio_stream->transcode_status = TALIESIN_STREAM_TRANSCODE_STATUS_COMPLETE;
   webradio->message_type = TALIESIN_PLAYLIST_MESSAGE_TYPE_CLOSE;

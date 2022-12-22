@@ -735,13 +735,11 @@ int add_webradio_from_db_stream(struct config_elements * config, json_t * j_stre
             }
             json_decref(j_playlist);
           }
-          y_log_message(Y_LOG_LEVEL_DEBUG, "Info loaded for stream %s", config->webradio_set[webradio_index]->display_name);
           json_array_foreach(json_object_get(j_stream, "media"), index, j_element) {
             if (file_list_enqueue_new_file(config->webradio_set[webradio_index]->file_list, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
               y_log_message(Y_LOG_LEVEL_ERROR, "add_webradio_from_playlist - Error adding file %s", json_string_value(json_object_get(j_element, "full_path")));
             }
           }
-          y_log_message(Y_LOG_LEVEL_DEBUG, "%zu media loaded for stream %s", json_array_size(json_object_get(j_stream, "media")), config->webradio_set[webradio_index]->display_name);
           if (new_webradio != NULL) {
             *new_webradio = config->webradio_set[webradio_index];
           }

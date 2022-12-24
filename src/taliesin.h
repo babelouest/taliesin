@@ -619,6 +619,7 @@ int             media_has_cover_from_path(const char * path);
 // db stream functions
 json_t * db_stream_list(struct config_elements * config);
 int      db_stream_reload_file_lists(struct config_elements * config);
+json_t * db_stream_get_media_list_from_name(struct config_elements * config, const char * name);
 
 // Search functions
 json_t * media_simple_search(struct config_elements * config, const char * username, const char * search_pattern, unsigned short int search_category);

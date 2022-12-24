@@ -23,6 +23,27 @@
 
 #include "taliesin.h"
 
+static json_t * _db_stream_get_media_list_from_id(struct config_elements * config, json_int_t ts_id) {
+  json_t * j_query, * j_result, * j_return;
+  int res;
+  
+  j_query = json_pack("{sss[s]s{sI}}",
+                      "table", TALIESIN_TABLE_STREAM_ELEMENT,
+                      "columns",
+                        "tm_id",
+                      "where",
+                        "ts_id", ts_id);
+  res = h_select(config->conn, j_query, &j_result, NULL);
+  json_decref(j_query);
+  if (res == H_OK) {
+    j_return = json_pack("{siso}", "result", T_OK, "media", j_result);
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "_db_stream_get_media_list_from_id - Error executing j_query");
+    j_return = json_pack("{si}", "result", T_ERROR_DB);
+  }
+  return j_return;
+}
+
 /**
  * Return the list of available webradio and playlist streams for the specified user
  */
@@ -98,27 +119,6 @@ json_t * is_stream_parameters_valid(int webradio, const char * scope, int is_adm
   return j_result;
 }
 
-static json_t * db_stream_get_media_list(struct config_elements * config, json_int_t ts_id) {
-  json_t * j_query, * j_result, * j_return;
-  int res;
-  
-  j_query = json_pack("{sss[s]s{sI}}",
-                      "table", TALIESIN_TABLE_STREAM_ELEMENT,
-                      "columns",
-                        "tm_id",
-                      "where",
-                        "ts_id", ts_id);
-  res = h_select(config->conn, j_query, &j_result, NULL);
-  json_decref(j_query);
-  if (res == H_OK) {
-    j_return = json_pack("{siso}", "result", T_OK, "media", j_result);
-  } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "db_stream_get_media_list - Error executing j_query");
-    j_return = json_pack("{si}", "result", T_ERROR_DB);
-  }
-  return j_return;
-}
-
 json_t * db_stream_list(struct config_elements * config) {
   json_t * j_query, * j_result, * j_return, * j_element, * j_media;
   int res;
@@ -144,7 +144,7 @@ json_t * db_stream_list(struct config_elements * config) {
   json_decref(j_query);
   if (res == H_OK) {
     json_array_foreach(j_result, index, j_element) {
-      j_media = db_stream_get_media_list(config, json_integer_value(json_object_get(j_element, "ts_id")));
+      j_media = _db_stream_get_media_list_from_id(config, json_integer_value(json_object_get(j_element, "ts_id")));
       if (check_result_value(j_media, T_OK)) {
         json_object_set(j_element, "media", json_object_get(j_media, "media"));
       }
@@ -214,4 +214,29 @@ int db_stream_reload_file_lists(struct config_elements * config) {
   }
   json_decref(j_stream_list);
   return ret;
+}
+
+json_t * db_stream_get_media_list_from_name(struct config_elements * config, const char * name) {
+  json_t * j_query, * j_result, * j_return;
+  int res;
+  char * name_clause = h_build_where_clause(config->conn, "IN (SELECT ts_id FROM "TALIESIN_TABLE_STREAM" WHERE ts_name=%s)", name);
+  
+  j_query = json_pack("{sss[s]s{s{ssss}}}",
+                      "table", TALIESIN_TABLE_STREAM_ELEMENT,
+                      "columns",
+                        "tm_id",
+                      "where",
+                        "ts_id",
+                          "operator", "raw",
+                          "value", name_clause);
+  res = h_select(config->conn, j_query, &j_result, NULL);
+  json_decref(j_query);
+  h_free(name_clause);
+  if (res == H_OK) {
+    j_return = json_pack("{siso}", "result", T_OK, "media", j_result);
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "_db_stream_get_media_list_from_id - Error executing j_query");
+    j_return = json_pack("{si}", "result", T_ERROR_DB);
+  }
+  return j_return;
 }

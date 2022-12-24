@@ -1371,11 +1371,21 @@ json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * ju
     }
   } else if (0 == o_strcmp(str_command, "save")) {
     if ((tpl_id = playlist_add(config, username, json_object_get(j_command, "parameters"))) != -1) {
-      if (jukebox_set_playlist_db_stream(config, jukebox->name, tpl_id) == T_OK) {
-        j_return = json_pack("{sis{ss}}", "result", T_OK, "command", "name", json_string_value(json_object_get(json_object_get(j_command, "parameters"), "name")));
+      j_media_list = db_stream_get_media_list_from_name(config, jukebox->name);
+      if (check_result_value(j_media_list, T_OK)) {
+        if (playlist_add_media(config, tpl_id, json_object_get(j_media_list, "media")) == T_OK) {
+          if (jukebox_set_playlist_db_stream(config, jukebox->name, tpl_id) == T_OK) {
+            j_return = json_pack("{sis{ss}}", "result", T_OK, "command", "name", json_string_value(json_object_get(json_object_get(j_command, "parameters"), "name")));
+          } else {
+            j_return = json_pack("{si}", "result", T_ERROR);
+          }
+        } else {
+          j_return = json_pack("{si}", "result", T_ERROR);
+        }
       } else {
         j_return = json_pack("{si}", "result", T_ERROR);
       }
+      json_decref(j_media_list);
     } else {
       j_return = json_pack("{si}", "result", T_ERROR);
     }

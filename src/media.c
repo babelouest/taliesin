@@ -1545,7 +1545,7 @@ json_t * media_cover_get_all(struct config_elements * config, json_t * j_data_so
             cover_path = msprintf("%s/%s", json_string_value(json_object_get(j_data_source, "path")), json_string_value(json_object_get(json_array_get(j_result, 0), "path")));
             cover_full = media_get_cover_from_path(cover_path, &cover_size);
             if (cover_full != NULL) {
-              cover_full_b64 = o_malloc(2 * cover_size * sizeof(char));
+              cover_full_b64 = o_malloc(2 * cover_size);
               if (cover_full_b64 != NULL) {
                 if (o_base64_encode(cover_full, cover_size, cover_full_b64, &cover_size_b64)) {
                   json_object_set_new(json_array_get(j_result, 0), "full", json_stringn((const char *)cover_full_b64, cover_size_b64));
@@ -1632,7 +1632,7 @@ json_t * media_cover_get_by_id(struct config_elements * config, json_int_t tm_id
           cover_path = msprintf("%s/%s", json_string_value(json_object_get(json_object_get(j_data_source, "data_source"), "path")), json_string_value(json_object_get(json_array_get(j_result_media, 0), "path")));
           cover_full = media_get_cover_from_path(cover_path, &cover_size);
           if (cover_full != NULL) {
-            cover_full_b64 = o_malloc(2 * cover_size * sizeof(char));
+            cover_full_b64 = o_malloc(2 * cover_size);
             if (cover_full_b64 != NULL) {
               if (o_base64_encode(cover_full, cover_size, cover_full_b64, &cover_size_b64)) {
                 json_object_set_new(json_array_get(j_result_media, 0), "full", json_stringn((const char *)cover_full_b64, cover_size_b64));
@@ -1684,7 +1684,7 @@ json_t * media_cover_get_by_id(struct config_elements * config, json_int_t tm_id
               cover_path = msprintf("%s/%s", json_string_value(json_object_get(json_object_get(j_data_source, "data_source"), "path")), json_string_value(json_object_get(json_array_get(j_result_folder, 0), "path")));
               cover_full = media_get_cover_from_path(cover_path, &cover_size);
               if (cover_full != NULL) {
-                cover_full_b64 = o_malloc(2 * cover_size * sizeof(char));
+                cover_full_b64 = o_malloc(2 * cover_size);
                 if (cover_full_b64 != NULL) {
                   if (o_base64_encode(cover_full, cover_size, cover_full_b64, &cover_size_b64)) {
                     json_object_set_new(json_array_get(j_result_folder, 0), "full", json_stringn((const char *)cover_full_b64, cover_size_b64));

@@ -23,13 +23,18 @@
 
 #include "taliesin.h"
 
-int jukebox_init(struct _t_jukebox * jukebox, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate) {
+int jukebox_init(struct _t_jukebox * jukebox, const char * stream_url, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate) {
   pthread_mutexattr_t mutexattr;
   int res;
   
   if (jukebox != NULL) {
     jukebox->tpl_id = 0;
-    rand_string(jukebox->name, TALIESIN_PLAYLIST_NAME_LENGTH);
+    if (o_strnullempty(stream_url)) {
+      rand_string(jukebox->name, TALIESIN_PLAYLIST_NAME_LENGTH);
+    } else {
+      memset(jukebox->name, 0, TALIESIN_PLAYLIST_NAME_LENGTH+1);
+      o_strncpy(jukebox->name, stream_url, TALIESIN_PLAYLIST_NAME_LENGTH);
+    }
     jukebox->nb_jukebox_audio_buffer = 0;
     jukebox->jukebox_audio_buffer = NULL;
     jukebox->stream_format = o_strdup(format);
@@ -304,7 +309,7 @@ static int jukebox_add_db_stream(struct config_elements * config, struct _t_juke
   json_int_t ts_id;
   struct _t_file * file;
   
-  j_query = json_pack("{sss{sosssssososssisisi}}",
+  j_query = json_pack("{sss{sosssssosisssisisi}}",
                       "table",
                       TALIESIN_TABLE_STREAM,
                       "values",
@@ -317,7 +322,7 @@ static int jukebox_add_db_stream(struct config_elements * config, struct _t_juke
                         "tpl_id",
                         jukebox->tpl_id?json_integer(jukebox->tpl_id):json_null(),
                         "ts_webradio",
-                        json_false(),
+                        0,
                         "ts_format",
                         jukebox->stream_format,
                         "ts_channels",
@@ -455,7 +460,7 @@ static int jukebox_remove_db_stream(struct config_elements * config, const char 
   }
 }
 
-json_t * add_jukebox_from_path(struct config_elements * config, json_t * j_data_source, const char * path, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, int recursive, const char * name) {
+json_t * add_jukebox_from_path(struct config_elements * config, const char * stream_url, json_t * j_data_source, const char * path, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, int recursive, const char * name) {
   json_t * j_result = NULL, * j_media_list, * j_element;
   size_t index;
   int jukebox_index;
@@ -470,7 +475,7 @@ json_t * add_jukebox_from_path(struct config_elements * config, json_t * j_data_
         config->nb_jukebox++;
         config->jukebox_set[jukebox_index] = o_malloc(sizeof(struct _t_jukebox));
         if (config->jukebox_set[jukebox_index] != NULL) {
-          if (jukebox_init(config->jukebox_set[jukebox_index], format, channels, sample_rate, bit_rate) == T_OK) {
+          if (jukebox_init(config->jukebox_set[jukebox_index], stream_url, format, channels, sample_rate, bit_rate) == T_OK) {
             if (name == NULL) {
               display_name = strrchr(path, '/')!=NULL?(strrchr(path, '/') + 1):path;
             } else {
@@ -543,7 +548,7 @@ json_t * add_jukebox_from_path(struct config_elements * config, json_t * j_data_
   return j_result;
 }
 
-json_t * add_jukebox_from_playlist(struct config_elements * config, json_t * j_playlist, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, const char * name) {
+json_t * add_jukebox_from_playlist(struct config_elements * config, const char * stream_url, json_t * j_playlist, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, const char * name) {
   json_t * j_result = NULL, * j_element;
   size_t index;
   int jukebox_index;
@@ -555,7 +560,7 @@ json_t * add_jukebox_from_playlist(struct config_elements * config, json_t * j_p
       config->nb_jukebox++;
       config->jukebox_set[jukebox_index] = o_malloc(sizeof(struct _t_jukebox));
       if (config->jukebox_set[jukebox_index] != NULL) {
-        if (jukebox_init(config->jukebox_set[jukebox_index], format, channels, sample_rate, bit_rate) == T_OK) {
+        if (jukebox_init(config->jukebox_set[jukebox_index], stream_url, format, channels, sample_rate, bit_rate) == T_OK) {
           config->jukebox_set[jukebox_index]->config = config;
           config->jukebox_set[jukebox_index]->username = o_strdup(username);
           if (name == NULL) {
@@ -631,7 +636,7 @@ int add_jukebox_from_db_stream(struct config_elements * config, json_t * j_strea
       config->nb_jukebox++;
       config->jukebox_set[jukebox_index] = o_malloc(sizeof(struct _t_jukebox));
       if (config->jukebox_set[jukebox_index] != NULL) {
-        if (jukebox_init(config->jukebox_set[jukebox_index], json_string_value(json_object_get(j_stream, "format")), json_integer_value(json_object_get(j_stream, "channels")), json_integer_value(json_object_get(j_stream, "sample_rate")), json_integer_value(json_object_get(j_stream, "bitrate"))) == T_OK) {
+        if (jukebox_init(config->jukebox_set[jukebox_index], config->jukebox_set[jukebox_index]->name, json_string_value(json_object_get(j_stream, "format")), json_integer_value(json_object_get(j_stream, "channels")), json_integer_value(json_object_get(j_stream, "sample_rate")), json_integer_value(json_object_get(j_stream, "bitrate"))) == T_OK) {
           config->jukebox_set[jukebox_index]->config = config;
           config->jukebox_set[jukebox_index]->username = json_object_get(j_stream, "username")!=json_null()?o_strdup(json_string_value(json_object_get(j_stream, "username"))):NULL;
           o_strcpy(config->jukebox_set[jukebox_index]->name, json_string_value(json_object_get(j_stream, "name")));

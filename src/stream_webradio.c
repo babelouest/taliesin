@@ -37,13 +37,18 @@ void webradio_clean(struct _t_webradio * webradio) {
   }
 }
 
-int webradio_init(struct _t_webradio * webradio, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate) {
+int webradio_init(struct _t_webradio * webradio, const char * stream_url, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate) {
   pthread_mutexattr_t mutexattr;
   int res;
   
   if (webradio != NULL) {
     webradio->tpl_id = 0;
-    rand_string(webradio->name, TALIESIN_PLAYLIST_NAME_LENGTH);
+    if (o_strnullempty(stream_url)) {
+      rand_string(webradio->name, TALIESIN_PLAYLIST_NAME_LENGTH);
+    } else {
+      memset(webradio->name, 0, TALIESIN_PLAYLIST_NAME_LENGTH+1);
+      o_strncpy(webradio->name, stream_url, TALIESIN_PLAYLIST_NAME_LENGTH);
+    }
     webradio->audio_stream = o_malloc(sizeof(struct _audio_stream));
     webradio->file_list = o_malloc(sizeof(struct _t_file_list));
     webradio->playlist_name = NULL;
@@ -52,6 +57,7 @@ int webradio_init(struct _t_webradio * webradio, const char * format, unsigned s
     if (webradio->audio_stream != NULL && webradio->file_list != NULL) {
       webradio->username = NULL;
       webradio->random = 0;
+      webradio->icecast = 0;
       webradio->display_name = NULL;
       webradio->current_index = 0;
       webradio->message_type = TALIESIN_PLAYLIST_MESSAGE_TYPE_NONE;
@@ -381,7 +387,7 @@ static int webradio_add_db_stream(struct config_elements * config, struct _t_web
   json_int_t ts_id;
   struct _t_file * file;
   
-  j_query = json_pack("{sss{sosssssososisisssisisi}}",
+  j_query = json_pack("{sss{sosssssosisisisssisisi}}",
                       "table",
                       TALIESIN_TABLE_STREAM,
                       "values",
@@ -394,7 +400,7 @@ static int webradio_add_db_stream(struct config_elements * config, struct _t_web
                         "tpl_id",
                         webradio->tpl_id?json_integer(webradio->tpl_id):json_null(),
                         "ts_webradio",
-                        json_true(),
+                        webradio->icecast?2:1,
                         "ts_random",
                         webradio->random,
                         "ts_index",
@@ -536,7 +542,19 @@ static int webradio_remove_db_stream(struct config_elements * config, const char
   }
 }
 
-json_t * add_webradio_from_path(struct config_elements * config, json_t * j_data_source, const char * path, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, int recursive, short int random, const char * name, struct _t_webradio ** new_webradio) {
+json_t * add_webradio_from_path(struct config_elements * config,
+                                const char * stream_url,
+                                json_t * j_data_source,
+                                const char * path,
+                                const char * username,
+                                const char * format,
+                                unsigned short channels,
+                                unsigned int sample_rate,
+                                unsigned int bit_rate,
+                                int recursive,
+                                short int random,
+                                const char * name,
+                                struct _t_webradio ** new_webradio) {
   json_t * j_result = NULL, * j_media_list, * j_element;
   size_t index;
   int webradio_index;
@@ -559,7 +577,7 @@ json_t * add_webradio_from_path(struct config_elements * config, json_t * j_data
           if (o_strlen(display_name) <= 0) {
             display_name = json_string_value(json_object_get(j_data_source, "name"));
           }
-          if (webradio_init(config->webradio_set[webradio_index], format, channels, sample_rate, bit_rate) == T_OK) {
+          if (webradio_init(config->webradio_set[webradio_index], stream_url, format, channels, sample_rate, bit_rate) == T_OK) {
             config->webradio_set[webradio_index]->config = config;
             config->webradio_set[webradio_index]->username = o_strdup(username);
             config->webradio_set[webradio_index]->random = random;
@@ -574,29 +592,18 @@ json_t * add_webradio_from_path(struct config_elements * config, json_t * j_data
             }
             if (webradio_add_db_stream(config, config->webradio_set[webradio_index]) == T_OK) {
               j_result = json_pack("{sis{sssssssosisisosisos[]ss}}",
-                                    "result",
-                                    T_OK,
+                                    "result", T_OK,
                                     "stream",
-                                      "name",
-                                      config->webradio_set[webradio_index]->name,
-                                      "display_name",
-                                      config->webradio_set[webradio_index]->display_name,
-                                      "format",
-                                      format,
-                                      "stereo",
-                                      channels==1?json_false():json_true(),
-                                      "sample_rate",
-                                      sample_rate,
-                                      "bitrate",
-                                      bit_rate,
-                                      "webradio",
-                                      json_true(),
-                                      "elements",
-                                      config->webradio_set[webradio_index]->file_list->nb_files,
-                                      "random",
-                                      random?json_true():json_false(),
-                                      "clients",
-                                      "scope",
+                                      "name", config->webradio_set[webradio_index]->name,
+                                      "display_name", config->webradio_set[webradio_index]->display_name,
+                                      "format", format,
+                                      "stereo", channels==1?json_false():json_true(),
+                                      "sample_rate", sample_rate,
+                                      "bitrate", bit_rate,
+                                      "webradio", json_true(),
+                                      "elements", config->webradio_set[webradio_index]->file_list->nb_files,
+                                      "random", random?json_true():json_false(),
+                                      "clients", "scope",
                                       username!=NULL?"me":"all");
             } else {
               y_log_message(Y_LOG_LEVEL_ERROR, "add_webradio_from_path - Error webradio_add_db_stream");
@@ -628,7 +635,17 @@ json_t * add_webradio_from_path(struct config_elements * config, json_t * j_data
   return j_result;
 }
 
-json_t * add_webradio_from_playlist(struct config_elements * config, json_t * j_playlist, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, short int random, const char * name, struct _t_webradio ** new_webradio) {
+json_t * add_webradio_from_playlist(struct config_elements * config,
+                                    const char * stream_url,
+                                    json_t * j_playlist,
+                                    const char * username,
+                                    const char * format,
+                                    unsigned short channels,
+                                    unsigned int sample_rate,
+                                    unsigned int bit_rate,
+                                    short int random,
+                                    const char * name,
+                                    struct _t_webradio ** new_webradio) {
   json_t * j_result = NULL, * j_element;
   size_t index;
   int webradio_index;
@@ -640,7 +657,7 @@ json_t * add_webradio_from_playlist(struct config_elements * config, json_t * j_
       config->nb_webradio++;
       config->webradio_set[webradio_index] = o_malloc(sizeof(struct _t_webradio));
       if (config->webradio_set[webradio_index] != NULL) {
-        if (webradio_init(config->webradio_set[webradio_index], format, channels, sample_rate, bit_rate) == T_OK) {
+        if (webradio_init(config->webradio_set[webradio_index], stream_url, format, channels, sample_rate, bit_rate) == T_OK) {
           config->webradio_set[webradio_index]->config = config;
           config->webradio_set[webradio_index]->username = o_strdup(username);
           config->webradio_set[webradio_index]->random = random;
@@ -661,29 +678,18 @@ json_t * add_webradio_from_playlist(struct config_elements * config, json_t * j_
           }
           if (webradio_add_db_stream(config, config->webradio_set[webradio_index]) == T_OK) {
             j_result = json_pack("{sis{sssssssosisisosisos[]ss}}",
-                                  "result",
-                                  T_OK,
+                                  "result", T_OK,
                                   "stream",
-                                    "name",
-                                    config->webradio_set[webradio_index]->name,
-                                    "display_name",
-                                    config->webradio_set[webradio_index]->display_name,
-                                    "format",
-                                    format,
-                                    "stereo",
-                                    channels==1?json_false():json_true(),
-                                    "sample_rate",
-                                    sample_rate,
-                                    "bitrate",
-                                    bit_rate,
-                                    "webradio",
-                                    json_true(),
-                                    "elements",
-                                    config->webradio_set[webradio_index]->file_list->nb_files,
-                                    "random",
-                                    random?json_true():json_false(),
-                                    "clients",
-                                    "scope",
+                                    "name", config->webradio_set[webradio_index]->name,
+                                    "display_name", config->webradio_set[webradio_index]->display_name,
+                                    "format", format,
+                                    "stereo", channels==1?json_false():json_true(),
+                                    "sample_rate", sample_rate,
+                                    "bitrate", bit_rate,
+                                    "webradio", json_true(),
+                                    "elements", config->webradio_set[webradio_index]->file_list->nb_files,
+                                    "random", random?json_true():json_false(),
+                                    "clients", "scope",
                                     username!=NULL?"me":"all");
           } else {
             y_log_message(Y_LOG_LEVEL_ERROR, "add_webradio_from_playlist - Error webradio_add_db_stream");
@@ -720,10 +726,9 @@ int add_webradio_from_db_stream(struct config_elements * config, json_t * j_stre
       config->nb_webradio++;
       config->webradio_set[webradio_index] = o_malloc(sizeof(struct _t_webradio));
       if (config->webradio_set[webradio_index] != NULL) {
-        if (webradio_init(config->webradio_set[webradio_index], json_string_value(json_object_get(j_stream, "format")), json_integer_value(json_object_get(j_stream, "channels")), json_integer_value(json_object_get(j_stream, "sample_rate")), json_integer_value(json_object_get(j_stream, "bitrate"))) == T_OK) {
+        if (webradio_init(config->webradio_set[webradio_index], json_string_value(json_object_get(j_stream, "name")), json_string_value(json_object_get(j_stream, "format")), json_integer_value(json_object_get(j_stream, "channels")), json_integer_value(json_object_get(j_stream, "sample_rate")), json_integer_value(json_object_get(j_stream, "bitrate"))) == T_OK) {
           config->webradio_set[webradio_index]->config = config;
           config->webradio_set[webradio_index]->username = json_object_get(j_stream, "username")!=json_null()?o_strdup(json_string_value(json_object_get(j_stream, "username"))):NULL;
-          o_strcpy(config->webradio_set[webradio_index]->name, json_string_value(json_object_get(j_stream, "name")));
           config->webradio_set[webradio_index]->display_name = o_strdup(json_string_value(json_object_get(j_stream, "display_name")));
           config->webradio_set[webradio_index]->random = json_integer_value(json_object_get(j_stream, "random"));
           config->webradio_set[webradio_index]->current_index = json_integer_value(json_object_get(j_stream, "current_index"));

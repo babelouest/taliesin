@@ -174,6 +174,12 @@ int main (int argc, char ** argv) {
   i_global_init();
   ulfius_init_instance(config->instance, TALIESIN_DEFAULT_PORT, NULL, NULL);
   config->timeout = TALIESIN_DEFAULT_HTTP_TIMEOUT;
+  config->icecast_host = NULL;
+  config->icecast_port = 0;
+  config->icecast_user = NULL;
+  config->icecast_password = NULL;
+  config->icecast_mount_prefix = NULL;
+  config->icecast_remote_address = NULL;
 
   if (u_init_compressed_inmemory_website_config(config->static_file_config) != U_OK) {
     fprintf(stderr, "Error u_init_compressed_inmemory_website_config\n");
@@ -490,6 +496,12 @@ void exit_server(struct config_elements ** config, int exit_value) {
     o_free((*config)->instance);
     o_free((*config)->webradio_set);
 
+    o_free((*config)->icecast_host);
+    o_free((*config)->icecast_user);
+    o_free((*config)->icecast_password);
+    o_free((*config)->icecast_mount_prefix);
+    o_free((*config)->icecast_remote_address);
+
     o_free(*config);
     (*config) = NULL;
   }
@@ -700,13 +712,42 @@ void exit_handler(int signal) {
 int build_config_from_file(struct config_elements * config) {
 
   config_t cfg;
-  config_setting_t * root, * database, * mime_type_list, * mime_type;
-  const char * cur_server_remote_address, * cur_prefix, * cur_log_mode, * cur_log_level, * cur_log_file = NULL, * one_log_mode, * cur_allow_origin,
-             * db_type, * db_sqlite_path, * db_mariadb_host = NULL, * db_mariadb_user = NULL,
-             * db_mariadb_password = NULL, * db_mariadb_dbname = NULL, * cur_static_files_path = NULL,
-             * cur_oauth_scope_user = NULL, * cur_oauth_scope_admin = NULL, * extension = NULL, * mime_type_value = NULL, * cur_stream_format = NULL,
-             * cur_oidc_claim_user_id = NULL;
-  int db_mariadb_port = 0, cur_stream_channels = 0, cur_stream_sample_rate = 0, cur_stream_bit_rate = 0, cur_use_oidc_authentication = 1, cur_user_can_create_data_source = 0, cur_timeout = 0, compress = 0, i = 0;
+  config_setting_t * root, * database, * mime_type_list, * mime_type, * icecast;
+  const char * cur_server_remote_address = NULL,
+             * cur_prefix = NULL,
+             * cur_log_mode = NULL,
+             * cur_log_level = NULL,
+             * cur_log_file = NULL,
+             * one_log_mode = NULL,
+             * cur_allow_origin = NULL,
+             * db_type = NULL,
+             * db_sqlite_path = NULL,
+             * db_mariadb_host = NULL,
+             * db_mariadb_user = NULL,
+             * db_mariadb_password = NULL,
+             * db_mariadb_dbname = NULL,
+             * cur_static_files_path = NULL,
+             * cur_oauth_scope_user = NULL,
+             * cur_oauth_scope_admin = NULL,
+             * extension = NULL,
+             * mime_type_value = NULL,
+             * cur_stream_format = NULL,
+             * cur_oidc_claim_user_id = NULL,
+             * icecast_host = NULL,
+             * icecast_user = NULL,
+             * icecast_password = NULL,
+             * icecast_mount_prefix = NULL,
+             * icecast_remote_address = NULL;
+  int db_mariadb_port = 0,
+      cur_stream_channels = 0,
+      cur_stream_sample_rate = 0,
+      cur_stream_bit_rate = 0,
+      cur_use_oidc_authentication = 1,
+      cur_user_can_create_data_source = 0,
+      cur_timeout = 0,
+      compress = 0,
+      icecast_port = 0,
+      i = 0;
 #ifndef DISABLE_OAUTH2
   config_setting_t * oidc_cfg;
   const char * cur_oidc_server_remote_config = NULL, * cur_oidc_server_public_jwks = NULL, * cur_oidc_iss = NULL, * cur_oidc_realm = NULL, * cur_oidc_aud = NULL;
@@ -904,6 +945,72 @@ int build_config_from_file(struct config_elements * config) {
   if (config_lookup_bool(&cfg, "use_oidc_authentication", &cur_use_oidc_authentication) == CONFIG_TRUE) {
     config->use_oidc_authentication = cur_use_oidc_authentication;
   }
+  
+  icecast = config_lookup(&cfg, "icecast");
+  if (icecast != NULL) {
+    if (config_setting_lookup_string(icecast, "host", &icecast_host) == CONFIG_TRUE) {
+      if ((config->icecast_host = o_strdup(icecast_host)) == NULL) {
+        fprintf(stderr, "Error allocating config->icecast_host, exiting\n");
+        config_destroy(&cfg);
+        return 0;
+      }
+    } else {
+      fprintf(stderr, "Error icecast_host mandatory, exiting\n");
+      config_destroy(&cfg);
+      return 0;
+    }
+    if (config_setting_lookup_int(icecast, "port", &icecast_port) == CONFIG_TRUE) {
+      config->icecast_port = (unsigned int)icecast_port;
+    } else {
+      fprintf(stderr, "Error icecast_port mandatory, exiting\n");
+      config_destroy(&cfg);
+      return 0;
+    }
+    if (config_setting_lookup_string(icecast, "user", &icecast_user) == CONFIG_TRUE) {
+      if ((config->icecast_user = o_strdup(icecast_user)) == NULL) {
+        fprintf(stderr, "Error allocating config->icecast_user, exiting\n");
+        config_destroy(&cfg);
+        return 0;
+      }
+    } else {
+      fprintf(stderr, "Error icecast_user mandatory, exiting\n");
+      config_destroy(&cfg);
+      return 0;
+    }
+    if (config_setting_lookup_string(icecast, "password", &icecast_password) == CONFIG_TRUE) {
+      if ((config->icecast_password = o_strdup(icecast_password)) == NULL) {
+        fprintf(stderr, "Error allocating config->icecast_password, exiting\n");
+        config_destroy(&cfg);
+        return 0;
+      }
+    } else {
+      fprintf(stderr, "Error icecast_password mandatory, exiting\n");
+      config_destroy(&cfg);
+      return 0;
+    }
+    if (config_setting_lookup_string(icecast, "mount_prefix", &icecast_mount_prefix) == CONFIG_TRUE) {
+      if ((config->icecast_mount_prefix = o_strdup(icecast_mount_prefix)) == NULL) {
+        fprintf(stderr, "Error allocating config->icecast_mount_prefix, exiting\n");
+        config_destroy(&cfg);
+        return 0;
+      }
+    } else {
+      fprintf(stderr, "Error icecast_mount_prefix mandatory, exiting\n");
+      config_destroy(&cfg);
+      return 0;
+    }
+    if (config_setting_lookup_string(icecast, "remote_address", &icecast_remote_address) == CONFIG_TRUE) {
+      if ((config->icecast_remote_address = o_strdup(icecast_remote_address)) == NULL) {
+        fprintf(stderr, "Error allocating config->icecast_remote_address, exiting\n");
+        config_destroy(&cfg);
+        return 0;
+      }
+    } else {
+      fprintf(stderr, "Error icecast_remote_address mandatory, exiting\n");
+      config_destroy(&cfg);
+      return 0;
+    }
+  }
 
   if (config->use_oidc_authentication) {
 #ifndef DISABLE_OAUTH2
@@ -1076,6 +1183,13 @@ int check_config(struct config_elements * config) {
 
   if (config->oidc_claim_user_id == NULL) {
     config->oidc_claim_user_id = o_strdup(TALIESIN_DEFAULT_CLAIM_USER_ID);
+  }
+  
+  if (config->icecast_host != NULL) {
+    if (!config->icecast_port || config->icecast_user == NULL || config->icecast_password == NULL || config->icecast_mount_prefix == NULL || config->icecast_remote_address == NULL) {
+      fprintf(stderr, "Error, invalid icecast parameters\n");
+      return 0;
+    }
   }
 
   return 1;

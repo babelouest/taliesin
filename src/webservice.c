@@ -107,29 +107,21 @@ int callback_taliesin_options (const struct _u_request * request, struct _u_resp
  */
 int callback_taliesin_server_configuration (const struct _u_request * request, struct _u_response * response, void * user_data) {
   UNUSED(request);
-  set_response_json_body_and_clean(response, 200, json_pack("{ss*ss*ss*ss*sisisissso}", 
-                        "api_prefix", 
-                        ((struct config_elements *)user_data)->api_prefix,
-                        "oauth_scope_user",
-                        ((struct config_elements *)user_data)->oauth_scope_user,
-                        "oauth_scope_admin",
-                        ((struct config_elements *)user_data)->oauth_scope_admin,
-                        "default_stream_format",
-                        ((struct config_elements *)user_data)->stream_format,
-                        "default_stream_channels",
-                        ((struct config_elements *)user_data)->stream_channels,
-                        "default_stream_sample_rate",
-                        ((struct config_elements *)user_data)->stream_sample_rate,
-                        "default_stream_bitrate",
-                        ((struct config_elements *)user_data)->stream_bitrate,
-                        "oidc_claim_user_id",
-                        ((struct config_elements *)user_data)->oidc_claim_user_id,
-                        "use_websockets",
+  set_response_json_body_and_clean(response, 200, json_pack("{ss*ss*ss*ss*sisisisssoso}", 
+                        "api_prefix",  ((struct config_elements *)user_data)->api_prefix,
+                        "oauth_scope_user", ((struct config_elements *)user_data)->oauth_scope_user,
+                        "oauth_scope_admin", ((struct config_elements *)user_data)->oauth_scope_admin,
+                        "default_stream_format", ((struct config_elements *)user_data)->stream_format,
+                        "default_stream_channels", ((struct config_elements *)user_data)->stream_channels,
+                        "default_stream_sample_rate", ((struct config_elements *)user_data)->stream_sample_rate,
+                        "default_stream_bitrate", ((struct config_elements *)user_data)->stream_bitrate,
+                        "oidc_claim_user_id", ((struct config_elements *)user_data)->oidc_claim_user_id,
 #ifdef U_DISABLE_WEBSOCKET
-                        json_false()
+                        "use_websockets", json_false(),
 #else
-                        json_true()
+                        "use_websockets", json_true(),
 #endif
+                        "icecast", o_strnullempty(((struct config_elements *)user_data)->icecast_host)?json_false():json_true()
                         ));
   return U_CALLBACK_COMPLETE;
 };
@@ -519,11 +511,12 @@ int callback_taliesin_media_get_path (const struct _u_request * request, struct 
             if (!bit_rate) {
               bit_rate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
             }
-            j_valid = is_stream_parameters_valid((u_map_get(request->map_url, "webradio") != NULL), u_map_get(request->map_url, "scope"), has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin), format, channels, sample_rate, bit_rate);
+            j_valid = is_stream_parameters_valid(config, (u_map_get(request->map_url, "webradio") != NULL), u_map_get(request->map_url, "streamUrl"), u_map_get(request->map_url, "scope"), has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin), format, channels, sample_rate, bit_rate);
             if (j_valid != NULL && json_array_size(j_valid) == 0) {
               if (u_map_get(request->map_url, "webradio") != NULL) {
                 format = "mp3";
                 j_stream_info = add_webradio_from_path(config,
+                                                       u_map_get(request->map_url, "streamUrl"),
                                                        json_object_get(j_data_source, "data_source"),
                                                        decode_path,
                                                        (0==o_strcmp(TALIESIN_SCOPE_ALL, u_map_get(request->map_url, "scope")))?NULL:get_username(request, response, config),
@@ -553,6 +546,7 @@ int callback_taliesin_media_get_path (const struct _u_request * request, struct 
                 json_decref(j_stream_info);
               } else if (u_map_get(request->map_url, "jukebox") != NULL) {
                 j_stream_info = add_jukebox_from_path(config,
+                                                      u_map_get(request->map_url, "streamUrl"),
                                                       json_object_get(j_data_source, "data_source"),
                                                       decode_path,
                                                       (0==o_strcmp(TALIESIN_SCOPE_ALL, u_map_get(request->map_url, "scope")))?NULL:get_username(request, response, config),
@@ -821,7 +815,7 @@ int callback_taliesin_category_list (const struct _u_request * request, struct _
             if (!bit_rate) {
               bit_rate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
             }
-            j_valid = is_stream_parameters_valid((u_map_get(request->map_url, "webradio") != NULL), u_map_get(request->map_url, "scope"), has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin), format, channels, sample_rate, bit_rate);
+            j_valid = is_stream_parameters_valid(config, (u_map_get(request->map_url, "webradio") != NULL), u_map_get(request->map_url, "streamUrl"), u_map_get(request->map_url, "scope"), has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin), format, channels, sample_rate, bit_rate);
             if (j_valid != NULL && json_array_size(j_valid) == 0) {
               j_data_source_path = json_object_get(json_object_get(j_data_source, "data_source"), "path");
               json_array_foreach(json_object_get(j_result, "media"), index, j_element) {
@@ -831,6 +825,7 @@ int callback_taliesin_category_list (const struct _u_request * request, struct _
                 format = "mp3";
                 j_fake_jukebox = json_pack("{sssssisO}", "description", u_map_get(request->map_url, "category"), "name", u_map_get(request->map_url, "category"), "tpl_id", 0, "media", json_object_get(j_result, "media"));
                 j_stream_info = add_webradio_from_playlist(config,
+                                                           u_map_get(request->map_url, "streamUrl"),
                                                            j_fake_jukebox,
                                                            (0==o_strcmp(TALIESIN_SCOPE_ALL, u_map_get(request->map_url, "scope")))?NULL:get_username(request, response, config),
                                                            format,
@@ -858,6 +853,7 @@ int callback_taliesin_category_list (const struct _u_request * request, struct _
               } else if (u_map_get(request->map_url, "jukebox") != NULL) {
                 j_fake_jukebox = json_pack("{sssssisO}", "description", u_map_get(request->map_url, "category"), "name", u_map_get(request->map_url, "category"), "tpl_id", 0, "media", json_object_get(j_result, "media"));
                 j_stream_info = add_jukebox_from_playlist(config,
+                                                          u_map_get(request->map_url, "streamUrl"),
                                                           j_fake_jukebox,
                                                           (0==o_strcmp(TALIESIN_SCOPE_ALL, u_map_get(request->map_url, "scope")))?NULL:get_username(request, response, config),
                                                           format,
@@ -996,7 +992,7 @@ int callback_taliesin_subcategory_list (const struct _u_request * request, struc
               if (!bit_rate) {
                 bit_rate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
               }
-              j_valid = is_stream_parameters_valid((u_map_get(request->map_url, "webradio") != NULL), u_map_get(request->map_url, "scope"), has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin), format, channels, sample_rate, bit_rate);
+              j_valid = is_stream_parameters_valid(config, (u_map_get(request->map_url, "webradio") != NULL), u_map_get(request->map_url, "streamUrl"), u_map_get(request->map_url, "scope"), has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin), format, channels, sample_rate, bit_rate);
               if (j_valid != NULL && json_array_size(j_valid) == 0) {
                 j_data_source_path = json_object_get(json_object_get(j_data_source, "data_source"), "path");
                 json_array_foreach(json_object_get(j_result, "media"), index, j_element) {
@@ -1006,6 +1002,7 @@ int callback_taliesin_subcategory_list (const struct _u_request * request, struc
                   format = "mp3";
                   j_fake_jukebox = json_pack("{sssssiso}", "description", u_map_get(request->map_url, "subcategory"), "name", u_map_get(request->map_url, "subcategory"), "tpl_id", 0, "media", json_object_get(j_result, "list"));
                   j_stream_info = add_webradio_from_playlist(config,
+                                                             u_map_get(request->map_url, "streamUrl"),
                                                              j_fake_jukebox,
                                                              (0==o_strcmp(TALIESIN_SCOPE_ALL, u_map_get(request->map_url, "scope")))?NULL:get_username(request, response, config),
                                                              format,
@@ -1033,6 +1030,7 @@ int callback_taliesin_subcategory_list (const struct _u_request * request, struc
                 } else if (u_map_get(request->map_url, "jukebox") != NULL) {
                   j_fake_jukebox = json_pack("{sssssiso}", "description", u_map_get(request->map_url, "subcategory"), "name", u_map_get(request->map_url, "subcategory"), "tpl_id", 0, "media", json_object_get(j_result, "list"));
                   j_stream_info = add_jukebox_from_playlist(config,
+                                                            u_map_get(request->map_url, "streamUrl"),
                                                             j_fake_jukebox,
                                                             (0==o_strcmp(TALIESIN_SCOPE_ALL, u_map_get(request->map_url, "scope")))?NULL:get_username(request, response, config),
                                                             format,
@@ -2227,11 +2225,12 @@ int callback_taliesin_playlist_load (const struct _u_request * request, struct _
       if (!bit_rate) {
         bit_rate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
       }
-      j_valid = is_stream_parameters_valid((u_map_get(request->map_url, "webradio") != NULL), u_map_get(request->map_url, "scope"), has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin), format, channels, sample_rate, bit_rate);
+      j_valid = is_stream_parameters_valid(config, (u_map_get(request->map_url, "webradio") != NULL), u_map_get(request->map_url, "streamUrl"), u_map_get(request->map_url, "scope"), has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin), format, channels, sample_rate, bit_rate);
       if (j_valid != NULL && json_array_size(j_valid) == 0) {
         if (u_map_get(request->map_url, "webradio") != NULL) {
           format = "mp3";
           j_stream_info = add_webradio_from_playlist(config,
+                                                     u_map_get(request->map_url, "streamUrl"),
                                                      json_object_get(j_playlist, "playlist"),
                                                      (0==o_strcmp(TALIESIN_SCOPE_ALL, u_map_get(request->map_url, "scope")))?NULL:get_username(request, response, config),
                                                      format,
@@ -2257,6 +2256,7 @@ int callback_taliesin_playlist_load (const struct _u_request * request, struct _
           json_decref(j_stream_info);
         } else {
           j_stream_info = add_jukebox_from_playlist(config,
+                                                    u_map_get(request->map_url, "streamUrl"),
                                                     json_object_get(j_playlist, "playlist"),
                                                     (0==o_strcmp(TALIESIN_SCOPE_ALL, u_map_get(request->map_url, "scope")))?NULL:get_username(request, response, config),
                                                     format,

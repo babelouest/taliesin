@@ -27,7 +27,7 @@ class ElementButtons extends Component {
 			onEditCategory: props.onEditCategory,
 			hideRefresh: props.hideRefresh,
 			manageModalShow: false,
-												serverConfig: StateStore.getState().serverConfig
+			serverConfig: StateStore.getState().serverConfig
 		};
 
 		this.playElement = this.playElement.bind(this);
@@ -141,7 +141,7 @@ class ElementButtons extends Component {
 	
 	runPlayElementAdvanced(player) {
 		if (player) {
-			var url;
+			var url, icecast = "", streamUrl = "";
 			if (this.state.path) {
 				url = "/data_source/" + encodeURIComponent(this.state.dataSource) + "/browse/path/" + encodeURI(this.state.path).replace(/#/g, "%23");
 			} else {
@@ -150,7 +150,13 @@ class ElementButtons extends Component {
 					url += "/" + encodeURI(this.state.subCategory) + "/" + encodeURI(this.state.subCategoryValue);
 				}
 			}
-      url += "?" + player.type + (player.recursive?"&recursive":"") + "&format=" + player.format + "&channels=" + player.channels + "&bitrate=" + player.bitrate + "&samplerate=" + player.sampleRate + (player.random?"&random":"") + (player.name?"&name="+encodeURI(player.name):"") + "&scope=" + encodeURIComponent(player.scope);
+      if (player.type === "webradio" && player.icecast) {
+        icecast = "&icecast";
+      }
+      if (player.streamUrl) {
+        streamUrl = "&streamUrl=" + player.streamUrl;
+      }
+      url += "?" + player.type + (player.recursive?"&recursive":"") + icecast + streamUrl + "&format=" + player.format + "&channels=" + player.channels + "&bitrate=" + player.bitrate + "&samplerate=" + player.sampleRate + (player.random?"&random":"") + (player.name?"&name="+encodeURI(player.name):"") + "&scope=" + encodeURIComponent(player.scope);
 			StateStore.getState().APIManager.taliesinApiRequest("GET", url)
 			.then((result) => {
 				var streamList = StateStore.getState().streamList;

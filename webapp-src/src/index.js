@@ -46,7 +46,7 @@ config.fetchConfig()
 					curConfig.stream = false;
 				}
 				StateStore.dispatch({ type: 'setStoredValues', config: curConfig });
-				StateStore.dispatch({ type: "showFullScreen", show: curConfig.fullScreen });
+				StateStore.dispatch({ type: 'showFullScreen', show: curConfig.fullScreen });
 				StateStore.dispatch({ type: 'setUseWebsocket', useWebsocket: config.getConfigValue("useWebsocket") });
 				if (newStatus === "connected") {
 					StateStore.dispatch({ type: 'connection',

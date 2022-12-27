@@ -263,8 +263,15 @@ class BrowsePlaylist extends Component {
 	}
 	
 	runPlaylistAdvanced(player) {
+    var icecast = "", streamUrl = "";
 		if (player) {
-      let url = "/playlist/" + encodeURIComponent(this.state.curPlaylist.name) + "/load?" + player.type + (player.recursive?"&recursive":"") + "&format=" + player.format + "&channels=" + player.channels + "&bitrate=" + player.bitrate + "&samplerate=" + player.sampleRate + (player.random?"&random":"") + "&name=" + encodeURIComponent(this.state.curPlaylist.name) + "&scope=" + encodeURIComponent(player.scope);
+      if (player.type === "webradio" && player.icecast) {
+        icecast = "&icecast";
+      }
+      if (player.streamUrl) {
+        streamUrl = "&streamUrl=" + player.streamUrl;
+      }
+      let url = "/playlist/" + encodeURIComponent(this.state.curPlaylist.name) + "/load?" + player.type + (player.recursive?"&recursive":"") + icecast + streamUrl + "&format=" + player.format + "&channels=" + player.channels + "&bitrate=" + player.bitrate + "&samplerate=" + player.sampleRate + (player.random?"&random":"") + "&name=" + encodeURIComponent(this.state.curPlaylist.name) + "&scope=" + encodeURIComponent(player.scope);
 			StateStore.getState().APIManager.taliesinApiRequest("GET", url)
 			.then((result) => {
 				var streamList = StateStore.getState().streamList;

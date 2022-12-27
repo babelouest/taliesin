@@ -21,8 +21,10 @@ class ModalEditStream extends Component {
 			subCategoryValue: props.subCategoryValue, 
 			playlist: props.playlist,
 			onCloseCb: props.onCloseCb,
+      streamUrl: "",
 			recursive: true,
 			random: true,
+			icecast: true,
 			type: "jukebox",
       scope: "me",
 			format: StateStore.getState().serverConfig.default_stream_format,
@@ -38,8 +40,10 @@ class ModalEditStream extends Component {
 		
 		this.close = this.close.bind(this);
 		this.handleChangeName = this.handleChangeName.bind(this);
+		this.handleChangeUrl = this.handleChangeUrl.bind(this);
 		this.handleChangeRecursive = this.handleChangeRecursive.bind(this);
 		this.handleChangeRandom = this.handleChangeRandom.bind(this);
+		this.handleChangeIcecast = this.handleChangeIcecast.bind(this);
 		this.handleChangeType = this.handleChangeType.bind(this);
 		this.handleChangeFormat = this.handleChangeFormat.bind(this);
 		this.handleChangeChannels = this.handleChangeChannels.bind(this);
@@ -62,8 +66,10 @@ class ModalEditStream extends Component {
 			subCategoryValue: nextProps.subCategoryValue, 
 			playlist: nextProps.playlist,
 			onCloseCb: nextProps.onCloseCb,
+      streamUrl: "",
 			recursive: true,
 			random: true,
+			icecast: true,
 			type: "jukebox",
 			format: StateStore.getState().serverConfig.default_stream_format,
 			channels: StateStore.getState().serverConfig.default_stream_channels,
@@ -87,6 +93,7 @@ class ModalEditStream extends Component {
 				dataSource: this.state.dataSource, 
 				element: this.state.element,
 				path: this.state.path, 
+        streamUrl: this.state.streamUrl,
 				recursive: this.state.recursive,
 				random: this.state.random,
 				type: this.state.type,
@@ -95,7 +102,8 @@ class ModalEditStream extends Component {
 				bitrate: this.state.bitrate,
 				sampleRate: this.state.sampleRate,
 				playNow: this.state.playNow,
-        scope: this.state.scope
+        scope: this.state.scope,
+        icecast: this.state.icecast
 			});
 		} else {
 			this.state.onCloseCb(false);
@@ -106,6 +114,10 @@ class ModalEditStream extends Component {
 		this.setState({name: e.target.value});
 	}
 	
+	handleChangeUrl(e) {
+		this.setState({streamUrl: e.target.value});
+	}
+	
 	handleChangeRecursive() {
 		this.setState({recursive: !this.state.recursive});
 	}
@@ -114,13 +126,17 @@ class ModalEditStream extends Component {
 		this.setState({random: !this.state.random});
 	}
 	
+	handleChangeIcecast() {
+		this.setState({icecast: !this.state.icecast});
+	}
+	
 	handleChangeType(e) {
 		var newStatus = {type: e.target.value};
 		if (e.target.value === "webradio") {
-			newStatus.format = "mp3";
-			newStatus.formatDisabled = true;
-		} else {
-			newStatus.formatDisabled = false;
+      if (this.state.format === "flac") {
+        newStatus.format = "mp3";
+        newStatus.bitrateDisabled = false;
+      }
 		}
 		this.setState(newStatus);
 	}
@@ -180,7 +196,7 @@ class ModalEditStream extends Component {
 	}
 	
 	render() {
-		var recursive, random, path;
+		var recursive, random, icecast, path,  formatSelect;
 		if (this.state.element && this.state.element.type === "folder") {
 			recursive = 
 				<div>
@@ -257,6 +273,15 @@ class ModalEditStream extends Component {
 				</div>;
 		}
 		if (this.state.type === "webradio") {
+      formatSelect =
+        <FormControl componentClass="select"
+                     placeholder={i18n.t("common.select")}
+                     value={this.state.format}
+                     onChange={this.handleChangeFormat}
+                     disabled={this.state.formatDisabled}>
+          <option value="mp3">{i18n.t("common.format_mp3")}</option>
+          <option value="vorbis">{i18n.t("common.format_ogg")}</option>
+        </FormControl>
 			random = 
 			<div>
 				<Row>
@@ -274,7 +299,37 @@ class ModalEditStream extends Component {
 					</Col>
 				</Row>
 			</div>
-		}
+      if (StateStore.getState().serverConfig.icecast) {
+        icecast =
+        <div>
+          <Row>
+            <Col md={4}>
+              <Label>{i18n.t("common.icecast")}</Label>
+            </Col>
+            <Col md={8}>
+              <Checkbox checked={this.state.icecast} onChange={this.handleChangeIcecast}>
+              </Checkbox>
+            </Col>
+          </Row>
+          <Row>
+            <Col md={12}>
+              <hr/>
+            </Col>
+          </Row>
+        </div>
+      }
+		} else {
+      formatSelect =
+        <FormControl componentClass="select"
+                     placeholder={i18n.t("common.select")}
+                     value={this.state.format}
+                     onChange={this.handleChangeFormat}
+                     disabled={this.state.formatDisabled}>
+          <option value="mp3">{i18n.t("common.format_mp3")}</option>
+          <option value="vorbis">{i18n.t("common.format_ogg")}</option>
+          <option value="flac">{i18n.t("common.format_flac")}</option>
+        </FormControl>
+    }
 		var scopeInput;
 		if (StateStore.getState().profile.isAdmin) {
 			scopeInput =
@@ -282,8 +337,7 @@ class ModalEditStream extends Component {
 					value={this.state.scope}
 					onChange={this.handleChangeScope}
 					componentClass="select"
-					placeholder={i18n.t("common.select")}
-				>
+					placeholder={i18n.t("common.select")}>
 					<option value={"me"}>{i18n.t("common.scope_me")}</option>
 					<option value={"all"}>{i18n.t("common.scope_all")}</option>
 				</FormControl>;
@@ -327,7 +381,10 @@ class ModalEditStream extends Component {
 								<Label>{i18n.t("modal.play_as")}</Label>
 							</Col>
 							<Col md={8}>
-								<FormControl componentClass="select" placeholder="select" value={this.state.type} onChange={this.handleChangeType}>
+								<FormControl componentClass="select"
+                             placeholder="select"
+                             value={this.state.type}
+                             onChange={this.handleChangeType}>
 									<option value="jukebox">{i18n.t("common.jukebox")}</option>
 									<option value="webradio">{i18n.t("common.webradio")}</option>
 								</FormControl>
@@ -339,16 +396,27 @@ class ModalEditStream extends Component {
 							</Col>
 						</Row>
 						{random}
+						{icecast}
+            <Row>
+              <Col md={4}>
+                <Label>{i18n.t("modal.stream_url")}</Label>
+              </Col>
+              <Col md={8}>
+                <FormControl
+                  type="text"
+                  value={this.state.streamUrl}
+                  placeholder={i18n.t("modal.stream_url_random")}
+                  onChange={this.handleChangeUrl}
+                  maxLength={32}
+                />
+              </Col>
+            </Row>
 						<Row>
 							<Col md={4}>
 								<Label>{i18n.t("common.format")}</Label>
 							</Col>
 							<Col md={8}>
-								<FormControl componentClass="select" placeholder={i18n.t("common.select")} value={this.state.format} onChange={this.handleChangeFormat} disabled={this.state.formatDisabled}>
-									<option value="mp3">{i18n.t("common.format_mp3")}</option>
-									<option value="vorbis">{i18n.t("common.format_ogg")}</option>
-									<option value="flac">{i18n.t("common.format_flac")}</option>
-								</FormControl>
+                {formatSelect}
 							</Col>
 						</Row>
 						<Row>
@@ -356,7 +424,11 @@ class ModalEditStream extends Component {
 								<Label>{i18n.t("common.channels")}</Label>
 							</Col>
 							<Col md={8}>
-								<FormControl componentClass="select" placeholder={i18n.t("common.select")} value={this.state.channels} onChange={this.handleChangeChannels} disabled={this.state.channelsDisabled}>
+								<FormControl componentClass="select"
+                             placeholder={i18n.t("common.select")}
+                             value={this.state.channels}
+                             onChange={this.handleChangeChannels}
+                             disabled={this.state.channelsDisabled}>
 									<option value="1">{i18n.t("common.channels_mono")}</option>
 									<option value="2">{i18n.t("common.channels_stereo")}</option>
 								</FormControl>
@@ -367,7 +439,11 @@ class ModalEditStream extends Component {
 								<Label>{i18n.t("common.bitrate")}</Label>
 							</Col>
 							<Col md={8}>
-								<FormControl componentClass="select" placeholder={i18n.t("common.select")} value={this.state.bitrate} onChange={this.handleChangeBitrate} disabled={this.state.bitrateDisabled}>
+								<FormControl componentClass="select"
+                             placeholder={i18n.t("common.select")}
+                             value={this.state.bitrate}
+                             onChange={this.handleChangeBitrate}
+                             disabled={this.state.bitrateDisabled}>
 									<option value="32000">{i18n.t("common.bitrate_bps", {bps: 32})}</option>
 									<option value="96000">{i18n.t("common.bitrate_bps", {bps: 96})}</option>
 									<option value="128000">{i18n.t("common.bitrate_bps", {bps: 128})}</option>
@@ -382,7 +458,11 @@ class ModalEditStream extends Component {
 								<Label>{i18n.t("common.sample_rate")}</Label>
 							</Col>
 							<Col md={8}>
-								<FormControl componentClass="select" placeholder={i18n.t("common.select")} value={this.state.sampleRate} onChange={this.handleChangeSampleRate} disabled={this.state.sampleRateDisabled}>
+								<FormControl componentClass="select"
+                             placeholder={i18n.t("common.select")}
+                             value={this.state.sampleRate}
+                             onChange={this.handleChangeSampleRate}
+                             disabled={this.state.sampleRateDisabled}>
 									<option value="8000">{i18n.t("common.sample_rate_khz", {khz: 8})}</option>
 									<option value="11025">{i18n.t("common.sample_rate_khz", {khz: 11})}</option>
 									<option value="22050">{i18n.t("common.sample_rate_khz", {khz: 22})}</option>

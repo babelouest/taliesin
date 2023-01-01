@@ -471,7 +471,7 @@ json_t * add_jukebox_from_path(struct config_elements * config, const char * str
     if (!pthread_mutex_lock(&config->playlist_lock)) {
       config->jukebox_set = o_realloc(config->jukebox_set, (config->nb_jukebox + 1) * sizeof(struct _t_jukebox *));
       if (config->jukebox_set != NULL) {
-        jukebox_index = config->nb_jukebox;
+        jukebox_index = (int)config->nb_jukebox;
         config->nb_jukebox++;
         config->jukebox_set[jukebox_index] = o_malloc(sizeof(struct _t_jukebox));
         if (config->jukebox_set[jukebox_index] != NULL) {
@@ -556,7 +556,7 @@ json_t * add_jukebox_from_playlist(struct config_elements * config, const char *
   if (!pthread_mutex_lock(&config->playlist_lock)) {
     config->jukebox_set = o_realloc(config->jukebox_set, (config->nb_jukebox + 1) * sizeof(struct _t_jukebox *));
     if (config->jukebox_set != NULL) {
-      jukebox_index = config->nb_jukebox;
+      jukebox_index = (int)config->nb_jukebox;
       config->nb_jukebox++;
       config->jukebox_set[jukebox_index] = o_malloc(sizeof(struct _t_jukebox));
       if (config->jukebox_set[jukebox_index] != NULL) {
@@ -632,11 +632,11 @@ int add_jukebox_from_db_stream(struct config_elements * config, json_t * j_strea
   if (!pthread_mutex_lock(&config->playlist_lock)) {
     config->jukebox_set = o_realloc(config->jukebox_set, (config->nb_jukebox + 1) * sizeof(struct _t_jukebox *));
     if (config->jukebox_set != NULL) {
-      jukebox_index = config->nb_jukebox;
+      jukebox_index = (int)config->nb_jukebox;
       config->nb_jukebox++;
       config->jukebox_set[jukebox_index] = o_malloc(sizeof(struct _t_jukebox));
       if (config->jukebox_set[jukebox_index] != NULL) {
-        if (jukebox_init(config->jukebox_set[jukebox_index], config->jukebox_set[jukebox_index]->name, json_string_value(json_object_get(j_stream, "format")), json_integer_value(json_object_get(j_stream, "channels")), json_integer_value(json_object_get(j_stream, "sample_rate")), json_integer_value(json_object_get(j_stream, "bitrate"))) == T_OK) {
+        if (jukebox_init(config->jukebox_set[jukebox_index], config->jukebox_set[jukebox_index]->name, json_string_value(json_object_get(j_stream, "format")), (short unsigned int)json_integer_value(json_object_get(j_stream, "channels")), (unsigned int)json_integer_value(json_object_get(j_stream, "sample_rate")), (unsigned int)json_integer_value(json_object_get(j_stream, "bitrate"))) == T_OK) {
           config->jukebox_set[jukebox_index]->config = config;
           config->jukebox_set[jukebox_index]->username = json_object_get(j_stream, "username")!=json_null()?o_strdup(json_string_value(json_object_get(j_stream, "username"))):NULL;
           o_strcpy(config->jukebox_set[jukebox_index]->name, json_string_value(json_object_get(j_stream, "name")));
@@ -680,7 +680,8 @@ int jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukeb
   json_t * j_media;
   char * icy_title, * tmp, * m3u_song;
   struct _t_file * file;
-  int i = 0, res = T_OK, counter = 0;
+  int res = T_OK, counter = 0;
+  long unsigned int i = 0;
   
   *m3u_data = msprintf("#EXTM3U\n\n");
   if (*m3u_data != NULL) {
@@ -689,7 +690,7 @@ int jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukeb
       if (check_result_value(j_media, T_OK)) {
         icy_title = build_m3u_title(json_object_get(j_media, "media"));
         if (icy_title != NULL) {
-          m3u_song = msprintf("#EXTINF:%"JSON_INTEGER_FORMAT",%s\n%s/%s/stream/%s?index=%d\n",
+          m3u_song = msprintf("#EXTINF:%"JSON_INTEGER_FORMAT",%s\n%s/%s/stream/%s?index=%lu\n",
                               (json_integer_value(json_object_get(json_object_get(j_media, "media"), "duration"))/1000),
                               icy_title,
                               url_prefix==NULL?config->server_remote_address:url_prefix,
@@ -697,7 +698,7 @@ int jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukeb
                               jukebox->name,
                               i);
         } else {
-          m3u_song = msprintf("%s/%s/stream/%s?index=%d\n",
+          m3u_song = msprintf("%s/%s/stream/%s?index=%lu\n",
                               url_prefix==NULL?config->server_remote_address:url_prefix,
                               url_prefix==NULL?config->api_prefix:"",
                               jukebox->name,
@@ -848,7 +849,7 @@ int jukebox_remove_media_by_index(struct _t_jukebox * jukebox, int index, json_i
   struct _t_file * file;
   
   if (jukebox->file_list->nb_files > 1) {
-    file = file_list_dequeue_file(jukebox->file_list, index);
+    file = file_list_dequeue_file(jukebox->file_list, (long unsigned int)index);
     if (file != NULL) {
       if (tm_id != NULL) {
         *tm_id = file->tm_id;
@@ -906,7 +907,7 @@ int jukebox_audio_buffer_add_data(struct _jukebox_audio_buffer * jukebox_audio_b
     if (pthread_mutex_lock(&jukebox_audio_buffer->write_lock)) {
       y_log_message(Y_LOG_LEVEL_ERROR, "Error pthread_mutex_lock");
     } else {
-      while (jukebox_audio_buffer->size + buf_size > jukebox_audio_buffer->max_size) {
+      while (jukebox_audio_buffer->size + (size_t)buf_size > jukebox_audio_buffer->max_size) {
         jukebox_audio_buffer->data = o_realloc(jukebox_audio_buffer->data, jukebox_audio_buffer->max_size + TALIESIN_STREAM_BUFFER_INC_SIZE);
         if (jukebox_audio_buffer->data == NULL) {
           y_log_message(Y_LOG_LEVEL_ERROR, "Error reallocating jukebox_audio_buffer->data");
@@ -917,8 +918,8 @@ int jukebox_audio_buffer_add_data(struct _jukebox_audio_buffer * jukebox_audio_b
         }
       }
       if (jukebox_audio_buffer->max_size) {
-        memcpy(jukebox_audio_buffer->data + jukebox_audio_buffer->size, buf, buf_size);
-        jukebox_audio_buffer->size += buf_size;
+        memcpy(jukebox_audio_buffer->data + jukebox_audio_buffer->size, buf, (size_t)buf_size);
+        jukebox_audio_buffer->size += (size_t)buf_size;
         ret = 0;
       }
       pthread_mutex_unlock(&jukebox_audio_buffer->write_lock);
@@ -1208,7 +1209,7 @@ json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * ju
     j_return = json_pack("{si}", "result", ret);
   } else if (0 == o_strcmp(str_command, "remove_list")) {
     if (json_object_get(json_object_get(j_command, "parameters"), "index") != NULL) {
-      if (jukebox_remove_media_by_index(jukebox, json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "index")), &tm_id) == T_OK) {
+      if (jukebox_remove_media_by_index(jukebox, (int)json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "index")), &tm_id) == T_OK) {
         if (jukebox_delete_db_stream_media(config, jukebox, tm_id) == T_OK) {
           j_return = json_pack("{si}", "result", T_OK);
         } else {
@@ -1347,7 +1348,7 @@ json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * ju
       if (move_index < move_target) {
         move_target--;
       }
-      file = file_list_dequeue_file(jukebox->file_list, move_index);
+      file = file_list_dequeue_file(jukebox->file_list, (long unsigned int)move_index);
       if (file != NULL) {
         if ((ret = file_list_insert_file_at(jukebox->file_list, file, (unsigned long)move_target)) == T_OK) {
           if (jukebox_update_db_stream_media_list(config, jukebox) == T_OK) {
@@ -1525,7 +1526,7 @@ ssize_t u_jukebox_stream (void * cls, uint64_t pos, char * buf, size_t max) {
   
   if (client_data_jukebox->audio_buffer->status != TALIESIN_STREAM_STATUS_STOPPED) {
     if (client_data_jukebox->audio_buffer->complete && client_data_jukebox->buffer_offset >= client_data_jukebox->audio_buffer->size) {
-      return U_STREAM_END;
+      return (ssize_t)U_STREAM_END;
     } else {
       while (client_data_jukebox->buffer_offset + max > client_data_jukebox->audio_buffer->size && 
              !client_data_jukebox->audio_buffer->complete &&
@@ -1533,7 +1534,7 @@ ssize_t u_jukebox_stream (void * cls, uint64_t pos, char * buf, size_t max) {
         usleep(50000);
       }
       if (pthread_mutex_lock(&client_data_jukebox->audio_buffer->write_lock)) {
-        return U_STREAM_END;
+        return (ssize_t)U_STREAM_END;
       } else {
         if (client_data_jukebox->buffer_offset + max > client_data_jukebox->audio_buffer->size) {
           len = (client_data_jukebox->audio_buffer->size - client_data_jukebox->buffer_offset);
@@ -1544,11 +1545,11 @@ ssize_t u_jukebox_stream (void * cls, uint64_t pos, char * buf, size_t max) {
         memcpy(buf, client_data_jukebox->audio_buffer->data + client_data_jukebox->buffer_offset, len);
         client_data_jukebox->buffer_offset += len;
         pthread_mutex_unlock(&client_data_jukebox->audio_buffer->write_lock);
-        return len;
+        return (ssize_t)len;
       }
     }
   } else {
-    return U_STREAM_END;
+    return (ssize_t)U_STREAM_END;
   }
 }
 

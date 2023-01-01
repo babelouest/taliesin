@@ -312,14 +312,14 @@ int callback_taliesin_data_source_refresh_run (const struct _u_request * request
   j_data_source = data_source_get(config, get_username(request, response, config), u_map_get(request->map_url, "data_source"), 1);
   if (check_result_value(j_data_source, T_OK)) {
     if (data_source_can_update(json_object_get(j_data_source, "data_source"), has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin))) {
-      decoded_url = url_decode(request->http_url);
+      decoded_url = ulfius_url_decode(request->http_url);
       if (decoded_url != NULL) {
         path = o_strdup((decoded_url + snprintf(NULL, 0, "/%s/data_source/%s/refresh/", config->api_prefix, u_map_get(request->map_url, "data_source"))));
         last = strrchr(path, '?');
         if (last != NULL) {
           path[last - path] = '\0';
         }
-        decode_path = decode_path_save = url_decode(path);
+        decode_path = decode_path_save = ulfius_url_decode(path);
         while (decode_path[0] == '/') {
           decode_path++;
         }
@@ -472,7 +472,7 @@ int callback_taliesin_media_get_path (const struct _u_request * request, struct 
   j_data_source = data_source_get(config, get_username(request, response, config), u_map_get(request->map_url, "data_source"), 1);
   if (check_result_value(j_data_source, T_OK)) {
     if (json_integer_value(json_object_get(json_object_get(j_data_source, "data_source"), "refresh_status")) == DATA_SOURCE_REFRESH_STATUS_NOT_RUNNING) {
-      decoded_url = url_decode(request->http_url);
+      decoded_url = ulfius_url_decode(request->http_url);
       if (decoded_url != NULL) {
         path = o_strdup((decoded_url + snprintf(NULL, 0, "/%s/data_source/%s/media/path/", config->api_prefix, u_map_get(request->map_url, "data_source"))));
         last = strrchr(path, '?');
@@ -491,12 +491,12 @@ int callback_taliesin_media_get_path (const struct _u_request * request, struct 
         if (check_result_value(j_result, T_OK)) {
           if (u_map_get(request->map_url, "webradio") != NULL || u_map_get(request->map_url, "jukebox") != NULL) {
             format = u_map_get(request->map_url, "format");
-            channels = u_map_get(request->map_url, "channels")!=NULL?strtol(u_map_get(request->map_url, "channels"), NULL, 10):TALIESIN_STREAM_DEFAULT_CHANNELS;
-            sample_rate = u_map_get(request->map_url, "samplerate")!=NULL?strtol(u_map_get(request->map_url, "samplerate"), NULL, 10):TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
+            channels = u_map_get(request->map_url, "channels")!=NULL?(unsigned short int)strtol(u_map_get(request->map_url, "channels"), NULL, 10):TALIESIN_STREAM_DEFAULT_CHANNELS;
+            sample_rate = u_map_get(request->map_url, "samplerate")!=NULL?(unsigned int)strtol(u_map_get(request->map_url, "samplerate"), NULL, 10):TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
             if (0 == o_strcmp(format, "flac")) {
               bit_rate = TALIESIN_STREAM_FLAC_BIT_RATE;
             } else {
-              bit_rate = u_map_get(request->map_url, "bitrate")!=NULL?strtol(u_map_get(request->map_url, "bitrate"), NULL, 10):TALIESIN_STREAM_DEFAULT_BIT_RATE;
+              bit_rate = u_map_get(request->map_url, "bitrate")!=NULL?(unsigned int)strtol(u_map_get(request->map_url, "bitrate"), NULL, 10):TALIESIN_STREAM_DEFAULT_BIT_RATE;
             }
             
             if (format == NULL) {
@@ -526,6 +526,7 @@ int callback_taliesin_media_get_path (const struct _u_request * request, struct 
                                                        bit_rate,
                                                        (u_map_get(request->map_url, "recursive")!=NULL),
                                                        (u_map_get(request->map_url, "random")!=NULL),
+                                                       (u_map_get(request->map_url, "icecast")!=NULL),
                                                        u_map_get(request->map_url, "name"),
                                                        &webradio);
                 if (check_result_value(j_stream_info, T_OK)) {
@@ -796,12 +797,12 @@ int callback_taliesin_category_list (const struct _u_request * request, struct _
         if (check_result_value(j_result, T_OK)) {
           if (u_map_get(request->map_url, "webradio") != NULL || u_map_get(request->map_url, "jukebox") != NULL) {
             format = u_map_get(request->map_url, "format");
-            channels = u_map_get(request->map_url, "channels")!=NULL?strtol(u_map_get(request->map_url, "channels"), NULL, 10):TALIESIN_STREAM_DEFAULT_CHANNELS;
-            sample_rate = u_map_get(request->map_url, "samplerate")!=NULL?strtol(u_map_get(request->map_url, "samplerate"), NULL, 10):TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
+            channels = u_map_get(request->map_url, "channels")!=NULL?(unsigned short int)strtol(u_map_get(request->map_url, "channels"), NULL, 10):TALIESIN_STREAM_DEFAULT_CHANNELS;
+            sample_rate = u_map_get(request->map_url, "samplerate")!=NULL?(unsigned int)strtol(u_map_get(request->map_url, "samplerate"), NULL, 10):TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
             if (0 == o_strcmp(format, "flac")) {
               bit_rate = TALIESIN_STREAM_FLAC_BIT_RATE;
             } else {
-              bit_rate = u_map_get(request->map_url, "bitrate")!=NULL?strtol(u_map_get(request->map_url, "bitrate"), NULL, 10):TALIESIN_STREAM_DEFAULT_BIT_RATE;
+              bit_rate = u_map_get(request->map_url, "bitrate")!=NULL?(unsigned int)strtol(u_map_get(request->map_url, "bitrate"), NULL, 10):TALIESIN_STREAM_DEFAULT_BIT_RATE;
             }
             if (format == NULL) {
               format = TALIESIN_STREAM_DEFAULT_FORMAT;
@@ -833,6 +834,7 @@ int callback_taliesin_category_list (const struct _u_request * request, struct _
                                                            sample_rate,
                                                            bit_rate,
                                                            (u_map_get(request->map_url, "random")!=NULL),
+                                                           (u_map_get(request->map_url, "icecast")!=NULL),
                                                            u_map_get(request->map_url, "name"),
                                                            &webradio);
                 if (check_result_value(j_stream_info, T_OK)) {
@@ -973,12 +975,12 @@ int callback_taliesin_subcategory_list (const struct _u_request * request, struc
           if (check_result_value(j_result, T_OK)) {
             if (u_map_get(request->map_url, "webradio") != NULL || u_map_get(request->map_url, "jukebox") != NULL) {
               format = u_map_get(request->map_url, "format");
-              channels = u_map_get(request->map_url, "channels")!=NULL?strtol(u_map_get(request->map_url, "channels"), NULL, 10):TALIESIN_STREAM_DEFAULT_CHANNELS;
-              sample_rate = u_map_get(request->map_url, "samplerate")!=NULL?strtol(u_map_get(request->map_url, "samplerate"), NULL, 10):TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
+              channels = u_map_get(request->map_url, "channels")!=NULL?(unsigned short int)strtol(u_map_get(request->map_url, "channels"), NULL, 10):TALIESIN_STREAM_DEFAULT_CHANNELS;
+              sample_rate = u_map_get(request->map_url, "samplerate")!=NULL?(unsigned int)strtol(u_map_get(request->map_url, "samplerate"), NULL, 10):TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
               if (0 == o_strcmp(format, "flac")) {
                 bit_rate = TALIESIN_STREAM_FLAC_BIT_RATE;
               } else {
-                bit_rate = u_map_get(request->map_url, "bitrate")!=NULL?strtol(u_map_get(request->map_url, "bitrate"), NULL, 10):TALIESIN_STREAM_DEFAULT_BIT_RATE;
+                bit_rate = u_map_get(request->map_url, "bitrate")!=NULL?(unsigned int)strtol(u_map_get(request->map_url, "bitrate"), NULL, 10):TALIESIN_STREAM_DEFAULT_BIT_RATE;
               }
               if (format == NULL) {
                 format = TALIESIN_STREAM_DEFAULT_FORMAT;
@@ -1010,6 +1012,7 @@ int callback_taliesin_subcategory_list (const struct _u_request * request, struc
                                                              sample_rate,
                                                              bit_rate,
                                                              (u_map_get(request->map_url, "random")!=NULL),
+                                                             (u_map_get(request->map_url, "icecast")!=NULL),
                                                              u_map_get(request->map_url, "name"),
                                                              &webradio);
                   if (check_result_value(j_stream_info, T_OK)) {
@@ -1116,7 +1119,7 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
     }
     
     if (u_map_get_case(request->map_url, "index") != NULL) {
-      jukebox_index = strtol(u_map_get_case(request->map_url, "index"), NULL, 10);
+      jukebox_index = (unsigned int)strtol(u_map_get_case(request->map_url, "index"), NULL, 10);
     }
     if (current_webradio != NULL) {
       response->status = 200;
@@ -1464,7 +1467,9 @@ void callback_websocket_stream_manager (const struct _u_request * request, struc
   json_t * j_result, * j_message;
   time_t now;
   
+#ifndef U_DISABLE_WS_MESSAGE_LIST
   websocket_manager->keep_messages = U_WEBSOCKET_KEEP_NONE;
+#endif
 
   if (ws_stream->webradio != NULL) {
     ws_stream->webradio->nb_websocket++;
@@ -1788,7 +1793,7 @@ int callback_taliesin_stream_cover (const struct _u_request * request, struct _u
   if (u_map_get_case(request->map_url, "index") == NULL) {
     playlist_index = 0;
   } else {
-    playlist_index = strtol(u_map_get_case(request->map_url, "index"), NULL, 10);
+    playlist_index = (unsigned int)strtol(u_map_get_case(request->map_url, "index"), NULL, 10);
   }
   
   if (current_webradio != NULL &&
@@ -1889,7 +1894,7 @@ int callback_taliesin_playlist_get (const struct _u_request * request, struct _u
   if (limit < 0) {
     limit = TALIESIN_MEDIA_LIMIT_DEFAULT;
   }
-  j_result = playlist_get(config, get_username(request, response, config), u_map_get(request->map_url, "playlist"), 0, offset, limit);
+  j_result = playlist_get(config, get_username(request, response, config), u_map_get(request->map_url, "playlist"), 0, (size_t)offset, (size_t)limit);
   if (check_result_value(j_result, T_OK)) {
     json_object_del(json_object_get(j_result, "playlist"), "tpl_id");
     if (ulfius_set_json_body_response(response, 200, json_object_get(j_result, "playlist")) != U_OK) {
@@ -2130,8 +2135,8 @@ int callback_taliesin_playlist_has_media (const struct _u_request * request, str
   struct config_elements * config = (struct config_elements *)user_data;
   json_t * j_playlist, * j_is_valid, * j_body = ulfius_get_json_body_request(request, NULL), * j_result, * j_media_list;
   int res = U_CALLBACK_CONTINUE, is_admin = has_scope(config, json_object_get((json_t *)response->shared_data, "scope"), config->oauth_scope_admin);
-  size_t offset = u_map_get(request->map_url, "offset")!=NULL?strtol(u_map_get(request->map_url, "offset"), NULL, 10):0,
-         limit = (u_map_get(request->map_url, "limit")!=NULL&&strtol(u_map_get(request->map_url, "limit"), NULL, 10)>0)?strtol(u_map_get(request->map_url, "limit"), NULL, 10):TALIESIN_MEDIA_LIMIT_DEFAULT;
+  size_t offset = u_map_get(request->map_url, "offset")!=NULL?(size_t)strtol(u_map_get(request->map_url, "offset"), NULL, 10):0,
+         limit = (u_map_get(request->map_url, "limit")!=NULL&&strtol(u_map_get(request->map_url, "limit"), NULL, 10)>0)?(size_t)strtol(u_map_get(request->map_url, "limit"), NULL, 10):TALIESIN_MEDIA_LIMIT_DEFAULT;
   
   j_playlist = playlist_get(config, get_username(request, response, config), u_map_get(request->map_url, "playlist"), 1, 0, 1);
   if (check_result_value(j_playlist, T_OK)) {
@@ -2205,12 +2210,12 @@ int callback_taliesin_playlist_load (const struct _u_request * request, struct _
   if (check_result_value(j_playlist, T_OK)) {
     if (json_array_size(json_object_get(json_object_get(j_playlist, "playlist"), "media"))) {
       format = u_map_get(request->map_url, "format");
-      channels = u_map_get(request->map_url, "channels")!=NULL?strtol(u_map_get(request->map_url, "channels"), NULL, 10):TALIESIN_STREAM_DEFAULT_CHANNELS;
-      sample_rate = u_map_get(request->map_url, "samplerate")!=NULL?strtol(u_map_get(request->map_url, "samplerate"), NULL, 10):TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
+      channels = u_map_get(request->map_url, "channels")!=NULL?(unsigned short int)strtol(u_map_get(request->map_url, "channels"), NULL, 10):TALIESIN_STREAM_DEFAULT_CHANNELS;
+      sample_rate = u_map_get(request->map_url, "samplerate")!=NULL?(unsigned int)strtol(u_map_get(request->map_url, "samplerate"), NULL, 10):TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
       if (0 == o_strcmp(format, "flac")) {
         bit_rate = TALIESIN_STREAM_FLAC_BIT_RATE;
       } else {
-        bit_rate = u_map_get(request->map_url, "bitrate")!=NULL?strtol(u_map_get(request->map_url, "bitrate"), NULL, 10):TALIESIN_STREAM_DEFAULT_BIT_RATE;
+        bit_rate = u_map_get(request->map_url, "bitrate")!=NULL?(unsigned int)strtol(u_map_get(request->map_url, "bitrate"), NULL, 10):TALIESIN_STREAM_DEFAULT_BIT_RATE;
       }
       
       if (format == NULL) {
@@ -2238,6 +2243,7 @@ int callback_taliesin_playlist_load (const struct _u_request * request, struct _
                                                      sample_rate,
                                                      bit_rate,
                                                      (u_map_get(request->map_url, "random")!=NULL),
+                                                     (u_map_get(request->map_url, "icecast")!=NULL),
                                                      u_map_get(request->map_url, "name"),
                                                      &webradio);
           if (check_result_value(j_stream_info, T_OK)) {

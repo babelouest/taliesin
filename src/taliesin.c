@@ -37,20 +37,25 @@ pthread_mutex_t global_handler_close_lock;
 pthread_cond_t  global_handler_close_cond;
 
 #ifndef DISABLE_OAUTH2
-static char * read_file(const char * filename) {
+
+static char * read_file(const char * filename, size_t * filesize) {
   char * buffer = NULL;
-  long length;
+  size_t length;
   FILE * f;
   if (filename != NULL) {
     f = fopen (filename, "rb");
     if (f) {
       fseek (f, 0, SEEK_END);
-      length = ftell (f);
+      length = (size_t)ftell (f);
+      if (filesize != NULL) {
+        *filesize = length;
+      }
       fseek (f, 0, SEEK_SET);
       buffer = o_malloc (length + 1);
-      if (buffer) {
-        fread (buffer, 1, length, f);
-        buffer[length] = '\0';
+      if (buffer != NULL) {
+        if (fread (buffer, 1, length, f)) {
+          buffer[length] = '\0';
+        }
       }
       fclose (f);
     }
@@ -87,7 +92,7 @@ int main (int argc, char ** argv) {
   av_register_all();
 #endif
 
-  srand(time(NULL));
+  srand((unsigned int)time(NULL));
   if (config == NULL) {
     fprintf(stderr, "Memory error - config\n");
     return 1;
@@ -239,7 +244,7 @@ int main (int argc, char ** argv) {
         y_log_message(Y_LOG_LEVEL_INFO, "Load remote authentification config: %s", config->oidc_server_remote_config);
       } else if (config->oidc_server_public_jwks != NULL) {
         res = 1;
-        if ((str_jwks = read_file(config->oidc_server_public_jwks)) != NULL) {
+        if ((str_jwks = read_file(config->oidc_server_public_jwks, NULL)) != NULL) {
           if ((j_jwks = json_loads(str_jwks, JSON_DECODE_ANY, NULL)) != NULL) {
             if (!i_jwt_profile_access_token_load_jwks(config->iddawc_resource_config, j_jwks, config->oidc_iss)) {
               y_log_message(Y_LOG_LEVEL_ERROR, "Error i_jwt_profile_access_token_load_jwks");
@@ -276,7 +281,7 @@ int main (int argc, char ** argv) {
 #endif
 
   // TODO remove instance timeout when MHD will support a timeout on a streaming response
-  config->instance->timeout = config->timeout;
+  config->instance->timeout = (unsigned int)config->timeout;
 
   av_log_set_callback(&redirect_libav_logs);
 
@@ -368,10 +373,18 @@ int main (int argc, char ** argv) {
         if (add_webradio_from_db_stream(config, j_element, &webradio) != T_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "Error adding webradio stream");
         } else {
-          ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
-          detach_thread_webradio = pthread_detach(thread_webradio);
-          if (ret_thread_webradio || detach_thread_webradio) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio");
+          if (webradio->icecast) {
+            ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_icecast_run_thread, (void *)webradio);
+            detach_thread_webradio = pthread_detach(thread_webradio);
+            if (ret_thread_webradio || detach_thread_webradio) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio icecast");
+            }
+          } else {
+            ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
+            detach_thread_webradio = pthread_detach(thread_webradio);
+            if (ret_thread_webradio || detach_thread_webradio) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio");
+            }
           }
         }
       } else {
@@ -548,7 +561,7 @@ int build_config_from_args(int argc, char ** argv, struct config_elements * conf
           break;
         case 'p':
           if (optarg != NULL) {
-            config->instance->port = strtol(optarg, NULL, 10);
+            config->instance->port = (unsigned int)strtol(optarg, NULL, 10);
             if (config->instance->port <= 0 || config->instance->port > 65535) {
               fprintf(stderr, "Error!\nInvalid TCP Port number\n\tPlease specify an integer value between 1 and 65535");
               return 0;
@@ -746,8 +759,8 @@ int build_config_from_file(struct config_elements * config) {
       cur_user_can_create_data_source = 0,
       cur_timeout = 0,
       compress = 0,
-      icecast_port = 0,
-      i = 0;
+      icecast_port = 0;
+  unsigned int i = 0;
 #ifndef DISABLE_OAUTH2
   config_setting_t * oidc_cfg;
   const char * cur_oidc_server_remote_config = NULL, * cur_oidc_server_public_jwks = NULL, * cur_oidc_iss = NULL, * cur_oidc_realm = NULL, * cur_oidc_aud = NULL;
@@ -887,7 +900,7 @@ int build_config_from_file(struct config_elements * config) {
         config_setting_lookup_string(database, "password", &db_mariadb_password);
         config_setting_lookup_string(database, "dbname", &db_mariadb_dbname);
         config_setting_lookup_int(database, "port", &db_mariadb_port);
-        config->conn = h_connect_mariadb(db_mariadb_host, db_mariadb_user, db_mariadb_password, db_mariadb_dbname, db_mariadb_port, NULL);
+        config->conn = h_connect_mariadb(db_mariadb_host, db_mariadb_user, db_mariadb_password, db_mariadb_dbname, (unsigned int)db_mariadb_port, NULL);
         if (config->conn == NULL) {
           fprintf(stderr, "Error opening mariadb database %s\n", db_mariadb_dbname);
           config_destroy(&cfg);
@@ -924,7 +937,7 @@ int build_config_from_file(struct config_elements * config) {
   // Populate mime types u_map
   mime_type_list = config_lookup(&cfg, "app_files_mime_types");
   if (mime_type_list != NULL) {
-    for (i=0; i<config_setting_length(mime_type_list); i++) {
+    for (i=0; i<(unsigned int)config_setting_length(mime_type_list); i++) {
       mime_type = config_setting_get_elem(mime_type_list, i);
       if (mime_type != NULL) {
         if (config_setting_lookup_string(mime_type, "extension", &extension) == CONFIG_TRUE &&
@@ -943,7 +956,7 @@ int build_config_from_file(struct config_elements * config) {
   }
 
   if (config_lookup_bool(&cfg, "use_oidc_authentication", &cur_use_oidc_authentication) == CONFIG_TRUE) {
-    config->use_oidc_authentication = cur_use_oidc_authentication;
+    config->use_oidc_authentication = (short unsigned int)cur_use_oidc_authentication;
   }
   
   icecast = config_lookup(&cfg, "icecast");
@@ -1023,7 +1036,7 @@ int build_config_from_file(struct config_elements * config) {
       }
     }
     if (config_setting_lookup_bool(oidc_cfg, "server_remote_config_verify_cert", &cur_oidc_server_remote_config_verify_cert) == CONFIG_TRUE) {
-      config->oidc_server_remote_config_verify_cert = (time_t)cur_oidc_server_remote_config_verify_cert;
+      config->oidc_server_remote_config_verify_cert = (short unsigned int)cur_oidc_server_remote_config_verify_cert;
     }
     if (config_setting_lookup_string(oidc_cfg, "server_public_jwks", &cur_oidc_server_public_jwks) == CONFIG_TRUE) {
       if ((config->oidc_server_public_jwks = o_strdup(cur_oidc_server_public_jwks)) == NULL) {
@@ -1107,7 +1120,7 @@ int build_config_from_file(struct config_elements * config) {
 
   if (config_lookup_int(&cfg, "stream_channels", &cur_stream_channels) == CONFIG_TRUE) {
     if (cur_stream_channels == 1 || cur_stream_channels == 2) {
-      config->stream_channels = cur_stream_channels;
+      config->stream_channels = (short unsigned int)cur_stream_channels;
     } else {
       fprintf(stderr, "Error stream_channels, use values 1 or 2\n");
       config_destroy(&cfg);
@@ -1121,7 +1134,7 @@ int build_config_from_file(struct config_elements * config) {
       config_destroy(&cfg);
       return 0;
     } else {
-      config->stream_sample_rate = cur_stream_sample_rate;
+      config->stream_sample_rate = (unsigned int)cur_stream_sample_rate;
     }
   }
 
@@ -1131,7 +1144,7 @@ int build_config_from_file(struct config_elements * config) {
       config_destroy(&cfg);
       return 0;
     } else {
-      config->stream_bitrate = cur_stream_bit_rate;
+      config->stream_bitrate = (unsigned int)cur_stream_bit_rate;
     }
   }
 
@@ -1146,7 +1159,7 @@ int build_config_from_file(struct config_elements * config) {
   }
 
   if (config_lookup_bool(&cfg, "user_can_create_data_source", &cur_user_can_create_data_source) == CONFIG_TRUE) {
-    config->user_can_create_data_source = cur_user_can_create_data_source;
+    config->user_can_create_data_source = (short unsigned int)cur_user_can_create_data_source;
   }
 
   config_destroy(&cfg);
@@ -1209,7 +1222,7 @@ char * get_file_content(const char * file_path) {
   f = fopen (file_path, "rb");
   if (f) {
     fseek (f, 0, SEEK_END);
-    length = ftell (f);
+    length = (size_t)ftell (f);
     fseek (f, 0, SEEK_SET);
     buffer = o_malloc((length+1)*sizeof(char));
     if (buffer) {
@@ -1262,7 +1275,7 @@ void redirect_libav_logs(void * avcl, int level, const char * fmt, va_list vl) {
     va_copy(args_cpy, vl);
     va_copy(args_cpy2, vl);
     new_fmt = msprintf("LIBAV - %s", fmt);
-    out_len = vsnprintf(NULL, 0, new_fmt, args_cpy);
+    out_len = (size_t)vsnprintf(NULL, 0, new_fmt, args_cpy);
     out = o_malloc((out_len)*sizeof(char));
     if (out != NULL) {
       vsnprintf(out, (out_len), new_fmt, args_cpy2);

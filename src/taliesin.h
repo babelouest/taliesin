@@ -36,6 +36,8 @@
 #include <libavutil/audio_fifo.h>
 #include <libswresample/swresample.h>
 
+#include <shout/shout.h>
+
 /** Angharad libraries **/
 #include <ulfius.h>
 #include <yder.h>
@@ -476,7 +478,6 @@ void   exit_handler(int handler);
 void   exit_server(struct config_elements ** config, int exit_value);
 void   print_help(FILE * output);
 char * get_file_content(const char * file_path);
-char * url_decode(const char * str);
 char * url_encode(const char * str);
 long   random_at_most(long max);
 char * rand_string(char * str, size_t size);
@@ -556,16 +557,18 @@ json_t         * webradio_get_info(struct _t_webradio * webradio);
 json_t         * webradio_get_file_list(struct config_elements * config, struct _t_webradio * webradio, json_int_t offset, json_int_t limit);
 int              webradio_remove_media_by_index(struct _t_webradio * webradio, unsigned long index, json_int_t * tm_id);
 int              webradio_close(struct config_elements * config, struct _t_webradio * webradio);
+int              webradio_icecast_audio_buffer_add_data(struct _t_webradio * webradio, uint8_t * buf, int buf_size);
 
 int      webradio_open_output_buffer(struct _audio_stream * audio_stream);
 ssize_t  webradio_buffer_metadata(char * buf, size_t max, struct _client_data_webradio * client_data);
 int      audio_buffer_init(struct _audio_buffer * audio_buffer);
 void     audio_buffer_clean(struct _audio_buffer * audio_buffer, int recursive);
 void   * webradio_run_thread(void * args);
+void   * webradio_icecast_run_thread(void * args);
 json_t * is_webradio_command_valid(struct config_elements * config, struct _t_webradio * webradio, json_t * j_command, const char * username, int is_admin);
 json_t * webradio_command(struct config_elements * config, struct _t_webradio * webradio, const char * username, json_t * j_command);
-json_t * add_webradio_from_path(struct config_elements * config, const char * stream_url, json_t * j_data_source, const char * path, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, int recursive, short int random, const char * name, struct _t_webradio ** new_webradio);
-json_t * add_webradio_from_playlist(struct config_elements * config, const char * stream_url, json_t * j_playlist, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, short int random, const char * name, struct _t_webradio ** new_webradio);
+json_t * add_webradio_from_path(struct config_elements * config, const char * stream_url, json_t * j_data_source, const char * path, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, int recursive, short int random, short int icecast, const char * name, struct _t_webradio ** new_webradio);
+json_t * add_webradio_from_playlist(struct config_elements * config, const char * stream_url, json_t * j_playlist, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, short int random, short int icecast, const char * name, struct _t_webradio ** new_webradio);
 int      add_webradio_from_db_stream(struct config_elements * config, json_t * j_stream, struct _t_webradio ** new_webradio);
 int      scan_path_to_webradio(struct config_elements * config, json_t * j_data_source, const char * path, int recursive, struct _t_webradio * webradio);
 

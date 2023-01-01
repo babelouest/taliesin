@@ -562,7 +562,7 @@ int data_source_scan_directory(struct config_elements * config, struct _refresh_
                 } else {
                   new_sub_path = o_strdup(json_string_value(json_object_get(j_element, "name")));
                 }
-                if (data_source_scan_directory(config, refresh_config, thumbnail_cover_codec_context, tds_id, j_data_source, new_sub_path, new_tf_id) != T_OK) {
+                if (data_source_scan_directory(config, refresh_config, thumbnail_cover_codec_context, tds_id, j_data_source, new_sub_path, (int)new_tf_id) != T_OK) {
                   y_log_message(Y_LOG_LEVEL_ERROR, "data_source_scan_directory - Error scanning subdirectory %s", new_sub_path);
                 }
                 j_folder_cover = media_folder_detect_cover_by_id(config, j_data_source, new_tf_id, new_sub_path);
@@ -783,7 +783,7 @@ void * thread_run_refresh_data_source(void * data) {
           refresh_config->nb_files_total = fs_directory_count_files_recursive(root_path);
           o_free(root_path);
           if (refresh_config->nb_files_total >= 0) {
-            if (data_source_scan_directory(config, refresh_config, thumbnail_cover_codec_context, tds_id, refresh_config->j_data_source, refresh_config->path, folder_get_id(config, refresh_config->j_data_source, 0, refresh_config->path)) == T_OK) {
+            if (data_source_scan_directory(config, refresh_config, thumbnail_cover_codec_context, tds_id, refresh_config->j_data_source, refresh_config->path, (int)folder_get_id(config, refresh_config->j_data_source, 0, refresh_config->path)) == T_OK) {
               if (data_source_set_refresh_status(config, tds_id, DATA_SOURCE_REFRESH_STATUS_NOT_RUNNING) != T_OK) {
                 y_log_message(Y_LOG_LEVEL_ERROR, "thread_run_refresh_data_source - Error setting data source refresh status");
               }
@@ -856,7 +856,7 @@ int data_source_refresh_run(struct config_elements * config, json_t * j_data_sou
   
   j_status = data_source_get_refresh_status(config, tds_id);
   if (check_result_value(j_status, T_OK) && (0 == o_strcmp("not running", json_string_value(json_object_get(json_object_get(j_status, "refresh"), "status"))) || 0 == o_strcmp("error", json_string_value(json_object_get(json_object_get(j_status, "refresh"), "status"))))) {
-    index = config->nb_refresh_status;
+    index = (int)config->nb_refresh_status;
     refresh_config = o_malloc(sizeof(struct _refresh_config));
     config->refresh_status_list = o_realloc(config->refresh_status_list, (config->nb_refresh_status + 1)*sizeof(struct _refresh_config *));
     if (refresh_config != NULL && config->refresh_status_list != NULL) {
@@ -877,7 +877,7 @@ int data_source_refresh_run(struct config_elements * config, json_t * j_data_sou
       }
       refresh_config->nb_files_read = 0;
       refresh_config->nb_files_total = 0;
-      refresh_config->index = index;
+      refresh_config->index = (unsigned int)index;
       if (!index || data_source_set_refresh_status(config, tds_id, DATA_SOURCE_REFRESH_STATUS_PENDING) == T_OK) {
         thread_refresh_ret = pthread_create(&thread_refresh, NULL, thread_run_refresh_data_source, (void *)refresh_config);
         thread_refresh_detach = pthread_detach(thread_refresh);

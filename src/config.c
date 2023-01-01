@@ -160,7 +160,7 @@ int config_set_values(struct config_elements * config, const char * config_type,
       json_array_foreach(j_config_values, index, j_element) {
         j_config_value = json_pack("{sssO}", "tc_type", config_type, "tc_value", j_element);
         if (0 == o_strcmp(config_type, TALIESIN_CONFIG_COVER_FILE_PATTERN)) {
-          json_object_set_new(j_config_value, "tc_order", json_integer(index));
+          json_object_set_new(j_config_value, "tc_order", json_integer((json_int_t)index));
         }
         json_array_append_new(json_object_get(j_query, "values"), j_config_value);
       }

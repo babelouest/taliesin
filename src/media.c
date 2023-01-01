@@ -47,7 +47,7 @@ json_t * media_get_tags(AVFormatContext * fmt_ctx) {
       value = o_strndup(tag->value, MIN(TALIESIN_TAG_VALUE_LENGTH, o_strlen(tag->value)));
       int i;
       for(i = 0; key[i]; i++){
-        key[i] = tolower(key[i]);
+        key[i] = (char)tolower(key[i]);
       }
       json_object_set_new(to_return, key, json_string(value));
       o_free(key);
@@ -164,7 +164,7 @@ int get_media_cover(AVFormatContext * full_size_cover_format_context, AVCodecCon
     cover_codec = avcodec_find_decoder(full_size_cover_format_context->streams[i]->codecpar->codec_id);
     if (cover_codec->type == AVMEDIA_TYPE_VIDEO) {
       if (cover_codec->id == AV_CODEC_ID_MJPEG) { // TODO See if we can't convert gif or png to jpeg
-        video_stream = i;
+        video_stream = (int)i;
         *full_size_cover_codec_context = avcodec_alloc_context3(cover_codec);
         avcodec_parameters_to_context(*full_size_cover_codec_context, full_size_cover_format_context->streams[i]->codecpar);
         avcodec_open2(*full_size_cover_codec_context, cover_codec, NULL);
@@ -259,10 +259,10 @@ unsigned char * media_get_cover_from_path(const char * path, size_t * size) {
     if (path != NULL && size != NULL) {
       if (!avformat_open_input(&full_size_cover_format_context, path, NULL, NULL)) {
         if ((ret = get_media_cover(full_size_cover_format_context, &full_size_cover_codec_context, full_size_cover_packet)) == T_OK) {
-          cover = o_malloc(full_size_cover_packet->size);
+          cover = o_malloc((size_t)full_size_cover_packet->size);
           if (cover != NULL) {
-            memcpy(cover, full_size_cover_packet->data, full_size_cover_packet->size);
-            *size = full_size_cover_packet->size;
+            memcpy(cover, full_size_cover_packet->data, (size_t)full_size_cover_packet->size);
+            *size = (size_t)full_size_cover_packet->size;
           } else {
             y_log_message(Y_LOG_LEVEL_ERROR, "media_get_cover_from_path - Error allocating resources for cover");
           }
@@ -309,16 +309,16 @@ json_t * media_get_metadata(struct config_elements * config, AVCodecContext * th
               if (full_size_cover_packet != NULL && thumbnail_cover_packet != NULL) {
                 if ((ret = get_media_cover(full_size_cover_format_context, &full_size_cover_codec_context, full_size_cover_packet)) == T_OK) {
                   if (resize_image(full_size_cover_codec_context, thumbnail_cover_codec_context, full_size_cover_packet, thumbnail_cover_packet, TALIESIN_COVER_THUMB_WIDTH, TALIESIN_COVER_THUMB_HEIGHT) >= 0) {
-                    cover_b64 = o_malloc(2 * full_size_cover_packet->size * sizeof(char));
+                    cover_b64 = o_malloc((size_t)(2 * full_size_cover_packet->size));
                     if (cover_b64 != NULL) {
-                      if (o_base64_encode(full_size_cover_packet->data, full_size_cover_packet->size, cover_b64, &cover_b64_len)) {
+                      if (o_base64_encode(full_size_cover_packet->data, (size_t)full_size_cover_packet->size, cover_b64, &cover_b64_len)) {
                         json_object_set_new(j_metadata, "cover", json_stringn((const char *)cover_b64, cover_b64_len));
                       }
                       o_free(cover_b64);
                     }
-                    cover_b64 = o_malloc(2 * thumbnail_cover_packet->size * sizeof(char));
+                    cover_b64 = o_malloc((size_t)(2 * thumbnail_cover_packet->size));
                     if (cover_b64 != NULL) {
-                      if (o_base64_encode(thumbnail_cover_packet->data, thumbnail_cover_packet->size, cover_b64, &cover_b64_len)) {
+                      if (o_base64_encode(thumbnail_cover_packet->data, (size_t)thumbnail_cover_packet->size, cover_b64, &cover_b64_len)) {
                         json_object_set_new(j_metadata, "cover_thumbnail", json_stringn((const char *)cover_b64, cover_b64_len));
                       }
                       o_free(cover_b64);
@@ -392,7 +392,7 @@ json_int_t folder_get_id(struct config_elements * config, json_t * j_data_source
   
   if (o_strlen(path) > 0) {
     if (strchrnul(path, '/') != NULL) {
-      sub_path = o_strndup(path, strchrnul(path, '/') - path);
+      sub_path = o_strndup(path, (size_t)(strchrnul(path, '/') - path));
     } else {
       sub_path = o_strdup(path);
     }
@@ -924,7 +924,7 @@ json_int_t cover_save_new_or_get_id(struct config_elements * config, json_int_t 
   
   cover = json_string_value(json_object_get(json_object_get(j_media, "metadata"), "cover"));
   cover_thumbnail = json_string_value(json_object_get(json_object_get(j_media, "metadata"), "cover_thumbnail"));
-  cover_crc = crc32(cover_crc, (const unsigned char *)cover, o_strlen(cover));
+  cover_crc = crc32(cover_crc, (const unsigned char *)cover, (unsigned int)o_strlen(cover));
   sprintf(cover_crc_str, "0x%08lx", cover_crc);
   j_query = json_pack("{sss[ss]s{ssso}}",
                       "table",
@@ -1109,7 +1109,7 @@ int media_update(struct config_elements * config, json_int_t tm_id, json_t * j_m
   if (json_object_get(json_object_get(j_media, "metadata"), "cover")) {
     cover = json_string_value(json_object_get(json_object_get(j_media, "metadata"), "cover"));
     cover_thumbnail = json_string_value(json_object_get(json_object_get(j_media, "metadata"), "cover_thumbnail"));
-    cover_crc = crc32(cover_crc, (const unsigned char *)cover, o_strlen(cover));
+    cover_crc = crc32(cover_crc, (const unsigned char *)cover, (unsigned int)o_strlen(cover));
     sprintf(cover_crc_str, "0x%08lx", cover_crc);
     j_query = json_pack("{sss[s]s{ss}}",
                         "table",

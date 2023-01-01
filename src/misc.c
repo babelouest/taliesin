@@ -64,32 +64,6 @@ char * url_encode(const char * str) {
   return buf;
 }
 
-/**
- * Returns a url-decoded version of str
- * IMPORTANT: be sure to o_free() the returned string after use
- * Thanks Geek Hideout!
- * http://www.geekhideout.com/urlcode.shtml
- */
-char * url_decode(const char * str) {
-  const char * pstr = str;
-  char * buf = o_malloc(o_strlen(str) + 1), * pbuf = buf;
-  while (* pstr) {
-    if (* pstr == '%') {
-      if (pstr[1] && pstr[2]) {
-        * pbuf++ = from_hex(pstr[1]) << 4 | from_hex(pstr[2]);
-        pstr += 2;
-      }
-    } else if (* pstr == '+') { 
-      * pbuf++ = ' ';
-    } else {
-      * pbuf++ = * pstr;
-    }
-    pstr++;
-  }
-  * pbuf = '\0';
-  return buf;
-}
-
 long random_at_most(long max) {
   unsigned long
   // max <= RAND_MAX < ULONG_MAX, so this is okay.
@@ -106,7 +80,7 @@ long random_at_most(long max) {
   while (num_rand - defect <= (unsigned long)x);
 
   // Truncated division is intentional
-  return x/bin_size;
+  return (x/(long)bin_size);
 }
 
 /**

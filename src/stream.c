@@ -96,10 +96,38 @@ int is_stream_name_taken(struct config_elements * config, const char * stream_ur
   return 0;
 }
 
-json_t * is_stream_parameters_valid(struct config_elements * config, int webradio, const char * stream_url, const char * scope, int is_admin, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate) {
-  json_t * j_result = json_array();
+void is_stream_url_valid(struct config_elements * config, const char * stream_url, json_t * j_result) {
   unsigned int i, j, found;
   const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_";
+  if (o_strlen(stream_url) > TALIESIN_PLAYLIST_NAME_LENGTH || o_strlen(stream_url) < 3) {
+    json_array_append_new(j_result, json_pack("{ss}", "stream_url", "stream_url must be a string of minimum 3 and maximum "TALIESIN_PLAYLIST_NAME_LENGTH_STR" characters"));
+  } else {
+    for (i=0; i<o_strlen(stream_url); i++) {
+      found = 0;
+      for (j=0; j<sizeof(charset); j++) {
+        if (stream_url[i] == charset[j]) {
+          found = 1;
+          break;
+        }
+      }
+      if (!found) {
+        json_array_append_new(j_result, json_pack("{ss}", "stream_url", "invalid stream_url charset"));
+        break;
+      }
+    }
+    if (!pthread_mutex_lock(&config->playlist_lock)) {
+      if (is_stream_name_taken(config, stream_url)) {
+        json_array_append_new(j_result, json_pack("{ss}", "stream_url", "invalid stream_url name"));
+      }
+      pthread_mutex_unlock(&config->playlist_lock);
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "is_stream_parameters_valid - Error locking playlist_lock");
+    }
+  }
+}
+
+json_t * is_stream_parameters_valid(struct config_elements * config, int webradio, const char * stream_url, const char * scope, int is_admin, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate) {
+  json_t * j_result = json_array();
 
   if (j_result != NULL) {
     if (webradio && 0 != o_strcasecmp("mp3", format)) {
@@ -133,31 +161,7 @@ json_t * is_stream_parameters_valid(struct config_elements * config, int webradi
     }
     
     if (!o_strnullempty(stream_url)) {
-      if (o_strlen(stream_url) > TALIESIN_PLAYLIST_NAME_LENGTH || o_strlen(stream_url) < 3) {
-        json_array_append_new(j_result, json_pack("{ss}", "stream_url", "stream_url must be a string of minimum 3 and maximum "TALIESIN_PLAYLIST_NAME_LENGTH_STR" characters"));
-      } else {
-        for (i=0; i<o_strlen(stream_url); i++) {
-          found = 0;
-          for (j=0; j<sizeof(charset); j++) {
-            if (stream_url[i] == charset[j]) {
-              found = 1;
-              break;
-            }
-          }
-          if (!found) {
-            json_array_append_new(j_result, json_pack("{ss}", "stream_url", "invalid stream_url charset"));
-            break;
-          }
-        }
-        if (!pthread_mutex_lock(&config->playlist_lock)) {
-          if (is_stream_name_taken(config, stream_url)) {
-            json_array_append_new(j_result, json_pack("{ss}", "stream_url", "invalid stream_url name"));
-          }
-          pthread_mutex_unlock(&config->playlist_lock);
-        } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "is_stream_parameters_valid - Error locking playlist_lock");
-        }
-      }
+      is_stream_url_valid(config, stream_url, j_result);
     }
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "is_stream_parameters_valid - Error allocating resources for j_result");

@@ -542,6 +542,7 @@ int      jukebox_audio_buffer_init (struct _jukebox_audio_buffer * jukebox_audio
 void     jukebox_audio_buffer_clean (struct _jukebox_audio_buffer * jukebox_audio_buffer);
 int      audio_stream_add_data(struct _audio_stream * stream, uint8_t *buf, int buf_size);
 int      is_stream_name_taken(struct config_elements * config, const char * stream_url);
+void     is_stream_url_valid(struct config_elements * config, const char * stream_url, json_t * j_result);
 
 // Common stream functions
 json_t * stream_list(struct config_elements * config, const char * username);
@@ -557,14 +558,13 @@ json_t         * webradio_get_info(struct _t_webradio * webradio);
 json_t         * webradio_get_file_list(struct config_elements * config, struct _t_webradio * webradio, json_int_t offset, json_int_t limit);
 int              webradio_remove_media_by_index(struct _t_webradio * webradio, unsigned long index, json_int_t * tm_id);
 int              webradio_close(struct config_elements * config, struct _t_webradio * webradio);
-int              webradio_icecast_audio_buffer_add_data(struct _t_webradio * webradio, uint8_t * buf, int buf_size);
 
 int      webradio_open_output_buffer(struct _audio_stream * audio_stream);
 ssize_t  webradio_buffer_metadata(char * buf, size_t max, struct _client_data_webradio * client_data);
 int      audio_buffer_init(struct _audio_buffer * audio_buffer);
 void     audio_buffer_clean(struct _audio_buffer * audio_buffer, int recursive);
 void   * webradio_run_thread(void * args);
-void   * webradio_icecast_run_thread(void * args);
+//void   * webradio_icecast_run_thread(void * args);
 json_t * is_webradio_command_valid(struct config_elements * config, struct _t_webradio * webradio, json_t * j_command, const char * username, int is_admin);
 json_t * webradio_command(struct config_elements * config, struct _t_webradio * webradio, const char * username, json_t * j_command);
 json_t * add_webradio_from_path(struct config_elements * config, const char * stream_url, json_t * j_data_source, const char * path, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, int recursive, short int random, short int icecast, const char * name, struct _t_webradio ** new_webradio);

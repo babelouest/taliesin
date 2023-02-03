@@ -192,7 +192,7 @@ struct _t_file * webradio_get_next_file(struct _t_webradio * webradio, unsigned 
     }
     if (webradio->random) {
       if (webradio->file_list->nb_files > 0) {
-        *index = random_at_most(webradio->file_list->nb_files - 1);
+        *index = (unsigned int)random_at_most(webradio->file_list->nb_files - 1);
       } else {
         y_log_message(Y_LOG_LEVEL_ERROR, "webradio_get_next_file - webradio %s (%s), error no file in list", webradio->name, webradio->display_name);
         return NULL;
@@ -201,7 +201,7 @@ struct _t_file * webradio_get_next_file(struct _t_webradio * webradio, unsigned 
       if (webradio->current_index >= webradio->file_list->nb_files) {
         webradio->current_index = 0;
       }
-      *index = webradio->current_index++;
+      *index = (unsigned int)webradio->current_index++;
     }
     next_file = file_list_get_file(webradio->file_list, *index);
   }
@@ -553,6 +553,7 @@ json_t * add_webradio_from_path(struct config_elements * config,
                                 unsigned int bit_rate,
                                 int recursive,
                                 short int random,
+                                short int icecast,
                                 const char * name,
                                 struct _t_webradio ** new_webradio) {
   json_t * j_result = NULL, * j_media_list, * j_element;
@@ -565,7 +566,7 @@ json_t * add_webradio_from_path(struct config_elements * config,
     if (!pthread_mutex_lock(&config->playlist_lock)) {
       config->webradio_set = o_realloc(config->webradio_set, (config->nb_webradio + 1) * sizeof(struct _t_webradio *));
       if (config->webradio_set != NULL) {
-        webradio_index = config->nb_webradio;
+        webradio_index = (int)config->nb_webradio;
         config->nb_webradio++;
         config->webradio_set[webradio_index] = o_malloc(sizeof(struct _t_webradio));
         if (config->webradio_set[webradio_index] != NULL) {
@@ -581,6 +582,7 @@ json_t * add_webradio_from_path(struct config_elements * config,
             config->webradio_set[webradio_index]->config = config;
             config->webradio_set[webradio_index]->username = o_strdup(username);
             config->webradio_set[webradio_index]->random = random;
+            config->webradio_set[webradio_index]->icecast = icecast;
             config->webradio_set[webradio_index]->display_name = o_strdup(display_name);
             json_array_foreach(json_object_get(j_media_list, "media_list"), index, j_element) {
               if (file_list_enqueue_new_file(config->webradio_set[webradio_index]->file_list, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
@@ -591,7 +593,7 @@ json_t * add_webradio_from_path(struct config_elements * config,
               *new_webradio = config->webradio_set[webradio_index];
             }
             if (webradio_add_db_stream(config, config->webradio_set[webradio_index]) == T_OK) {
-              j_result = json_pack("{sis{sssssssosisisosisos[]ss}}",
+              j_result = json_pack("{sis{sssssssosisisosisosos[]ss}}",
                                     "result", T_OK,
                                     "stream",
                                       "name", config->webradio_set[webradio_index]->name,
@@ -603,8 +605,10 @@ json_t * add_webradio_from_path(struct config_elements * config,
                                       "webradio", json_true(),
                                       "elements", config->webradio_set[webradio_index]->file_list->nb_files,
                                       "random", random?json_true():json_false(),
-                                      "clients", "scope",
-                                      username!=NULL?"me":"all");
+                                      "icecast", icecast?json_true():json_false(),
+                                      "clients",
+                                      "scope",
+                                        username!=NULL?"me":"all");
             } else {
               y_log_message(Y_LOG_LEVEL_ERROR, "add_webradio_from_path - Error webradio_add_db_stream");
               j_result = json_pack("{si}", "result", T_ERROR);
@@ -644,6 +648,7 @@ json_t * add_webradio_from_playlist(struct config_elements * config,
                                     unsigned int sample_rate,
                                     unsigned int bit_rate,
                                     short int random,
+                                    short int icecast,
                                     const char * name,
                                     struct _t_webradio ** new_webradio) {
   json_t * j_result = NULL, * j_element;
@@ -653,7 +658,7 @@ json_t * add_webradio_from_playlist(struct config_elements * config,
   if (!pthread_mutex_lock(&config->playlist_lock)) {
     config->webradio_set = o_realloc(config->webradio_set, (config->nb_webradio + 1) * sizeof(struct _t_webradio *));
     if (config->webradio_set != NULL) {
-      webradio_index = config->nb_webradio;
+      webradio_index = (int)config->nb_webradio;
       config->nb_webradio++;
       config->webradio_set[webradio_index] = o_malloc(sizeof(struct _t_webradio));
       if (config->webradio_set[webradio_index] != NULL) {
@@ -661,6 +666,7 @@ json_t * add_webradio_from_playlist(struct config_elements * config,
           config->webradio_set[webradio_index]->config = config;
           config->webradio_set[webradio_index]->username = o_strdup(username);
           config->webradio_set[webradio_index]->random = random;
+          config->webradio_set[webradio_index]->icecast = icecast;
           if (name == NULL) {
             config->webradio_set[webradio_index]->display_name = o_strdup(json_string_value(json_object_get(j_playlist, "name")));
           } else {
@@ -677,7 +683,7 @@ json_t * add_webradio_from_playlist(struct config_elements * config,
             *new_webradio = config->webradio_set[webradio_index];
           }
           if (webradio_add_db_stream(config, config->webradio_set[webradio_index]) == T_OK) {
-            j_result = json_pack("{sis{sssssssosisisosisos[]ss}}",
+            j_result = json_pack("{sis{sssssssosisisosisosos[]ss}}",
                                   "result", T_OK,
                                   "stream",
                                     "name", config->webradio_set[webradio_index]->name,
@@ -689,8 +695,10 @@ json_t * add_webradio_from_playlist(struct config_elements * config,
                                     "webradio", json_true(),
                                     "elements", config->webradio_set[webradio_index]->file_list->nb_files,
                                     "random", random?json_true():json_false(),
-                                    "clients", "scope",
-                                    username!=NULL?"me":"all");
+                                    "icecast", icecast?json_true():json_false(),
+                                    "clients",
+                                    "scope",
+                                      username!=NULL?"me":"all");
           } else {
             y_log_message(Y_LOG_LEVEL_ERROR, "add_webradio_from_playlist - Error webradio_add_db_stream");
             j_result = json_pack("{si}", "result", T_ERROR);
@@ -722,16 +730,17 @@ int add_webradio_from_db_stream(struct config_elements * config, json_t * j_stre
   if (!pthread_mutex_lock(&config->playlist_lock)) {
     config->webradio_set = o_realloc(config->webradio_set, (config->nb_webradio + 1) * sizeof(struct _t_webradio *));
     if (config->webradio_set != NULL) {
-      webradio_index = config->nb_webradio;
+      webradio_index = (int)config->nb_webradio;
       config->nb_webradio++;
       config->webradio_set[webradio_index] = o_malloc(sizeof(struct _t_webradio));
       if (config->webradio_set[webradio_index] != NULL) {
-        if (webradio_init(config->webradio_set[webradio_index], json_string_value(json_object_get(j_stream, "name")), json_string_value(json_object_get(j_stream, "format")), json_integer_value(json_object_get(j_stream, "channels")), json_integer_value(json_object_get(j_stream, "sample_rate")), json_integer_value(json_object_get(j_stream, "bitrate"))) == T_OK) {
+        if (webradio_init(config->webradio_set[webradio_index], json_string_value(json_object_get(j_stream, "name")), json_string_value(json_object_get(j_stream, "format")), (short unsigned int)json_integer_value(json_object_get(j_stream, "channels")), (unsigned int)json_integer_value(json_object_get(j_stream, "sample_rate")), (unsigned int)json_integer_value(json_object_get(j_stream, "bitrate"))) == T_OK) {
           config->webradio_set[webradio_index]->config = config;
           config->webradio_set[webradio_index]->username = json_object_get(j_stream, "username")!=json_null()?o_strdup(json_string_value(json_object_get(j_stream, "username"))):NULL;
           config->webradio_set[webradio_index]->display_name = o_strdup(json_string_value(json_object_get(j_stream, "display_name")));
-          config->webradio_set[webradio_index]->random = json_integer_value(json_object_get(j_stream, "random"));
-          config->webradio_set[webradio_index]->current_index = json_integer_value(json_object_get(j_stream, "current_index"));
+          config->webradio_set[webradio_index]->random = (short int)json_integer_value(json_object_get(j_stream, "random"));
+          config->webradio_set[webradio_index]->icecast = (short int)(json_integer_value(json_object_get(j_stream, "webradio"))==2);
+          config->webradio_set[webradio_index]->current_index = (long unsigned int)json_integer_value(json_object_get(j_stream, "current_index"));
           config->webradio_set[webradio_index]->tpl_id = json_object_get(j_stream, "tpl_id")!=json_null()?json_integer_value(json_object_get(j_stream, "tpl_id")):0;
           if (config->webradio_set[webradio_index]->tpl_id) {
             j_playlist = playlist_get_by_id(config, config->webradio_set[webradio_index]->tpl_id);
@@ -798,30 +807,20 @@ json_t * webradio_get_info(struct _t_webradio * webradio) {
   json_t * j_stream = NULL, * j_client;
   
   if (webradio != NULL && webradio->audio_stream != NULL) {
-    j_stream = json_pack("{sis{sssssososisssosisiss}}",
-                          "result",
-                          T_OK,
+    j_stream = json_pack("{sis{sssssbsosbsisssbsisiss}}",
+                          "result", T_OK,
                           "webradio",
-                            "name",
-                            webradio->name,
-                            "display_name",
-                            webradio->display_name,
-                            "random",
-                            webradio->random?json_true():json_false(),
-                            "webradio",
-                            json_true(),
-                            "elements",
-                            webradio->file_list->nb_files,
-                            "format",
-                            webradio->audio_stream->stream_format,
-                            "stereo",
-                            webradio->audio_stream->stream_channels==2?json_true():json_false(),
-                            "sample_rate",
-                            webradio->audio_stream->stream_sample_rate,
-                            "bitrate",
-                            webradio->audio_stream->stream_bitrate,
-                            "scope",
-                            webradio->username!=NULL?"me":"all");
+                            "name", webradio->name,
+                            "display_name", webradio->display_name,
+                            "random", webradio->random,
+                            "webradio", json_true(),
+                            "icecast", webradio->icecast,
+                            "elements", webradio->file_list->nb_files,
+                            "format", webradio->audio_stream->stream_format,
+                            "stereo", webradio->audio_stream->stream_channels==2,
+                            "sample_rate", webradio->audio_stream->stream_sample_rate,
+                            "bitrate", webradio->audio_stream->stream_bitrate,
+                            "scope", webradio->username!=NULL?"me":"all");
     j_client = webradio_get_clients(webradio);
     if (check_result_value(j_client, T_OK)) {
       json_object_set(json_object_get(j_stream, "webradio"), "clients", json_object_get(j_client, "clients"));
@@ -956,7 +955,7 @@ int audio_stream_add_data(struct _audio_stream * stream, uint8_t * buf, int buf_
     if (pthread_mutex_lock(&stream->write_lock)) {
       return -1;
     }
-    while (buffer->size + buf_size > buffer->max_size) {
+    while (buffer->size + (size_t)buf_size > buffer->max_size) {
       buffer->data = o_realloc(buffer->data, buffer->max_size + TALIESIN_STREAM_BUFFER_INC_SIZE);
       if (buffer->data == NULL) {
         y_log_message(Y_LOG_LEVEL_ERROR, "Error reallocating buffer->data");
@@ -966,8 +965,8 @@ int audio_stream_add_data(struct _audio_stream * stream, uint8_t * buf, int buf_
       }
     }
     if (buffer->max_size) {
-      memcpy(buffer->data + buffer->size, buf, buf_size);
-      buffer->size += buf_size;
+      memcpy(buffer->data + buffer->size, buf, (size_t)buf_size);
+      buffer->size += (size_t)buf_size;
       ret = 0;
     }
     pthread_mutex_unlock(&stream->write_lock);
@@ -1361,12 +1360,26 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
     webradio_close(config, webradio);
     j_return = json_pack("{si}", "result", T_OK);
   } else if (0 == o_strcmp(str_command, "reset_url")) {
-    strcpy(old_name, webradio->name);
-    rand_string(webradio->name, TALIESIN_PLAYLIST_NAME_LENGTH);
-    if (webradio_set_name_db_stream(config, old_name, webradio->name) == T_OK) {
-      j_return = json_pack("{sis{ss}}", "result", T_OK, "command", "name", webradio->name);
+    o_strcpy(old_name, webradio->name);
+    if (json_is_string(json_object_get(json_object_get(j_command, "parameters"), "streamUrl"))) {
+      j_result = json_array();
+      is_stream_url_valid(config, json_string_value(json_object_get(json_object_get(j_command, "parameters"), "streamUrl")), j_result);
+      if (!json_array_size(j_result)) {
+        bzero(webradio->name, TALIESIN_PLAYLIST_NAME_LENGTH);
+        o_strncpy(webradio->name, json_string_value(json_object_get(json_object_get(j_command, "parameters"), "streamUrl")), TALIESIN_PLAYLIST_NAME_LENGTH);
+      } else {
+        j_return = json_pack("{si}", "result", T_ERROR);
+      }
+      json_decref(j_result);
     } else {
-      j_return = json_pack("{si}", "result", T_ERROR);
+      rand_string(webradio->name, TALIESIN_PLAYLIST_NAME_LENGTH);
+    }
+    if (j_return == NULL) {
+      if (webradio_set_name_db_stream(config, old_name, webradio->name) == T_OK) {
+        j_return = json_pack("{sis{ss}}", "result", T_OK, "command", "name", webradio->name);
+      } else {
+        j_return = json_pack("{si}", "result", T_ERROR);
+      }
     }
   } else if (0 == o_strcmp(str_command, "replay")) {
     for (i=0; i<webradio->audio_stream->nb_client_connected; i++) {
@@ -1510,7 +1523,7 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
     j_return = json_pack("{si}", "result", ret);
   } else if (0 == o_strcmp(str_command, "remove_list")) {
     if (json_object_get(json_object_get(j_command, "parameters"), "index") != NULL) {
-      if (webradio_remove_media_by_index(webradio, json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "index")), &tm_id) == T_OK) {
+      if (webradio_remove_media_by_index(webradio, (long unsigned int)json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "index")), &tm_id) == T_OK) {
         if (webradio_delete_db_stream_media(config, webradio, tm_id) == T_OK) {
           j_return = json_pack("{si}", "result", T_OK);
         } else {
@@ -1649,7 +1662,7 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
       if (move_index < move_target) {
         move_target--;
       }
-      file = file_list_dequeue_file(webradio->file_list, move_index);
+      file = file_list_dequeue_file(webradio->file_list, (long unsigned int)move_index);
       if (file != NULL) {
         if ((ret = file_list_insert_file_at(webradio->file_list, file, (unsigned long)move_target)) == T_OK) {
           if (webradio_update_db_stream_media_list(config, webradio) == T_OK) {
@@ -1734,8 +1747,9 @@ void * webradio_run_thread(void * args) {
     }
     path = msprintf("%s/%s", json_string_value(json_object_get(json_object_get(j_media, "media"), "path_ds")), json_string_value(json_object_get(json_object_get(j_media, "media"), "path_media")));
     if (!open_input_file(path, &input_format_context, &input_codec_context, AVMEDIA_TYPE_AUDIO)) {
+      y_log_message(Y_LOG_LEVEL_INFO, "Transcode for stream '%s' (icecast: %s) file '%s'", webradio->display_name, webradio->icecast?"yes":"no", path);
       duration = (input_format_context->duration/AV_TIME_BASE);
-      if (audio_stream_enqueue_buffer(webradio, ((duration + 1) * webradio->audio_stream->stream_bitrate / 8), title, current_file, current_index) != T_OK) {
+      if (audio_stream_enqueue_buffer(webradio, (size_t)((duration + 1) * webradio->audio_stream->stream_bitrate / 8), title, current_file, current_index) != T_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "Error enqueing buffer_stream of size %u", ((duration + 1) * webradio->audio_stream->stream_bitrate / 8));
       } else {
         current_buffer = webradio->audio_stream->last_buffer;
@@ -1872,7 +1886,7 @@ ssize_t u_webradio_stream (void * cls, uint64_t pos, char * buf, size_t max) {
   
   // If no more buffer or stream is stopped, close stream
   if (client_data_webradio->current_buffer == NULL || stream->status == TALIESIN_STREAM_STATUS_STOPPED) {
-    return U_STREAM_END;
+    return (ssize_t)U_STREAM_END;
   } else if (client_data_webradio->command != TALIESIN_STREAM_COMMAND_NONE && !client_data_webradio->send_header) {
     // Handle command replay or next
     switch (client_data_webradio->command) {
@@ -1889,10 +1903,10 @@ ssize_t u_webradio_stream (void * cls, uint64_t pos, char * buf, size_t max) {
       case TALIESIN_STREAM_COMMAND_NEXT:
         if (client_data_webradio->buffer_offset == client_data_webradio->current_buffer->size || client_data_webradio->current_buffer->offset_list[client_data_webradio->current_buffer->last_offset] == client_data_webradio->buffer_offset) {
           if ((res = stream_get_next_buffer(client_data_webradio)) == T_ERROR_NOT_FOUND) {
-            return U_STREAM_END;
+            return (ssize_t)U_STREAM_END;
           } else if (res != T_OK) {
             y_log_message(Y_LOG_LEVEL_ERROR, "Error getting next buffer");
-            return U_STREAM_END;
+            return (ssize_t)U_STREAM_END;
           }
           client_data_webradio->buffer_offset = 0;
           client_data_webradio->command = TALIESIN_STREAM_COMMAND_NONE;
@@ -1913,13 +1927,13 @@ ssize_t u_webradio_stream (void * cls, uint64_t pos, char * buf, size_t max) {
     time_should = ((uint64_t)client_data_webradio->global_offset * 1000000000) / (stream_bitrate / 8);
     if (time_should > time_delta) {
       diff = time_should - time_delta;
-      nsleep.tv_sec = diff / 1000000000;
-      nsleep.tv_nsec = diff % 1000000000;
+      nsleep.tv_sec = (__time_t)(diff / 1000000000);
+      nsleep.tv_nsec = (__syscall_slong_t)(diff % 1000000000);
       nanosleep(&nsleep, NULL);
     }
     
     if (stream->status == TALIESIN_STREAM_STATUS_STOPPED) {
-      return U_STREAM_END;
+      return (ssize_t)U_STREAM_END;
     }
     
     // Calculate buffer len to send
@@ -1928,51 +1942,49 @@ ssize_t u_webradio_stream (void * cls, uint64_t pos, char * buf, size_t max) {
     } else {
       current_offset = client_data_webradio->buffer_offset;
     }
-    len = max<(client_data_webradio->current_buffer->size - current_offset) ? max : (client_data_webradio->current_buffer->size - current_offset);
-    if (client_data_webradio->command == TALIESIN_STREAM_COMMAND_NEXT) {
-    }
+    len = (ssize_t)(max<(client_data_webradio->current_buffer->size - current_offset) ? max : (client_data_webradio->current_buffer->size - current_offset));
     if (client_data_webradio->command == TALIESIN_STREAM_COMMAND_NEXT &&
         !client_data_webradio->send_header &&
         client_data_webradio->current_buffer->last_offset < client_data_webradio->current_buffer->nb_offset &&
-        client_data_webradio->buffer_offset + len > client_data_webradio->current_buffer->offset_list[client_data_webradio->current_buffer->last_offset + 1]) {
-      tmp_len = (client_data_webradio->current_buffer->offset_list[client_data_webradio->current_buffer->last_offset + 1] - client_data_webradio->buffer_offset);
+        (ssize_t)client_data_webradio->buffer_offset + (ssize_t)len > (ssize_t)client_data_webradio->current_buffer->offset_list[client_data_webradio->current_buffer->last_offset + 1]) {
+      tmp_len = (ssize_t)(client_data_webradio->current_buffer->offset_list[client_data_webradio->current_buffer->last_offset + 1] - client_data_webradio->buffer_offset);
       len = (ssize_t)max < tmp_len ? (ssize_t)max : tmp_len;
     }
     while (len < (ssize_t)max && !client_data_webradio->current_buffer->complete) {
       // Wait until current_buffer is full or len is equal to max
       usleep(50000);
-      len = max<(client_data_webradio->current_buffer->size - current_offset) ? max : (client_data_webradio->current_buffer->size - current_offset);
+      len = max<(client_data_webradio->current_buffer->size - current_offset) ? (ssize_t)max : (ssize_t)(client_data_webradio->current_buffer->size - current_offset);
     }
     
     // Calculate if we're supposed to send metadata
-    if (client_data_webradio->metadata_send == 0 && client_data_webradio->metadata_offset + len >= (stream_bitrate / 8 * TALIESIN_STREAM_METADATA_INTERVAL)) {
+    if (client_data_webradio->metadata_send == 0 && client_data_webradio->metadata_offset + (long unsigned int)len >= (stream_bitrate / 8 * TALIESIN_STREAM_METADATA_INTERVAL)) {
       // Send metadata in next round
-      len = (stream_bitrate / 8 * TALIESIN_STREAM_METADATA_INTERVAL) - client_data_webradio->metadata_offset;
+      len = (ssize_t)((stream_bitrate / 8 * TALIESIN_STREAM_METADATA_INTERVAL) - client_data_webradio->metadata_offset);
       client_data_webradio->metadata_send = 1;
     } else {
-      client_data_webradio->metadata_offset += len;
+      client_data_webradio->metadata_offset += (long unsigned int)len;
     }
     
-    memcpy(buf, client_data_webradio->current_buffer->data + current_offset, len);
-    client_data_webradio->global_offset += len;
-    next_buffer = (current_offset + len >= client_data_webradio->current_buffer->size);
+    memcpy(buf, client_data_webradio->current_buffer->data + current_offset, (size_t)len);
+    client_data_webradio->global_offset += (long unsigned int)len;
+    next_buffer = (current_offset + (size_t)len >= client_data_webradio->current_buffer->size);
     if (next_buffer) {
       if ((res = stream_get_next_buffer(client_data_webradio)) == T_ERROR_NOT_FOUND) {
-        return U_STREAM_END;
+        return (ssize_t)U_STREAM_END;
       } else if (res != T_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "Error getting next buffer");
-        return U_STREAM_END;
+        return (ssize_t)U_STREAM_END;
       }
     } else {
       if (client_data_webradio->send_header) {
-        client_data_webradio->header_offset += len;
+        client_data_webradio->header_offset += (long unsigned int)len;
       } else {
-        client_data_webradio->buffer_offset += len;
+        client_data_webradio->buffer_offset += (long unsigned int)len;
         if (pthread_mutex_lock(&client_data_webradio->current_buffer->buffer_lock)) {
           y_log_message(Y_LOG_LEVEL_ERROR, "Impossible to initialize Mutex Lock for current_buffer");
         } else {
           for (i = client_data_webradio->current_buffer->last_offset + 1; i < client_data_webradio->current_buffer->nb_offset && client_data_webradio->current_buffer->offset_list[i] <= client_data_webradio->buffer_offset; i++) {
-            client_data_webradio->current_buffer->last_offset = i;
+            client_data_webradio->current_buffer->last_offset = (unsigned int)i;
           }
           pthread_mutex_unlock(&client_data_webradio->current_buffer->buffer_lock);
         }
@@ -2051,13 +2063,173 @@ ssize_t webradio_buffer_metadata(char * buf, size_t max, struct _client_data_web
       client_data->metadata_offset = 0;
       o_free(client_data->metadata_buffer);
       client_data->metadata_buffer = NULL;
-      len = client_data->metadata_len - client_data->metadata_current_offset;
+      len = (ssize_t)(client_data->metadata_len - client_data->metadata_current_offset);
       client_data->metadata_current_offset = client_data->metadata_len;
     } else {
       memcpy(buf, client_data->metadata_buffer + client_data->metadata_current_offset, max);
       client_data->metadata_current_offset += max;
-      len = max;
+      len = (ssize_t)max;
     }
   }
   return len;
 }
+
+/*
+    do {
+      ret = 1;
+      if ((shout = shout_new()) == NULL) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_new");
+        ret = 0;
+        break;
+      }
+      if (shout_set_host(shout, webradio->config->icecast_host) != SHOUTERR_SUCCESS) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_host");
+        ret = 0;
+        break;
+      }
+
+      if (shout_set_protocol(shout, SHOUT_PROTOCOL_HTTP) != SHOUTERR_SUCCESS) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_protocol");
+        ret = 0;
+        break;
+      }
+
+      if (shout_set_port(shout, (short unsigned int)webradio->config->icecast_port) != SHOUTERR_SUCCESS) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_port");
+        ret = 0;
+        break;
+      }
+
+      if (shout_set_user(shout, webradio->config->icecast_user) != SHOUTERR_SUCCESS) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_user");
+        ret = 0;
+        break;
+      }
+
+      if (shout_set_password(shout, webradio->config->icecast_password) != SHOUTERR_SUCCESS) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_password");
+        ret = 0;
+        break;
+      }
+
+      icecast_mount = msprintf("%s/%s", webradio->config->icecast_mount_prefix, webradio->name);
+      if (shout_set_mount(shout, icecast_mount) != SHOUTERR_SUCCESS) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_mount %s", icecast_mount);
+        ret = 0;
+        break;
+      }
+
+      if (shout_set_format(shout, SHOUT_FORMAT_MP3) != SHOUTERR_SUCCESS) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_format");
+        ret = 0;
+        break;
+      }
+
+      if (shout_open(shout) != SHOUTERR_SUCCESS) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_open");
+        ret = 0;
+        break;
+      }
+
+    } while (0);
+    o_free(icecast_mount);
+void * webradio_icecast_run_thread(void * args) {
+  struct _t_webradio                      * webradio = (struct _t_webradio *)args;
+  //struct _client_data_jukebox * client_data_jukebox  = (struct _client_data_jukebox *)args;
+  struct config_elements      * config               = client_data_jukebox->jukebox->config;
+  AVFormatContext             * input_format_context = NULL, * output_format_context = NULL;
+  AVCodecContext              * input_codec_context  = NULL, * output_codec_context  = NULL;
+  SwrContext                  * resample_context     = NULL;
+  AVAudioFifo                 * fifo                 = NULL;
+  int64_t pts = 0;
+  int output_frame_size, finished = 0, error, data_present = 0, data_written = 0;
+  char * path = NULL;
+  json_t * j_media;
+  
+  if (!open_output_buffer_jukebox(client_data_jukebox->audio_buffer, &output_format_context, &output_codec_context, &fifo)) {
+    j_media = media_get_by_id_for_stream(config, client_data_jukebox->audio_buffer->file->tm_id);
+    if (check_result_value(j_media, T_OK)) {
+      path = msprintf("%s/%s", json_string_value(json_object_get(json_object_get(j_media, "media"), "path_ds")), json_string_value(json_object_get(json_object_get(j_media, "media"), "path_media")));
+      if (!open_input_file(path, &input_format_context, &input_codec_context, AVMEDIA_TYPE_AUDIO) && !init_resampler(input_codec_context, output_codec_context, &resample_context)) {
+        if (media_add_history(config, client_data_jukebox->jukebox->name, client_data_jukebox->jukebox->tpl_id, client_data_jukebox->audio_buffer->file->tm_id) != T_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_run_thread - Error media_add_history");
+        }
+        while (client_data_jukebox->audio_buffer->status != TALIESIN_STREAM_STATUS_STOPPED) {
+          output_frame_size = output_codec_context->frame_size;
+          finished          = 0;
+          error             = 0;
+          while (av_audio_fifo_size(fifo) < output_frame_size && !error) {
+            if (read_decode_convert_and_store(fifo, input_format_context, input_codec_context, output_codec_context, resample_context, &finished)) {
+              error = 1;
+            }
+            if (finished) {
+              break;
+            }
+          }
+          while ((av_audio_fifo_size(fifo) >= output_frame_size || (finished && av_audio_fifo_size(fifo) > 0)) && !error) {
+            if (load_encode_and_return(fifo, output_codec_context, output_format_context, &pts, &data_present)) {
+              error = 1;
+            }
+          }
+          if (finished && !error) {
+            do {
+              if (encode_audio_frame_and_return(NULL, output_codec_context, output_format_context, &pts, &data_written)) {
+                error = 1;
+              }
+            } while (data_written && !error);
+            break;
+          }
+        }
+        if (client_data_jukebox->audio_buffer->status != TALIESIN_STREAM_STATUS_STOPPED) {
+          if (av_write_trailer(output_format_context)) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "Error av_write_trailer");
+          }
+        }
+        client_data_jukebox->audio_buffer->complete = 1;
+        avcodec_flush_buffers(output_codec_context);
+        client_data_jukebox->audio_buffer->status = TALIESIN_STREAM_STATUS_COMPLETED;
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_run_thread - Error opening input file or resample context");
+      }
+      if (resample_context) {
+        swr_close(resample_context);
+        swr_free(&resample_context);
+        resample_context = NULL;
+      }
+      if (input_codec_context) {
+        avcodec_free_context(&input_codec_context);
+        input_codec_context = NULL;
+      }
+      if (output_codec_context) {
+        avcodec_free_context(&output_codec_context);
+        output_codec_context = NULL;
+      }
+      if (input_format_context) {
+        avformat_close_input(&input_format_context);
+        input_format_context = NULL;
+      }
+      
+      if (output_format_context != NULL) {
+        avio_flush(output_format_context->pb);
+        av_free(output_format_context->pb->buffer);
+        av_free(output_format_context->pb);
+        avformat_free_context(output_format_context);
+      }
+      av_audio_fifo_free(fifo);
+      pthread_mutex_lock(&client_data_jukebox->audio_buffer->stream_lock);
+      pthread_cond_wait(&client_data_jukebox->audio_buffer->stream_cond, &client_data_jukebox->audio_buffer->stream_lock);
+      pthread_mutex_unlock(&client_data_jukebox->audio_buffer->stream_lock);
+      o_free(path);
+      path = NULL;
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_run_thread - Error invalid media id %"JSON_INTEGER_FORMAT, client_data_jukebox->audio_buffer->file->tm_id);
+    }
+    json_decref(j_media);
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_run_thread - Error opening output buffer");
+  }
+  jukebox_audio_buffer_clean(client_data_jukebox->audio_buffer);
+  clean_client_data_jukebox(client_data_jukebox);
+  return NULL;
+}
+ */

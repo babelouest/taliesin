@@ -251,8 +251,8 @@ int read_decode_convert_and_store(AVAudioFifo *fifo,
       } else {
         /* If there is decoded data, convert and store it. */
         if (data_present) {
-          out_samples = av_rescale_rnd(swr_get_delay(resample_context, output_codec_context->sample_rate) + input_frame->nb_samples, input_codec_context->sample_rate, output_codec_context->sample_rate, AV_ROUND_UP);
-          if (!(converted_input_samples = calloc(output_codec_context->channels, sizeof(uint8_t *)))) {
+          out_samples = (int)av_rescale_rnd(swr_get_delay(resample_context, output_codec_context->sample_rate) + input_frame->nb_samples, input_codec_context->sample_rate, output_codec_context->sample_rate, AV_ROUND_UP);
+          if (!(converted_input_samples = calloc((size_t)output_codec_context->channels, sizeof(uint8_t *)))) {
             y_log_message(Y_LOG_LEVEL_ERROR, "Could not allocate converted input sample pointers");
             ret = AVERROR(ENOMEM);
           } else {
@@ -431,7 +431,7 @@ int webradio_open_output_buffer(struct _audio_stream * audio_stream) {
   } else if ((avctx = avcodec_alloc_context3(output_codec)) == NULL) {
     y_log_message(Y_LOG_LEVEL_ERROR, "Could not allocate an encoding context");
     error = AVERROR(ENOMEM);
-  } else if ((output_io_context = avio_alloc_context(avio_ctx_buffer, avio_ctx_buffer_size, 1, audio_stream, NULL, &write_packet_webradio, NULL)) == NULL) {
+  } else if ((output_io_context = avio_alloc_context(avio_ctx_buffer, (int)avio_ctx_buffer_size, 1, audio_stream, NULL, &write_packet_webradio, NULL)) == NULL) {
     y_log_message(Y_LOG_LEVEL_ERROR, "Error avio_alloc_context");
     error = AVERROR(ENOMEM);
   } else {
@@ -445,14 +445,14 @@ int webradio_open_output_buffer(struct _audio_stream * audio_stream) {
         error = AVERROR(ENOMEM);
       } else {
         avctx->channels       = audio_stream->stream_channels;
-        avctx->channel_layout = av_get_default_channel_layout(audio_stream->stream_channels);
-        avctx->sample_rate    = audio_stream->stream_sample_rate;
+        avctx->channel_layout = (uint64_t)av_get_default_channel_layout(audio_stream->stream_channels);
+        avctx->sample_rate    = (int)audio_stream->stream_sample_rate;
         avctx->sample_fmt     = output_codec->sample_fmts[0];
         if (0 != o_strcasecmp("flac", audio_stream->stream_format)) {
           avctx->bit_rate     = audio_stream->stream_bitrate;
         }
         avctx->strict_std_compliance = FF_COMPLIANCE_NORMAL;
-        stream->time_base.den = audio_stream->stream_sample_rate;
+        stream->time_base.den = (int)audio_stream->stream_sample_rate;
         stream->time_base.num = 1;
 
         if ((error = avcodec_open2(avctx, output_codec, NULL)) < 0) {
@@ -499,10 +499,11 @@ struct _decoded_image {
 static int read_image_packet(void * opaque, uint8_t * buf, int buf_size) {
   struct _decoded_image * image = (struct _decoded_image *)opaque;
   
-  buf_size = FFMIN(buf_size, (image->size-image->context_size));
-  if (buf_size)
-  memcpy(buf, (image->buffer + image->context_size), buf_size);
-  image->context_size += buf_size;
+  buf_size = (int)FFMIN((size_t)buf_size, (image->size-image->context_size));
+  if (buf_size) {
+    memcpy(buf, (image->buffer + image->context_size), (size_t)buf_size);
+  }
+  image->context_size += (size_t)buf_size;
   
   return buf_size;
 }
@@ -526,7 +527,7 @@ int open_input_buffer(const unsigned char * base64_buffer, AVFormatContext **ima
   } else if ((avio_ctx_buffer = av_malloc(avio_ctx_buffer_size)) == NULL) {
     y_log_message(Y_LOG_LEVEL_ERROR, "get_image_from_buffer - Error malloc avio_ctx_buffer");
     ret = T_ERROR_MEMORY;
-  } else if ((input_io_context = avio_alloc_context(avio_ctx_buffer, avio_ctx_buffer_size, 0, &image, &read_image_packet, NULL, NULL)) == NULL) {
+  } else if ((input_io_context = avio_alloc_context(avio_ctx_buffer, (int)avio_ctx_buffer_size, 0, &image, &read_image_packet, NULL, NULL)) == NULL) {
     y_log_message(Y_LOG_LEVEL_ERROR, "get_image_from_buffer - Error avio_alloc_context");
     ret = T_ERROR_MEMORY;
   } else if (((*image_format_context) = avformat_alloc_context()) == NULL) {
@@ -646,7 +647,7 @@ int open_output_buffer_jukebox(struct _jukebox_audio_buffer * jukebox_audio_buff
   } else if ((avctx = avcodec_alloc_context3(output_codec)) == NULL) {
     y_log_message(Y_LOG_LEVEL_ERROR, "Could not allocate an encoding context");
     error = AVERROR(ENOMEM);
-  } else if ((output_io_context = avio_alloc_context(avio_ctx_buffer, avio_ctx_buffer_size, 1, jukebox_audio_buffer, NULL, &write_packet_jukebox, NULL)) == NULL) {
+  } else if ((output_io_context = avio_alloc_context(avio_ctx_buffer, (int)avio_ctx_buffer_size, 1, jukebox_audio_buffer, NULL, &write_packet_jukebox, NULL)) == NULL) {
     y_log_message(Y_LOG_LEVEL_ERROR, "Error avio_alloc_context");
     error = AVERROR(ENOMEM);
   } else {
@@ -660,14 +661,14 @@ int open_output_buffer_jukebox(struct _jukebox_audio_buffer * jukebox_audio_buff
         error = AVERROR(ENOMEM);
       } else {
         avctx->channels       = jukebox_audio_buffer->jukebox->stream_channels;
-        avctx->channel_layout = av_get_default_channel_layout(jukebox_audio_buffer->jukebox->stream_channels);
-        avctx->sample_rate    = jukebox_audio_buffer->jukebox->stream_sample_rate;
+        avctx->channel_layout = (uint64_t)av_get_default_channel_layout(jukebox_audio_buffer->jukebox->stream_channels);
+        avctx->sample_rate    = (int)jukebox_audio_buffer->jukebox->stream_sample_rate;
         avctx->sample_fmt     = output_codec->sample_fmts[0];
         if (0 != o_strcasecmp("flac", jukebox_audio_buffer->jukebox->stream_format)) {
           avctx->bit_rate     = jukebox_audio_buffer->jukebox->stream_bitrate;
         }
         avctx->strict_std_compliance = FF_COMPLIANCE_NORMAL;
-        stream->time_base.den = jukebox_audio_buffer->jukebox->stream_sample_rate;
+        stream->time_base.den = (int)jukebox_audio_buffer->jukebox->stream_sample_rate;
         stream->time_base.num = 1;
 
         if ((error = avcodec_open2(avctx, output_codec, NULL)) < 0) {

@@ -1132,12 +1132,26 @@ json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * ju
       j_return = json_pack("{si}", "result", T_ERROR_MEMORY);
     }
   } else if (0 == o_strcmp(str_command, "reset_url")) {
-    strcpy(old_name, jukebox->name);
-    rand_string(jukebox->name, TALIESIN_PLAYLIST_NAME_LENGTH);
-    if (jukebox_set_name_db_stream(config, old_name, jukebox->name) == T_OK) {
-      j_return = json_pack("{sis{ss}}", "result", T_OK, "command", "name", jukebox->name);
+    o_strcpy(old_name, jukebox->name);
+    if (json_is_string(json_object_get(json_object_get(j_command, "parameters"), "streamUrl"))) {
+      j_result = json_array();
+      is_stream_url_valid(config, json_string_value(json_object_get(json_object_get(j_command, "parameters"), "streamUrl")), j_result);
+      if (!json_array_size(j_result)) {
+        bzero(jukebox->name, TALIESIN_PLAYLIST_NAME_LENGTH);
+        o_strncpy(jukebox->name, json_string_value(json_object_get(json_object_get(j_command, "parameters"), "streamUrl")), TALIESIN_PLAYLIST_NAME_LENGTH);
+      } else {
+        j_return = json_pack("{si}", "result", T_ERROR);
+      }
+      json_decref(j_result);
     } else {
-      j_return = json_pack("{si}", "result", T_ERROR);
+      rand_string(jukebox->name, TALIESIN_PLAYLIST_NAME_LENGTH);
+    }
+    if (j_return == NULL) {
+      if (jukebox_set_name_db_stream(config, old_name, jukebox->name) == T_OK) {
+        j_return = json_pack("{sis{ss}}", "result", T_OK, "command", "name", jukebox->name);
+      } else {
+        j_return = json_pack("{si}", "result", T_ERROR);
+      }
     }
   } else if (0 == o_strcmp(str_command, "history")) {
     if (json_object_get(json_object_get(j_command, "parameters"), "offset") != NULL) {

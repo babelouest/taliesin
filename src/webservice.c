@@ -107,7 +107,7 @@ int callback_taliesin_options (const struct _u_request * request, struct _u_resp
  */
 int callback_taliesin_server_configuration (const struct _u_request * request, struct _u_response * response, void * user_data) {
   UNUSED(request);
-  set_response_json_body_and_clean(response, 200, json_pack("{ss*ss*ss*ss*sisisisssoso}", 
+  set_response_json_body_and_clean(response, 200, json_pack("{ss*ss*ss*ss*sisisisssososs*}", 
                         "api_prefix",  ((struct config_elements *)user_data)->api_prefix,
                         "oauth_scope_user", ((struct config_elements *)user_data)->oauth_scope_user,
                         "oauth_scope_admin", ((struct config_elements *)user_data)->oauth_scope_admin,
@@ -121,7 +121,8 @@ int callback_taliesin_server_configuration (const struct _u_request * request, s
 #else
                         "use_websockets", json_true(),
 #endif
-                        "icecast", o_strnullempty(((struct config_elements *)user_data)->icecast_host)?json_false():json_true()
+                        "icecast", o_strnullempty(((struct config_elements *)user_data)->icecast_host)?json_false():json_true(),
+                        "icecast_remote_address", ((struct config_elements *)user_data)->icecast_remote_address
                         ));
   return U_CALLBACK_COMPLETE;
 };
@@ -1097,7 +1098,7 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
   struct _client_data_webradio * client_data_webradio = NULL;
   struct _client_data_jukebox * client_data_jukebox = NULL;
   struct _t_file * file;
-  char metaint[17] = {0}, * m3u_data = NULL, * content_disposition, * escaped_filename;
+  char metaint[17] = {0}, * m3u_data = NULL, * content_disposition, * escaped_filename/*, * icecast_stream = NULL*/;
   uint64_t time_offset;
   int ret_thread_jukebox = 0, detach_thread_jukebox = 0;
   pthread_t thread_jukebox;
@@ -1122,83 +1123,91 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
       jukebox_index = (unsigned int)strtol(u_map_get_case(request->map_url, "index"), NULL, 10);
     }
     if (current_webradio != NULL) {
-      response->status = 200;
-      // TODO specify timeout when MHD will support a timeout on a streaming response
-      //if (config->timeout) {
-        //response->timeout = config->timeout;
-      //}
-      client_data_webradio = o_malloc(sizeof (struct _client_data_webradio));
-      if (client_data_webradio != NULL) {
-        if (client_data_webradio_init(client_data_webradio) == T_OK) {
-          clock_gettime(CLOCK_MONOTONIC_RAW, &client_data_webradio->start);
-          o_strcpy(client_data_webradio->stream_name, u_map_get(request->map_url, "stream_name"));
-          client_data_webradio->audio_stream = current_webradio->audio_stream;
-          client_data_webradio->current_buffer = client_data_webradio->audio_stream->header_buffer;
-          client_data_webradio->metadata_send = (0 == o_strcmp(client_data_webradio->audio_stream->stream_format, "mp3") && o_strcasecmp("1", u_map_get_case(request->map_header, "Icy-MetaData")))?-1:0;
-          client_data_webradio->client_address = get_ip_source(request);
-          client_data_webradio->user_agent = o_strdup(u_map_get_case(request->map_header, "User-Agent"));
-          if (client_data_webradio->audio_stream->nb_client_connected >= TALIESIN_STREAM_CLIENT_MAX) {
-            response->status = 503;
-          } else if (jukebox_index >= current_webradio->file_list->nb_files) {
-            response->status = 404;
-          } else {
-            client_data_webradio->audio_stream->client_list = o_realloc(client_data_webradio->audio_stream->client_list, (client_data_webradio->audio_stream->nb_client_connected + 1)*sizeof(struct _client_data_webradio *));
-            if (client_data_webradio->audio_stream->client_list != NULL) {
-              client_data_webradio->audio_stream->client_list[client_data_webradio->audio_stream->nb_client_connected] = client_data_webradio;
-              client_data_webradio->audio_stream->nb_client_connected++;
-              if (client_data_webradio->audio_stream->first_buffer) {
-                client_data_webradio->first_buffer_counter = client_data_webradio->audio_stream->first_buffer->counter;
-              } else {
-                client_data_webradio->first_buffer_counter = 0;
-              }
-              if (client_data_webradio->audio_stream->first_buffer != NULL) {
-                time_offset = client_data_webradio->audio_stream->first_buffer->offset_list[client_data_webradio->audio_stream->first_buffer->last_offset];
-                i=0;
-                while (i < client_data_webradio->audio_stream->first_buffer->nb_offset && client_data_webradio->audio_stream->first_buffer->offset_list[i] < time_offset) {
-                  i++;
-                }
-                if (i < client_data_webradio->audio_stream->first_buffer->nb_offset) {
-                  client_data_webradio->buffer_offset = client_data_webradio->audio_stream->first_buffer->offset_list[i];
+      /*if (current_webradio->icecast) {
+        // Build redirect url to the icecast stream
+        icecast_stream = msprintf("%s/taliesin/%s", config->icecast_remote_address, current_webradio->name);
+        u_map_put(response->map_header, "Location", icecast_stream);
+        o_free(icecast_stream);
+        response->status = 302;
+      } else {*/
+        response->status = 200;
+        // TODO specify timeout when MHD will support a timeout on a streaming response
+        //if (config->timeout) {
+          //response->timeout = config->timeout;
+        //}
+        client_data_webradio = o_malloc(sizeof (struct _client_data_webradio));
+        if (client_data_webradio != NULL) {
+          if (client_data_webradio_init(client_data_webradio) == T_OK) {
+            clock_gettime(CLOCK_MONOTONIC_RAW, &client_data_webradio->start);
+            o_strcpy(client_data_webradio->stream_name, u_map_get(request->map_url, "stream_name"));
+            client_data_webradio->audio_stream = current_webradio->audio_stream;
+            client_data_webradio->current_buffer = client_data_webradio->audio_stream->header_buffer;
+            client_data_webradio->metadata_send = (0 == o_strcmp(client_data_webradio->audio_stream->stream_format, "mp3") && o_strcasecmp("1", u_map_get_case(request->map_header, "Icy-MetaData")))?-1:0;
+            client_data_webradio->client_address = get_ip_source(request);
+            client_data_webradio->user_agent = o_strdup(u_map_get_case(request->map_header, "User-Agent"));
+            if (client_data_webradio->audio_stream->nb_client_connected >= TALIESIN_STREAM_CLIENT_MAX) {
+              response->status = 503;
+            } else if (jukebox_index >= current_webradio->file_list->nb_files) {
+              response->status = 404;
+            } else {
+              client_data_webradio->audio_stream->client_list = o_realloc(client_data_webradio->audio_stream->client_list, (client_data_webradio->audio_stream->nb_client_connected + 1)*sizeof(struct _client_data_webradio *));
+              if (client_data_webradio->audio_stream->client_list != NULL) {
+                client_data_webradio->audio_stream->client_list[client_data_webradio->audio_stream->nb_client_connected] = client_data_webradio;
+                client_data_webradio->audio_stream->nb_client_connected++;
+                if (client_data_webradio->audio_stream->first_buffer) {
+                  client_data_webradio->first_buffer_counter = client_data_webradio->audio_stream->first_buffer->counter;
                 } else {
-                  // This shouldn't happen
+                  client_data_webradio->first_buffer_counter = 0;
+                }
+                if (client_data_webradio->audio_stream->first_buffer != NULL) {
+                  time_offset = client_data_webradio->audio_stream->first_buffer->offset_list[client_data_webradio->audio_stream->first_buffer->last_offset];
+                  i=0;
+                  while (i < client_data_webradio->audio_stream->first_buffer->nb_offset && client_data_webradio->audio_stream->first_buffer->offset_list[i] < time_offset) {
+                    i++;
+                  }
+                  if (i < client_data_webradio->audio_stream->first_buffer->nb_offset) {
+                    client_data_webradio->buffer_offset = client_data_webradio->audio_stream->first_buffer->offset_list[i];
+                  } else {
+                    // This shouldn't happen
+                    client_data_webradio->buffer_offset = 0;
+                  }
+                } else {
                   client_data_webradio->buffer_offset = 0;
                 }
-              } else {
-                client_data_webradio->buffer_offset = 0;
-              }
-              if (ulfius_set_stream_response(response, 200, u_webradio_stream, u_webradio_stream_free, U_STREAM_SIZE_UNKOWN, client_data_webradio->audio_stream->stream_bitrate / 8, client_data_webradio) == U_OK) {
-                pthread_setname_np(pthread_self(), request->http_url);
-                if (0 == o_strcmp(client_data_webradio->audio_stream->stream_format, "vorbis")) {
-                  ulfius_add_header_to_response(response, "Content-Type", "application/ogg");
-                } else if (0 == o_strcmp(client_data_webradio->audio_stream->stream_format, "flac")) {
-                  ulfius_add_header_to_response(response, "Content-Type", "audio/flac");
+                if (ulfius_set_stream_response(response, 200, u_webradio_stream, u_webradio_stream_free, U_STREAM_SIZE_UNKOWN, client_data_webradio->audio_stream->stream_bitrate / 8, client_data_webradio) == U_OK) {
+                  pthread_setname_np(pthread_self(), request->http_url);
+                  if (0 == o_strcmp(client_data_webradio->audio_stream->stream_format, "vorbis")) {
+                    ulfius_add_header_to_response(response, "Content-Type", "application/ogg");
+                  } else if (0 == o_strcmp(client_data_webradio->audio_stream->stream_format, "flac")) {
+                    ulfius_add_header_to_response(response, "Content-Type", "audio/flac");
+                  } else {
+                    ulfius_add_header_to_response(response, "Content-Type", "audio/mpeg");
+                  }
+                  if (!client_data_webradio->metadata_send) {
+                    snprintf(metaint, 16, "%u", client_data_webradio->audio_stream->stream_bitrate / 8 * TALIESIN_STREAM_METADATA_INTERVAL);
+                    ulfius_add_header_to_response(response, "icy-metaint", metaint);
+                  }
                 } else {
-                  ulfius_add_header_to_response(response, "Content-Type", "audio/mpeg");
-                }
-                if (!client_data_webradio->metadata_send) {
-                  snprintf(metaint, 16, "%u", client_data_webradio->audio_stream->stream_bitrate / 8 * TALIESIN_STREAM_METADATA_INTERVAL);
-                  ulfius_add_header_to_response(response, "icy-metaint", metaint);
+                  y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error ulfius_set_stream_response");
+                  response->status = 500;
                 }
               } else {
-                y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error ulfius_set_stream_response");
+                y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error allocating resources for client_list");
                 response->status = 500;
               }
-            } else {
-              y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error allocating resources for client_list");
-              response->status = 500;
             }
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error initializing client_data_webradio");
+            response->status = 500;
           }
         } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error initializing client_data_webradio");
+          y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error allocating resources for client_data_webradio");
           response->status = 500;
         }
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error allocating resources for client_data_webradio");
-        response->status = 500;
-      }
-      if (response->status != 200) {
-        client_data_webradio_clean(client_data_webradio);
-      }
+        if (response->status != 200) {
+          client_data_webradio_clean(client_data_webradio);
+        }
+      //}
     } else if (current_jukebox != NULL) {
       if (u_map_get_case(request->map_url, "index") != NULL) {
         file = file_list_get_file(current_jukebox->file_list, jukebox_index);

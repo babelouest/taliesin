@@ -373,19 +373,19 @@ int main (int argc, char ** argv) {
         if (add_webradio_from_db_stream(config, j_element, &webradio) != T_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "Error adding webradio stream");
         } else {
-          if (webradio->icecast) {
+          /*if (webradio->icecast) {
             ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_icecast_run_thread, (void *)webradio);
             detach_thread_webradio = pthread_detach(thread_webradio);
             if (ret_thread_webradio || detach_thread_webradio) {
               y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio icecast");
             }
-          } else {
+          } else {*/
             ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
             detach_thread_webradio = pthread_detach(thread_webradio);
             if (ret_thread_webradio || detach_thread_webradio) {
               y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio");
             }
-          }
+          //}
         }
       } else {
         if (add_jukebox_from_db_stream(config, j_element) != T_OK) {
@@ -596,7 +596,7 @@ int build_config_from_args(int argc, char ** argv, struct config_elements * conf
                 config->log_mode |= Y_LOG_MODE_CONSOLE;
               } else if (0 == o_strncmp("syslog", one_log_mode, o_strlen("syslog"))) {
                 config->log_mode |= Y_LOG_MODE_SYSLOG;
-              } else if (0 == strncmp("journald", one_log_mode, strlen("journald"))) {
+              } else if (0 == o_strncmp("journald", one_log_mode, o_strlen("journald"))) {
                 config->log_mode += Y_LOG_MODE_JOURNALD;
               } else if (0 == o_strncmp("file", one_log_mode, o_strlen("file"))) {
                 config->log_mode |= Y_LOG_MODE_FILE;
@@ -828,7 +828,7 @@ int build_config_from_file(struct config_elements * config) {
           config->log_mode |= Y_LOG_MODE_CONSOLE;
         } else if (0 == o_strncmp("syslog", one_log_mode, o_strlen("syslog"))) {
           config->log_mode |= Y_LOG_MODE_SYSLOG;
-        } else if (0 == strncmp("journald", one_log_mode, strlen("journald"))) {
+        } else if (0 == o_strncmp("journald", one_log_mode, o_strlen("journald"))) {
           config->log_mode += Y_LOG_MODE_JOURNALD;
         } else if (0 == o_strncmp("file", one_log_mode, o_strlen("file"))) {
           config->log_mode |= Y_LOG_MODE_FILE;

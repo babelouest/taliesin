@@ -85,6 +85,18 @@ oidc =
 #  dpop_max_iat = 60                           # optional, default 0 (disabled)
 }
 
+# icecast parameters
+# if set, an icecast server can be used to provide the http stream
+icecast =
+{
+  host = "127.0.0.1"
+  port = 8000
+  user = "source"
+  password = "hackme"
+  mount_prefix = "taliesin"
+  remote_address = "http://127.0.0.1:8000/"
+}
+
 # mime types for webapp files
 app_files_mime_types =
 (

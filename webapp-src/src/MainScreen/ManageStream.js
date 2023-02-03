@@ -5,6 +5,7 @@ import FontAwesome from 'react-fontawesome';
 import StateStore from '../lib/StateStore';
 import ModalConfirm from '../Modal/ModalConfirm';
 import ModalEdit from '../Modal/ModalEdit';
+import ModalResetStream from '../Modal/ModalResetStream';
 import i18n from '../lib/i18n';
 
 class ManageStream extends Component {	
@@ -17,6 +18,7 @@ class ManageStream extends Component {
 			modalConfirmShow: false, 
 			modalRenameShow: false, 
 			modalSaveShow: false, 
+			modalResetUrlShow: false, 
 			modalTitle: "", 
 			modalMessage: "", 
 			modalValue: "",
@@ -40,6 +42,7 @@ class ManageStream extends Component {
 		this.detailsStream = this.detailsStream.bind(this);
 		this.reloadStream = this.reloadStream.bind(this);
 		this.resetStream = this.resetStream.bind(this);
+		this.confirmResetStream = this.confirmResetStream.bind(this);
 		this.confirmDelete = this.confirmDelete.bind(this);
 		this.confirmRename = this.confirmRename.bind(this);
 		this.confirmSave = this.confirmSave.bind(this);
@@ -56,6 +59,7 @@ class ManageStream extends Component {
 			modalConfirmShow: false, 
 			modalRenameShow: false, 
 			modalSaveShow: false, 
+			modalResetUrlShow: false, 
 			modalTitle: "", 
 			modalMessage: "", 
 			modalValue: "",
@@ -130,28 +134,35 @@ class ManageStream extends Component {
 	}
 	
 	resetStream(stream) {
-		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(stream.name) + "/manage", {command: "reset_url"})
-		.then((result) => {
-			var streamList = StateStore.getState().streamList;
-			for (var i in streamList) {
-				if (streamList[i].name === stream.name) {
-					streamList[i].name = result.name;
-					break;
-				}
-			}
-			StateStore.dispatch({type: "setStreamList", streamList: streamList});
-			this.setState({streamList: streamList});
-			StateStore.getState().NotificationManager.addNotification({
-				message: i18n.t("stream.message_stream_reset_ok"),
-				level: 'info'
-			});
-		})
-		.fail(() => {
-			StateStore.getState().NotificationManager.addNotification({
-				message: i18n.t("stream.message_stream_reset_error"),
-				level: 'error'
-			});
-		});
+		this.setState({modalResetUrlShow: true, modalValue: stream.name, curStream: stream});
+	}
+	
+	confirmResetStream(confirm, streamUrl) {
+    if (confirm) {
+      StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.curStream.name) + "/manage", {command: "reset_url", parameters: {streamUrl: !!streamUrl?streamUrl:undefined}})
+      .then((result) => {
+        var streamList = StateStore.getState().streamList;
+        for (var i in streamList) {
+          if (streamList[i].name === this.state.curStream.name) {
+            streamList[i].name = result.name;
+            this.setState({stream: streamList[i]});
+            break;
+          }
+        }
+        StateStore.dispatch({type: "setStreamList", streamList: streamList});
+        StateStore.getState().NotificationManager.addNotification({
+          message: i18n.t("stream.message_stream_reset_ok"),
+          level: 'info'
+        });
+      })
+      .fail(() => {
+        StateStore.getState().NotificationManager.addNotification({
+          message: i18n.t("stream.message_stream_reset_error"),
+          level: 'error'
+        });
+      });
+    }
+    this.setState({modalResetUrlShow: false});
 	}
 	
 	confirmDelete(confirm) {
@@ -270,7 +281,11 @@ class ManageStream extends Component {
 		this.state.streamList.forEach((stream, index) => {
 			var type, random;
 			if (stream.webradio) {
-				type = i18n.t("common.webradio");
+        if (stream.icecast) {
+          type = i18n.t("common.webradio_icecast");
+        } else {
+          type = i18n.t("common.webradio");
+        }
 				if (stream.random) {
 					random = <FontAwesome name={"random"} />;
 				}
@@ -394,6 +409,7 @@ class ManageStream extends Component {
 				<ModalConfirm show={this.state.modalConfirmShow} title={this.state.modalTitle} message={this.state.modalMessage} onCloseCb={this.confirmDelete} />
 				<ModalEdit show={this.state.modalRenameShow} title={this.state.modalTitle} message={this.state.modalMessage} onCloseCb={this.confirmRename} value={this.state.modalValue} />
 				<ModalEdit show={this.state.modalSaveShow} title={this.state.modalTitle} message={this.state.modalMessage} onCloseCb={this.confirmSave} value={this.state.modalValue} />
+        <ModalResetStream show={this.state.modalResetUrlShow} onCloseCb={this.confirmResetStream} value={this.state.modalValue} />
 			</div>
 		);
 	}

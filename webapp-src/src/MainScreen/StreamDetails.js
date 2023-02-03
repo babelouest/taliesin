@@ -6,6 +6,7 @@ import StateStore from '../lib/StateStore';
 import StreamMediaList from './StreamMediaList';
 import ModalConfirm from '../Modal/ModalConfirm';
 import ModalEdit from '../Modal/ModalEdit';
+import ModalResetStream from '../Modal/ModalResetStream';
 import MediaRow from './MediaRow';
 import i18n from '../lib/i18n';
 
@@ -17,6 +18,7 @@ class StreamDetails extends Component {
 			stream: props.stream,
 			playExternalAnchor: this.buildStreamExternal(props.stream),
 			modalConfirmShow: false, 
+			modalResetUrlShow: false, 
 			modalRenameShow: false, 
 			modalSaveShow: false, 
 			modalTitle: "", 
@@ -38,6 +40,7 @@ class StreamDetails extends Component {
 		this.reloadStream = this.reloadStream.bind(this);
 		this.refreshStream = this.refreshStream.bind(this);
 		this.resetStream = this.resetStream.bind(this);
+		this.confirmResetStream = this.confirmResetStream.bind(this);
 		this.confirmDelete = this.confirmDelete.bind(this);
 		this.confirmRename = this.confirmRename.bind(this);
 		this.confirmSave = this.confirmSave.bind(this);
@@ -58,6 +61,7 @@ class StreamDetails extends Component {
 			stream: nextProps.stream, 
 			playExternalAnchor: this.buildStreamExternal(nextProps.stream),
 			modalConfirmShow: false, 
+			modalResetUrlShow: false, 
 			modalRenameShow: false, 
 			modalSaveShow: false, 
 			modalTitle: "", 
@@ -82,6 +86,10 @@ class StreamDetails extends Component {
 	
 	renameStream() {
 		this.setState({modalRenameShow: true, modalTitle: i18n.t("stream.rename_title"), modalMessage: i18n.t("stream.rename_message", {stream: (this.state.stream.display_name||i18n.t("common.no_name"))}), modalValue: this.state.stream.display_name});
+	}
+	
+	resetStream() {
+		this.setState({modalResetUrlShow: true, modalValue: this.state.stream.name});
 	}
 	
 	saveStream() {
@@ -122,29 +130,32 @@ class StreamDetails extends Component {
 		});
 	}
 	
-	resetStream() {
-		StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "reset_url"})
-		.then((result) => {
-			var streamList = StateStore.getState().streamList;
-			for (var i in streamList) {
-				if (streamList[i].name === this.state.stream.name) {
-					streamList[i].name = result.name;
-					this.setState({stream: streamList[i]});
-					break;
-				}
-			}
-			StateStore.dispatch({type: "setStreamList", streamList: streamList});
-			StateStore.getState().NotificationManager.addNotification({
-				message: i18n.t("stream.message_stream_reset_ok"),
-				level: 'info'
-			});
-		})
-		.fail(() => {
-			StateStore.getState().NotificationManager.addNotification({
-				message: i18n.t("stream.message_stream_reset_error"),
-				level: 'error'
-			});
-		});
+	confirmResetStream(confirm, streamUrl) {
+    if (confirm) {
+      StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "reset_url", parameters: {streamUrl: !!streamUrl?streamUrl:undefined}})
+      .then((result) => {
+        var streamList = StateStore.getState().streamList;
+        for (var i in streamList) {
+          if (streamList[i].name === this.state.stream.name) {
+            streamList[i].name = result.name;
+            this.setState({stream: streamList[i]});
+            break;
+          }
+        }
+        StateStore.dispatch({type: "setStreamList", streamList: streamList});
+        StateStore.getState().NotificationManager.addNotification({
+          message: i18n.t("stream.message_stream_reset_ok"),
+          level: 'info'
+        });
+      })
+      .fail(() => {
+        StateStore.getState().NotificationManager.addNotification({
+          message: i18n.t("stream.message_stream_reset_error"),
+          level: 'error'
+        });
+      });
+    }
+    this.setState({modalResetUrlShow: false});
 	}
 	
 	confirmDelete(confirm) {
@@ -298,8 +309,15 @@ class StreamDetails extends Component {
 	}
 	
 	render() {
-		var streamRandom, playlistAttached, history, clientList = [], mediaList;
+		var streamRandom, playlistAttached, history, clientList = [], mediaList, streamType, streamUrl;
 		if (this.state.stream.webradio) {
+      if (this.state.stream.icecast) {
+        streamUrl = StateStore.getState().serverConfig.icecast_remote_address + "/taliesin/" + this.state.stream.name;
+        streamType = i18n.t("common.webradio_icecast");
+      } else {
+        streamUrl = StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name;
+        streamType = i18n.t("common.webradio");
+      }
 			if (this.state.stream.random) {
 				streamRandom = 
 					<Row>
@@ -329,57 +347,6 @@ class StreamDetails extends Component {
 						</Col>
 					</Row>;
 			}
-		}
-		if (this.state.stream.stored_playlist) {
-			playlistAttached = 
-					<Row>
-						<Col md={6} sm={6} xs={6}>
-							<Label>
-								{i18n.t("stream.playlist_attached")}
-							</Label>
-						</Col>
-						<Col md={6} sm={6} xs={6}>
-							<span>
-								{this.state.stream.stored_playlist}
-							</span>
-						</Col>
-					</Row>;
-		}
-		this.state.stream.clients.forEach((client, index) => {
-			clientList.push(
-				<div key={index}>
-					<Row>
-						<Col md={12}>
-							<hr/>
-						</Col>
-					</Row>
-					<Row>
-						<Col md={3} sm={6} xs={6}>
-							<Label>{i18n.t("stream.ip_address")}</Label>
-						</Col>
-						<Col md={3} sm={6} xs={6}>
-							<span>{client.ip_address}</span>
-						</Col>
-						<Col md={3} sm={6} xs={6}>
-							<Label>{i18n.t("common.user_agent")}</Label>
-						</Col>
-						<Col md={3} sm={6} xs={6}>
-							<span>{client.user_agent}</span>
-						</Col>
-					</Row>
-				</div>
-			);
-		});
-		if (!clientList.length) {
-			clientList.push(
-				<Row key={0}>
-					<Col md={3} sm={3} xs={3}>
-						<Label>{i18n.t("common.none")}</Label>
-					</Col>
-				</Row>
-			);
-		}
-		if (this.state.stream.webradio) {
 			history =
 				<Panel onToggle={this.handleSelectHistory} defaultExpanded>
 					<Panel.Heading>
@@ -429,6 +396,58 @@ class StreamDetails extends Component {
 						</Panel.Body>
 					</Panel.Collapse>
 				</Panel>
+		} else {
+      streamUrl = StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name + "?url_prefix=" + StateStore.getState().taliesinApiUrl;
+      streamType = i18n.t("common.jukebox");
+    }
+		if (this.state.stream.stored_playlist) {
+			playlistAttached = 
+					<Row>
+						<Col md={6} sm={6} xs={6}>
+							<Label>
+								{i18n.t("stream.playlist_attached")}
+							</Label>
+						</Col>
+						<Col md={6} sm={6} xs={6}>
+							<span>
+								{this.state.stream.stored_playlist}
+							</span>
+						</Col>
+					</Row>;
+		}
+		this.state.stream.clients.forEach((client, index) => {
+			clientList.push(
+				<div key={index}>
+					<Row>
+						<Col md={12}>
+							<hr/>
+						</Col>
+					</Row>
+					<Row>
+						<Col md={3} sm={6} xs={6}>
+							<Label>{i18n.t("stream.ip_address")}</Label>
+						</Col>
+						<Col md={3} sm={6} xs={6}>
+							<span>{client.ip_address}</span>
+						</Col>
+						<Col md={3} sm={6} xs={6}>
+							<Label>{i18n.t("common.user_agent")}</Label>
+						</Col>
+						<Col md={3} sm={6} xs={6}>
+							<span>{client.user_agent}</span>
+						</Col>
+					</Row>
+				</div>
+			);
+		});
+		if (!clientList.length) {
+			clientList.push(
+				<Row key={0}>
+					<Col md={3} sm={3} xs={3}>
+						<Label>{i18n.t("common.none")}</Label>
+					</Col>
+				</Row>
+			);
 		}
 		if (this.state.mediaListExpanded) {
 			mediaList = <StreamMediaList stream={this.state.stream}/>
@@ -551,7 +570,7 @@ class StreamDetails extends Component {
 										</Label>
 									</Col>
 									<Col md={6} sm={6} xs={6}>
-										<a target="_blank" rel="noopener noreferrer" href={StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name + (this.state.stream.webradio?"":("?url_prefix=" + StateStore.getState().taliesinApiUrl))}>direct link</a>
+										<a target="_blank" rel="noopener noreferrer" href={streamUrl}>{i18n.t("stream.direct_link")}</a>
 									</Col>
 								</Row>
 								{playlistAttached}
@@ -563,7 +582,7 @@ class StreamDetails extends Component {
 									</Col>
 									<Col md={6} sm={6} xs={6}>
 										<span>
-											{this.state.stream.webradio?i18n.t("common.webradio"):i18n.t("common.jukebox")}
+											{streamType}
 										</span>
 									</Col>
 								</Row>
@@ -634,6 +653,7 @@ class StreamDetails extends Component {
 					<ModalConfirm show={this.state.modalConfirmShow} title={this.state.modalTitle} message={this.state.modalMessage} onCloseCb={this.confirmDelete} />
 					<ModalEdit show={this.state.modalRenameShow} title={this.state.modalTitle} message={this.state.modalMessage} onCloseCb={this.confirmRename} value={this.state.modalValue} />
 					<ModalEdit show={this.state.modalSaveShow} title={this.state.modalTitle} message={this.state.modalMessage} onCloseCb={this.confirmSave} value={this.state.modalValue} />
+					<ModalResetStream show={this.state.modalResetUrlShow} onCloseCb={this.confirmResetStream} value={this.state.stream.name} />
 				</PanelGroup>
 			</div>
 		);

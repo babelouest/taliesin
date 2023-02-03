@@ -83,6 +83,7 @@
 		"close": "Fermer",
 		"jukebox": "Jukebox",
 		"webradio": "Webradio",
+    "webradio_icecast": "Webradio (Icecast)",
 		"icecast": "Icecast",
 		"stereo": "Stéréo",
 		"mono": "Mono",
@@ -301,12 +302,17 @@
 		"clients": "Clients",
 		"history": "Historique",
 		"info": "Informations sur le flux",
+    "direct_link": "Lien direct",
 		"media_list": "Liste de média",
 		"playlist_attached": "Playlist attachée",
 		"ip_address": "Adresse IP",
 		"user_agent": "User-Agent",
 		"stream_name": "Nom interne",
-		"total_media_files": "Nombre total de medias: "
+		"total_media_files": "Nombre total de medias: ",
+    "reset_url_title": "Réinitialiser l'URL",
+    "reset_url_message": "Nouvelle URL du flux",
+    "reset_url_random": "URL aléatoire",
+    "reset_url_value": "Entre 3 et 32 caractères alphanumériques"
 	},
 	"player": {
 		"replay": "Rejouer",

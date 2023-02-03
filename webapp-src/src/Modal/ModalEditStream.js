@@ -24,7 +24,7 @@ class ModalEditStream extends Component {
       streamUrl: "",
 			recursive: true,
 			random: true,
-			icecast: true,
+			icecast: false,
 			type: "jukebox",
       scope: "me",
 			format: StateStore.getState().serverConfig.default_stream_format,
@@ -69,7 +69,7 @@ class ModalEditStream extends Component {
       streamUrl: "",
 			recursive: true,
 			random: true,
-			icecast: true,
+			icecast: false,
 			type: "jukebox",
 			format: StateStore.getState().serverConfig.default_stream_format,
 			channels: StateStore.getState().serverConfig.default_stream_channels,
@@ -202,7 +202,7 @@ class ModalEditStream extends Component {
 				<div>
 					<Row>
 						<Col md={4}>
-							<Label>Recursive</Label>
+							<Label>{i18n.t("common.recursive")}</Label>
 						</Col>
 						<Col md={8}>
               <Checkbox checked={this.state.recursive} onChange={this.handleChangeRecursive}>
@@ -307,7 +307,7 @@ class ModalEditStream extends Component {
               <Label>{i18n.t("common.icecast")}</Label>
             </Col>
             <Col md={8}>
-              <Checkbox checked={this.state.icecast} onChange={this.handleChangeIcecast}>
+              <Checkbox checked={this.state.icecast} onChange={this.handleChangeIcecast} disabled={true}>
               </Checkbox>
             </Col>
           </Row>

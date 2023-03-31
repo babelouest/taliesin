@@ -2,7 +2,7 @@
 *.err
 *.log
 valgrind*.txt
-taliesin.conf
+*.conf
 taliesin
 data_source_browse_category
 data_source_browse_path
@@ -18,5 +18,5 @@ stream_webradio
 webapp-react
 config
 test/media/
-config.json
+config*.json
 *.jwks

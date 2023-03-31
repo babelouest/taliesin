@@ -22,13 +22,15 @@ class MediaRow extends Component {
 			modalShow: false,
 			modalTitle: this.buildTitle(props.media),
 			visible: false,
-			highlight: props.highlight
+			highlight: props.highlight,
+      file_download: StateStore.getState().taliesinApiUrl + "/stream/" + encodeURIComponent(props.stream) + "?index=" + props.index + "&download"
 		};
 
 		this.loadCover = this.loadCover.bind(this);
 		this.handleOpenModal = this.handleOpenModal.bind(this);
 		this.handlePlayNow = this.handlePlayNow.bind(this);
 		this.handleRemove = this.handleRemove.bind(this);
+		this.handleDownload = this.handleDownload.bind(this);
 		this.handleSelectDataSource = this.handleSelectDataSource.bind(this);
 		this.handleSelectArtist = this.handleSelectArtist.bind(this);
 		this.handleSelectAlbum = this.handleSelectAlbum.bind(this);
@@ -47,7 +49,8 @@ class MediaRow extends Component {
 			coverLoaded: false,
 			modalShow: false,
 			modalTitle: this.buildTitle(nextProps.media),
-			highlight: nextProps.highlight
+			highlight: nextProps.highlight,
+      file_download: StateStore.getState().taliesinApiUrl + "/stream/" + encodeURIComponent(nextProps.stream) + "?index=" + nextProps.index + "&download"
 		});
 	}
 	
@@ -125,6 +128,10 @@ class MediaRow extends Component {
 			}
 		});
 	}
+  
+  handleDownload() {
+    $("#file-download-anchor-"+this.state.index)[0].click();
+  }
 	
 	handleSelectDataSource() {
 		StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: StateStore.getState().dataSourceList.find((ds) => {return ds.name === this.state.media.data_source})});
@@ -176,6 +183,9 @@ class MediaRow extends Component {
 							</Button>
 							<Button title={i18n.t("common.remove_from_list")} onClick={this.handleRemove}>
 								<FontAwesome name="trash" />
+							</Button>
+							<Button title={i18n.t("common.download")} onClick={this.handleDownload}>
+								<FontAwesome name="download" />
 							</Button>
 						</ButtonGroup>
 						<span className="space-before">{(this.state.elements>=10&&this.state.index<9?"0":"") + (this.state.index + 1) + "/" + this.state.elements}</span>
@@ -230,6 +240,12 @@ class MediaRow extends Component {
 					</Col>
 				</Row>
 				<ModalMedia show={this.state.modalShow} media={this.state.media} title={this.state.modalTitle} onClose={this.handleCloseModal} />
+        <a href={(this.state.file_download||"")}
+           style={{display: "none"}}
+           id={"file-download-anchor-"+this.state.index}
+           download={this.state.media.name}>
+          {i18n.t("common.external")}
+        </a>
 			</div>
 		);
 	}

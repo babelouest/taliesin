@@ -333,6 +333,12 @@ struct _client_data_jukebox {
   char                            stream_name[TALIESIN_PLAYLIST_NAME_LENGTH + 1];
   short unsigned int              command;
   short unsigned int              client_present;
+
+  short unsigned int              transcode;
+  char                          * stream_format;
+  unsigned short int              stream_channels;
+  unsigned int                    stream_sample_rate;
+  unsigned int                    stream_bitrate;
 };
 
 struct _jukebox_audio_buffer {
@@ -605,6 +611,8 @@ int     init_client_data_jukebox(struct _client_data_jukebox * client_data_jukeb
 void    clean_client_data_jukebox(struct _client_data_jukebox * client_data_jukebox);
 ssize_t u_jukebox_stream (void * cls, uint64_t pos, char * buf, size_t max);
 void    u_jukebox_stream_free(void * cls);
+ssize_t u_jukebox_stream_download (void * cls, uint64_t pos, char * buf, size_t max);
+void    u_jukebox_stream_download_free(void * cls);
 
 int      jukebox_init(struct _t_jukebox * jukebox, const char * stream_url, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate);
 void     jukebox_clean(struct _t_jukebox * jukebox);
@@ -697,7 +705,7 @@ int encode_audio_frame_and_return(AVFrame * frame,
                                   int * data_present);
 int init_output_jpeg_image(AVCodecContext ** thumbnail_cover_codec_context, int dst_width, int dst_height);
 int resize_image(AVCodecContext * full_size_cover_codec_context, AVCodecContext * thumbnail_cover_codec_context, AVPacket * full_size_cover_packet, AVPacket * thumbnail_cover_packet, int dst_width, int dst_height);
-int open_output_buffer_jukebox(struct _jukebox_audio_buffer * jukebox_audio_buffer, AVFormatContext ** output_format_context, AVCodecContext ** output_codec_context, AVAudioFifo ** fifo);
+int open_output_buffer_jukebox(struct _client_data_jukebox * client_data_jukebox, AVFormatContext ** output_format_context, AVCodecContext ** output_codec_context, AVAudioFifo ** fifo);
 int open_input_buffer(const unsigned char * base64_buffer, AVFormatContext **image_format_context, AVCodecContext **image_codec_context, int * codec_index, int type);
 int open_output_buffer_icecast(struct _t_webradio * webradio, AVFormatContext ** output_format_context, AVCodecContext ** output_codec_context, AVAudioFifo ** fifo);
 

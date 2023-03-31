@@ -480,11 +480,12 @@ int webradio_open_output_buffer(struct _audio_stream * audio_stream) {
   
   if (error) {
     av_audio_fifo_free(fifo);
-    if (audio_stream->output_format_context != NULL) {
-      avio_close(audio_stream->output_format_context->pb);
+    if (output_io_context != NULL) {
+      avio_context_free(&output_io_context);
     }
     avformat_free_context(audio_stream->output_format_context);
     avcodec_free_context(&avctx);
+    av_free(avio_ctx_buffer);
   }
   audio_stream->output_codec_context = avctx;
   return error;
@@ -614,7 +615,7 @@ static int write_packet_icecast(void * opaque, uint8_t * buf, int buf_size) {
   return buf_size;
 }
 
-int open_output_buffer_jukebox(struct _jukebox_audio_buffer * jukebox_audio_buffer, AVFormatContext ** output_format_context, AVCodecContext ** output_codec_context, AVAudioFifo ** fifo) {
+int open_output_buffer_jukebox(struct _client_data_jukebox * client_data_jukebox, AVFormatContext ** output_format_context, AVCodecContext ** output_codec_context, AVAudioFifo ** fifo) {
   AVCodecContext * avctx          = NULL;
   AVCodec * output_codec          = NULL;
   AVIOContext * output_io_context = NULL;
@@ -625,23 +626,23 @@ int open_output_buffer_jukebox(struct _jukebox_audio_buffer * jukebox_audio_buff
   size_t avio_ctx_buffer_size     = 4096;
   char format[8]                  = {0};
   
-  if (0 == o_strcasecmp("vorbis", jukebox_audio_buffer->jukebox->stream_format)) {
+  if (0 == o_strcasecmp("vorbis", client_data_jukebox->stream_format)) {
     codec_id = AV_CODEC_ID_VORBIS;
     o_strcpy(format, "ogg");
-  } else if (0 == o_strcasecmp("flac", jukebox_audio_buffer->jukebox->stream_format)) {
+  } else if (0 == o_strcasecmp("flac", client_data_jukebox->stream_format)) {
     codec_id = AV_CODEC_ID_FLAC;
     o_strcpy(format, "flac");
-  } else if (0 == o_strcasecmp("mp3", jukebox_audio_buffer->jukebox->stream_format)) {
+  } else if (0 == o_strcasecmp("mp3", client_data_jukebox->stream_format)) {
     codec_id = AV_CODEC_ID_MP3;
     o_strcpy(format, "mp3");
-  } else if (0 == o_strcasecmp("h264", jukebox_audio_buffer->jukebox->stream_format)) {
+  } else if (0 == o_strcasecmp("h264", client_data_jukebox->stream_format)) {
     codec_id = AV_CODEC_ID_H264;
     o_strcpy(format, "mp4");
-  } else if (0 == o_strcasecmp("vp8", jukebox_audio_buffer->jukebox->stream_format)) {
+  } else if (0 == o_strcasecmp("vp8", client_data_jukebox->stream_format)) {
     codec_id = AV_CODEC_ID_VP8;
     o_strcpy(format, "webm");
   } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "Error unsupported format: %s", jukebox_audio_buffer->jukebox->stream_format);
+    y_log_message(Y_LOG_LEVEL_ERROR, "Error unsupported format: %s", client_data_jukebox->stream_format);
     error = AVERROR(ENOMEM);
   }
   
@@ -656,10 +657,11 @@ int open_output_buffer_jukebox(struct _jukebox_audio_buffer * jukebox_audio_buff
   } else if ((avctx = avcodec_alloc_context3(output_codec)) == NULL) {
     y_log_message(Y_LOG_LEVEL_ERROR, "Could not allocate an encoding context");
     error = AVERROR(ENOMEM);
-  } else if ((output_io_context = avio_alloc_context(avio_ctx_buffer, (int)avio_ctx_buffer_size, 1, jukebox_audio_buffer, NULL, &write_packet_jukebox, NULL)) == NULL) {
+  } else if ((output_io_context = avio_alloc_context(avio_ctx_buffer, (int)avio_ctx_buffer_size, 1, client_data_jukebox->audio_buffer, NULL, &write_packet_jukebox, NULL)) == NULL) {
     y_log_message(Y_LOG_LEVEL_ERROR, "Error avio_alloc_context");
     error = AVERROR(ENOMEM);
   } else {
+    (*output_format_context)->pb = NULL;
     if (!(stream = avformat_new_stream((*output_format_context), NULL))) {
       y_log_message(Y_LOG_LEVEL_ERROR, "Could not create new stream");
       error = AVERROR(ENOMEM);
@@ -669,15 +671,15 @@ int open_output_buffer_jukebox(struct _jukebox_audio_buffer * jukebox_audio_buff
         y_log_message(Y_LOG_LEVEL_ERROR, "Could not find output format '%s'", format);
         error = AVERROR(ENOMEM);
       } else {
-        avctx->channels       = jukebox_audio_buffer->jukebox->stream_channels;
-        avctx->channel_layout = (uint64_t)av_get_default_channel_layout(jukebox_audio_buffer->jukebox->stream_channels);
-        avctx->sample_rate    = (int)jukebox_audio_buffer->jukebox->stream_sample_rate;
+        avctx->channels       = client_data_jukebox->stream_channels;
+        avctx->channel_layout = (uint64_t)av_get_default_channel_layout(client_data_jukebox->stream_channels);
+        avctx->sample_rate    = (int)client_data_jukebox->stream_sample_rate;
         avctx->sample_fmt     = output_codec->sample_fmts[0];
-        if (0 != o_strcasecmp("flac", jukebox_audio_buffer->jukebox->stream_format)) {
-          avctx->bit_rate     = jukebox_audio_buffer->jukebox->stream_bitrate;
+        if (0 != o_strcasecmp("flac", client_data_jukebox->stream_format)) {
+          avctx->bit_rate     = client_data_jukebox->stream_bitrate;
         }
         avctx->strict_std_compliance = FF_COMPLIANCE_NORMAL;
-        stream->time_base.den = (int)jukebox_audio_buffer->jukebox->stream_sample_rate;
+        stream->time_base.den = (int)client_data_jukebox->stream_sample_rate;
         stream->time_base.num = 1;
 
         if ((error = avcodec_open2(avctx, output_codec, NULL)) < 0) {
@@ -701,11 +703,12 @@ int open_output_buffer_jukebox(struct _jukebox_audio_buffer * jukebox_audio_buff
   
   if (error) {
     av_audio_fifo_free(*fifo);
-    if (*output_format_context != NULL) {
-      avio_close((*output_format_context)->pb);
+    if (output_io_context != NULL) {
+      avio_context_free(&output_io_context);
     }
     avformat_free_context(*output_format_context);
     avcodec_free_context(&avctx);
+    av_free(avio_ctx_buffer);
   }
   *output_codec_context = avctx;
   return error;
@@ -792,11 +795,12 @@ int open_output_buffer_icecast(struct _t_webradio * webradio, AVFormatContext **
   
   if (error) {
     av_audio_fifo_free(*fifo);
-    if (*output_format_context != NULL) {
-      avio_close((*output_format_context)->pb);
+    if (output_io_context != NULL) {
+      avio_context_free(&output_io_context);
     }
     avformat_free_context(*output_format_context);
     avcodec_free_context(&avctx);
+    av_free(avio_ctx_buffer);
   }
   *output_codec_context = avctx;
   return error;

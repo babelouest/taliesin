@@ -189,7 +189,6 @@ struct _t_file * webradio_get_next_file(struct _t_webradio * webradio, unsigned 
         pthread_cond_wait(&stream->stream_cond, &stream->stream_lock);
         pthread_mutex_unlock(&stream->stream_lock);
         stream->transcode_status = TALIESIN_STREAM_TRANSCODE_STATUS_STARTED;
-        y_log_message(Y_LOG_LEVEL_DEBUG, "signal received %d", stream->first_buffer->read);
       }
     }
     if (webradio->random) {

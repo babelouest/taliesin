@@ -81,7 +81,8 @@ int main (int argc, char ** argv) {
   json_t * j_stream_list, * j_element;
   size_t index, i;
   int ret_thread_webradio = 0, detach_thread_webradio = 0;
-  pthread_t thread_webradio;
+  int ret_thread_icecast = 0, detach_thread_icecast = 0;
+  pthread_t thread_webradio, thread_icecast;
   struct _t_webradio * webradio;
 #ifndef DISABLE_OAUTH2
   char * str_jwks;
@@ -91,6 +92,7 @@ int main (int argc, char ** argv) {
 #if LIBAVFORMAT_VERSION_INT < AV_VERSION_INT(58, 9, 100)
   av_register_all();
 #endif
+  shout_init();
 
   srand((unsigned int)time(NULL));
   if (config == NULL) {
@@ -373,19 +375,34 @@ int main (int argc, char ** argv) {
         if (add_webradio_from_db_stream(config, j_element, &webradio) != T_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "Error adding webradio stream");
         } else {
-          /*if (webradio->icecast) {
+          if (webradio->icecast) {
             ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_icecast_run_thread, (void *)webradio);
             detach_thread_webradio = pthread_detach(thread_webradio);
             if (ret_thread_webradio || detach_thread_webradio) {
               y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio icecast");
+            } else {
+              ret_thread_icecast = pthread_create(&thread_icecast, NULL, icecast_push_run_thread, (void *)webradio);
+              detach_thread_icecast = pthread_detach(thread_icecast);
+              if (ret_thread_icecast || detach_thread_icecast) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread icecast push");
+                webradio->audio_stream->status = TALIESIN_STREAM_STATUS_STOPPED;
+                if (webradio->audio_stream->first_buffer != NULL) {
+                  pthread_mutex_lock(&webradio->audio_stream->stream_lock);
+                  pthread_cond_signal(&webradio->audio_stream->stream_cond);
+                  pthread_mutex_unlock(&webradio->audio_stream->stream_lock);
+                }
+                pthread_mutex_lock(&config->stream_stop_lock);
+                pthread_cond_wait(&config->stream_stop_cond, &config->stream_stop_lock);
+                pthread_mutex_unlock(&config->stream_stop_lock);
+              }
             }
-          } else {*/
+          } else {
             ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
             detach_thread_webradio = pthread_detach(thread_webradio);
             if (ret_thread_webradio || detach_thread_webradio) {
               y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio");
             }
-          //}
+          }
         }
       } else {
         if (add_jukebox_from_db_stream(config, j_element) != T_OK) {
@@ -520,6 +537,7 @@ void exit_server(struct config_elements ** config, int exit_value) {
   }
   i_global_close();
   y_close_logs();
+  shout_shutdown();
   exit(exit_value==TALIESIN_STOP?0:1);
 }
 

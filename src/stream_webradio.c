@@ -58,6 +58,8 @@ int webradio_init(struct _t_webradio * webradio, const char * stream_url, const 
       webradio->username = NULL;
       webradio->random = 0;
       webradio->icecast = icecast;
+      webradio->icecast_command = TALIESIN_STREAM_COMMAND_NONE;
+      webradio->icecast_status = TALIESIN_STREAM_STATUS_NOT_STARTED;
       webradio->display_name = NULL;
       webradio->current_index = 0;
       webradio->message_type = TALIESIN_PLAYLIST_MESSAGE_TYPE_NONE;
@@ -807,7 +809,7 @@ json_t * webradio_get_info(struct _t_webradio * webradio) {
   json_t * j_stream = NULL, * j_client;
 
   if (webradio != NULL && webradio->audio_stream != NULL) {
-    j_stream = json_pack("{sis{sssssbsosbsisssbsisiss}}",
+    j_stream = json_pack("{sis{ss ss sb so sb ss si ss sb si si ss}}",
                           "result", T_OK,
                           "webradio",
                             "name", webradio->name,
@@ -815,6 +817,7 @@ json_t * webradio_get_info(struct _t_webradio * webradio) {
                             "random", webradio->random,
                             "webradio", json_true(),
                             "icecast", webradio->icecast,
+                            "icecast_status", (webradio->icecast_status==TALIESIN_STREAM_STATUS_STARTED?"started":(webradio->icecast_status==TALIESIN_STREAM_STATUS_ERROR?"error":"stopped")),
                             "elements", webradio->file_list->nb_files,
                             "format", webradio->audio_stream->stream_format,
                             "stereo", webradio->audio_stream->stream_channels==2,
@@ -1196,7 +1199,9 @@ json_t * is_webradio_command_valid(struct config_elements * config, struct _t_we
                  0 != o_strcmp(str_command, "reload") &&
                  0 != o_strcmp(str_command, "rename") &&
                  0 != o_strcmp(str_command, "save") &&
-                 0 != o_strcmp(str_command, "reset_url")) {
+                 0 != o_strcmp(str_command, "reset_url") &&
+                 0 != o_strcmp(str_command, "icecast_stop") &&
+                 0 != o_strcmp(str_command, "icecast_start")) {
         json_array_append_new(j_result, json_pack("{ss}", "command", "invalid command"));
       } else if (!is_admin && 0 != o_strcmp(webradio->username, username) &&
                               (0 == o_strcmp(str_command, "stop") ||
@@ -1208,7 +1213,9 @@ json_t * is_webradio_command_valid(struct config_elements * config, struct _t_we
                                0 == o_strcmp(str_command, "reload") ||
                                0 == o_strcmp(str_command, "rename") ||
                                0 == o_strcmp(str_command, "save") ||
-                               0 == o_strcmp(str_command, "reset_url"))) {
+                               0 == o_strcmp(str_command, "reset_url") ||
+                               0 == o_strcmp(str_command, "icecast_stop") ||
+                               0 == o_strcmp(str_command, "icecast_start"))) {
         json_array_append_new(j_result, json_pack("{ss}", "parameters", "User is not allowed to run this command"));
       } else if (o_strcmp(str_command, "history") == 0 ||
           o_strcmp(str_command, "append_list") == 0 ||
@@ -1355,6 +1362,8 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
   struct _audio_buffer * audio_buffer;
   struct _t_file * file;
   char old_name[TALIESIN_PLAYLIST_NAME_LENGTH + 1] = {0};
+  int ret_thread_icecast = 0, detach_thread_icecast = 0;
+  pthread_t thread_icecast;
 
   if (0 == o_strcmp(str_command, "stop")) {
     webradio_close(config, webradio);
@@ -1377,35 +1386,48 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
     if (j_return == NULL) {
       if (webradio_set_name_db_stream(config, old_name, webradio->name) == T_OK) {
         j_return = json_pack("{sis{ss}}", "result", T_OK, "command", "name", webradio->name);
+        if (webradio->icecast && webradio->icecast_status == TALIESIN_STREAM_STATUS_STARTED) {
+          webradio->icecast_command = TALIESIN_STREAM_COMMAND_RESTART;
+        }
       } else {
         j_return = json_pack("{si}", "result", T_ERROR);
       }
     }
   } else if (0 == o_strcmp(str_command, "replay")) {
-    for (i=0; i<webradio->audio_stream->nb_client_connected; i++) {
-      webradio->audio_stream->client_list[i]->command = TALIESIN_STREAM_COMMAND_PREVIOUS;
-    }
-    j_return = json_pack("{si}", "result", T_OK);
-  } else if (0 == o_strcmp(str_command, "skip")) {
-    if (webradio->audio_stream->nb_client_connected > 0) {
-      webradio->audio_stream->first_buffer->skip = 1;
-      for (i=0; i<webradio->audio_stream->nb_client_connected; i++) {
-        webradio->audio_stream->client_list[i]->command = TALIESIN_STREAM_COMMAND_NEXT;
-      }
+    if (webradio->icecast) {
+      webradio->icecast_command = TALIESIN_STREAM_COMMAND_PREVIOUS;
       j_return = json_pack("{si}", "result", T_OK);
     } else {
-      if (pthread_mutex_lock(&webradio->audio_stream->write_lock)) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - skip - Error locking webradio->audio_stream->write_lock");
-        j_return = json_pack("{si}", "result", T_ERROR);
-      } else {
-        audio_buffer = webradio->audio_stream->first_buffer;
-        if (audio_buffer != NULL) {
-          webradio->audio_stream->first_buffer = audio_buffer->next;
-          audio_buffer_clean(audio_buffer, 0);
-          webradio->audio_stream->nb_buffer--;
+      for (i=0; i<webradio->audio_stream->nb_client_connected; i++) {
+        webradio->audio_stream->client_list[i]->command = TALIESIN_STREAM_COMMAND_PREVIOUS;
+      }
+      j_return = json_pack("{si}", "result", T_OK);
+    }
+  } else if (0 == o_strcmp(str_command, "skip")) {
+    if (webradio->icecast) {
+      webradio->icecast_command = TALIESIN_STREAM_COMMAND_NEXT;
+      j_return = json_pack("{si}", "result", T_OK);
+    } else {
+      if (webradio->audio_stream->nb_client_connected > 0) {
+        webradio->audio_stream->first_buffer->skip = 1;
+        for (i=0; i<webradio->audio_stream->nb_client_connected; i++) {
+          webradio->audio_stream->client_list[i]->command = TALIESIN_STREAM_COMMAND_NEXT;
         }
-        pthread_mutex_unlock(&webradio->audio_stream->write_lock);
         j_return = json_pack("{si}", "result", T_OK);
+      } else {
+        if (pthread_mutex_lock(&webradio->audio_stream->write_lock)) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - skip - Error locking webradio->audio_stream->write_lock");
+          j_return = json_pack("{si}", "result", T_ERROR);
+        } else {
+          audio_buffer = webradio->audio_stream->first_buffer;
+          if (audio_buffer != NULL) {
+            webradio->audio_stream->first_buffer = audio_buffer->next;
+            audio_buffer_clean(audio_buffer, 0);
+            webradio->audio_stream->nb_buffer--;
+          }
+          pthread_mutex_unlock(&webradio->audio_stream->write_lock);
+          j_return = json_pack("{si}", "result", T_OK);
+        }
       }
     }
   } else if (0 == o_strcmp(str_command, "history")) {
@@ -1437,7 +1459,7 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
     }
     json_decref(j_result);
   } else if (0 == o_strcmp(str_command, "now")) {
-    if (webradio->audio_stream->first_buffer != NULL && webradio->audio_stream->first_buffer->file != NULL) {
+    if (webradio->audio_stream != NULL && webradio->audio_stream->status == TALIESIN_STREAM_STATUS_STARTED && webradio->audio_stream->first_buffer != NULL && webradio->audio_stream->first_buffer->file != NULL) {
       audio_buffer = webradio->audio_stream->first_buffer;
       if (audio_buffer != NULL && audio_buffer->file != NULL) {
         j_result = media_get_by_id(config, audio_buffer->file->tm_id);
@@ -1457,7 +1479,10 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
       j_return = json_pack("{si}", "result", T_ERROR_NOT_FOUND);
     }
   } else if (0 == o_strcmp(str_command, "next")) {
-    if (webradio->audio_stream->first_buffer != NULL && webradio->audio_stream->first_buffer->next != NULL) {
+    if (webradio->audio_stream != NULL &&
+        webradio->audio_stream->status == TALIESIN_STREAM_STATUS_STARTED &&
+        webradio->audio_stream->first_buffer != NULL &&
+        webradio->audio_stream->first_buffer->next != NULL) {
       audio_buffer = webradio->audio_stream->first_buffer->next;
       if (audio_buffer != NULL && audio_buffer->file != NULL) {
         j_result = media_get_by_id(config, audio_buffer->file->tm_id);
@@ -1708,6 +1733,25 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
       j_return = json_pack("{si}", "result", T_OK);
     } else {
       j_return = json_pack("{si}", "result", T_ERROR);
+    }
+  } else if (0 == o_strcmp(str_command, "icecast_stop")) {
+    if (webradio->icecast && webradio->icecast_status == TALIESIN_STREAM_STATUS_STARTED) {
+      webradio->icecast_command = TALIESIN_STREAM_COMMAND_STOP;
+      j_return = json_pack("{si}", "result", T_OK);
+    } else {
+      j_return = json_pack("{si}", "result", T_OK);
+    }
+  } else if (0 == o_strcmp(str_command, "icecast_start")) {
+    if (webradio->icecast && webradio->icecast_status != TALIESIN_STREAM_STATUS_STARTED) {
+      ret_thread_icecast = pthread_create(&thread_icecast, NULL, icecast_push_run_thread, (void *)webradio);
+      detach_thread_icecast = pthread_detach(thread_icecast);
+      if (ret_thread_icecast || detach_thread_icecast) {
+        j_return = json_pack("{si}", "result", T_ERROR);
+      } else {
+        j_return = json_pack("{si}", "result", T_OK);
+      }
+    } else {
+      j_return = json_pack("{si}", "result", T_ERROR_PARAM);
     }
   } else {
     j_return = json_pack("{si}", "result", T_ERROR_PARAM);
@@ -2095,9 +2139,9 @@ void * webradio_icecast_run_thread(void * args) {
                          * output_codec_context  = NULL;
   SwrContext             * resample_context      = NULL;
   AVAudioFifo            * fifo                  = NULL;
-  struct _t_file         * current_file         = NULL;
+  struct _t_file         * current_file          = NULL;
   char * title = NULL,   * path = NULL;
-  int output_frame_size, finished = 0, error, data_present = 0, data_written = 0, send_signal = 0;
+  int output_frame_size, finished = 0, error, data_present = 0, send_signal = 0;
   size_t i;
   int64_t duration;
   json_t * j_media;
@@ -2124,9 +2168,9 @@ void * webradio_icecast_run_thread(void * args) {
         if (!open_output_buffer_icecast(webradio, &output_format_context, &output_codec_context, &fifo)) {
           current_buffer = webradio->audio_stream->last_buffer;
           if (!init_resampler(input_codec_context, output_codec_context, &resample_context)) {
-            while (webradio->audio_stream->status != TALIESIN_STREAM_STATUS_STOPPED) {
+            finished = 0;
+            while (webradio->audio_stream->status != TALIESIN_STREAM_STATUS_STOPPED && !finished) {
               output_frame_size = output_codec_context->frame_size;
-              finished          = 0;
               error             = 0;
               // Transcode file
 
@@ -2146,23 +2190,11 @@ void * webradio_icecast_run_thread(void * args) {
                   error = 1;
                 }
               }
-
-              // Write encoded frames into buffer
-              if (finished && !error) {
-                y_log_message(Y_LOG_LEVEL_DEBUG, "write encoded frames");
-                do {
-                  if (encode_audio_frame_and_return(NULL, output_codec_context, output_format_context, &webradio->audio_stream->pts, &data_written)) {
-                    error = 1;
-                  }
-                  y_log_message(Y_LOG_LEVEL_DEBUG, "encode_audio_frame_and_return %d %d", data_written, error);
-                } while (data_written && !error);
-                break;
-              }
             }
-            if (webradio->audio_stream->status != TALIESIN_STREAM_STATUS_STOPPED) {
-              if (av_write_trailer(output_format_context)) {
-                y_log_message(Y_LOG_LEVEL_ERROR, "Error av_write_trailer");
-              }
+            /*avcodec_send_frame(output_codec_context, NULL);
+            avcodec_send_frame(input_codec_context, NULL);*/
+            if (av_write_trailer(output_format_context)) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "Error av_write_trailer");
             }
             current_buffer->complete = 1;
             avcodec_flush_buffers(output_codec_context);
@@ -2251,6 +2283,7 @@ void * webradio_icecast_run_thread(void * args) {
     pthread_cond_signal(&config->stream_stop_cond);
     pthread_mutex_unlock(&config->stream_stop_lock);
   }
+  y_log_message(Y_LOG_LEVEL_DEBUG, "end transcode thread");
   return NULL;
 }
 
@@ -2286,130 +2319,142 @@ int icecast_audio_buffer_add_data(struct _audio_buffer * buffer, uint8_t * buf, 
   return ret;
 }
 
-void * icecast_push_run_thread(void * args) {
-  struct _t_webradio * webradio = (struct _t_webradio *)args;
-  shout_t * shout;
-  shout_metadata_t * meta = NULL;
+int icecast_init_shout(shout_t ** shout, struct _t_webradio * webradio) {
+  int ret = T_OK;
+  char * icecast_mount = NULL;
   unsigned int shout_format = SHOUT_FORMAT_MP3;
-  char * icecast_mount = NULL, * title = NULL;
-  size_t offset = 0, send_size = 0;
-  struct _audio_buffer * buffer;
-  int ret = 0;
+
+  do {
+    if ((*shout = shout_new()) == NULL) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_new");
+      ret = T_ERROR;
+      break;
+    }
+    if (shout_set_host(*shout, webradio->config->icecast_host) != SHOUTERR_SUCCESS) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_host: %s", shout_get_error(*shout));
+      ret = T_ERROR;
+      break;
+    }
+
+    if (shout_set_protocol(*shout, SHOUT_PROTOCOL_HTTP) != SHOUTERR_SUCCESS) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_protocol: %s", shout_get_error(*shout));
+      ret = T_ERROR;
+      break;
+    }
+
+    if (shout_set_port(*shout, (short unsigned int)webradio->config->icecast_port) != SHOUTERR_SUCCESS) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_port: %s", shout_get_error(*shout));
+      ret = T_ERROR;
+      break;
+    }
+
+    if (shout_set_user(*shout, webradio->config->icecast_user) != SHOUTERR_SUCCESS) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_user: %s", shout_get_error(*shout));
+      ret = T_ERROR;
+      break;
+    }
+
+    if (shout_set_password(*shout, webradio->config->icecast_password) != SHOUTERR_SUCCESS) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_password: %s", shout_get_error(*shout));
+      ret = T_ERROR;
+      break;
+    }
+    
+    if (shout_set_name(*shout, webradio->display_name) != SHOUTERR_SUCCESS) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_name: %s", shout_get_error(*shout));
+      ret = T_ERROR;
+      break;
+    }
+
+    if (shout_set_description(*shout, webradio->display_name) != SHOUTERR_SUCCESS) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_description: %s", shout_get_error(*shout));
+      ret = T_ERROR;
+      break;
+    }
+
+    icecast_mount = msprintf("%s/%s", webradio->config->icecast_mount_prefix, webradio->name);
+    if (shout_set_mount(*shout, icecast_mount) != SHOUTERR_SUCCESS) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_mount %s: %s", icecast_mount, shout_get_error(*shout));
+      ret = T_ERROR;
+      break;
+    }
+
+    if (0 == o_strcasecmp("vorbis", webradio->audio_stream->stream_format)) {
+      shout_format = SHOUT_FORMAT_OGG;
+    } else if (0 == o_strcasecmp("mp3", webradio->audio_stream->stream_format)) {
+      shout_format = SHOUT_FORMAT_MP3;
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error invalid format %s: %s", icecast_mount, shout_get_error(*shout));
+      ret = T_ERROR;
+      break;
+    }
+    if (shout_set_format(*shout, shout_format) != SHOUTERR_SUCCESS) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_format: %s", shout_get_error(*shout));
+      ret = T_ERROR;
+      break;
+    }
+
+    if (shout_open(*shout) != SHOUTERR_SUCCESS) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_open: %s", shout_get_error(*shout));
+      ret = T_ERROR;
+      break;
+    }
+  } while(0);
+  o_free(icecast_mount);
+  if (T_OK != ret) {
+    shout_free(*shout);
+    *shout = NULL;
+  }
+  
+  return ret;
+}
+
+void webradio_send_close_signal(struct _t_webradio * webradio) {
+  if (webradio != NULL && webradio->audio_stream != NULL) {
+    webradio->audio_stream->status = TALIESIN_STREAM_STATUS_STOPPED;
+
+    pthread_mutex_lock(&webradio->audio_stream->stream_lock);
+    pthread_cond_signal(&webradio->audio_stream->stream_cond);
+    pthread_mutex_unlock(&webradio->audio_stream->stream_lock);
+  }
+}
+
+char * get_icy_title(struct config_elements * config, struct _t_webradio * webradio, json_int_t tm_id) {
+  char * title = NULL;
   json_t * j_media;
 
-  shout_init();
-  if (webradio != NULL) {
-    do {
-      ret = 1;
-      if ((shout = shout_new()) == NULL) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_new");
-        ret = 0;
-        break;
-      }
-      if (shout_set_host(shout, webradio->config->icecast_host) != SHOUTERR_SUCCESS) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_host");
-        ret = 0;
-        break;
-      }
+  if (tm_id) {
+    j_media = media_get_by_id_for_stream(config, tm_id);
+    if (check_result_value(j_media, T_OK)) {
+      title = build_icy_title(json_object_get(j_media, "media"));
+    } else {
+      title = o_strdup(webradio->display_name);
+    }
+    json_decref(j_media);
+  }
+  return title;
+}
 
-      if (shout_set_protocol(shout, SHOUT_PROTOCOL_HTTP) != SHOUTERR_SUCCESS) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_protocol");
-        ret = 0;
-        break;
-      }
+void * icecast_push_run_thread(void * args) {
+  struct _t_webradio * webradio = (struct _t_webradio *)args;
+  shout_t * shout = NULL;
+  shout_metadata_t * meta = NULL;
+  char * title = NULL;
+  unsigned char send_buffer[TALIESIN_STREAM_ICECAST_MAX_BUFFER];
+  size_t offset = 0, send_size = 0;
+  struct _audio_buffer * buffer, * old_buffer;
+  int ret = 0, counter = 0;
 
-      if (shout_set_port(shout, (short unsigned int)webradio->config->icecast_port) != SHOUTERR_SUCCESS) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_port");
-        ret = 0;
-        break;
-      }
-
-      if (shout_set_user(shout, webradio->config->icecast_user) != SHOUTERR_SUCCESS) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_user");
-        ret = 0;
-        break;
-      }
-
-      if (shout_set_password(shout, webradio->config->icecast_password) != SHOUTERR_SUCCESS) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_password");
-        ret = 0;
-        break;
-      }
-      
-      if (shout_set_name(shout, webradio->display_name) != SHOUTERR_SUCCESS) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_name");
-        ret = 0;
-        break;
-      }
-
-      if (shout_set_description(shout, webradio->display_name) != SHOUTERR_SUCCESS) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_description");
-        ret = 0;
-        break;
-      }
-
-      icecast_mount = msprintf("%s/%s", webradio->config->icecast_mount_prefix, webradio->name);
-      if (shout_set_mount(shout, icecast_mount) != SHOUTERR_SUCCESS) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_mount %s", icecast_mount);
-        ret = 0;
-        break;
-      }
-
-      if (0 == o_strcasecmp("vorbis", webradio->audio_stream->stream_format)) {
-        shout_format = SHOUT_FORMAT_OGG;
-      } else if (0 == o_strcasecmp("mp3", webradio->audio_stream->stream_format)) {
-        shout_format = SHOUT_FORMAT_MP3;
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error invalid format %s", icecast_mount);
-        ret = 0;
-        break;
-      }
-      if (shout_set_format(shout, shout_format) != SHOUTERR_SUCCESS) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_format");
-        ret = 0;
-        break;
-      }
-
-      if (shout_open(shout) != SHOUTERR_SUCCESS) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_open");
-        ret = 0;
-        break;
-      }
-
-    } while (0);
-    o_free(icecast_mount);
-    
-    if (ret) {
-      sleep(2);
+  if (webradio != NULL && webradio->icecast_status != TALIESIN_STREAM_STATUS_STARTED) {
+    if (icecast_init_shout(&shout, webradio) == T_OK) {
+      y_log_message(Y_LOG_LEVEL_INFO, "Icecast for stream '%s' connected", webradio->display_name);
+      webradio->icecast_status = TALIESIN_STREAM_STATUS_STARTED;
+      webradio->icecast_command = TALIESIN_STREAM_COMMAND_NONE;
       while (webradio->audio_stream == NULL || webradio->audio_stream->first_buffer == NULL || (webradio->audio_stream->first_buffer->size < TALIESIN_STREAM_ICECAST_MAX_BUFFER && !webradio->audio_stream->first_buffer->complete)) {
         usleep(50000);
       }
       buffer = webradio->audio_stream->first_buffer;
-      offset = 0;
-      //y_log_message(Y_LOG_LEVEL_DEBUG, "send buffer %p to icecast", buffer);
-      while (buffer != NULL) {
-        if (pthread_mutex_lock(&buffer->buffer_lock)) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error pthread_mutex_lock");
-          webradio->audio_stream->status = TALIESIN_STREAM_STATUS_STOPPED;
-
-          pthread_mutex_lock(&webradio->audio_stream->stream_lock);
-          pthread_cond_signal(&webradio->audio_stream->stream_cond);
-          pthread_mutex_unlock(&webradio->audio_stream->stream_lock);
-
-          pthread_mutex_lock(&webradio->config->stream_stop_lock);
-          pthread_cond_wait(&webradio->config->stream_stop_cond, &webradio->config->stream_stop_lock);
-          pthread_mutex_unlock(&webradio->config->stream_stop_lock);
-          
-          buffer = NULL;
-          break;
-        }
-        j_media = media_get_by_id_for_stream(webradio->config, buffer->file->tm_id);
-        if (check_result_value(j_media, T_OK)) {
-          title = build_icy_title(json_object_get(j_media, "media"));
-        } else {
-          title = o_strdup(webradio->display_name);
-        }
-        json_decref(j_media);
+      if ((title = get_icy_title(webradio->config, webradio, buffer->file->tm_id)) != NULL) {
         if ((meta = shout_metadata_new()) != NULL) {
           shout_metadata_add(meta, "song", title);
           shout_set_metadata(shout, meta);
@@ -2418,43 +2463,138 @@ void * icecast_push_run_thread(void * args) {
           y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_metadata_new");
         }
         o_free(title);
+      }
+      offset = 0;
+      while (buffer != NULL &&
+             webradio->audio_stream->status == TALIESIN_STREAM_STATUS_STARTED &&
+             webradio->icecast_command != TALIESIN_STREAM_COMMAND_STOP &&
+             webradio->icecast_status == TALIESIN_STREAM_STATUS_STARTED) {
+        if (pthread_mutex_lock(&buffer->buffer_lock)) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error pthread_mutex_lock (1)");
+          webradio_send_close_signal(webradio);
+          webradio->icecast_status = TALIESIN_STREAM_STATUS_ERROR;
+          buffer = NULL;
+          break;
+        }
         if ((buffer->size - offset) > TALIESIN_STREAM_ICECAST_MAX_BUFFER) {
           send_size = TALIESIN_STREAM_ICECAST_MAX_BUFFER;
         } else {
           send_size = buffer->size - offset;
         }
-        if (send_size > 0) {
-          //y_log_message(Y_LOG_LEVEL_DEBUG, "send %zu data at offset %zu (max %zu, complete %d) from buffer %p", send_size, offset, buffer->size, buffer->complete, buffer);
-          if (shout_send(shout, buffer->data + offset, send_size) != SHOUTERR_SUCCESS) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_send");
-            pthread_mutex_unlock(&buffer->buffer_lock);
-            buffer = NULL;
-            break;
-          }
-          offset += send_size;
-          //y_log_message(Y_LOG_LEVEL_DEBUG, "grut 0 %zu", send_size);
-          shout_sync(shout);
-          //y_log_message(Y_LOG_LEVEL_DEBUG, "grut 1");
-        }
+        memcpy(send_buffer, buffer->data + offset, send_size);
         pthread_mutex_unlock(&buffer->buffer_lock);
-        if (buffer->complete && offset >= buffer->size) {
-          //y_log_message(Y_LOG_LEVEL_DEBUG, "Next buffer");
-          //y_log_message(Y_LOG_LEVEL_DEBUG, "send buffer %p to icecast", buffer);
-          buffer->read = 1;
-          buffer = buffer->next;
-          offset = 0;
-          
-          pthread_mutex_lock(&webradio->audio_stream->stream_lock);
-          pthread_cond_signal(&webradio->audio_stream->stream_cond);
-          pthread_mutex_unlock(&webradio->audio_stream->stream_lock);
+        if (send_size > 0) {
+          if ((ret = shout_send(shout, send_buffer, send_size)) != SHOUTERR_SUCCESS) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_send: %s", shout_get_error(shout));
+            if (ret == SHOUTERR_SOCKET) {
+              counter = 0;
+              offset = 0;
+              shout_close(shout);
+              shout_free(shout);
+              while (counter < TALIESIN_STREAM_ICECAST_MAX_RECONNECT) {
+                sleep(TALIESIN_STREAM_ICECAST_SLEEP_RECONNECT);
+                if (icecast_init_shout(&shout, webradio) == T_OK) {
+                  y_log_message(Y_LOG_LEVEL_INFO, "Icecast for stream '%s' reconnected", webradio->display_name);
+                  break;
+                }
+                counter++;
+              }
+              if (counter >= TALIESIN_STREAM_ICECAST_MAX_RECONNECT) {
+                y_log_message(Y_LOG_LEVEL_INFO, "Icecast for stream '%s' stopped", webradio->display_name);
+                webradio->icecast_status = TALIESIN_STREAM_STATUS_ERROR;
+
+                buffer = NULL;
+                break;
+              } else {
+                if ((title = get_icy_title(webradio->config, webradio, buffer->file->tm_id)) != NULL) {
+                  if ((meta = shout_metadata_new()) != NULL) {
+                    shout_metadata_add(meta, "song", title);
+                    shout_set_metadata(shout, meta);
+                    shout_metadata_free(meta);
+                  } else {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_metadata_new");
+                  }
+                  o_free(title);
+                }
+              }
+            } else {
+              y_log_message(Y_LOG_LEVEL_INFO, "Icecast for stream '%s' stopped", webradio->display_name);
+              webradio->icecast_status = TALIESIN_STREAM_STATUS_ERROR;
+
+              buffer = NULL;
+              break;
+            }
+          } else {
+            offset += send_size;
+            shout_sync(shout);
+          }
+        }
+        if (webradio->audio_stream->status == TALIESIN_STREAM_STATUS_STARTED) {
+          if (webradio->icecast_command == TALIESIN_STREAM_COMMAND_PREVIOUS) {
+            offset = 0;
+            webradio->icecast_command = TALIESIN_STREAM_COMMAND_NONE;
+          } else if ((buffer->complete && offset >= buffer->size) || webradio->icecast_command == TALIESIN_STREAM_COMMAND_NEXT) {
+            if (pthread_mutex_lock(&buffer->buffer_lock)) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error pthread_mutex_lock (2)");
+              webradio_send_close_signal(webradio);
+              webradio->icecast_status = TALIESIN_STREAM_STATUS_ERROR;
+              
+              buffer = NULL;
+              break;
+            }
+            webradio->icecast_command = TALIESIN_STREAM_COMMAND_NONE;
+            buffer->read = 1;
+            old_buffer = buffer;
+            buffer = buffer->next;
+            offset = 0;
+            if ((title = get_icy_title(webradio->config, webradio, buffer->file->tm_id)) != NULL) {
+              if ((meta = shout_metadata_new()) != NULL) {
+                shout_metadata_add(meta, "song", title);
+                shout_set_metadata(shout, meta);
+                shout_metadata_free(meta);
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_metadata_new");
+              }
+              o_free(title);
+            }
+            
+            pthread_mutex_lock(&webradio->audio_stream->stream_lock);
+            pthread_cond_signal(&webradio->audio_stream->stream_cond);
+            pthread_mutex_unlock(&webradio->audio_stream->stream_lock);
+
+            pthread_mutex_unlock(&old_buffer->buffer_lock);
+          } else if (webradio->icecast_command == TALIESIN_STREAM_COMMAND_RESTART) {
+            webradio->icecast_status = TALIESIN_STREAM_STATUS_STARTED;
+            webradio->icecast_command = TALIESIN_STREAM_COMMAND_NONE;
+            shout_close(shout);
+            shout_free(shout);
+            offset = 0;
+            if (icecast_init_shout(&shout, webradio) != T_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error icecast_init_shout");
+              webradio->icecast_status = TALIESIN_STREAM_STATUS_ERROR;
+              break;
+            } else {
+              if ((title = get_icy_title(webradio->config, webradio, buffer->file->tm_id)) != NULL) {
+                if ((meta = shout_metadata_new()) != NULL) {
+                  shout_metadata_add(meta, "song", title);
+                  shout_set_metadata(shout, meta);
+                  shout_metadata_free(meta);
+                } else {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_metadata_new");
+                }
+                o_free(title);
+              }
+            }
+          }
         }
       }
       shout_close(shout);
-    } else {
-      webradio->audio_stream->status = TALIESIN_STREAM_STATUS_STOPPED;
+      shout_free(shout);
+      if (webradio->icecast_status == TALIESIN_STREAM_STATUS_STARTED) {
+        webradio->icecast_status = TALIESIN_STREAM_STATUS_STOPPED;
+      }
     }
   }
 
-  shout_shutdown();
   return NULL;
 }

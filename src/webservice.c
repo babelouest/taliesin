@@ -465,7 +465,7 @@ int callback_taliesin_media_get_path (const struct _u_request * request, struct 
   unsigned int sample_rate, bit_rate;
   struct _t_webradio * webradio;
   int ret_thread_webradio = 0, detach_thread_webradio = 0;
-  pthread_t thread_webradio;
+  pthread_t thread_webradio, thread_icecast;
   unsigned char * cover_decoded;
   size_t cover_decoded_len, cover_b64_len;
   const char * cover_b64;
@@ -531,13 +531,31 @@ int callback_taliesin_media_get_path (const struct _u_request * request, struct 
                                                        u_map_get(request->map_url, "name"),
                                                        &webradio);
                 if (check_result_value(j_stream_info, T_OK)) {
-                  ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
-                  detach_thread_webradio = pthread_detach(thread_webradio);
-                  if (ret_thread_webradio || detach_thread_webradio) {
-                    y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio");
-                    response->status = 500;
+                  if (webradio->icecast) {
+                    ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_icecast_run_thread, (void *)webradio);
+                    detach_thread_webradio = pthread_detach(thread_webradio);
+                    if (ret_thread_webradio || detach_thread_webradio) {
+                      y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio icecast");
+                      response->status = 500;
+                    } else {
+                      ret_thread_webradio = pthread_create(&thread_icecast, NULL, icecast_push_run_thread, (void *)webradio);
+                      detach_thread_webradio = pthread_detach(thread_icecast);
+                      if (ret_thread_webradio || detach_thread_webradio) {
+                        y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread icecast");
+                        response->status = 500;
+                      } else {
+                        ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
+                      }
+                    }
                   } else {
-                    ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
+                    ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
+                    detach_thread_webradio = pthread_detach(thread_webradio);
+                    if (ret_thread_webradio || detach_thread_webradio) {
+                      y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio");
+                      response->status = 500;
+                    } else {
+                      ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
+                    }
                   }
                 } else if (check_result_value(j_stream_info, T_ERROR_NOT_FOUND)) {
                   response->status = 404;
@@ -784,7 +802,7 @@ int callback_taliesin_category_list (const struct _u_request * request, struct _
   unsigned int sample_rate, bit_rate;
   struct _t_webradio * webradio;
   int ret_thread_webradio = 0, detach_thread_webradio = 0;
-  pthread_t thread_webradio;
+  pthread_t thread_webradio, thread_icecast;
   size_t index;
   
   j_data_source = data_source_get(config, get_username(request, response, config), u_map_get(request->map_url, "data_source"), 1);
@@ -839,13 +857,31 @@ int callback_taliesin_category_list (const struct _u_request * request, struct _
                                                            u_map_get(request->map_url, "name"),
                                                            &webradio);
                 if (check_result_value(j_stream_info, T_OK)) {
-                  ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
-                  detach_thread_webradio = pthread_detach(thread_webradio);
-                  if (ret_thread_webradio || detach_thread_webradio) {
-                    y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio");
-                    response->status = 500;
+                  if (webradio->icecast) {
+                    ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_icecast_run_thread, (void *)webradio);
+                    detach_thread_webradio = pthread_detach(thread_webradio);
+                    if (ret_thread_webradio || detach_thread_webradio) {
+                      y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio icecast");
+                      response->status = 500;
+                    } else {
+                      ret_thread_webradio = pthread_create(&thread_icecast, NULL, icecast_push_run_thread, (void *)webradio);
+                      detach_thread_webradio = pthread_detach(thread_icecast);
+                      if (ret_thread_webradio || detach_thread_webradio) {
+                        y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread icecast");
+                        response->status = 500;
+                      } else {
+                        ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
+                      }
+                    }
                   } else {
-                    ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
+                    ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
+                    detach_thread_webradio = pthread_detach(thread_webradio);
+                    if (ret_thread_webradio || detach_thread_webradio) {
+                      y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio");
+                      response->status = 500;
+                    } else {
+                      ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
+                    }
                   }
                 } else {
                   y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get_path - Error streaming file");
@@ -957,7 +993,7 @@ int callback_taliesin_subcategory_list (const struct _u_request * request, struc
   unsigned int sample_rate, bit_rate;
   struct _t_webradio * webradio;
   int ret_thread_webradio = 0, detach_thread_webradio = 0;
-  pthread_t thread_webradio;
+  pthread_t thread_webradio, thread_icecast;
   size_t index;
   
   j_data_source = data_source_get(config, get_username(request, response, config), u_map_get(request->map_url, "data_source"), 1);
@@ -1017,13 +1053,31 @@ int callback_taliesin_subcategory_list (const struct _u_request * request, struc
                                                              u_map_get(request->map_url, "name"),
                                                              &webradio);
                   if (check_result_value(j_stream_info, T_OK)) {
-                    ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
-                    detach_thread_webradio = pthread_detach(thread_webradio);
-                    if (ret_thread_webradio || detach_thread_webradio) {
-                      y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio");
-                      response->status = 500;
+                    if (webradio->icecast) {
+                      ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_icecast_run_thread, (void *)webradio);
+                      detach_thread_webradio = pthread_detach(thread_webradio);
+                      if (ret_thread_webradio || detach_thread_webradio) {
+                        y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio icecast");
+                        response->status = 500;
+                      } else {
+                        ret_thread_webradio = pthread_create(&thread_icecast, NULL, icecast_push_run_thread, (void *)webradio);
+                        detach_thread_webradio = pthread_detach(thread_icecast);
+                        if (ret_thread_webradio || detach_thread_webradio) {
+                          y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread icecast");
+                          response->status = 500;
+                        } else {
+                          ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
+                        }
+                      }
                     } else {
-                      ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
+                      ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
+                      detach_thread_webradio = pthread_detach(thread_webradio);
+                      if (ret_thread_webradio || detach_thread_webradio) {
+                        y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio");
+                        response->status = 500;
+                      } else {
+                        ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
+                      }
                     }
                   } else {
                     y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get_path - Error streaming file");
@@ -1098,7 +1152,7 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
   struct _client_data_webradio * client_data_webradio = NULL;
   struct _client_data_jukebox * client_data_jukebox = NULL;
   struct _t_file * file;
-  char metaint[17] = {0}, * m3u_data = NULL, * content_disposition, * escaped_filename/*, * icecast_stream = NULL*/;
+  char metaint[17] = {0}, * m3u_data = NULL, * content_disposition, * escaped_filename, * icecast_stream = NULL;
   uint64_t time_offset;
   int ret_thread_jukebox = 0, detach_thread_jukebox = 0;
   pthread_t thread_jukebox;
@@ -1123,13 +1177,13 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
       jukebox_index = (unsigned int)strtol(u_map_get_case(request->map_url, "index"), NULL, 10);
     }
     if (current_webradio != NULL) {
-      /*if (current_webradio->icecast) {
+      if (current_webradio->icecast) {
         // Build redirect url to the icecast stream
         icecast_stream = msprintf("%s/taliesin/%s", config->icecast_remote_address, current_webradio->name);
         u_map_put(response->map_header, "Location", icecast_stream);
         o_free(icecast_stream);
         response->status = 302;
-      } else {*/
+      } else {
         response->status = 200;
         // TODO specify timeout when MHD will support a timeout on a streaming response
         //if (config->timeout) {
@@ -1207,7 +1261,7 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
         if (response->status != 200) {
           client_data_webradio_clean(client_data_webradio);
         }
-      //}
+      }
     } else if (current_jukebox != NULL) {
       if (u_map_get_case(request->map_url, "index") != NULL) {
         file = file_list_get_file(current_jukebox->file_list, jukebox_index);
@@ -1502,6 +1556,7 @@ void callback_websocket_stream_manager (const struct _u_request * request, struc
             y_log_message(Y_LOG_LEVEL_ERROR, "callback_websocket_stream_manager - Error executing command now");
           }
           json_decref(j_result);
+          ws_stream->webradio->message_type = TALIESIN_PLAYLIST_MESSAGE_TYPE_NONE;
         } else if (websocket_manager->connected && ws_stream->webradio->message_type == TALIESIN_PLAYLIST_MESSAGE_TYPE_CLOSE) {
           j_message = json_pack("{ss}", "command", "quit");
           message = json_dumps(j_message, JSON_COMPACT);
@@ -2213,7 +2268,7 @@ int callback_taliesin_playlist_load (const struct _u_request * request, struct _
   unsigned int sample_rate, bit_rate;
   struct _t_webradio * webradio;
   int ret_thread_webradio = 0, detach_thread_webradio = 0;
-  pthread_t thread_webradio;
+  pthread_t thread_webradio, thread_icecast;
   
   j_playlist = playlist_get(config, get_username(request, response, config), u_map_get(request->map_url, "playlist"), 1, 0, 0);
   if (check_result_value(j_playlist, T_OK)) {
@@ -2256,13 +2311,31 @@ int callback_taliesin_playlist_load (const struct _u_request * request, struct _
                                                      u_map_get(request->map_url, "name"),
                                                      &webradio);
           if (check_result_value(j_stream_info, T_OK)) {
-            ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
-            detach_thread_webradio = pthread_detach(thread_webradio);
-            if (ret_thread_webradio || detach_thread_webradio) {
-              y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio");
-              response->status = 500;
+            if (webradio->icecast) {
+              ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_icecast_run_thread, (void *)webradio);
+              detach_thread_webradio = pthread_detach(thread_webradio);
+              if (ret_thread_webradio || detach_thread_webradio) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio icecast");
+                response->status = 500;
+              } else {
+                ret_thread_webradio = pthread_create(&thread_icecast, NULL, icecast_push_run_thread, (void *)webradio);
+                detach_thread_webradio = pthread_detach(thread_icecast);
+                if (ret_thread_webradio || detach_thread_webradio) {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread icecast");
+                  response->status = 500;
+                } else {
+                  ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
+                }
+              }
             } else {
-              ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
+              ret_thread_webradio = pthread_create(&thread_webradio, NULL, webradio_run_thread, (void *)webradio);
+              detach_thread_webradio = pthread_detach(thread_webradio);
+              if (ret_thread_webradio || detach_thread_webradio) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread webradio");
+                response->status = 500;
+              } else {
+                ulfius_set_json_body_response(response, 200, json_object_get(j_stream_info, "stream"));
+              }
             }
           } else {
             y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_get_path - Error streaming file");

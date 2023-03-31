@@ -115,12 +115,16 @@
 #define TALIESIN_STREAM_INITIAL_CLIENT_BUFFER_LENGTH 5
 #define TALIESIN_STREAM_HEADER_SIZE                  1024
 #define TALIESIN_STREAM_BUFFER_INC_SIZE              1024
+#define TALIESIN_STREAM_ICECAST_MAX_BUFFER           16384
+#define TALIESIN_STREAM_ICECAST_MAX_RECONNECT        10
+#define TALIESIN_STREAM_ICECAST_SLEEP_RECONNECT      5
 
 #define TALIESIN_STREAM_STATUS_NOT_STARTED 0
 #define TALIESIN_STREAM_STATUS_STARTED     1
 #define TALIESIN_STREAM_STATUS_STOPPED     2
 #define TALIESIN_STREAM_STATUS_PAUSED      3
 #define TALIESIN_STREAM_STATUS_COMPLETED   4
+#define TALIESIN_STREAM_STATUS_ERROR       5
 
 #define TALIESIN_STREAM_TRANSCODE_STATUS_NOT_STARTED 0
 #define TALIESIN_STREAM_TRANSCODE_STATUS_STARTED     1
@@ -147,6 +151,8 @@
 #define TALIESIN_STREAM_COMMAND_PREVIOUS 1
 #define TALIESIN_STREAM_COMMAND_NEXT     2
 #define TALIESIN_STREAM_COMMAND_JUMP     3
+#define TALIESIN_STREAM_COMMAND_STOP     4
+#define TALIESIN_STREAM_COMMAND_RESTART  5
 
 #define TALIESIN_CONFIG_AUDIO_FILE_EXTENSION    "audio_file_extension"
 #define TALIESIN_CONFIG_VIDEO_FILE_EXTENSION    "video_file_extension"
@@ -287,6 +293,8 @@ struct _t_webradio {
   
   short int                 random;
   short int                 icecast;
+  short int                 icecast_command;
+  short int                 icecast_status;
   
   struct config_elements  * config;
   short int                 busy;
@@ -550,7 +558,7 @@ char * build_icy_title(json_t * media);
 char * build_m3u_title(json_t * media);
 
 // Webradio functions
-int              webradio_init(struct _t_webradio * webradio, const char * stream_url, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate);
+int              webradio_init(struct _t_webradio * webradio, const char * stream_url, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, short int icecast);
 void             webradio_clean(struct _t_webradio * webradio);
 struct _t_file * webradio_get_next_file(struct _t_webradio * webradio, unsigned int * index/*, unsigned short * play_after*/);
 json_t         * webradio_get_clients(struct _t_webradio * webradio);
@@ -564,13 +572,15 @@ ssize_t  webradio_buffer_metadata(char * buf, size_t max, struct _client_data_we
 int      audio_buffer_init(struct _audio_buffer * audio_buffer);
 void     audio_buffer_clean(struct _audio_buffer * audio_buffer, int recursive);
 void   * webradio_run_thread(void * args);
-//void   * webradio_icecast_run_thread(void * args);
+void   * webradio_icecast_run_thread(void * args);
+void   * icecast_push_run_thread(void * args);
 json_t * is_webradio_command_valid(struct config_elements * config, struct _t_webradio * webradio, json_t * j_command, const char * username, int is_admin);
 json_t * webradio_command(struct config_elements * config, struct _t_webradio * webradio, const char * username, json_t * j_command);
 json_t * add_webradio_from_path(struct config_elements * config, const char * stream_url, json_t * j_data_source, const char * path, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, int recursive, short int random, short int icecast, const char * name, struct _t_webradio ** new_webradio);
 json_t * add_webradio_from_playlist(struct config_elements * config, const char * stream_url, json_t * j_playlist, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, short int random, short int icecast, const char * name, struct _t_webradio ** new_webradio);
 int      add_webradio_from_db_stream(struct config_elements * config, json_t * j_stream, struct _t_webradio ** new_webradio);
 int      scan_path_to_webradio(struct config_elements * config, json_t * j_data_source, const char * path, int recursive, struct _t_webradio * webradio);
+int      icecast_audio_buffer_add_data(struct _audio_buffer * buffer, uint8_t * buf, int buf_size);
 
 int     client_data_webradio_init(struct _client_data_webradio * client_data);
 void    client_data_webradio_clean(struct _client_data_webradio * client_data);
@@ -689,6 +699,7 @@ int init_output_jpeg_image(AVCodecContext ** thumbnail_cover_codec_context, int 
 int resize_image(AVCodecContext * full_size_cover_codec_context, AVCodecContext * thumbnail_cover_codec_context, AVPacket * full_size_cover_packet, AVPacket * thumbnail_cover_packet, int dst_width, int dst_height);
 int open_output_buffer_jukebox(struct _jukebox_audio_buffer * jukebox_audio_buffer, AVFormatContext ** output_format_context, AVCodecContext ** output_codec_context, AVAudioFifo ** fifo);
 int open_input_buffer(const unsigned char * base64_buffer, AVFormatContext **image_format_context, AVCodecContext **image_codec_context, int * codec_index, int type);
+int open_output_buffer_icecast(struct _t_webradio * webradio, AVFormatContext ** output_format_context, AVCodecContext ** output_codec_context, AVAudioFifo ** fifo);
 
 /**
  * Ulfius callback functions

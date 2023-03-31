@@ -1,7 +1,7 @@
 /**
  *
  * Taliesin - Media server
- * 
+ *
  * Stream functions definitions for jukebox streaming
  *
  * Copyright 2017-2022 Nicolas Mora <mail@babelouest.org>
@@ -26,7 +26,7 @@
 int jukebox_init(struct _t_jukebox * jukebox, const char * stream_url, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate) {
   pthread_mutexattr_t mutexattr;
   int res;
-  
+
   if (jukebox != NULL) {
     jukebox->tpl_id = 0;
     if (o_strnullempty(stream_url)) {
@@ -141,7 +141,7 @@ static void * jukebox_update_db_stream_media_list_thread(void * args) {
   json_int_t ts_id;
   int res;
   struct _t_file * file;
-  
+
   if (args != NULL) {
     struct config_elements * config = ((struct _update_db_thread *)args)->config;
     struct _t_jukebox * jukebox = ((struct _update_db_thread *)args)->jukebox;
@@ -206,7 +206,7 @@ static int jukebox_update_db_stream_media_list(struct config_elements * config, 
   int ret_thread_update_db = 0, detach_thread_update_db = 0;
   pthread_t thread_update_db;
   struct _update_db_thread * args = o_malloc(sizeof(struct _update_db_thread));
-  
+
   if (args != NULL) {
     args->config = config;
     args->jukebox = jukebox;
@@ -229,7 +229,7 @@ static int jukebox_delete_db_stream_media(struct config_elements * config, struc
   json_t * j_query, * j_result;
   json_int_t ts_id;
   int res, ret;
-  
+
   j_query = json_pack("{sss[s]s{ss}}",
                       "table",
                       TALIESIN_TABLE_STREAM,
@@ -268,7 +268,7 @@ static int jukebox_delete_db_stream_media_list(struct config_elements * config, 
   json_t * j_query, * j_result;
   json_int_t ts_id;
   int res, ret;
-  
+
   j_query = json_pack("{sss[s]s{ss}}",
                       "table",
                       TALIESIN_TABLE_STREAM,
@@ -308,7 +308,7 @@ static int jukebox_add_db_stream(struct config_elements * config, struct _t_juke
   int res, ret;
   json_int_t ts_id;
   struct _t_file * file;
-  
+
   j_query = json_pack("{sss{sosssssosisssisisi}}",
                       "table",
                       TALIESIN_TABLE_STREAM,
@@ -374,7 +374,7 @@ static int jukebox_add_db_stream(struct config_elements * config, struct _t_juke
 static int jukebox_set_name_db_stream(struct config_elements * config, const char * old_name, const char * new_name) {
   json_t * j_query;
   int res;
-  
+
   j_query = json_pack("{sss{ss}s{ss}}",
                       "table",
                       TALIESIN_TABLE_STREAM,
@@ -397,7 +397,7 @@ static int jukebox_set_name_db_stream(struct config_elements * config, const cha
 static int jukebox_set_display_name_db_stream(struct config_elements * config, const char * name, const char * display_name) {
   json_t * j_query;
   int res;
-  
+
   j_query = json_pack("{sss{ss}s{ss}}",
                       "table",
                       TALIESIN_TABLE_STREAM,
@@ -420,7 +420,7 @@ static int jukebox_set_display_name_db_stream(struct config_elements * config, c
 static int jukebox_set_playlist_db_stream(struct config_elements * config, const char * name, json_int_t tpl_id) {
   json_t * j_query;
   int res;
-  
+
   j_query = json_pack("{sss{sI}s{ss}}",
                       "table",
                       TALIESIN_TABLE_STREAM,
@@ -443,7 +443,7 @@ static int jukebox_set_playlist_db_stream(struct config_elements * config, const
 static int jukebox_remove_db_stream(struct config_elements * config, const char * name) {
   json_t * j_query;
   int res;
-  
+
   j_query = json_pack("{sss{ss}}",
                       "table",
                       TALIESIN_TABLE_STREAM,
@@ -465,7 +465,7 @@ json_t * add_jukebox_from_path(struct config_elements * config, const char * str
   size_t index;
   int jukebox_index;
   const char * display_name;
-  
+
   j_media_list = media_scan_path(config, j_data_source, path, recursive);
   if (j_media_list != NULL && json_array_size(json_object_get(j_media_list, "media_list")) > 0) {
     if (!pthread_mutex_lock(&config->playlist_lock)) {
@@ -552,7 +552,7 @@ json_t * add_jukebox_from_playlist(struct config_elements * config, const char *
   json_t * j_result = NULL, * j_element;
   size_t index;
   int jukebox_index;
-  
+
   if (!pthread_mutex_lock(&config->playlist_lock)) {
     config->jukebox_set = o_realloc(config->jukebox_set, (config->nb_jukebox + 1) * sizeof(struct _t_jukebox *));
     if (config->jukebox_set != NULL) {
@@ -628,7 +628,7 @@ int add_jukebox_from_db_stream(struct config_elements * config, json_t * j_strea
   json_t * j_element, * j_playlist;
   size_t index;
   int jukebox_index, ret;
-  
+
   if (!pthread_mutex_lock(&config->playlist_lock)) {
     config->jukebox_set = o_realloc(config->jukebox_set, (config->nb_jukebox + 1) * sizeof(struct _t_jukebox *));
     if (config->jukebox_set != NULL) {
@@ -636,7 +636,7 @@ int add_jukebox_from_db_stream(struct config_elements * config, json_t * j_strea
       config->nb_jukebox++;
       config->jukebox_set[jukebox_index] = o_malloc(sizeof(struct _t_jukebox));
       if (config->jukebox_set[jukebox_index] != NULL) {
-        if (jukebox_init(config->jukebox_set[jukebox_index], config->jukebox_set[jukebox_index]->name, json_string_value(json_object_get(j_stream, "format")), (short unsigned int)json_integer_value(json_object_get(j_stream, "channels")), (unsigned int)json_integer_value(json_object_get(j_stream, "sample_rate")), (unsigned int)json_integer_value(json_object_get(j_stream, "bitrate"))) == T_OK) {
+        if (jukebox_init(config->jukebox_set[jukebox_index], json_string_value(json_object_get(j_stream, "name")), json_string_value(json_object_get(j_stream, "format")), (short unsigned int)json_integer_value(json_object_get(j_stream, "channels")), (unsigned int)json_integer_value(json_object_get(j_stream, "sample_rate")), (unsigned int)json_integer_value(json_object_get(j_stream, "bitrate"))) == T_OK) {
           config->jukebox_set[jukebox_index]->config = config;
           config->jukebox_set[jukebox_index]->username = json_object_get(j_stream, "username")!=json_null()?o_strdup(json_string_value(json_object_get(j_stream, "username"))):NULL;
           o_strcpy(config->jukebox_set[jukebox_index]->name, json_string_value(json_object_get(j_stream, "name")));
@@ -682,7 +682,7 @@ int jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukeb
   struct _t_file * file;
   int res = T_OK, counter = 0;
   long unsigned int i = 0;
-  
+
   *m3u_data = msprintf("#EXTM3U\n\n");
   if (*m3u_data != NULL) {
     while ((*m3u_data != NULL) && (file = file_list_get_file(jukebox->file_list, i)) != NULL) {
@@ -735,7 +735,7 @@ int jukebox_build_m3u(struct config_elements * config, struct _t_jukebox * jukeb
 json_t * jukebox_get_clients(struct _t_jukebox * jukebox) {
   json_t * j_clients, * j_return;
   size_t i;
-  
+
   if (jukebox != NULL) {
     j_clients = json_array();
     if (j_clients != NULL) {
@@ -760,7 +760,7 @@ json_t * jukebox_get_clients(struct _t_jukebox * jukebox) {
 
 json_t * jukebox_get_info(struct _t_jukebox * jukebox) {
   json_t * j_stream = NULL, * j_client;
-  
+
   if (jukebox != NULL) {
     j_stream = json_pack("{sis{sssssosisssosisisiss}}",
                           "result",
@@ -807,7 +807,7 @@ json_t * jukebox_get_file_list(struct config_elements * config, struct _t_jukebo
   struct _t_file * file = NULL;
   json_t * j_media, * j_return = NULL;
   json_int_t cur_offset = 0, end_offset = limit?(offset+limit):jukebox->file_list->nb_files;
-  
+
   file = jukebox->file_list->start;
   if (file != NULL) {
     if (pthread_mutex_lock(&jukebox->file_list->file_lock)) {
@@ -847,7 +847,7 @@ json_t * jukebox_get_file_list(struct config_elements * config, struct _t_jukebo
 int jukebox_remove_media_by_index(struct _t_jukebox * jukebox, int index, json_int_t * tm_id) {
   int ret;
   struct _t_file * file;
-  
+
   if (jukebox->file_list->nb_files > 1) {
     file = file_list_dequeue_file(jukebox->file_list, (long unsigned int)index);
     if (file != NULL) {
@@ -881,7 +881,7 @@ int jukebox_close(struct config_elements * config, struct _t_jukebox * jukebox) 
       pthread_cond_signal(&jukebox->message_cond);
       pthread_mutex_unlock(&jukebox->message_lock);
     }
-    
+
     for (i=0; i<config->nb_jukebox && config->jukebox_set[i] != jukebox; i++);
     for (; i<config->nb_jukebox-1; i++) {
       config->jukebox_set[i] = config->jukebox_set[i+1];
@@ -902,7 +902,7 @@ int jukebox_close(struct config_elements * config, struct _t_jukebox * jukebox) 
 
 int jukebox_audio_buffer_add_data(struct _jukebox_audio_buffer * jukebox_audio_buffer, uint8_t * buf, int buf_size) {
   int ret = -1;
-  
+
   if (jukebox_audio_buffer != NULL) {
     if (pthread_mutex_lock(&jukebox_audio_buffer->write_lock)) {
       y_log_message(Y_LOG_LEVEL_ERROR, "Error pthread_mutex_lock");
@@ -930,7 +930,7 @@ int jukebox_audio_buffer_add_data(struct _jukebox_audio_buffer * jukebox_audio_b
 
 void * run_thread_close_playlist(void * args) {
   struct _close_jukebox * jukebox = (struct _close_jukebox *)args;
-  
+
   if (jukebox_remove_db_stream(jukebox->config, jukebox->jukebox->name) != T_OK) {
     y_log_message(Y_LOG_LEVEL_ERROR, "run_thread_close_playlist - Error jukebox_remove_db_stream");
   }
@@ -946,7 +946,7 @@ json_t * is_jukebox_command_valid(struct config_elements * config, struct _t_juk
   json_t * j_result = json_array(), * j_element;
   const char * str_command;
   size_t index;
-  
+
   if (j_result != NULL) {
     if (j_command == NULL || !json_is_object(j_command)) {
       json_array_append_new(j_result, json_pack("{ss}", "json", "command must be a valid JSON object"));
@@ -968,16 +968,16 @@ json_t * is_jukebox_command_valid(struct config_elements * config, struct _t_juk
                  0 != o_strcmp(str_command, "save") &&
                  0 != o_strcmp(str_command, "reset_url")) {
         json_array_append_new(j_result, json_pack("{ss}", "command", "invalid command"));
-      } else if (!is_admin && 0 != o_strcmp(jukebox->username, username) && 
-                              (0 == o_strcmp(str_command, "stop") || 
-                               0 == o_strcmp(str_command, "append_list") || 
+      } else if (!is_admin && 0 != o_strcmp(jukebox->username, username) &&
+                              (0 == o_strcmp(str_command, "stop") ||
+                               0 == o_strcmp(str_command, "append_list") ||
                                0 == o_strcmp(str_command, "remove_list") ||
                                0 == o_strcmp(str_command, "has_list") ||
-                               0 == o_strcmp(str_command, "move") || 
-                               0 == o_strcmp(str_command, "attach_playlist") || 
-                               0 == o_strcmp(str_command, "reload") || 
-                               0 == o_strcmp(str_command, "rename") || 
-                               0 == o_strcmp(str_command, "save") || 
+                               0 == o_strcmp(str_command, "move") ||
+                               0 == o_strcmp(str_command, "attach_playlist") ||
+                               0 == o_strcmp(str_command, "reload") ||
+                               0 == o_strcmp(str_command, "rename") ||
+                               0 == o_strcmp(str_command, "save") ||
                                0 == o_strcmp(str_command, "reset_url"))) {
         json_array_append_new(j_result, json_pack("{ss}", "parameters", "User is not allowed to run this command"));
       } else if (o_strcmp(str_command, "history") == 0 ||
@@ -990,12 +990,12 @@ json_t * is_jukebox_command_valid(struct config_elements * config, struct _t_juk
             if (!json_is_object(json_object_get(j_command, "parameters"))) {
               json_array_append_new(j_result, json_pack("{ss}", "parameters", "parameters must be a json object"));
             } else {
-              if (json_object_get(json_object_get(j_command, "parameters"), "offset") && 
+              if (json_object_get(json_object_get(j_command, "parameters"), "offset") &&
                         (!json_is_integer(json_object_get(json_object_get(j_command, "parameters"), "offset")) ||
                         json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "offset")) <= 0)) {
                 json_array_append_new(j_result, json_pack("{ss}", "parameters", "offset must ba a positive non zero integer"));
               }
-              if (json_object_get(json_object_get(j_command, "parameters"), "limit") && 
+              if (json_object_get(json_object_get(j_command, "parameters"), "limit") &&
                         (!json_is_integer(json_object_get(json_object_get(j_command, "parameters"), "limit")) ||
                         json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "limit")) <= 0)) {
                 json_array_append_new(j_result, json_pack("{ss}", "parameters", "limit must ba a positive non zero integer"));
@@ -1019,12 +1019,12 @@ json_t * is_jukebox_command_valid(struct config_elements * config, struct _t_juk
             if (!json_is_object(json_object_get(j_command, "parameters"))) {
               json_array_append_new(j_result, json_pack("{ss}", "parameters", "parameters must be a json object"));
             } else {
-              if (json_object_get(json_object_get(j_command, "parameters"), "offset") && 
+              if (json_object_get(json_object_get(j_command, "parameters"), "offset") &&
                         (!json_is_integer(json_object_get(json_object_get(j_command, "parameters"), "offset")) ||
                         json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "offset")) <= 0)) {
                 json_array_append_new(j_result, json_pack("{ss}", "parameters", "offset must ba a positive non zero integer"));
               }
-              if (json_object_get(json_object_get(j_command, "parameters"), "limit") && 
+              if (json_object_get(json_object_get(j_command, "parameters"), "limit") &&
                         (!json_is_integer(json_object_get(json_object_get(j_command, "parameters"), "limit")) ||
                         json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "limit")) <= 0)) {
                 json_array_append_new(j_result, json_pack("{ss}", "parameters", "limit must ba a positive non zero integer"));
@@ -1065,7 +1065,7 @@ json_t * is_jukebox_command_valid(struct config_elements * config, struct _t_juk
         } else if (o_strcmp(str_command, "attach_playlist") == 0) {
           if (!json_is_object(json_object_get(j_command, "parameters"))) {
             json_array_append_new(j_result, json_pack("{ss}", "parameters", "parameters must be a json object"));
-          } else if (json_object_get(json_object_get(j_command, "parameters"), "name") == NULL || 
+          } else if (json_object_get(json_object_get(j_command, "parameters"), "name") == NULL ||
                               !json_is_string(json_object_get(json_object_get(j_command, "parameters"), "name")) ||
                               json_string_length(json_object_get(json_object_get(j_command, "parameters"), "name")) == 0 ||
                               json_string_length(json_object_get(json_object_get(j_command, "parameters"), "name")) > 128) {
@@ -1074,11 +1074,11 @@ json_t * is_jukebox_command_valid(struct config_elements * config, struct _t_juk
         } else if (o_strcmp(str_command, "move") == 0) {
           if (!json_is_object(json_object_get(j_command, "parameters"))) {
             json_array_append_new(j_result, json_pack("{ss}", "parameters", "parameters must be a json object"));
-          } else if (json_object_get(json_object_get(j_command, "parameters"), "index") == NULL || 
+          } else if (json_object_get(json_object_get(j_command, "parameters"), "index") == NULL ||
                               !json_is_integer(json_object_get(json_object_get(j_command, "parameters"), "index")) ||
                               json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "index")) < 0) {
             json_array_append_new(j_result, json_pack("{ss}", "parameters", "index must ba a positive integer"));
-          } else if (json_object_get(json_object_get(j_command, "parameters"), "target") == NULL || 
+          } else if (json_object_get(json_object_get(j_command, "parameters"), "target") == NULL ||
                               !json_is_integer(json_object_get(json_object_get(j_command, "parameters"), "target")) ||
                               json_integer_value(json_object_get(json_object_get(j_command, "parameters"), "target")) < 0) {
             json_array_append_new(j_result, json_pack("{ss}", "parameters", "target must ba a positive integer"));
@@ -1113,7 +1113,7 @@ json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * ju
   pthread_t thread_close_playlist;
   struct _close_jukebox * close_jukebox;
   char old_name[TALIESIN_PLAYLIST_NAME_LENGTH + 1] = {0};
-  
+
   if (0 == o_strcmp(str_command, "stop")) {
     close_jukebox = o_malloc(sizeof(struct _close_jukebox));
     if (close_jukebox != NULL) {
@@ -1445,11 +1445,13 @@ void * jukebox_run_thread(void * args) {
   int output_frame_size, finished = 0, error, data_present = 0, data_written = 0;
   char * path = NULL;
   json_t * j_media;
-  
+
+  // Open new buffer
   if (!open_output_buffer_jukebox(client_data_jukebox->audio_buffer, &output_format_context, &output_codec_context, &fifo)) {
     j_media = media_get_by_id_for_stream(config, client_data_jukebox->audio_buffer->file->tm_id);
     if (check_result_value(j_media, T_OK)) {
       path = msprintf("%s/%s", json_string_value(json_object_get(json_object_get(j_media, "media"), "path_ds")), json_string_value(json_object_get(json_object_get(j_media, "media"), "path_media")));
+      // Open file
       if (!open_input_file(path, &input_format_context, &input_codec_context, AVMEDIA_TYPE_AUDIO) && !init_resampler(input_codec_context, output_codec_context, &resample_context)) {
         if (media_add_history(config, client_data_jukebox->jukebox->name, client_data_jukebox->jukebox->tpl_id, client_data_jukebox->audio_buffer->file->tm_id) != T_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_run_thread - Error media_add_history");
@@ -1458,6 +1460,9 @@ void * jukebox_run_thread(void * args) {
           output_frame_size = output_codec_context->frame_size;
           finished          = 0;
           error             = 0;
+          // Transcode file
+
+          // Decode frames
           while (av_audio_fifo_size(fifo) < output_frame_size && !error) {
             if (read_decode_convert_and_store(fifo, input_format_context, input_codec_context, output_codec_context, resample_context, &finished)) {
               error = 1;
@@ -1466,11 +1471,15 @@ void * jukebox_run_thread(void * args) {
               break;
             }
           }
+
+          // Re-encode frames
           while ((av_audio_fifo_size(fifo) >= output_frame_size || (finished && av_audio_fifo_size(fifo) > 0)) && !error) {
             if (load_encode_and_return(fifo, output_codec_context, output_format_context, &pts, &data_present)) {
               error = 1;
             }
           }
+
+          // Write encoded frames into buffer
           if (finished && !error) {
             do {
               if (encode_audio_frame_and_return(NULL, output_codec_context, output_format_context, &pts, &data_written)) {
@@ -1508,7 +1517,7 @@ void * jukebox_run_thread(void * args) {
         avformat_close_input(&input_format_context);
         input_format_context = NULL;
       }
-      
+
       if (output_format_context != NULL) {
         avio_flush(output_format_context->pb);
         av_free(output_format_context->pb->buffer);
@@ -1537,12 +1546,12 @@ ssize_t u_jukebox_stream (void * cls, uint64_t pos, char * buf, size_t max) {
   UNUSED(pos);
   struct _client_data_jukebox * client_data_jukebox = (struct _client_data_jukebox *)cls;
   size_t len;
-  
+
   if (client_data_jukebox->audio_buffer->status != TALIESIN_STREAM_STATUS_STOPPED) {
     if (client_data_jukebox->audio_buffer->complete && client_data_jukebox->buffer_offset >= client_data_jukebox->audio_buffer->size) {
       return (ssize_t)U_STREAM_END;
     } else {
-      while (client_data_jukebox->buffer_offset + max > client_data_jukebox->audio_buffer->size && 
+      while (client_data_jukebox->buffer_offset + max > client_data_jukebox->audio_buffer->size &&
              !client_data_jukebox->audio_buffer->complete &&
              client_data_jukebox->audio_buffer->status == TALIESIN_STREAM_STATUS_STARTED) {
         usleep(50000);
@@ -1555,7 +1564,7 @@ ssize_t u_jukebox_stream (void * cls, uint64_t pos, char * buf, size_t max) {
         } else {
           len = max;
         }
-        
+
         memcpy(buf, client_data_jukebox->audio_buffer->data + client_data_jukebox->buffer_offset, len);
         client_data_jukebox->buffer_offset += len;
         pthread_mutex_unlock(&client_data_jukebox->audio_buffer->write_lock);
@@ -1570,7 +1579,7 @@ ssize_t u_jukebox_stream (void * cls, uint64_t pos, char * buf, size_t max) {
 void u_jukebox_stream_free(void * cls) {
   struct _client_data_jukebox * client_data_jukebox = (struct _client_data_jukebox *)cls;
   size_t i;
-  
+
   if (client_data_jukebox->audio_buffer->jukebox->nb_jukebox_audio_buffer > 1) {
     for (i = 0; i < client_data_jukebox->audio_buffer->jukebox->nb_jukebox_audio_buffer; i++) {
       if (client_data_jukebox->audio_buffer->jukebox->jukebox_audio_buffer[i] == cls) {
@@ -1588,7 +1597,7 @@ void u_jukebox_stream_free(void * cls) {
   client_data_jukebox->client_present = 0;
   client_data_jukebox->jukebox->nb_jukebox_audio_buffer--;
   time(&client_data_jukebox->jukebox->last_seen);
-  
+
   if (client_data_jukebox->audio_buffer->status == TALIESIN_STREAM_STATUS_STARTED) {
     client_data_jukebox->audio_buffer->status = TALIESIN_STREAM_STATUS_STOPPED;
   }

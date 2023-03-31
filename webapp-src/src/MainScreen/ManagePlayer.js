@@ -204,12 +204,16 @@ class ManagePlayer extends Component {
 					</MenuItem>
 				);
 			});
+      let curSwitch = false;
+      if (this.state.switchList.length && player.switch) {
+        curSwitch = this.state.switchList.find((switcher) => {return switcher.name === player.switch.name})||false;
+      }
 			
 			lines.push(
 			<tr key={index}>
 				<td>{player.name}</td>
 				<td>
-					<DropdownButton id={"switch-" + player.name} title={this.state.switchList.length&&player.switch?this.state.switchList.find((switcher) => {return switcher.name === player.switch.name}).display:i18n.t("common.none")}>
+					<DropdownButton id={"switch-" + player.name} title={curSwitch.display||i18n.t("common.none")}>
 						{switches}
 					</DropdownButton>
 				</td>

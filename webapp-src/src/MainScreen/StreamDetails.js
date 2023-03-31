@@ -245,7 +245,13 @@ class StreamDetails extends Component {
 	buildStreamExternal(stream) {
 		if (stream) {
 			if (stream.webradio) {
-				return "data:application/mpegurl;base64," + btoa("#EXTM3U\n\n#EXTINF:0," + (stream.display_name||i18n.t("common.no_name")) + "\n" + StateStore.getState().taliesinApiUrl + "/stream/" + stream.name + "\n");
+        let streamUrl;
+        if (stream.icecast) {
+          streamUrl = StateStore.getState().serverConfig.icecast_remote_address + "/taliesin/" + stream.name;
+        } else {
+          streamUrl = StateStore.getState().taliesinApiUrl + "/stream/" + stream.name;
+        }
+				return "data:application/mpegurl;base64," + btoa("#EXTM3U\n\n#EXTINF:0," + (stream.display_name||i18n.t("common.no_name")) + "\n" + streamUrl + "\n");
 			} else {
 				return StateStore.getState().taliesinApiUrl + "/stream/" + stream.name + "?url_prefix=" + StateStore.getState().taliesinApiUrl;
 			}

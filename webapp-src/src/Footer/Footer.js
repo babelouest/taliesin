@@ -170,7 +170,13 @@ class Footer extends Component {
 		var stream_external;
 		if (this.state.stream.name && this.state.currentPlayer.type==="external") {
 			if (this.state.stream.webradio) {
-				stream_external = "data:application/mpegurl;base64," + btoa("#EXTM3U\n\n#EXTINF:0," + (this.state.stream.display_name||"no name") + "\n" + StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name + "\n");
+        let streamUrl;
+        if (stream.icecast) {
+          streamUrl = StateStore.getState().serverConfig.icecast_remote_address + "/taliesin/" + this.state.stream.name;
+        } else {
+          streamUrl = StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name;
+        }
+				stream_external = "data:application/mpegurl;base64," + btoa("#EXTM3U\n\n#EXTINF:0," + (this.state.stream.display_name||"no name") + "\n" + streamUrl + "\n");
 			} else {
 				stream_external = StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name + "?url_prefix=" + StateStore.getState().taliesinApiUrl;
 			}

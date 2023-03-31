@@ -353,9 +353,15 @@ class AudioPlayer extends Component {
 		this.setState({preload: (this.state.stream.webradio?"none":"auto"), currentTime: 0}, () => {
 			if (this.state.stream.name && this.state.taliesinApiUrl) {
 				this.handleStop();
-				var randStr = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);
-				var indexStr = this.state.stream.webradio?"":("&index="+this.state.jukeboxIndex);
-				var newState = {streamUrl: this.state.taliesinApiUrl + "/stream/" + this.state.stream.name + "?rand=" + randStr + indexStr};
+        let streamUrl;
+        if (this.state.stream.icecast) {
+          streamUrl = StateStore.getState().serverConfig.icecast_remote_address + "/taliesin/" + this.state.stream.name;
+        } else {
+          var randStr = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);
+          var indexStr = this.state.stream.webradio?"":("&index="+this.state.jukeboxIndex);
+          streamUrl = this.state.taliesinApiUrl + "/stream/" + this.state.stream.name + "?rand=" + randStr + indexStr;
+        }
+				var newState = {streamUrl: streamUrl};
 				if (this.state.stream.webradio) {
 					var newPlayedIndex = this.state.jukeboxPlayedIndex;
 					newPlayedIndex.push(this.state.jukeboxIndex);

@@ -131,7 +131,13 @@ class MPDController extends Component {
 	loadStream(playNow) {
 		var playlist = [];
 		if (this.state.stream.webradio) {
-			playlist.push(StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name + "?rand=" + Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5))
+      let streamUrl;
+      if (this.state.stream.icecast) {
+        streamUrl = StateStore.getState().serverConfig.icecast_remote_address + "/taliesin/" + this.state.stream.name;
+      } else {
+        streamUrl = StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name + "?rand=" + Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);
+      }
+			playlist.push(streamUrl)
 		} else {
 			for (var i=0; i<this.state.stream.elements; i++) {
 				playlist.push(StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name + "?index=" + i);
@@ -180,10 +186,15 @@ class MPDController extends Component {
 					StateStore.getState().APIManager.carleonApiRequest("GET", "/service-mpd/" + encodeURIComponent(this.state.player.name) + "/playlist/0")
 					.then((result) => {
 						// Parse result to check if it's a taliesin stream
-						if (result.uri && result.uri.startsWith(StateStore.getState().taliesinApiUrl + "/stream")) {
-							var streamName = result.uri.substring((StateStore.getState().taliesinApiUrl + "/stream").length);
-							if (result.uri.indexOf("?") > -1) {
-								streamName = result.uri.substring((StateStore.getState().taliesinApiUrl + "/stream").length + 1, result.uri.indexOf("?"));
+						if (result.uri && (result.uri.startsWith(StateStore.getState().taliesinApiUrl + "/stream") || result.uri.startsWith(StateStore.getState().serverConfig.icecast_remote_address + "/taliesin/"))) {
+							var streamName;
+              if (result.uri.startsWith(StateStore.getState().taliesinApiUrl + "/stream")) {
+                streamName = result.uri.substring((StateStore.getState().taliesinApiUrl + "/stream").length);
+              } else {
+                streamName = result.uri.substring((StateStore.getState().serverConfig.icecast_remote_address + "/taliesin/").length);
+              }
+							if (streamName.indexOf("?") > -1) {
+								streamName = streamName.substring(1, result.uri.indexOf("?"));
 							}
 							var currentStream = StateStore.getState().streamList.find((stream) => {
 								return streamName.indexOf(stream.name) > -1;

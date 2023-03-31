@@ -34,6 +34,8 @@ class ManageStream extends Component {
 			}
 		});
 		
+		this.icecastStop = this.icecastStop.bind(this);
+		this.icecastStart = this.icecastStart.bind(this);
 		this.playStream = this.playStream.bind(this);
 		this.playStreamExternal = this.playStreamExternal.bind(this);
 		this.deleteStream = this.deleteStream.bind(this);
@@ -87,7 +89,13 @@ class ManageStream extends Component {
 	buildStreamExternal(stream) {
 		if (stream) {
 			if (stream.webradio) {
-				return "data:application/mpegurl;base64," + btoa("#EXTM3U\n\n#EXTINF:0," + (stream.display_name||"no name") + "\n" + StateStore.getState().taliesinApiUrl + "/stream/" + stream.name + "\n");
+        let streamUrl;
+        if (stream.icecast) {
+          streamUrl = StateStore.getState().serverConfig.icecast_remote_address + "/taliesin/" + stream.name;
+        } else {
+          streamUrl = StateStore.getState().taliesinApiUrl + "/stream/" + stream.name;
+        }
+				return "data:application/mpegurl;base64," + btoa("#EXTM3U\n\n#EXTINF:0," + (stream.display_name||"no name") + "\n" + streamUrl + "\n");
 			} else {
 				return StateStore.getState().taliesinApiUrl + "/stream/" + stream.name + "?url_prefix=" + StateStore.getState().taliesinApiUrl;
 			}
@@ -95,6 +103,56 @@ class ManageStream extends Component {
 			return "";
 		}
 	}
+  
+  icecastStop(stream) {
+    StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(stream.name) + "/manage", {command: "icecast_stop"})
+    .then((result) => {
+      var streamList = StateStore.getState().streamList;
+      for (var i in streamList) {
+        if (streamList[i].name === stream.name) {
+          streamList[i].name = result.name;
+          this.setState({stream: streamList[i]});
+          break;
+        }
+      }
+      StateStore.dispatch({type: "setStreamList", streamList: streamList});
+      StateStore.getState().NotificationManager.addNotification({
+        message: i18n.t("stream.message_stream_reload_ok"),
+        level: 'info'
+      });
+    })
+    .fail(() => {
+      StateStore.getState().NotificationManager.addNotification({
+        message: i18n.t("stream.message_stream_reload_error"),
+        level: 'error'
+      });
+    });
+  }
+
+  icecastStart(stream) {
+    StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(stream.name) + "/manage", {command: "icecast_start"})
+    .then((result) => {
+      var streamList = StateStore.getState().streamList;
+      for (var i in streamList) {
+        if (streamList[i].name === stream.name) {
+          streamList[i].name = result.name;
+          this.setState({stream: streamList[i]});
+          break;
+        }
+      }
+      StateStore.dispatch({type: "setStreamList", streamList: streamList});
+      StateStore.getState().NotificationManager.addNotification({
+        message: i18n.t("stream.message_stream_reload_ok"),
+        level: 'info'
+      });
+    })
+    .fail(() => {
+      StateStore.getState().NotificationManager.addNotification({
+        message: i18n.t("stream.message_stream_reload_error"),
+        level: 'error'
+      });
+    });
+  }
 
 	playStream(stream) {
 		StateStore.dispatch({type: "loadStreamAndPlay", stream: stream, index: 0});
@@ -277,12 +335,46 @@ class ManageStream extends Component {
 	}
 	
 	render() {
-		var rows = [];
+		var rows = [], nb_clients, buttonPlay, buttonPlayMini, streamColor = "";
 		this.state.streamList.forEach((stream, index) => {
+      streamColor = "";
+      buttonPlay = 
+      <Button title={i18n.t("common.play_now")} onClick={() => this.playStream(stream)}>
+        <FontAwesome name={"play"} />
+      </Button>,
+      buttonPlayMini = 
+      <MenuItem onClick={() => this.playStream(stream)}>
+        <FontAwesome name={"play"} className="space-after"/>
+        {i18n.t("common.play_now")}
+      </MenuItem>;
+      nb_clients = (stream.clients && stream.clients.length)||0;
 			var type, random;
 			if (stream.webradio) {
         if (stream.icecast) {
           type = i18n.t("common.webradio_icecast");
+          nb_clients = "-";
+          if (stream.icecast_status == "started") {
+            buttonPlay = 
+              <Button title={i18n.t("common.stop")} onClick={() => this.icecastStop(stream)}>
+                <FontAwesome name={"stop"} />
+              </Button>
+            buttonPlayMini = 
+              <MenuItem onClick={() => this.icecastStop(stream)}>
+                <FontAwesome name={"stop"} className="space-after"/>
+                {i18n.t("common.stop")}
+              </MenuItem>
+          } else {
+            streamColor = "warning";
+            buttonPlay = 
+              <Button title={i18n.t("common.start")} onClick={() => this.icecastStart(stream)}>
+                <FontAwesome name={"play"} />
+              </Button>
+            buttonPlayMini = 
+              <MenuItem onClick={() => this.icecastStart(stream)}>
+                <FontAwesome name={"play"} className="space-after"/>
+                {i18n.t("common.start")}
+              </MenuItem>
+          }
         } else {
           type = i18n.t("common.webradio");
         }
@@ -293,7 +385,7 @@ class ManageStream extends Component {
 				type = i18n.t("common.jukebox");
 			}
 			rows.push(
-				<tr key={index}>
+				<tr key={index} className={streamColor}>
 					<td className="longName">
             <a role="button" onClick={() => this.detailsStream(stream)}>
               {stream.display_name||i18n.t("common.no_name")}
@@ -321,15 +413,13 @@ class ManageStream extends Component {
 					</td>
 					<td>
 						<a role="button" onClick={() => this.detailsStream(stream)}>
-							{(stream.clients && stream.clients.length)||0}
+							{nb_clients}
 						</a>
 					</td>
 					<td className="text-center">
 						<a href={stream.external} style={{display: "none"}} id={"play-external-anchor-" + stream.name} download={(stream.display_name||i18n.t("common.no_name"))+".m3u"}>{i18n.t("common.external")}</a>
 						<ButtonGroup className="hidden-xs hidden-sm">
-							<Button title={i18n.t("common.play_now")} onClick={() => this.playStream(stream)}>
-								<FontAwesome name={"play"} />
-							</Button>
+							{buttonPlay}
 							<Button title={i18n.t("common.external")} onClick={() => this.playStreamExternal(stream)}>
 								<FontAwesome name={"external-link"} />
 							</Button>
@@ -352,10 +442,7 @@ class ManageStream extends Component {
 						<DropdownButton className="visible-xs visible-sm" id={"xs-manage-"+stream.name} pullRight title={
 							<span><i className="fa fa-cog"></i></span>
 						}>
-							<MenuItem onClick={() => this.playStream(stream)}>
-								<FontAwesome name={"play"} className="space-after"/>
-								{i18n.t("common.play_now")}
-							</MenuItem>
+							{buttonPlayMini}
 							<MenuItem onClick={() => this.playStreamExternal(stream)}>
 								<FontAwesome name={"external-link"} className="space-after"/>
 								{i18n.t("common.external")}

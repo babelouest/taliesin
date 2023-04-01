@@ -106,6 +106,12 @@ if (LIBSWSCALE_FOUND)
     set(LIBS ${LIBS} ${LIBSWSCALE_LIBRARIES})
 endif ()
 
+include(FindLibshout)
+find_package(Libshout REQUIRED)
+if (LIBSHOUT_FOUND)
+    set(LIBS ${LIBS} ${LIBSHOUT_LIBRARIES})
+endif ()
+
 include(FindZLIB)
 find_package(ZLIB REQUIRED)
 set(LIBS ${LIBS} ${ZLIB_LIBRARIES})

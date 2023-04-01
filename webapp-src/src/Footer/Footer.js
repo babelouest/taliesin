@@ -172,7 +172,7 @@ class Footer extends Component {
 			if (this.state.stream.webradio) {
         let streamUrl;
         if (stream.icecast) {
-          streamUrl = StateStore.getState().serverConfig.icecast_remote_address + "/taliesin/" + this.state.stream.name;
+          streamUrl = StateStore.getState().serverConfig.icecast_remote_address + "/" + this.state.stream.name;
         } else {
           streamUrl = StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name;
         }

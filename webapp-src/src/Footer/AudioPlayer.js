@@ -355,7 +355,7 @@ class AudioPlayer extends Component {
 				this.handleStop();
         let streamUrl;
         if (this.state.stream.icecast) {
-          streamUrl = StateStore.getState().serverConfig.icecast_remote_address + "/taliesin/" + this.state.stream.name;
+          streamUrl = StateStore.getState().serverConfig.icecast_remote_address + "/" + this.state.stream.name;
         } else {
           var randStr = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);
           var indexStr = this.state.stream.webradio?"":("&index="+this.state.jukeboxIndex);

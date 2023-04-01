@@ -91,7 +91,7 @@ class ManageStream extends Component {
 			if (stream.webradio) {
         let streamUrl;
         if (stream.icecast) {
-          streamUrl = StateStore.getState().serverConfig.icecast_remote_address + "/taliesin/" + stream.name;
+          streamUrl = StateStore.getState().serverConfig.icecast_remote_address + "/" + stream.name;
         } else {
           streamUrl = StateStore.getState().taliesinApiUrl + "/stream/" + stream.name;
         }

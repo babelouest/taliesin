@@ -208,7 +208,7 @@ struct _t_file {
 };
 
 struct _t_file_list {
-  unsigned int     nb_files;
+  unsigned long    nb_files;
   pthread_mutex_t  file_lock;
   
   struct _t_file * start;

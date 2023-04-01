@@ -1181,7 +1181,7 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
     if (current_webradio != NULL) {
       if (current_webradio->icecast) {
         // Build redirect url to the icecast stream
-        icecast_stream = msprintf("%s/taliesin/%s", config->icecast_remote_address, current_webradio->name);
+        icecast_stream = msprintf("%s/%s", config->icecast_remote_address, current_webradio->name);
         u_map_put(response->map_header, "Location", icecast_stream);
         o_free(icecast_stream);
         response->status = 302;
@@ -1752,7 +1752,7 @@ void callback_websocket_stream_incoming_message (const struct _u_request * reque
             o_free(message);
             json_decref(j_out_message);
             ws_stream->is_authenticated = 1;
-            ws_stream->expiration = json_integer_value(json_object_get(ws_stream->config->iddawc_resource_config->session->access_token_payload, "exp"));
+            ws_stream->expiration = (time_t)json_integer_value(json_object_get(ws_stream->config->iddawc_resource_config->session->access_token_payload, "exp"));
             if (ws_stream->username == NULL) {
               ws_stream->username = o_strdup(json_string_value(json_object_get(ws_stream->config->iddawc_resource_config->session->access_token_payload, "username")));
             }

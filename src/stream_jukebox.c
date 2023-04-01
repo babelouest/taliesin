@@ -806,7 +806,7 @@ json_t * jukebox_get_info(struct _t_jukebox * jukebox) {
 json_t * jukebox_get_file_list(struct config_elements * config, struct _t_jukebox * jukebox, json_int_t offset, json_int_t limit) {
   struct _t_file * file = NULL;
   json_t * j_media, * j_return = NULL;
-  json_int_t cur_offset = 0, end_offset = limit?(offset+limit):jukebox->file_list->nb_files;
+  json_int_t cur_offset = 0, end_offset = (limit?(offset+limit):(json_int_t)jukebox->file_list->nb_files);
 
   file = jukebox->file_list->start;
   if (file != NULL) {

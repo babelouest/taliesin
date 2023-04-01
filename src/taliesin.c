@@ -270,13 +270,43 @@ int main (int argc, char ** argv) {
         exit_server(&config, TALIESIN_ERROR);
       }
     }
-    // TODO add a copy iddawc session function
-    config->iddawc_resource_config_admin->session = config->iddawc_resource_config->session;
-    config->iddawc_resource_config_admin->method = I_METHOD_HEADER;
-    config->iddawc_resource_config_admin->oauth_scope = config->oauth_scope_admin;
-    config->iddawc_resource_config_admin->realm = NULL;
-    config->iddawc_resource_config_admin->aud = NULL;
-    config->iddawc_resource_config_admin->resource_url_root = config->iddawc_resource_config->resource_url_root;
+    if (i_jwt_profile_access_token_init_config(config->iddawc_resource_config_admin, I_METHOD_HEADER, NULL, NULL, config->oauth_scope_admin, config->server_remote_address, config->oidc_dpop_max_iat) != I_TOKEN_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "Error i_jwt_profile_access_token_init_config");
+      exit_server(&config, TALIESIN_ERROR);
+    } else {
+      config->oidc_configured = 1;
+      if (config->oidc_server_remote_config != NULL) {
+        if (!i_jwt_profile_access_token_load_config(config->iddawc_resource_config_admin, config->oidc_server_remote_config, config->oidc_server_remote_config_verify_cert)) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "Error i_jwt_profile_access_token_load_config");
+          exit_server(&config, TALIESIN_ERROR);
+        }
+        y_log_message(Y_LOG_LEVEL_INFO, "Load remote authentification config: %s", config->oidc_server_remote_config);
+      } else if (config->oidc_server_public_jwks != NULL) {
+        res = 1;
+        if ((str_jwks = read_file(config->oidc_server_public_jwks, NULL)) != NULL) {
+          if ((j_jwks = json_loads(str_jwks, JSON_DECODE_ANY, NULL)) != NULL) {
+            if (!i_jwt_profile_access_token_load_jwks(config->iddawc_resource_config_admin, j_jwks, config->oidc_iss)) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "Error i_jwt_profile_access_token_load_jwks");
+            }
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "Error parsing jwks");
+            res = 0;
+          }
+          json_decref(j_jwks);
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "Error reading jwks file");
+          res = 0;
+        }
+        o_free(str_jwks);
+        if (!res) {
+          exit_server(&config, TALIESIN_ERROR);
+        }
+        y_log_message(Y_LOG_LEVEL_INFO, "Load signature key from file: %s", config->oidc_server_public_jwks);
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "Error oidc config");
+        exit_server(&config, TALIESIN_ERROR);
+      }
+    }
   } else {
     y_log_message(Y_LOG_LEVEL_INFO, "OIDC Authentication: disabled");
   }

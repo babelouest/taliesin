@@ -193,7 +193,7 @@ struct _t_file * webradio_get_next_file(struct _t_webradio * webradio, unsigned 
     }
     if (webradio->random) {
       if (webradio->file_list->nb_files > 0) {
-        *index = (unsigned int)random_at_most(webradio->file_list->nb_files - 1);
+        *index = (unsigned int)random_at_most((long)(webradio->file_list->nb_files - 1));
       } else {
         y_log_message(Y_LOG_LEVEL_ERROR, "webradio_get_next_file - webradio %s (%s), error no file in list", webradio->name, webradio->display_name);
         return NULL;
@@ -843,7 +843,7 @@ json_t * webradio_get_info(struct _t_webradio * webradio) {
 json_t * webradio_get_file_list(struct config_elements * config, struct _t_webradio * webradio, json_int_t offset, json_int_t limit) {
   struct _t_file * file = NULL;
   json_t * j_media, * j_return;
-  json_int_t cur_offset = 0, end_offset = limit?(offset+limit):webradio->file_list->nb_files;
+  json_int_t cur_offset = 0, end_offset = limit?(offset+limit):(json_int_t)webradio->file_list->nb_files;
 
   file = webradio->file_list->start;
   if (file != NULL) {
@@ -2371,7 +2371,11 @@ int icecast_init_shout(shout_t ** shout, struct _t_webradio * webradio) {
       break;
     }
 
-    icecast_mount = msprintf("%s/%s", webradio->config->icecast_mount_prefix, webradio->name);
+    if (o_strnullempty(webradio->config->icecast_mount_prefix)) {
+      icecast_mount = o_strdup(webradio->name);
+    } else {
+      icecast_mount = msprintf("%s/%s", webradio->config->icecast_mount_prefix, webradio->name);
+    }
     if (shout_set_mount(*shout, icecast_mount) != SHOUTERR_SUCCESS) {
       y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_mount %s: %s", icecast_mount, shout_get_error(*shout));
       ret = T_ERROR;

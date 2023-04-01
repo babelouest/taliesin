@@ -31,7 +31,7 @@
  * Converts a hex character to its integer value
  */
 char from_hex(char ch) {
-  return isdigit(ch) ? ch - '0' : tolower(ch) - 'a' + 10;
+  return isdigit(ch) ? ch - '0' : (char)tolower(ch) - 'a' + 10;
 }
 
 /**

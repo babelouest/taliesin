@@ -415,7 +415,7 @@ int webradio_open_output_buffer(struct _audio_stream * audio_stream) {
   AVIOContext * output_io_context = NULL;
   AVStream * stream               = NULL;
   int error                       = 0;
-  int codec_id                    = AV_CODEC_ID_MP3;
+  enum AVCodecID codec_id         = AV_CODEC_ID_MP3;
   uint8_t * avio_ctx_buffer       = NULL;
   size_t avio_ctx_buffer_size     = 4096;
   char * format                   = "mp3";
@@ -621,7 +621,7 @@ int open_output_buffer_jukebox(struct _client_data_jukebox * client_data_jukebox
   AVIOContext * output_io_context = NULL;
   AVStream * stream               = NULL;
   int error                       = 0;
-  int codec_id                    = 0;
+  enum AVCodecID codec_id         = 0;
   uint8_t * avio_ctx_buffer       = NULL;
   size_t avio_ctx_buffer_size     = 4096;
   char format[8]                  = {0};
@@ -720,7 +720,7 @@ int open_output_buffer_icecast(struct _t_webradio * webradio, AVFormatContext **
   AVIOContext * output_io_context = NULL;
   AVStream * stream               = NULL;
   int error                       = 0;
-  int codec_id                    = 0;
+  enum AVCodecID codec_id         = 0;
   uint8_t * avio_ctx_buffer       = NULL;
   size_t avio_ctx_buffer_size     = 4096;
   char format[8]                  = {0};

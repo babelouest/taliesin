@@ -121,27 +121,35 @@ void is_stream_url_valid(struct config_elements * config, const char * stream_ur
       }
       pthread_mutex_unlock(&config->playlist_lock);
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "is_stream_parameters_valid - Error locking playlist_lock");
+      y_log_message(Y_LOG_LEVEL_ERROR, "is_stream_url_valid - Error locking playlist_lock");
     }
   }
 }
 
-json_t * is_stream_parameters_valid(struct config_elements * config, int webradio, const char * stream_url, const char * scope, int is_admin, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate) {
+json_t * is_stream_parameters_valid(struct config_elements * config, int webradio, int icecast, const char * stream_url, const char * scope, int is_admin, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate) {
   json_t * j_result = json_array();
 
   if (j_result != NULL) {
-    if (webradio && 0 != o_strcasecmp("mp3", format)) {
-      json_array_append_new(j_result, json_pack("{ss}", "format", "webradio allows only 'mp3' format"));
-    }
-    
     if (0 != o_strcasecmp("mp3", format) &&
         0 != o_strcasecmp("vorbis", format) &&
         0 != o_strcasecmp("flac", format)) {
       json_array_append_new(j_result, json_pack("{ss}", "format", "formats available are 'mp3', 'vorbis' or 'flac'"));
     }
     
-    if (webradio && 0 != o_strcasecmp("mp3", format)) {
-      json_array_append_new(j_result, json_pack("{ss}", "format", "webradio allows only 'mp3' format"));
+    if (icecast && o_strnullempty(config->icecast_host)) {
+      json_array_append_new(j_result, json_pack("{ss}", "icecast", "icecast streaming not allowed"));
+    }
+    
+    if (webradio) {
+      if (!icecast) {
+        if (0 != o_strcasecmp("mp3", format)) {
+          json_array_append_new(j_result, json_pack("{ss}", "format", "webradio allows only 'mp3' format"));
+        }
+      } else {
+        if (0 != o_strcasecmp("mp3", format) && 0 != o_strcasecmp("vorbis", format)) {
+          json_array_append_new(j_result, json_pack("{ss}", "format", "icecast allows only 'mp3' of 'vorbis' formats"));
+        }
+      }
     }
 
     if (channels > 2) {

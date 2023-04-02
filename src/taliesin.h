@@ -550,7 +550,7 @@ int              file_list_remove_media_list(struct _t_file_list * file_list, js
 int              file_list_empty_nolock(struct _t_file_list * file_list);
 
 // Jukebox audio buffer
-json_t * is_stream_parameters_valid(struct config_elements * config, int webradio, const char * stream_url, const char * scope, int is_admin, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate);
+json_t * is_stream_parameters_valid(struct config_elements * config, int webradio, int icecast, const char * stream_url, const char * scope, int is_admin, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate);
 void     audio_stream_clean (struct _audio_stream * audio_stream);
 int      jukebox_audio_buffer_init (struct _jukebox_audio_buffer * jukebox_audio_buffer);
 void     jukebox_audio_buffer_clean (struct _jukebox_audio_buffer * jukebox_audio_buffer);

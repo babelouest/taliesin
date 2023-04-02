@@ -533,6 +533,7 @@ void exit_server(struct config_elements ** config, int exit_value) {
 #ifndef DISABLE_OAUTH2
     if ((*config)->oidc_configured) {
       i_jwt_profile_access_token_close_config((*config)->iddawc_resource_config);
+      i_jwt_profile_access_token_close_config((*config)->iddawc_resource_config_admin);
     }
     o_free((*config)->iddawc_resource_config);
     o_free((*config)->iddawc_resource_config_admin);

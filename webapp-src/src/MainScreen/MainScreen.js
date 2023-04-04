@@ -7,10 +7,10 @@ import BrowsePlaylist from './BrowsePlaylist';
 import BrowseRecent from './BrowseRecent';
 import BrowseCategory from './BrowseCategory';
 import AdvancedSearch from './AdvancedSearch';
+import VideoPlayer from './VideoPlayer';
 import ManagePlayer from './ManagePlayer';
 import ManageStream from './ManageStream';
 import ManageDataSource from './ManageDataSource';
-import ManageConfig from './ManageConfig';
 import StreamDetails from './StreamDetails';
 import StreamMediaList from './StreamMediaList';
 import StateStore from '../lib/StateStore';
@@ -50,6 +50,8 @@ class MainScreen extends Component {
 				this.setState({showMainScreen: !reduxState.showFullScreen});
 			} else if (reduxState.lastAction === "setStoredValues") {
 				this.setState({view: reduxState.profile.view});
+			} else if (reduxState.lastAction === "loadVideoStreamAndPlay") {
+				this.setState({browse: "videoPlayer"});
 			}
 		});
 	}
@@ -107,13 +109,6 @@ class MainScreen extends Component {
 						<ManageDataSource />
 					</Grid>
 				);
-			} else if (this.state.browse === "manageConfig") {
-				return (
-					<Grid className="main-screen">
-						<h2>{i18n.t("mainScreen.config")}</h2>
-						<ManageConfig />
-					</Grid>
-				);
 			} else if (this.state.browse === "streamDetails") {
 				return (
 					<Grid className="main-screen">
@@ -133,6 +128,13 @@ class MainScreen extends Component {
 					<Grid className="main-screen">
 						<h2>{i18n.t("mainScreen.advanced_search")}</h2>
 						<AdvancedSearch />
+					</Grid>
+				);
+			} else if (this.state.browse === "videoPlayer") {
+				return (
+					<Grid className="main-screen">
+						<h2>{StateStore.getState().profile.videoTitle||i18n.t("mainScreen.video_player")}</h2>
+						<VideoPlayer />
 					</Grid>
 				);
 			} else {

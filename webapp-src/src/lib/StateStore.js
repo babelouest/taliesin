@@ -39,6 +39,7 @@ var defaultState = {
 		playlist: false,
 		mediaNow: false,
 		mediaNext: false,
+    videoTitle: "",
 		imgThumbBlob: false,
 		browse: "dashboard",
 		view: "list",
@@ -132,12 +133,14 @@ function stateStoreManager(state = defaultState, action) {
 			}
 			break;
 		case "loadStreamAndPlay":
+		case "loadVideoStreamAndPlay":
 			if (action.index || action.index === 0) {
 				state.profile.jukeboxIndex = action.index;
 			} else {
 				state.profile.jukeboxIndex = -1;
 			}
 			state.profile.stream = action.stream;
+			state.profile.videoTitle = action.videoTitle;
 			config.setLocalConfigValue("stream", action.stream);
 			break;
 		case "loadStream":

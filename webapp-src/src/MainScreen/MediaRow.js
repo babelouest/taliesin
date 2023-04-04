@@ -23,7 +23,8 @@ class MediaRow extends Component {
 			modalTitle: this.buildTitle(props.media),
 			visible: false,
 			highlight: props.highlight,
-      file_download: StateStore.getState().taliesinApiUrl + "/stream/" + encodeURIComponent(props.stream) + "?index=" + props.index + "&download"
+      fileDownload: StateStore.getState().taliesinApiUrl + "/stream/" + encodeURIComponent(props.stream) + "?index=" + props.index + "&download",
+      filePlayExternal: StateStore.getState().taliesinApiUrl + "/stream/" + encodeURIComponent(props.stream) + "?index=" + props.index + "&direct"
 		};
 
 		this.loadCover = this.loadCover.bind(this);
@@ -31,6 +32,7 @@ class MediaRow extends Component {
 		this.handlePlayNow = this.handlePlayNow.bind(this);
 		this.handleRemove = this.handleRemove.bind(this);
 		this.handleDownload = this.handleDownload.bind(this);
+		this.handlePlayExternal = this.handlePlayExternal.bind(this);
 		this.handleSelectDataSource = this.handleSelectDataSource.bind(this);
 		this.handleSelectArtist = this.handleSelectArtist.bind(this);
 		this.handleSelectAlbum = this.handleSelectAlbum.bind(this);
@@ -105,13 +107,24 @@ class MediaRow extends Component {
 	}
 
 	handlePlayNow() {
-		StateStore.dispatch({
-			type: "loadStreamAndPlay", 
-			stream: StateStore.getState().streamList.find((stream) => {
-				return stream.name === this.state.stream
-			}),
-			index: this.state.index
-		});
+    if (this.state.media.type === "audio") {
+      StateStore.dispatch({
+        type: "loadStreamAndPlay", 
+        stream: StateStore.getState().streamList.find((stream) => {
+          return stream.name === this.state.stream
+        }),
+        index: this.state.index
+      });
+    } else if (this.state.media.type === "video") {
+      StateStore.dispatch({
+        type: "loadVideoStreamAndPlay", 
+        stream: StateStore.getState().streamList.find((stream) => {
+          return stream.name === this.state.stream
+        }),
+        index: this.state.index,
+        videoTitle: this.state.media.name.replace(/\.[^/.]+$/, "")
+      });
+    }
 	}
 	
 	handleRemove() {
@@ -131,6 +144,10 @@ class MediaRow extends Component {
   
   handleDownload() {
     $("#file-download-anchor-"+this.state.index)[0].click();
+  }
+	
+  handlePlayExternal() {
+    $("#file-play-external-anchor-"+this.state.index)[0].click();
   }
 	
 	handleSelectDataSource() {
@@ -187,6 +204,9 @@ class MediaRow extends Component {
 							<Button title={i18n.t("common.download")} onClick={this.handleDownload}>
 								<FontAwesome name="download" />
 							</Button>
+							<Button title={i18n.t("common.external")} onClick={this.handlePlayExternal}>
+								<FontAwesome name="external-link" />
+							</Button>
 						</ButtonGroup>
 						<span className="space-before">{(this.state.elements>=10&&this.state.index<9?"0":"") + (this.state.index + 1) + "/" + this.state.elements}</span>
 						<span className="space-before">{this.state.highlight?<FontAwesome name="music" />:""}</span>
@@ -240,9 +260,17 @@ class MediaRow extends Component {
 					</Col>
 				</Row>
 				<ModalMedia show={this.state.modalShow} media={this.state.media} title={this.state.modalTitle} onClose={this.handleCloseModal} />
-        <a href={(this.state.file_download||"")}
+        <a href={(this.state.fileDownload||"")}
            style={{display: "none"}}
+           target="_blank"
            id={"file-download-anchor-"+this.state.index}
+           download={this.state.media.name}>
+          {i18n.t("common.download")}
+        </a>
+        <a href={(this.state.filePlayExternal||"")}
+           style={{display: "none"}}
+           target="_blank"
+           id={"file-play-external-anchor-"+this.state.index}
            download={this.state.media.name}>
           {i18n.t("common.external")}
         </a>

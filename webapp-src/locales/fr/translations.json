@@ -160,7 +160,8 @@
 		"stream": "Flux",
 		"stream_media_list": "Liste des media du flux",
 		"advanced_search": "Recherche Avancée",
-		"config": "Configuration"
+		"config": "Configuration",
+    "video_player": "Lecteur vidéo"
 	},
 	"dashboard": {
 		"title": "Serveur de streaming Taliesin",

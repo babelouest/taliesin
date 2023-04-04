@@ -38,7 +38,6 @@ class TopMenu extends Component {
 		this.handleSelectView = this.handleSelectView.bind(this);
 		this.handleChangeSearchPattern = this.handleChangeSearchPattern.bind(this);
 		this.handleAdvancedSearch = this.handleAdvancedSearch.bind(this);
-		this.handleManageConfig = this.handleManageConfig.bind(this);
 		this.simpleSearch = this.simpleSearch.bind(this);
 		this.runSimpleSearch = this.runSimpleSearch.bind(this);
 		this.getSearchResultCovers = this.getSearchResultCovers.bind(this);
@@ -251,10 +250,6 @@ class TopMenu extends Component {
 		});
 	}
 	
-	handleManageConfig() {
-		StateStore.dispatch({type: "setCurrentBrowse", browse: "manageConfig"});
-	}
-	
 	render() {
 		var languages = [];
 		["en","fr"].forEach((lang, index) => {
@@ -409,12 +404,7 @@ class TopMenu extends Component {
 			}
 			var userDropdown;
 			if (StateStore.getState().profile.isAdmin) {
-				if (StateStore.getState().status === "noauth") {
-					userDropdown = 
-						<NavDropdown title={<span><i className="fa fa-cog"></i></span>} id="nav-view">
-							<MenuItem onClick={() => this.handleManageConfig()} className={this.state.browse==="file"?"bg-success":""}>{i18n.t("topmenu.config")}</MenuItem>
-						</NavDropdown>;
-				} else {
+				if (StateStore.getState().status !== "noauth") {
 					var userList = [];
 					var foundMe = false, selected = false;
 					this.state.userList.forEach((user, index) => {
@@ -437,8 +427,6 @@ class TopMenu extends Component {
 					}
 					userDropdown = 
 						<NavDropdown title={<span><i className="fa fa-cog"></i></span>} id="nav-view">
-							<MenuItem onClick={() => this.handleManageConfig()} className={this.state.browse==="file"?"bg-success":""}>{i18n.t("topmenu.config")}</MenuItem>
-							<MenuItem divider />
 							<MenuItem>{i18n.t("topmenu.change_user")}</MenuItem>
 							{userList}
 						</NavDropdown>;

@@ -160,7 +160,8 @@
 		"stream": "Stream",
 		"stream_media_list": "Stream Media List",
 		"advanced_search": "Advanced Search",
-		"config": "Configuration"
+		"config": "Configuration",
+    "video_player": "Video Player"
 	},
 	"dashboard": {
 		"title": "Taliesin Streaming server",

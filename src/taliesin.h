@@ -86,10 +86,10 @@
 #define TALIESIN_TABLE_PLAYLIST_ELEMENT   "t_playlist_element"
 #define TALIESIN_TABLE_IMAGE_COVER        "t_image_cover"
 #define TALIESIN_TABLE_MEDIA_HISTORY      "t_media_history"
-#define TALIESIN_TABLE_CONFIG             "t_config"
 #define TALIESIN_TABLE_CATEGORY_INFO      "t_category_info"
 #define TALIESIN_TABLE_STREAM             "t_stream"
 #define TALIESIN_TABLE_STREAM_ELEMENT     "t_stream_element"
+#define TALIESIN_TABLE_CONFIG             "t_config"
 
 #define TALIESIN_SCOPE_ALL "all"
 #define TALIESIN_SCOPE_ME  "me"
@@ -154,11 +154,6 @@
 #define TALIESIN_STREAM_COMMAND_STOP     4
 #define TALIESIN_STREAM_COMMAND_RESTART  5
 
-#define TALIESIN_CONFIG_AUDIO_FILE_EXTENSION    "audio_file_extension"
-#define TALIESIN_CONFIG_VIDEO_FILE_EXTENSION    "video_file_extension"
-#define TALIESIN_CONFIG_SUBTITLE_FILE_EXTENSION "subtitle_file_extension"
-#define TALIESIN_CONFIG_IMAGE_FILE_EXTENSION    "image_file_extension"
-#define TALIESIN_CONFIG_COVER_FILE_PATTERN      "cover_file_pattern"
 #define TALIESIN_CONFIG_EXTERNAL_PLAYER         "external_player"
 
 #define TALIESIN_FILE_TYPE_UNKNOWN  0
@@ -466,10 +461,10 @@ struct config_elements {
   pthread_mutex_t                                refresh_lock;
   pthread_cond_t                                 refresh_cond;
   unsigned short                                 user_can_create_data_source;
-  char                                        ** audio_file_extension;
-  char                                        ** video_file_extension;
-  char                                        ** subtitle_file_extension;
-  char                                        ** image_file_extension;
+  struct _u_map                                * audio_file_extension;
+  struct _u_map                                * video_file_extension;
+  struct _u_map                                * subtitle_file_extension;
+  struct _u_map                                * image_file_extension;
   char                                        ** cover_file_pattern;
   char                                        ** external_player;
   char                                         * icecast_host;
@@ -509,12 +504,13 @@ json_t * media_get_metadata(struct config_elements * config, AVCodecContext  * t
 ssize_t  fs_directory_count_files_recursive(const char * path);
 
 // Config functions
-int      load_config_values(struct config_elements * config);
-int      config_get_type_from_path(struct config_elements * config, const char * path);
-json_t * config_get_values(struct config_elements * config, const char * config_type);
-json_t * is_valid_config_elements(json_t * j_config_values);
-int      config_set_values(struct config_elements * config, const char * config_type, json_t * j_config_values);
-json_t * username_get_list(struct config_elements * config);
+int          load_config_values(struct config_elements * config);
+int          config_get_type_from_path(struct config_elements * config, const char * path);
+const char * config_get_content_type_from_path(struct config_elements * config, const char * path);
+json_t     * config_get_values(struct config_elements * config, const char * config_type);
+json_t     * is_valid_config_elements(json_t * j_config_values);
+int          config_set_values(struct config_elements * config, const char * config_type, json_t * j_config_values);
+json_t     * username_get_list(struct config_elements * config);
 
 // Data source functions
 json_t   * data_source_list(struct config_elements * config, const char * username);
@@ -551,6 +547,7 @@ int              file_list_empty_nolock(struct _t_file_list * file_list);
 
 // Jukebox audio buffer
 json_t * is_stream_parameters_valid(struct config_elements * config, int webradio, int icecast, const char * stream_url, const char * scope, int is_admin, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate);
+json_t * is_stream_libav_parameters_valid(struct config_elements * config, int webradio, int icecast, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate);
 void     audio_stream_clean (struct _audio_stream * audio_stream);
 int      jukebox_audio_buffer_init (struct _jukebox_audio_buffer * jukebox_audio_buffer);
 void     jukebox_audio_buffer_clean (struct _jukebox_audio_buffer * jukebox_audio_buffer);

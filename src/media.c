@@ -286,9 +286,11 @@ unsigned char * media_get_cover_from_path(const char * path, size_t * size) {
 
 json_t * media_get_metadata(struct config_elements * config, AVCodecContext * thumbnail_cover_codec_context, const char * path) {
   AVFormatContext * full_size_cover_format_context = NULL;
-  json_t * j_metadata = json_object(), * j_format;
+  json_t          * j_metadata                     = json_object(),
+                  * j_format;
   AVCodecContext  * full_size_cover_codec_context  = NULL;
-  AVPacket        * full_size_cover_packet, * thumbnail_cover_packet;
+  AVPacket        * full_size_cover_packet,
+                  * thumbnail_cover_packet;
   int ret;
   unsigned char * cover_b64 = NULL;
   size_t cover_b64_len;

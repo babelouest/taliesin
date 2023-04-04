@@ -159,9 +159,6 @@ int config_set_values(struct config_elements * config, const char * config_type,
     if (j_query != NULL) {
       json_array_foreach(j_config_values, index, j_element) {
         j_config_value = json_pack("{sssO}", "tc_type", config_type, "tc_value", j_element);
-        if (0 == o_strcmp(config_type, TALIESIN_CONFIG_COVER_FILE_PATTERN)) {
-          json_object_set_new(j_config_value, "tc_order", json_integer((json_int_t)index));
-        }
         json_array_append_new(json_object_get(j_query, "values"), j_config_value);
       }
       res = h_insert(config->conn, j_query, NULL);
@@ -169,27 +166,7 @@ int config_set_values(struct config_elements * config, const char * config_type,
       if (res == H_OK) {
         new_config_array = get_array_from_json_list(j_config_values);
         if (new_config_array != NULL) {
-          if (0 == o_strcmp(config_type, TALIESIN_CONFIG_AUDIO_FILE_EXTENSION)) {
-            free_string_array(config->audio_file_extension);
-            config->audio_file_extension = new_config_array;
-            ret = T_OK;
-          } else if (0 == o_strcmp(config_type, TALIESIN_CONFIG_VIDEO_FILE_EXTENSION)) {
-            free_string_array(config->video_file_extension);
-            config->video_file_extension = new_config_array;
-            ret = T_OK;
-          } else if (0 == o_strcmp(config_type, TALIESIN_CONFIG_SUBTITLE_FILE_EXTENSION)) {
-            free_string_array(config->subtitle_file_extension);
-            config->subtitle_file_extension = new_config_array;
-            ret = T_OK;
-          } else if (0 == o_strcmp(config_type, TALIESIN_CONFIG_IMAGE_FILE_EXTENSION)) {
-            free_string_array(config->image_file_extension);
-            config->image_file_extension = new_config_array;
-            ret = T_OK;
-          } else if (0 == o_strcmp(config_type, TALIESIN_CONFIG_COVER_FILE_PATTERN)) {
-            free_string_array(config->cover_file_pattern);
-            config->cover_file_pattern = new_config_array;
-            ret = T_OK;
-          } else if (0 == o_strcmp(config_type, TALIESIN_CONFIG_EXTERNAL_PLAYER)) {
+          if (0 == o_strcmp(config_type, TALIESIN_CONFIG_EXTERNAL_PLAYER)) {
             free_string_array(config->external_player);
             config->external_player = new_config_array;
             ret = T_OK;
@@ -225,16 +202,16 @@ int load_config_values(struct config_elements * config) {
   size_t index;
   int ret = T_OK;
   
-  j_result = config_get_db_values(config, TALIESIN_CONFIG_AUDIO_FILE_EXTENSION);
+  j_result = config_get_db_values(config, TALIESIN_CONFIG_EXTERNAL_PLAYER);
   if (check_result_value(j_result, T_OK)) {
-    config->audio_file_extension = o_malloc((json_array_size(json_object_get(j_result, "config")) + 1) * sizeof (char*));
-    if (config->audio_file_extension != NULL) {
+    config->external_player = o_malloc((json_array_size(json_object_get(j_result, "config")) + 1) * sizeof (char*));
+    if (config->external_player != NULL) {
       json_array_foreach(json_object_get(j_result, "config"), index, j_element) {
-        config->audio_file_extension[index] = o_strdup(json_string_value(json_object_get(j_element, "conf_value")));
+        config->external_player[index] = o_strdup(json_string_value(json_object_get(j_element, "conf_value")));
       }
-        config->audio_file_extension[json_array_size(json_object_get(j_result, "config"))] = NULL;
+      config->external_player[json_array_size(json_object_get(j_result, "config"))] = NULL;
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "load_config_values - Error allocating resources for config->audio_file_extension");
+      y_log_message(Y_LOG_LEVEL_ERROR, "load_config_values - Error allocating resources for config->external_player");
       ret = T_ERROR_MEMORY;
     }
   } else {
@@ -242,106 +219,6 @@ int load_config_values(struct config_elements * config) {
     ret = T_ERROR_DB;
   }
   json_decref(j_result);
-  
-  if (ret == T_OK) {
-    j_result = config_get_db_values(config, TALIESIN_CONFIG_VIDEO_FILE_EXTENSION);
-    if (check_result_value(j_result, T_OK)) {
-      config->video_file_extension = o_malloc((json_array_size(json_object_get(j_result, "config")) + 1) * sizeof (char*));
-      if (config->video_file_extension != NULL) {
-        json_array_foreach(json_object_get(j_result, "config"), index, j_element) {
-          config->video_file_extension[index] = o_strdup(json_string_value(json_object_get(j_element, "conf_value")));
-        }
-        config->video_file_extension[json_array_size(json_object_get(j_result, "config"))] = NULL;
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "load_config_values - Error allocating resources for config->video_file_extension");
-        ret = T_ERROR_MEMORY;
-      }
-    } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "load_config_values - Error config_get_db_values for audio file extension");
-      ret = T_ERROR_DB;
-    }
-    json_decref(j_result);
-  }
-  
-  if (ret == T_OK) {
-    j_result = config_get_db_values(config, TALIESIN_CONFIG_SUBTITLE_FILE_EXTENSION);
-    if (check_result_value(j_result, T_OK)) {
-      config->subtitle_file_extension = o_malloc((json_array_size(json_object_get(j_result, "config")) + 1) * sizeof (char*));
-      if (config->subtitle_file_extension != NULL) {
-        json_array_foreach(json_object_get(j_result, "config"), index, j_element) {
-          config->subtitle_file_extension[index] = o_strdup(json_string_value(json_object_get(j_element, "conf_value")));
-        }
-        config->subtitle_file_extension[json_array_size(json_object_get(j_result, "config"))] = NULL;
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "load_config_values - Error allocating resources for config->subtitle_file_extension");
-        ret = T_ERROR_MEMORY;
-      }
-    } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "load_config_values - Error config_get_db_values for audio file extension");
-      ret = T_ERROR_DB;
-    }
-    json_decref(j_result);
-  }
-  
-  if (ret == T_OK) {
-    j_result = config_get_db_values(config, TALIESIN_CONFIG_IMAGE_FILE_EXTENSION);
-    if (check_result_value(j_result, T_OK)) {
-      config->image_file_extension = o_malloc((json_array_size(json_object_get(j_result, "config")) + 1) * sizeof (char*));
-      if (config->image_file_extension != NULL) {
-        json_array_foreach(json_object_get(j_result, "config"), index, j_element) {
-          config->image_file_extension[index] = o_strdup(json_string_value(json_object_get(j_element, "conf_value")));
-        }
-        config->image_file_extension[json_array_size(json_object_get(j_result, "config"))] = NULL;
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "load_config_values - Error allocating resources for config->image_file_extension");
-        ret = T_ERROR_MEMORY;
-      }
-    } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "load_config_values - Error config_get_db_values for audio file extension");
-      ret = T_ERROR_DB;
-    }
-    json_decref(j_result);
-  }
-  
-  if (ret == T_OK) {
-    j_result = config_get_db_values(config, TALIESIN_CONFIG_COVER_FILE_PATTERN);
-    if (check_result_value(j_result, T_OK)) {
-      config->cover_file_pattern = o_malloc((json_array_size(json_object_get(j_result, "config")) + 1) * sizeof (char*));
-      if (config->cover_file_pattern != NULL) {
-        json_array_foreach(json_object_get(j_result, "config"), index, j_element) {
-          config->cover_file_pattern[index] = o_strdup(json_string_value(json_object_get(j_element, "conf_value")));
-        }
-        config->cover_file_pattern[json_array_size(json_object_get(j_result, "config"))] = NULL;
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "load_config_values - Error allocating resources for config->cover_file_pattern");
-        ret = T_ERROR_MEMORY;
-      }
-    } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "load_config_values - Error config_get_db_values for audio file extension");
-      ret = T_ERROR_DB;
-    }
-    json_decref(j_result);
-  }
-  
-  if (ret == T_OK) {
-    j_result = config_get_db_values(config, TALIESIN_CONFIG_EXTERNAL_PLAYER);
-    if (check_result_value(j_result, T_OK)) {
-      config->external_player = o_malloc((json_array_size(json_object_get(j_result, "config")) + 1) * sizeof (char*));
-      if (config->external_player != NULL) {
-        json_array_foreach(json_object_get(j_result, "config"), index, j_element) {
-          config->external_player[index] = o_strdup(json_string_value(json_object_get(j_element, "conf_value")));
-        }
-        config->external_player[json_array_size(json_object_get(j_result, "config"))] = NULL;
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "load_config_values - Error allocating resources for config->external_player");
-        ret = T_ERROR_MEMORY;
-      }
-    } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "load_config_values - Error config_get_db_values for audio file extension");
-      ret = T_ERROR_DB;
-    }
-    json_decref(j_result);
-  }
   
   return ret;
 }
@@ -355,33 +232,63 @@ int config_get_type_from_path(struct config_elements * config, const char * path
   int ret = TALIESIN_FILE_TYPE_UNKNOWN;
   
   // Check for audio extension
-  if (string_array_has_value_case((const char **)config->audio_file_extension, ext)) {
+  if (u_map_has_key_case(config->audio_file_extension, ext)) {
     ret = TALIESIN_FILE_TYPE_AUDIO;
   }
   
   if (ret == TALIESIN_FILE_TYPE_UNKNOWN) {
     // Check for video extension
-    if (string_array_has_value_case((const char **)config->video_file_extension, ext)) {
+    if (u_map_has_key_case(config->video_file_extension, ext)) {
       ret = TALIESIN_FILE_TYPE_VIDEO;
     }
   }
   
   if (ret == TALIESIN_FILE_TYPE_UNKNOWN) {
     // Check for subtitle extension
-    if (string_array_has_value_case((const char **)config->subtitle_file_extension, ext)) {
+    if (u_map_has_key_case(config->subtitle_file_extension, ext)) {
       ret = TALIESIN_FILE_TYPE_SUBTITLE;
     }
   }
   
   if (ret == TALIESIN_FILE_TYPE_UNKNOWN) {
     // Check for image extension
-    if (string_array_has_value_case((const char **)config->image_file_extension, ext)) {
+    if (u_map_has_key_case(config->image_file_extension, ext)) {
       ret = TALIESIN_FILE_TYPE_IMAGE;
     }
   }
   
   o_free(save_path);
   return ret;
+}
+
+/**
+ * Get the type of a file based on its path
+ */
+const char * config_get_content_type_from_path(struct config_elements * config, const char * path) {
+  char * save_path = o_strdup(path);
+  const char * ext = get_filename_ext(save_path), * content_type = NULL;
+  int type = config_get_type_from_path(config, path);
+  
+  switch (type) {
+    case TALIESIN_FILE_TYPE_AUDIO:
+      content_type = u_map_get_case(config->audio_file_extension, ext);
+      break;
+    case TALIESIN_FILE_TYPE_VIDEO:
+      content_type = u_map_get_case(config->video_file_extension, ext);
+      break;
+    case TALIESIN_FILE_TYPE_SUBTITLE:
+      content_type = u_map_get_case(config->subtitle_file_extension, ext);
+      break;
+    case TALIESIN_FILE_TYPE_IMAGE:
+      content_type = u_map_get_case(config->image_file_extension, ext);
+      break;
+    default:
+      content_type = NULL;
+      break;
+  }
+  
+  o_free(save_path);
+  return content_type;
 }
 
 /**

@@ -1153,8 +1153,9 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
   uint64_t time_offset;
   int ret_thread_jukebox = 0, detach_thread_jukebox = 0;
   pthread_t thread_jukebox;
-  json_t * j_media;
+  json_t * j_media, * j_valid;
   FILE * media_file;
+  const char * content_type = NULL;
   
   if (config->status == TALIESIN_RUNNING) {
     for (i=0; i<config->nb_webradio; i++) {
@@ -1229,13 +1230,7 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
                 }
                 if (ulfius_set_stream_response(response, 200, u_webradio_stream, u_webradio_stream_free, U_STREAM_SIZE_UNKOWN, client_data_webradio->audio_stream->stream_bitrate / 8, client_data_webradio) == U_OK) {
                   pthread_setname_np(pthread_self(), request->http_url);
-                  if (0 == o_strcmp(client_data_webradio->audio_stream->stream_format, "vorbis")) {
-                    ulfius_add_header_to_response(response, "Content-Type", "application/ogg");
-                  } else if (0 == o_strcmp(client_data_webradio->audio_stream->stream_format, "flac")) {
-                    ulfius_add_header_to_response(response, "Content-Type", "audio/flac");
-                  } else {
-                    ulfius_add_header_to_response(response, "Content-Type", "audio/mpeg");
-                  }
+                  ulfius_add_header_to_response(response, "Content-Type", config_get_content_type_from_path(config, "stream.mp3"));
                   if (!client_data_webradio->metadata_send) {
                     snprintf(metaint, 16, "%u", client_data_webradio->audio_stream->stream_bitrate / 8 * TALIESIN_STREAM_METADATA_INTERVAL);
                     ulfius_add_header_to_response(response, "icy-metaint", metaint);
@@ -1265,24 +1260,14 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
       if (u_map_get_case(request->map_url, "index") != NULL) {
         file = file_list_get_file(current_jukebox->file_list, jukebox_index);
         if (file != NULL) {
-          if (u_map_get_case(request->map_url, "download") != NULL || u_map_get_case(request->map_url, "direct") != NULL) {
-            y_log_message(Y_LOG_LEVEL_DEBUG, "grut 0");
-            j_media = media_get_by_id_for_stream(config, file->tm_id);
-            y_log_message(Y_LOG_LEVEL_DEBUG, "grut 1");
-            if (check_result_value(j_media, T_OK)) {
-              y_log_message(Y_LOG_LEVEL_DEBUG, "grut 2");
+          j_media = media_get_by_id_for_stream(config, file->tm_id);
+          if (check_result_value(j_media, T_OK)) {
+            if (u_map_get_case(request->map_url, "download") != NULL || u_map_get_case(request->map_url, "direct") != NULL) {
               if ((path = msprintf("%s/%s", json_string_value(json_object_get(json_object_get(j_media, "media"), "path_ds")), json_string_value(json_object_get(json_object_get(j_media, "media"), "path_media")))) != NULL) {
-                y_log_message(Y_LOG_LEVEL_DEBUG, "grut 3");
                 if ((media_file = fopen(path, "rb")) != NULL) {
-                  y_log_message(Y_LOG_LEVEL_DEBUG, "grut 4");
                   if (ulfius_set_stream_response(response, 200, u_jukebox_stream_download, u_jukebox_stream_download_free, U_STREAM_SIZE_UNKOWN, 16384, media_file) == U_OK) {
-                    y_log_message(Y_LOG_LEVEL_DEBUG, "grut 5");
-                    if (0 == o_strcmp(current_jukebox->stream_format, "vorbis")) {
-                      ulfius_add_header_to_response(response, "Content-Type", "application/ogg");
-                    } else if (0 == o_strcmp(current_jukebox->stream_format, "flac")) {
-                      ulfius_add_header_to_response(response, "Content-Type", "audio/flac");
-                    } else {
-                      ulfius_add_header_to_response(response, "Content-Type", "audio/mpeg");
+                    if ((content_type = config_get_content_type_from_path(config, json_string_value(json_object_get(json_object_get(j_media, "media"), "path_media")))) != NULL) {
+                      ulfius_add_header_to_response(response, "Content-Type", content_type);
                     }
                     if (u_map_get_case(request->map_url, "download") != NULL) {
                       escaped_filename = url_encode(json_string_value(json_object_get(json_object_get(j_media, "media"), "name")));
@@ -1304,93 +1289,104 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
                 response->status = 500;
               }
               o_free(path);
-            } else if (check_result_value(j_media, T_ERROR_NOT_FOUND)) {
-              response->status = 404;
             } else {
-              y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error media_get_by_id_for_stream");
-              response->status = 500;
-            }
-            json_decref(j_media);
-          } else {
-            client_data_jukebox = o_malloc(sizeof(struct _client_data_jukebox));
-            if (client_data_jukebox != NULL) {
-              client_data_jukebox->audio_buffer = NULL;
-              if (init_client_data_jukebox(client_data_jukebox) == T_OK) {
-                client_data_jukebox->jukebox = current_jukebox;
-                o_strcpy(client_data_jukebox->stream_name, u_map_get(request->map_url, "stream_name"));
-                client_data_jukebox->audio_buffer = o_malloc(sizeof(struct _jukebox_audio_buffer));
-                if (client_data_jukebox->audio_buffer != NULL && jukebox_audio_buffer_init(client_data_jukebox->audio_buffer) == T_OK) {
-                  client_data_jukebox->audio_buffer->client_address = get_ip_source(request);
-                  client_data_jukebox->audio_buffer->user_agent = o_strdup(u_map_get_case(request->map_header, "User-Agent"));
-                  client_data_jukebox->audio_buffer->file = file;
-                  client_data_jukebox->audio_buffer->jukebox = current_jukebox;
-                  client_data_jukebox->transcode = 1;
+              client_data_jukebox = o_malloc(sizeof(struct _client_data_jukebox));
+              if (client_data_jukebox != NULL) {
+                client_data_jukebox->audio_buffer = NULL;
+                if (init_client_data_jukebox(client_data_jukebox) == T_OK) {
+                  client_data_jukebox->jukebox = current_jukebox;
+                  o_strcpy(client_data_jukebox->stream_name, u_map_get(request->map_url, "stream_name"));
+                  client_data_jukebox->audio_buffer = o_malloc(sizeof(struct _jukebox_audio_buffer));
+                  if (client_data_jukebox->audio_buffer != NULL && jukebox_audio_buffer_init(client_data_jukebox->audio_buffer) == T_OK) {
+                    client_data_jukebox->audio_buffer->client_address = get_ip_source(request);
+                    client_data_jukebox->audio_buffer->user_agent = o_strdup(u_map_get_case(request->map_header, "User-Agent"));
+                    client_data_jukebox->audio_buffer->file = file;
+                    client_data_jukebox->audio_buffer->jukebox = current_jukebox;
+                    client_data_jukebox->transcode = 1;
 
-                  if (u_map_get(request->map_url, "format") == NULL) {
-                    client_data_jukebox->stream_format = o_strdup(current_jukebox->stream_format);
-                  } else {
-                    client_data_jukebox->stream_format = o_strdup(u_map_get(request->map_url, "format"));
-                  }
-                  if (u_map_get(request->map_url, "channels") == NULL) {
-                    client_data_jukebox->stream_channels = current_jukebox->stream_channels;
-                  } else {
-                    client_data_jukebox->stream_channels = (unsigned short int)strtol(u_map_get(request->map_url, "channels"), NULL, 10);
-                  }
-                  if (u_map_get(request->map_url, "samplerate") == NULL) {
-                    client_data_jukebox->stream_sample_rate = current_jukebox->stream_sample_rate;
-                  } else {
-                    client_data_jukebox->stream_sample_rate = (unsigned int)strtol(u_map_get(request->map_url, "samplerate"), NULL, 10);
-                  }
-                  if (u_map_get(request->map_url, "bitrate") == NULL || 0 == o_strcmp(client_data_jukebox->stream_format, "flac")) {
-                    client_data_jukebox->stream_bitrate = current_jukebox->stream_bitrate;
-                  } else {
-                    client_data_jukebox->stream_bitrate = (unsigned int)strtol(u_map_get(request->map_url, "bitrate"), NULL, 10);
-                  }
-
-                  current_jukebox->jukebox_audio_buffer = o_realloc(current_jukebox->jukebox_audio_buffer, (current_jukebox->nb_jukebox_audio_buffer + 1)*sizeof(struct _jukebox_audio_buffer *));
-                  if (current_jukebox->jukebox_audio_buffer != NULL) {
-                    current_jukebox->jukebox_audio_buffer[current_jukebox->nb_jukebox_audio_buffer] = client_data_jukebox->audio_buffer;
-                    current_jukebox->nb_jukebox_audio_buffer++;
-                    ret_thread_jukebox = pthread_create(&thread_jukebox, NULL, jukebox_run_thread, (void *)client_data_jukebox);
-                    detach_thread_jukebox = pthread_detach(thread_jukebox);
-                    if (ret_thread_jukebox || detach_thread_jukebox) {
-                      y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread jukebox");
-                      response->status = 500;
+                    if (u_map_get(request->map_url, "format") == NULL) {
+                      client_data_jukebox->stream_format = o_strdup(current_jukebox->stream_format);
                     } else {
-                      client_data_jukebox->client_present = 1;
-                      client_data_jukebox->audio_buffer->status = TALIESIN_STREAM_TRANSCODE_STATUS_STARTED;
-                      if (ulfius_set_stream_response(response, 200, u_jukebox_stream, u_jukebox_stream_free, U_STREAM_SIZE_UNKOWN, current_jukebox->stream_bitrate / 8, client_data_jukebox) == U_OK) {
-                        time(&current_jukebox->last_seen);
-                        if (0 == o_strcmp(current_jukebox->stream_format, "vorbis")) {
-                          ulfius_add_header_to_response(response, "Content-Type", "application/ogg");
-                        } else if (0 == o_strcmp(current_jukebox->stream_format, "flac")) {
-                          ulfius_add_header_to_response(response, "Content-Type", "audio/flac");
+                      client_data_jukebox->stream_format = o_strdup(u_map_get(request->map_url, "format"));
+                    }
+                    if (u_map_get(request->map_url, "channels") == NULL) {
+                      client_data_jukebox->stream_channels = current_jukebox->stream_channels;
+                    } else {
+                      client_data_jukebox->stream_channels = (unsigned short int)strtol(u_map_get(request->map_url, "channels"), NULL, 10);
+                    }
+                    if (u_map_get(request->map_url, "samplerate") == NULL) {
+                      client_data_jukebox->stream_sample_rate = current_jukebox->stream_sample_rate;
+                    } else {
+                      client_data_jukebox->stream_sample_rate = (unsigned int)strtol(u_map_get(request->map_url, "samplerate"), NULL, 10);
+                    }
+                    if (u_map_get(request->map_url, "bitrate") == NULL || 0 == o_strcmp(client_data_jukebox->stream_format, "flac")) {
+                      client_data_jukebox->stream_bitrate = current_jukebox->stream_bitrate;
+                    } else {
+                      client_data_jukebox->stream_bitrate = (unsigned int)strtol(u_map_get(request->map_url, "bitrate"), NULL, 10);
+                    }
+                    
+                    j_valid = is_stream_libav_parameters_valid(config, 0, 0, client_data_jukebox->stream_format, client_data_jukebox->stream_channels, client_data_jukebox->stream_sample_rate, client_data_jukebox->stream_bitrate);
+                    if (j_valid != NULL && json_array_size(j_valid) == 0) {
+                      if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(j_media, "media"), "type")), "audio")) {
+                        current_jukebox->jukebox_audio_buffer = o_realloc(current_jukebox->jukebox_audio_buffer, (current_jukebox->nb_jukebox_audio_buffer + 1)*sizeof(struct _jukebox_audio_buffer *));
+                        if (current_jukebox->jukebox_audio_buffer != NULL) {
+                          current_jukebox->jukebox_audio_buffer[current_jukebox->nb_jukebox_audio_buffer] = client_data_jukebox->audio_buffer;
+                          current_jukebox->nb_jukebox_audio_buffer++;
+                          ret_thread_jukebox = pthread_create(&thread_jukebox, NULL, jukebox_run_thread, (void *)client_data_jukebox);
+                          detach_thread_jukebox = pthread_detach(thread_jukebox);
+                          if (ret_thread_jukebox || detach_thread_jukebox) {
+                            y_log_message(Y_LOG_LEVEL_ERROR, "Error running thread jukebox");
+                            response->status = 500;
+                          } else {
+                            client_data_jukebox->client_present = 1;
+                            client_data_jukebox->audio_buffer->status = TALIESIN_STREAM_TRANSCODE_STATUS_STARTED;
+                            if (ulfius_set_stream_response(response, 200, u_jukebox_stream, u_jukebox_stream_free, U_STREAM_SIZE_UNKOWN, current_jukebox->stream_bitrate / 8, client_data_jukebox) == U_OK) {
+                              time(&current_jukebox->last_seen);
+                              if ((content_type = config_get_content_type_from_path(config, json_string_value(json_object_get(json_object_get(j_media, "media"), "path_media")))) != NULL) {
+                                ulfius_add_header_to_response(response, "Content-Type", content_type);
+                              }
+                            } else {
+                              client_data_jukebox->client_present = 0;
+                              y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error ulfius_set_stream_response (3)");
+                              response->status = 500;
+                            }
+                          }
                         } else {
-                          ulfius_add_header_to_response(response, "Content-Type", "audio/mpeg");
+                          y_log_message(Y_LOG_LEVEL_ERROR, "Error realloc current_jukebox->jukebox_audio_buffer");
+                          response->status = 500;
                         }
                       } else {
-                        client_data_jukebox->client_present = 0;
-                        y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error ulfius_set_stream_response (3)");
-                        response->status = 500;
+                        ulfius_set_string_body_response(response, 400, "Invalid file format");
+                        response->status = 400;
                       }
+                    } else if (j_valid != NULL && json_array_size(j_valid) > 0) {
+                      ulfius_set_json_body_response(response, 400, j_valid);
+                    } else {
+                      y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error is_stream_libav_parameters_valid");
+                      response->status = 500;
                     }
+                    json_decref(j_valid);
+
                   } else {
-                    y_log_message(Y_LOG_LEVEL_ERROR, "Error realloc current_jukebox->jukebox_audio_buffer");
+                    y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error initializing client_data_jukebox->audio_buffer");
                     response->status = 500;
                   }
                 } else {
-                  y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error initializing client_data_jukebox->audio_buffer");
+                  y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error initializing client_data_jukebox");
                   response->status = 500;
                 }
               } else {
-                y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error initializing client_data_jukebox");
+                y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error allocating resources for client_data_jukebox");
                 response->status = 500;
               }
-            } else {
-              y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error allocating resources for client_data_jukebox");
-              response->status = 500;
             }
+          } else if (check_result_value(j_media, T_ERROR_NOT_FOUND)) {
+            response->status = 404;
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error media_get_by_id_for_stream");
+            response->status = 500;
           }
+          json_decref(j_media);
         } else {
           response->status = 404;
         }
@@ -2581,12 +2577,7 @@ int callback_taliesin_config_type_get (const struct _u_request * request, struct
   struct config_elements * config = (struct config_elements *)user_data;
   json_t * j_result = NULL;
   
-  if (0 == o_strcmp(TALIESIN_CONFIG_AUDIO_FILE_EXTENSION, u_map_get_case(request->map_url, "type")) ||
-      0 == o_strcmp(TALIESIN_CONFIG_VIDEO_FILE_EXTENSION, u_map_get_case(request->map_url, "type")) ||
-      0 == o_strcmp(TALIESIN_CONFIG_SUBTITLE_FILE_EXTENSION, u_map_get_case(request->map_url, "type")) ||
-      0 == o_strcmp(TALIESIN_CONFIG_IMAGE_FILE_EXTENSION, u_map_get_case(request->map_url, "type")) ||
-      0 == o_strcmp(TALIESIN_CONFIG_COVER_FILE_PATTERN, u_map_get_case(request->map_url, "type")) ||
-      0 == o_strcmp(TALIESIN_CONFIG_EXTERNAL_PLAYER, u_map_get_case(request->map_url, "type"))) {
+  if (0 == o_strcmp(TALIESIN_CONFIG_EXTERNAL_PLAYER, u_map_get_case(request->map_url, "type"))) {
     j_result = config_get_values(config, u_map_get_case(request->map_url, "type"));
     if (check_result_value(j_result, T_OK)) {
       if (ulfius_set_json_body_response(response, 200, json_object_get(j_result, "config")) != U_OK) {
@@ -2608,12 +2599,7 @@ int callback_taliesin_config_type_set (const struct _u_request * request, struct
   struct config_elements * config = (struct config_elements *)user_data;
   json_t * j_is_valid, * j_body;
   
-  if (0 == o_strcmp(TALIESIN_CONFIG_AUDIO_FILE_EXTENSION, u_map_get_case(request->map_url, "type")) ||
-      0 == o_strcmp(TALIESIN_CONFIG_VIDEO_FILE_EXTENSION, u_map_get_case(request->map_url, "type")) ||
-      0 == o_strcmp(TALIESIN_CONFIG_SUBTITLE_FILE_EXTENSION, u_map_get_case(request->map_url, "type")) ||
-      0 == o_strcmp(TALIESIN_CONFIG_IMAGE_FILE_EXTENSION, u_map_get_case(request->map_url, "type")) ||
-      0 == o_strcmp(TALIESIN_CONFIG_COVER_FILE_PATTERN, u_map_get_case(request->map_url, "type")) ||
-      0 == o_strcmp(TALIESIN_CONFIG_EXTERNAL_PLAYER, u_map_get_case(request->map_url, "type"))) {
+  if (0 == o_strcmp(TALIESIN_CONFIG_EXTERNAL_PLAYER, u_map_get_case(request->map_url, "type"))) {
     j_body = ulfius_get_json_body_request(request, NULL);
     j_is_valid = is_valid_config_elements(j_body);
     if (j_is_valid != NULL && json_array_size(j_is_valid) == 0) {

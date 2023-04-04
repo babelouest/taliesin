@@ -142,13 +142,20 @@ int main (int argc, char ** argv) {
   config->nb_refresh_status = 0;
   config->refresh_status_list = NULL;
   config->user_can_create_data_source = 0;
-  config->audio_file_extension = NULL;
-  config->video_file_extension = NULL;
-  config->subtitle_file_extension = NULL;
-  config->image_file_extension = NULL;
+  config->audio_file_extension = o_malloc(sizeof(struct _u_map));
+  config->video_file_extension = o_malloc(sizeof(struct _u_map));
+  config->subtitle_file_extension = o_malloc(sizeof(struct _u_map));
+  config->image_file_extension = o_malloc(sizeof(struct _u_map));
   config->cover_file_pattern = NULL;
   config->external_player = NULL;
 
+  if (u_map_init(config->audio_file_extension) != U_OK ||
+      u_map_init(config->video_file_extension) != U_OK ||
+      u_map_init(config->subtitle_file_extension) != U_OK ||
+      u_map_init(config->image_file_extension) != U_OK) {
+    fprintf(stderr, "Error initializing file extension lista\n");
+    return 1;
+  }
   pthread_mutexattr_init ( &mutexattr );
   pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_RECURSIVE );
   if (pthread_mutex_init(&config->playlist_lock, &mutexattr)) {
@@ -222,11 +229,6 @@ int main (int argc, char ** argv) {
   // Check if all mandatory configuration variables are present and correctly typed
   if (!check_config(config)) {
     fprintf(stderr, "Error initializing configuration\n");
-    exit_server(&config, TALIESIN_ERROR);
-  }
-
-  if (load_config_values(config) != T_OK) {
-    fprintf(stderr, "Error load_config_values\n");
     exit_server(&config, TALIESIN_ERROR);
   }
 
@@ -544,10 +546,10 @@ void exit_server(struct config_elements ** config, int exit_value) {
     o_free((*config)->oidc_aud);
 #endif
     o_free((*config)->stream_format);
-    free_string_array((*config)->audio_file_extension);
-    free_string_array((*config)->video_file_extension);
-    free_string_array((*config)->subtitle_file_extension);
-    free_string_array((*config)->image_file_extension);
+    u_map_clean_full((*config)->audio_file_extension);
+    u_map_clean_full((*config)->video_file_extension);
+    u_map_clean_full((*config)->subtitle_file_extension);
+    u_map_clean_full((*config)->image_file_extension);
     free_string_array((*config)->cover_file_pattern);
     free_string_array((*config)->external_player);
 
@@ -774,7 +776,7 @@ void exit_handler(int signal) {
 int build_config_from_file(struct config_elements * config) {
 
   config_t cfg;
-  config_setting_t * root, * database, * mime_type_list, * mime_type, * icecast;
+  config_setting_t * root, * database, * mime_type_list, * mime_type, * icecast, * file_list;
   const char * cur_server_remote_address = NULL,
              * cur_prefix = NULL,
              * cur_log_mode = NULL,
@@ -799,7 +801,8 @@ int build_config_from_file(struct config_elements * config) {
              * icecast_user = NULL,
              * icecast_password = NULL,
              * icecast_mount_prefix = NULL,
-             * icecast_remote_address = NULL;
+             * icecast_remote_address = NULL,
+             * file_name = NULL;
   int db_mariadb_port = 0,
       cur_stream_channels = 0,
       cur_stream_sample_rate = 0,
@@ -810,6 +813,7 @@ int build_config_from_file(struct config_elements * config) {
       compress = 0,
       icecast_port = 0;
   unsigned int i = 0;
+  size_t file_list_size = 0;
 #ifndef DISABLE_OAUTH2
   config_setting_t * oidc_cfg;
   const char * cur_oidc_server_remote_config = NULL, * cur_oidc_server_public_jwks = NULL, * cur_oidc_iss = NULL, * cur_oidc_realm = NULL, * cur_oidc_aud = NULL;
@@ -1001,6 +1005,92 @@ int build_config_from_file(struct config_elements * config) {
           }
         }
       }
+    }
+  }
+
+  // Populate audio mime types u_map
+  file_list = config_lookup(&cfg, "audio_mime_types");
+  if (file_list != NULL) {
+    for (i=0; i<(unsigned int)config_setting_length(file_list); i++) {
+      mime_type = config_setting_get_elem(file_list, i);
+      if (mime_type != NULL) {
+        if (config_setting_lookup_string(mime_type, "extension", &extension) == CONFIG_TRUE &&
+            config_setting_lookup_string(mime_type, "mime_type", &mime_type_value) == CONFIG_TRUE) {
+          u_map_put(config->audio_file_extension, extension, mime_type_value);
+        }
+      }
+    }
+  }
+
+  // Populate video mime types u_map
+  file_list = config_lookup(&cfg, "video_mime_types");
+  if (file_list != NULL) {
+    for (i=0; i<(unsigned int)config_setting_length(file_list); i++) {
+      mime_type = config_setting_get_elem(file_list, i);
+      if (mime_type != NULL) {
+        if (config_setting_lookup_string(mime_type, "extension", &extension) == CONFIG_TRUE &&
+            config_setting_lookup_string(mime_type, "mime_type", &mime_type_value) == CONFIG_TRUE) {
+          u_map_put(config->video_file_extension, extension, mime_type_value);
+        }
+      }
+    }
+  }
+
+  // Populate subtitle mime types u_map
+  file_list = config_lookup(&cfg, "subtitle_mime_types");
+  if (file_list != NULL) {
+    for (i=0; i<(unsigned int)config_setting_length(file_list); i++) {
+      mime_type = config_setting_get_elem(file_list, i);
+      if (mime_type != NULL) {
+        if (config_setting_lookup_string(mime_type, "extension", &extension) == CONFIG_TRUE &&
+            config_setting_lookup_string(mime_type, "mime_type", &mime_type_value) == CONFIG_TRUE) {
+          u_map_put(config->subtitle_file_extension, extension, mime_type_value);
+        }
+      }
+    }
+  }
+
+  // Populate image mime types u_map
+  file_list = config_lookup(&cfg, "image_mime_types");
+  if (file_list != NULL) {
+    for (i=0; i<(unsigned int)config_setting_length(file_list); i++) {
+      mime_type = config_setting_get_elem(file_list, i);
+      if (mime_type != NULL) {
+        if (config_setting_lookup_string(mime_type, "extension", &extension) == CONFIG_TRUE &&
+            config_setting_lookup_string(mime_type, "mime_type", &mime_type_value) == CONFIG_TRUE) {
+          u_map_put(config->image_file_extension, extension, mime_type_value);
+        }
+      }
+    }
+  }
+
+  // Populate image cover search order string array
+  file_list = config_lookup(&cfg, "image_cover_search_order");
+  if (file_list != NULL) {
+    file_list_size = (size_t)config_setting_length(file_list);
+    if ((config->cover_file_pattern = o_malloc((file_list_size+1)*sizeof(char *))) != NULL) {
+      for (i=0; i<(unsigned int)file_list_size; i++) {
+        config->cover_file_pattern[i] = NULL;
+        mime_type = config_setting_get_elem(file_list, i);
+        if (mime_type != NULL) {
+          if (config_setting_lookup_string(mime_type, "file_name", &file_name) == CONFIG_TRUE) {
+            config->cover_file_pattern[i] = o_strdup(file_name);
+            config->cover_file_pattern[i+1] = NULL;
+          } else {
+            fprintf(stderr, "Error invalid image_cover_search_order at index %u, exiting\n", i);
+            config_destroy(&cfg);
+            return 0;
+          }
+        } else {
+          fprintf(stderr, "Error invalid image_cover_search_order at index %u, exiting\n", i);
+          config_destroy(&cfg);
+          return 0;
+        }
+      }
+    } else {
+      fprintf(stderr, "Error allocating config->cover_file_pattern, exiting\n");
+      config_destroy(&cfg);
+      return 0;
     }
   }
 

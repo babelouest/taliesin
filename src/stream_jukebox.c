@@ -1612,8 +1612,8 @@ void u_jukebox_stream_free(void * cls) {
 }
 
 ssize_t u_jukebox_stream_download (void * cls, uint64_t pos, char * buf, size_t max) {
+  UNUSED(pos);
   FILE * media_file = (FILE *)cls;
-y_log_message(Y_LOG_LEVEL_DEBUG, "plop %lu", pos);
   if (media_file != NULL && !feof(media_file)) {
     return (ssize_t)fread (buf, 1, max, media_file);
   } else {

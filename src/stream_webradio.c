@@ -1788,64 +1788,39 @@ void * webradio_run_thread(void * args) {
     } else {
       title = o_strdup(webradio->display_name);
     }
-    // Open file
-    path = msprintf("%s/%s", json_string_value(json_object_get(json_object_get(j_media, "media"), "path_ds")), json_string_value(json_object_get(json_object_get(j_media, "media"), "path_media")));
-    if (!open_input_file(path, &input_format_context, &input_codec_context, AVMEDIA_TYPE_AUDIO)) {
-      y_log_message(Y_LOG_LEVEL_INFO, "Transcode for stream '%s' file '%s'", webradio->display_name, path);
-      duration = (input_format_context->duration/AV_TIME_BASE);
+    if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(j_media, "media"), "type")), "audio")) {
+      // Open file
+      path = msprintf("%s/%s", json_string_value(json_object_get(json_object_get(j_media, "media"), "path_ds")), json_string_value(json_object_get(json_object_get(j_media, "media"), "path_media")));
+      if (!open_input_file(path, &input_format_context, &input_codec_context, AVMEDIA_TYPE_AUDIO)) {
+        y_log_message(Y_LOG_LEVEL_INFO, "Transcode for stream '%s' file '%s'", webradio->display_name, path);
+        duration = (input_format_context->duration/AV_TIME_BASE);
 
-      // Open new buffer
-      if (audio_stream_enqueue_buffer(webradio, (size_t)((duration + 1) * webradio->audio_stream->stream_bitrate / 8), title, current_file, current_index) == T_OK) {
-        current_buffer = webradio->audio_stream->last_buffer;
-        if (webradio->audio_stream->status != TALIESIN_STREAM_STATUS_STOPPED &&
-            !init_resampler(input_codec_context, webradio->audio_stream->output_codec_context, &resample_context)) {
-          finished = 0;
-          while (webradio->audio_stream->status != TALIESIN_STREAM_STATUS_STOPPED && !finished) {
-            output_frame_size = webradio->audio_stream->output_codec_context->frame_size;
-            error             = 0;
+        // Open new buffer
+        if (audio_stream_enqueue_buffer(webradio, (size_t)((duration + 1) * webradio->audio_stream->stream_bitrate / 8), title, current_file, current_index) == T_OK) {
+          current_buffer = webradio->audio_stream->last_buffer;
+          if (webradio->audio_stream->status != TALIESIN_STREAM_STATUS_STOPPED &&
+              !init_resampler(input_codec_context, webradio->audio_stream->output_codec_context, &resample_context)) {
+            finished = 0;
+            while (webradio->audio_stream->status != TALIESIN_STREAM_STATUS_STOPPED && !finished) {
+              output_frame_size = webradio->audio_stream->output_codec_context->frame_size;
+              error             = 0;
 
-            // Transcode file
+              // Transcode file
 
-            // Decode frames
-            while (av_audio_fifo_size(webradio->audio_stream->fifo) < output_frame_size && !error) {
-              if (read_decode_convert_and_store(webradio->audio_stream->fifo, input_format_context, input_codec_context, webradio->audio_stream->output_codec_context, resample_context, &finished)) {
-                error = 1;
-              }
-              if (finished) {
-                // End of file
-                break;
-              }
-            }
-
-            // Re-encode frames
-            while ((av_audio_fifo_size(webradio->audio_stream->fifo) >= output_frame_size || (finished && av_audio_fifo_size(webradio->audio_stream->fifo) > 0)) && !error) {
-              if (load_encode_and_return(webradio->audio_stream->fifo, webradio->audio_stream->output_codec_context, webradio->audio_stream->output_format_context, &webradio->audio_stream->pts, &data_present)) {
-                error = 1;
-              } else {
-                if (pthread_mutex_lock(&current_buffer->buffer_lock)) {
-                  y_log_message(Y_LOG_LEVEL_ERROR, "Error pthread_mutex_lock for buffer_lock");
-                } else {
-                  current_buffer->offset_list = o_realloc(current_buffer->offset_list, (current_buffer->nb_offset+1)*sizeof(size_t));
-                  if (current_buffer->offset_list != NULL) {
-                    current_buffer->offset_list[current_buffer->nb_offset] = current_buffer->size;
-                    current_buffer->nb_offset++;
-                  } else {
-                    y_log_message(Y_LOG_LEVEL_ERROR, "Error realloc for offset_list");
-                  }
-                  pthread_mutex_unlock(&current_buffer->buffer_lock);
+              // Decode frames
+              while (av_audio_fifo_size(webradio->audio_stream->fifo) < output_frame_size && !error) {
+                if (read_decode_convert_and_store(webradio->audio_stream->fifo, input_format_context, input_codec_context, webradio->audio_stream->output_codec_context, resample_context, &finished)) {
+                  error = 1;
+                }
+                if (finished) {
+                  // End of file
+                  break;
                 }
               }
-            }
 
-            // Write encoded frames into buffer
-            if (finished && !error) {
-              data_written = 0;
-              do {
-                if (encode_audio_frame_and_return(NULL,
-                                                  webradio->audio_stream->output_codec_context,
-                                                  webradio->audio_stream->output_format_context,
-                                                  &webradio->audio_stream->pts,
-                                                  &data_written)) {
+              // Re-encode frames
+              while ((av_audio_fifo_size(webradio->audio_stream->fifo) >= output_frame_size || (finished && av_audio_fifo_size(webradio->audio_stream->fifo) > 0)) && !error) {
+                if (load_encode_and_return(webradio->audio_stream->fifo, webradio->audio_stream->output_codec_context, webradio->audio_stream->output_format_context, &webradio->audio_stream->pts, &data_present)) {
                   error = 1;
                 } else {
                   if (pthread_mutex_lock(&current_buffer->buffer_lock)) {
@@ -1861,35 +1836,62 @@ void * webradio_run_thread(void * args) {
                     pthread_mutex_unlock(&current_buffer->buffer_lock);
                   }
                 }
-              } while (data_written && !error);
+              }
+
+              // Write encoded frames into buffer
+              if (finished && !error) {
+                data_written = 0;
+                do {
+                  if (encode_audio_frame_and_return(NULL,
+                                                    webradio->audio_stream->output_codec_context,
+                                                    webradio->audio_stream->output_format_context,
+                                                    &webradio->audio_stream->pts,
+                                                    &data_written)) {
+                    error = 1;
+                  } else {
+                    if (pthread_mutex_lock(&current_buffer->buffer_lock)) {
+                      y_log_message(Y_LOG_LEVEL_ERROR, "Error pthread_mutex_lock for buffer_lock");
+                    } else {
+                      current_buffer->offset_list = o_realloc(current_buffer->offset_list, (current_buffer->nb_offset+1)*sizeof(size_t));
+                      if (current_buffer->offset_list != NULL) {
+                        current_buffer->offset_list[current_buffer->nb_offset] = current_buffer->size;
+                        current_buffer->nb_offset++;
+                      } else {
+                        y_log_message(Y_LOG_LEVEL_ERROR, "Error realloc for offset_list");
+                      }
+                      pthread_mutex_unlock(&current_buffer->buffer_lock);
+                    }
+                  }
+                } while (data_written && !error);
+              }
             }
           }
+          current_buffer->complete = 1;
+          avcodec_flush_buffers(webradio->audio_stream->output_codec_context);
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "Error enqueing buffer_stream of size %u", ((duration + 1) * webradio->audio_stream->stream_bitrate / 8));
         }
-        current_buffer->complete = 1;
-        avcodec_flush_buffers(webradio->audio_stream->output_codec_context);
       } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "Error enqueing buffer_stream of size %u", ((duration + 1) * webradio->audio_stream->stream_bitrate / 8));
+        y_log_message(Y_LOG_LEVEL_ERROR, "Error opening file %s", path);
       }
-    } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "Error opening file %s", path);
+      o_free(path);
+      path = NULL;
+      if (resample_context) {
+        swr_close(resample_context);
+        swr_free(&resample_context);
+        resample_context = NULL;
+      }
+      if (input_codec_context) {
+        avcodec_free_context(&input_codec_context);
+        input_codec_context = NULL;
+      }
+      if (input_format_context) {
+        avformat_close_input(&input_format_context);
+        input_format_context = NULL;
+      }
     }
-    o_free(path);
-    path = NULL;
     o_free(title);
     title = NULL;
-    if (resample_context) {
-      swr_close(resample_context);
-      swr_free(&resample_context);
-      resample_context = NULL;
-    }
-    if (input_codec_context) {
-      avcodec_free_context(&input_codec_context);
-      input_codec_context = NULL;
-    }
-    if (input_format_context) {
-      avformat_close_input(&input_format_context);
-      input_format_context = NULL;
-    }
     json_decref(j_media);
   }
   webradio->audio_stream->transcode_status = TALIESIN_STREAM_TRANSCODE_STATUS_COMPLETE;
@@ -2157,98 +2159,100 @@ void * webradio_icecast_run_thread(void * args) {
     } else {
       title = o_strdup(webradio->display_name);
     }
-    // Open file
-    path = msprintf("%s/%s", json_string_value(json_object_get(json_object_get(j_media, "media"), "path_ds")), json_string_value(json_object_get(json_object_get(j_media, "media"), "path_media")));
-    if (!open_input_file(path, &input_format_context, &input_codec_context, AVMEDIA_TYPE_AUDIO)) {
-      y_log_message(Y_LOG_LEVEL_INFO, "Icecast transcode for stream '%s' file '%s'", webradio->display_name, path);
-      duration = (input_format_context->duration/AV_TIME_BASE);
-      // Open new buffer
-      if (audio_stream_enqueue_buffer(webradio, (size_t)((duration + 1) * webradio->audio_stream->stream_bitrate / 8), title, current_file, current_index) == T_OK) {
-        if (!open_output_buffer_icecast(webradio, &output_format_context, &output_codec_context, &fifo)) {
-          current_buffer = webradio->audio_stream->last_buffer;
-          if (!init_resampler(input_codec_context, output_codec_context, &resample_context)) {
-            finished = 0;
-            while (webradio->audio_stream->status != TALIESIN_STREAM_STATUS_STOPPED && !finished) {
-              output_frame_size = output_codec_context->frame_size;
-              error             = 0;
-              // Transcode file
+    if (0 == o_strcmp(json_string_value(json_object_get(json_object_get(j_media, "media"), "type")), "audio")) {
+      // Open file
+      path = msprintf("%s/%s", json_string_value(json_object_get(json_object_get(j_media, "media"), "path_ds")), json_string_value(json_object_get(json_object_get(j_media, "media"), "path_media")));
+      if (!open_input_file(path, &input_format_context, &input_codec_context, AVMEDIA_TYPE_AUDIO)) {
+        y_log_message(Y_LOG_LEVEL_INFO, "Icecast transcode for stream '%s' file '%s'", webradio->display_name, path);
+        duration = (input_format_context->duration/AV_TIME_BASE);
+        // Open new buffer
+        if (audio_stream_enqueue_buffer(webradio, (size_t)((duration + 1) * webradio->audio_stream->stream_bitrate / 8), title, current_file, current_index) == T_OK) {
+          if (!open_output_buffer_icecast(webradio, &output_format_context, &output_codec_context, &fifo)) {
+            current_buffer = webradio->audio_stream->last_buffer;
+            if (!init_resampler(input_codec_context, output_codec_context, &resample_context)) {
+              finished = 0;
+              while (webradio->audio_stream->status != TALIESIN_STREAM_STATUS_STOPPED && !finished) {
+                output_frame_size = output_codec_context->frame_size;
+                error             = 0;
+                // Transcode file
 
-              // Decode frames
-              while (av_audio_fifo_size(fifo) < output_frame_size && !error) {
-                if (read_decode_convert_and_store(fifo, input_format_context, input_codec_context, output_codec_context, resample_context, &finished)) {
-                  error = 1;
+                // Decode frames
+                while (av_audio_fifo_size(fifo) < output_frame_size && !error) {
+                  if (read_decode_convert_and_store(fifo, input_format_context, input_codec_context, output_codec_context, resample_context, &finished)) {
+                    error = 1;
+                  }
+                  if (finished) {
+                    break;
+                  }
                 }
-                if (finished) {
-                  break;
+
+                // Re-encode frames
+                while ((av_audio_fifo_size(fifo) >= output_frame_size || (finished && av_audio_fifo_size(fifo) > 0)) && !error) {
+                  if (load_encode_and_return(fifo, output_codec_context, output_format_context, &webradio->audio_stream->pts, &data_present)) {
+                    error = 1;
+                  }
                 }
               }
-
-              // Re-encode frames
-              while ((av_audio_fifo_size(fifo) >= output_frame_size || (finished && av_audio_fifo_size(fifo) > 0)) && !error) {
-                if (load_encode_and_return(fifo, output_codec_context, output_format_context, &webradio->audio_stream->pts, &data_present)) {
-                  error = 1;
-                }
+              /*avcodec_send_frame(output_codec_context, NULL);
+              avcodec_send_frame(input_codec_context, NULL);*/
+              if (av_write_trailer(output_format_context)) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "Error av_write_trailer");
               }
+              current_buffer->complete = 1;
+              avcodec_flush_buffers(output_codec_context);
+              avcodec_flush_buffers(input_codec_context);
             }
-            /*avcodec_send_frame(output_codec_context, NULL);
-            avcodec_send_frame(input_codec_context, NULL);*/
-            if (av_write_trailer(output_format_context)) {
-              y_log_message(Y_LOG_LEVEL_ERROR, "Error av_write_trailer");
+            if (resample_context) {
+              swr_close(resample_context);
+              swr_free(&resample_context);
+              resample_context = NULL;
             }
-            current_buffer->complete = 1;
-            avcodec_flush_buffers(output_codec_context);
-            avcodec_flush_buffers(input_codec_context);
-          }
-          if (resample_context) {
-            swr_close(resample_context);
-            swr_free(&resample_context);
-            resample_context = NULL;
-          }
-          if (input_codec_context) {
-            avcodec_free_context(&input_codec_context);
-            input_codec_context = NULL;
-          }
-          if (output_codec_context) {
-            avcodec_free_context(&output_codec_context);
-            output_codec_context = NULL;
-          }
-          if (input_format_context) {
-            avformat_close_input(&input_format_context);
-            input_format_context = NULL;
-          }
+            if (input_codec_context) {
+              avcodec_free_context(&input_codec_context);
+              input_codec_context = NULL;
+            }
+            if (output_codec_context) {
+              avcodec_free_context(&output_codec_context);
+              output_codec_context = NULL;
+            }
+            if (input_format_context) {
+              avformat_close_input(&input_format_context);
+              input_format_context = NULL;
+            }
 
-          if (output_format_context != NULL) {
-            avio_flush(output_format_context->pb);
-            av_free(output_format_context->pb->buffer);
-            av_free(output_format_context->pb);
-            avformat_free_context(output_format_context);
+            if (output_format_context != NULL) {
+              avio_flush(output_format_context->pb);
+              av_free(output_format_context->pb->buffer);
+              av_free(output_format_context->pb);
+              avformat_free_context(output_format_context);
+            }
           }
+          av_audio_fifo_free(fifo);
+          fifo = NULL;
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "Error enqueing buffer_stream of size %u", ((duration + 1) * webradio->audio_stream->stream_bitrate / 8));
         }
-        av_audio_fifo_free(fifo);
-        fifo = NULL;
       } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "Error enqueing buffer_stream of size %u", ((duration + 1) * webradio->audio_stream->stream_bitrate / 8));
+        y_log_message(Y_LOG_LEVEL_ERROR, "Error opening file %s", path);
       }
-    } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "Error opening file %s", path);
+      o_free(path);
+      path = NULL;
+      if (resample_context) {
+        swr_close(resample_context);
+        swr_free(&resample_context);
+        resample_context = NULL;
+      }
+      if (input_codec_context) {
+        avcodec_free_context(&input_codec_context);
+        input_codec_context = NULL;
+      }
+      if (input_format_context) {
+        avformat_close_input(&input_format_context);
+        input_format_context = NULL;
+      }
     }
-    o_free(path);
-    path = NULL;
     o_free(title);
     title = NULL;
-    if (resample_context) {
-      swr_close(resample_context);
-      swr_free(&resample_context);
-      resample_context = NULL;
-    }
-    if (input_codec_context) {
-      avcodec_free_context(&input_codec_context);
-      input_codec_context = NULL;
-    }
-    if (input_format_context) {
-      avformat_close_input(&input_format_context);
-      input_format_context = NULL;
-    }
     json_decref(j_media);
   }
   webradio->audio_stream->transcode_status = TALIESIN_STREAM_TRANSCODE_STATUS_COMPLETE;

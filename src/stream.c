@@ -126,7 +126,7 @@ void is_stream_url_valid(struct config_elements * config, const char * stream_ur
   }
 }
 
-json_t * is_stream_parameters_valid(struct config_elements * config, int webradio, int icecast, const char * stream_url, const char * scope, int is_admin, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate) {
+json_t * is_stream_libav_parameters_valid(struct config_elements * config, int webradio, int icecast, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate) {
   json_t * j_result = json_array();
 
   if (j_result != NULL) {
@@ -163,7 +163,17 @@ json_t * is_stream_parameters_valid(struct config_elements * config, int webradi
     if (0 != o_strcasecmp("flac", format) && bit_rate != 32000 && bit_rate != 96000 && bit_rate != 128000 && bit_rate != 192000 && bit_rate != 256000 && bit_rate != 320000) {
       json_array_append_new(j_result, json_pack("{ss}", "bit_rate", "bit_rate can be 32000, 96000, 128000, 192000, 256000 or 320000"));
     }
-    
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "is_stream_libav_parameters_valid - Error allocating resources for j_result");
+  }
+  return j_result;
+}
+
+json_t * is_stream_parameters_valid(struct config_elements * config, int webradio, int icecast, const char * stream_url, const char * scope, int is_admin, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate) {
+  json_t * j_result;
+
+  j_result = is_stream_libav_parameters_valid(config, webradio, icecast, format, channels, sample_rate, bit_rate);
+  if (j_result != NULL) {
     if ((!is_admin && 0 == o_strcmp(TALIESIN_SCOPE_ALL, scope)) || (scope != NULL && 0 != o_strcmp(TALIESIN_SCOPE_ME, scope) && 0 != o_strcmp(TALIESIN_SCOPE_ALL, scope))) {
       json_array_append_new(j_result, json_pack("{ss}", "scope", "scope value is an optional string and can be only " TALIESIN_SCOPE_ALL " or " TALIESIN_SCOPE_ME ", only administrator can add playlists for all users"));
     }
@@ -171,8 +181,6 @@ json_t * is_stream_parameters_valid(struct config_elements * config, int webradi
     if (!o_strnullempty(stream_url)) {
       is_stream_url_valid(config, stream_url, j_result);
     }
-  } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "is_stream_parameters_valid - Error allocating resources for j_result");
   }
   return j_result;
 }

@@ -1323,7 +1323,7 @@ json_t * media_scan_path(struct config_elements * config, json_t * j_data_source
               json_array_extend(json_object_get(j_result, "media_list"), json_object_get(j_temp_result, "media_list"));
             }
             json_decref(j_temp_result);
-          } else if (0 == o_strcmp(json_string_value(json_object_get(j_element, "type")), "audio")) {
+          } else if (0 == o_strcmp(json_string_value(json_object_get(j_element, "type")), "audio") || 0 == o_strcmp(json_string_value(json_object_get(j_element, "type")), "video")) {
             full_path = msprintf("%s/%s", json_string_value(json_object_get(j_data_source, "path")), new_path);
             json_array_append_new(json_object_get(j_result, "media_list"), json_pack("{sIss}", "tm_id", json_integer_value(json_object_get(j_element, "tm_id")), "full_path", full_path));
             o_free(full_path);

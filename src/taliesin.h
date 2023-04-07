@@ -118,6 +118,9 @@
 #define TALIESIN_STREAM_ICECAST_MAX_BUFFER           16384
 #define TALIESIN_STREAM_ICECAST_MAX_RECONNECT        10
 #define TALIESIN_STREAM_ICECAST_SLEEP_RECONNECT      5
+#define TALIESIN_STREAM_DEFAULT_VIDEO_FORMAT         "webm"
+#define TALIESIN_STREAM_DEFAULT_VIDEO_BITRATE        "2Mbps"
+#define TALIESIN_STREAM_DEFAULT_VIDEO_RESOLUTION     "720P"
 
 #define TALIESIN_STREAM_STATUS_NOT_STARTED 0
 #define TALIESIN_STREAM_STATUS_STARTED     1
@@ -456,6 +459,9 @@ struct config_elements {
   unsigned int                                   stream_bitrate;
   pthread_mutex_t                                stream_stop_lock;
   pthread_cond_t                                 stream_stop_cond;
+  char                                         * video_stream_format;
+  char                                         * video_stream_bitrate;
+  char                                         * video_stream_resolution;
   uint                                           nb_refresh_status;
   struct _refresh_config                      ** refresh_status_list;
   pthread_mutex_t                                refresh_lock;

@@ -107,7 +107,7 @@ int callback_taliesin_options (const struct _u_request * request, struct _u_resp
  */
 int callback_taliesin_server_configuration (const struct _u_request * request, struct _u_response * response, void * user_data) {
   UNUSED(request);
-  set_response_json_body_and_clean(response, 200, json_pack("{ss*ss*ss*ss*sisisisssososs*}", 
+  set_response_json_body_and_clean(response, 200, json_pack("{ss*ss*ss*ss*sisisissss*ss*ss*sososs*}", 
                         "api_prefix",  ((struct config_elements *)user_data)->api_prefix,
                         "oauth_scope_user", ((struct config_elements *)user_data)->oauth_scope_user,
                         "oauth_scope_admin", ((struct config_elements *)user_data)->oauth_scope_admin,
@@ -116,6 +116,9 @@ int callback_taliesin_server_configuration (const struct _u_request * request, s
                         "default_stream_sample_rate", ((struct config_elements *)user_data)->stream_sample_rate,
                         "default_stream_bitrate", ((struct config_elements *)user_data)->stream_bitrate,
                         "oidc_claim_user_id", ((struct config_elements *)user_data)->oidc_claim_user_id,
+                        "default_video_stream_format", ((struct config_elements *)user_data)->video_stream_format,
+                        "default_video_stream_bitrate", ((struct config_elements *)user_data)->video_stream_bitrate,
+                        "default_video_stream_resolution", ((struct config_elements *)user_data)->video_stream_resolution,
 #ifdef U_DISABLE_WEBSOCKET
                         "use_websockets", json_false(),
 #else
@@ -1156,6 +1159,7 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
   json_t * j_media, * j_valid;
   FILE * media_file;
   const char * content_type = NULL;
+  int is_video = 0, download_file = 0, direct_stream = 0;
   
   if (config->status == TALIESIN_RUNNING) {
     for (i=0; i<config->nb_webradio; i++) {
@@ -1262,14 +1266,20 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
         if (file != NULL) {
           j_media = media_get_by_id_for_stream(config, file->tm_id);
           if (check_result_value(j_media, T_OK)) {
-            if (u_map_get_case(request->map_url, "download") != NULL || u_map_get_case(request->map_url, "direct") != NULL) {
+            is_video = !o_strcmp(json_string_value(json_object_get(json_object_get(j_media, "media"), "type")), "video");
+            download_file = u_map_has_key(request->map_url, "download");
+            direct_stream = u_map_has_key(request->map_url, "direct");
+            if (is_video) {
+              direct_stream = 1;
+            }
+            if (download_file || direct_stream) {
               if ((path = msprintf("%s/%s", json_string_value(json_object_get(json_object_get(j_media, "media"), "path_ds")), json_string_value(json_object_get(json_object_get(j_media, "media"), "path_media")))) != NULL) {
                 if ((media_file = fopen(path, "rb")) != NULL) {
                   if (ulfius_set_stream_response(response, 200, u_jukebox_stream_download, u_jukebox_stream_download_free, U_STREAM_SIZE_UNKOWN, 16384, media_file) == U_OK) {
                     if ((content_type = config_get_content_type_from_path(config, json_string_value(json_object_get(json_object_get(j_media, "media"), "path_media")))) != NULL) {
                       ulfius_add_header_to_response(response, "Content-Type", content_type);
                     }
-                    if (u_map_get_case(request->map_url, "download") != NULL) {
+                    if (direct_stream) {
                       escaped_filename = url_encode(json_string_value(json_object_get(json_object_get(j_media, "media"), "name")));
                       content_disposition = msprintf("attachment; filename=%s", escaped_filename);
                       ulfius_add_header_to_response(response, "Content-Disposition", content_disposition);

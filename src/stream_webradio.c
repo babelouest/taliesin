@@ -1343,8 +1343,8 @@ int webradio_close(struct config_elements * config, struct _t_webradio * webradi
     y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error webradio_remove_db_stream");
     return T_ERROR;
   }
-  webradio->audio_stream->status = TALIESIN_STREAM_STATUS_STOPPED;
   if (webradio->audio_stream != NULL) {
+    webradio->audio_stream->status = TALIESIN_STREAM_STATUS_STOPPED;
     pthread_mutex_lock(&webradio->audio_stream->stream_lock);
     pthread_cond_signal(&webradio->audio_stream->stream_cond);
     pthread_mutex_unlock(&webradio->audio_stream->stream_lock);

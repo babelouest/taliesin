@@ -124,6 +124,11 @@ class MediaRow extends Component {
         index: this.state.index,
         videoTitle: this.state.media.name.replace(/\.[^/.]+$/, "")
       });
+    } else {
+			StateStore.getState().NotificationManager.addNotification({
+				message: i18n.t("playlist.message_error_refreshing_playlists"),
+				level: 'error'
+			});
     }
 	}
 	
@@ -195,7 +200,7 @@ class MediaRow extends Component {
 				firstCol =
 					<Col md={2} sm={12} xs={12}>
 						<ButtonGroup className="space-after">
-							<Button title={i18n.t("common.play_now")} onClick={this.handlePlayNow}>
+							<Button title={i18n.t("common.play_now")} onClick={this.handlePlayNow} disabled={this.state.media.type!="audio"&&this.state.media.type!="video"}>
 								<FontAwesome name="play" />
 							</Button>
 							<Button title={i18n.t("common.remove_from_list")} onClick={this.handleRemove}>

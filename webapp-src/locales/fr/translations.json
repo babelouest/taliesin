@@ -63,6 +63,7 @@
 		"channels": "Channels",
 		"sample_rate": "Échantillonage",
 		"bitrate": "Bit Rate",
+		"resolution": "Résolution",
 		"play": "Lire",
 		"pause": "Pause",
 		"previous": "Précédent",
@@ -93,10 +94,15 @@
 		"format_mp3": "MP3",
 		"format_ogg": "OGG/Vorbis",
 		"format_flac": "FLAC",
+    "format_mp4_h264_aac": "MP4 (H264/AAC)",
+    "format_webm_vp9_vorbis": "WEBM (VP9/Vorbis)",
+    "format_ogg_theora_vorbis": "OGG (Theora/Vorbis)",
 		"channels_mono": "Mono",
 		"channels_stereo": "Stéréo",
-		"bitrate_bps": "{{bps}} kbps",
+		"bitrate_kbps": "{{bps}} Kbps",
+		"bitrate_mbps": "{{bps}} Mbps",
 		"sample_rate_khz": "{{khz}} kHz",
+		"resolution_p": "{{value}}",
 		"new_playlist": "Nouvelle playlist",
 		"manage_streams": "Gérer les flux",
 		"message_error_adding_stream": "Erreur lors de l'ajout au flux",
@@ -115,6 +121,7 @@
 		"message_error_loading_data_source": "Erreur lors du chargement de la liste des sources de données",
 		"message_error_loading_playlist": "Erreur lors du chargement de la liste des playlists",
 		"message_error_loading_server_config": "Erreur lors du chargement de la configuration du serveur",
+		"message_error_invalid_type": "Erreur, le type de fichier est inconnu",
 		"manage_in_stream_playlist": "Gérer"
 	},
 	"topmenu": {
@@ -377,7 +384,9 @@
 		"message_add_to_stream_success": "Ajouté dans le flux",
 		"message_add_to_stream_error": "Erreur lors de l'ajout dans le flux",
 		"message_add_to_playlist_success": "Ajouté dans la playlist",
-		"message_add_to_playlist_error": "Erreur lors de l'ajout dans la playlist"
+		"message_add_to_playlist_error": "Erreur lors de l'ajout dans la playlist",
+    "audio_stream_parameters": "Paramètres audio",
+    "video_stream_parameters": "Paramètres video"
 	},
 	"config": {
 		"audioExtensions": "Extensions pour fichiers audio",

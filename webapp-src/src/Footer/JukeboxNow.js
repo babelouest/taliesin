@@ -26,12 +26,14 @@ class JukeboxNow extends Component {
 	}
 	
 	componentWillReceiveProps(nextProps) {
-		var newMedia = (this.state.media.data_source !== nextProps.media.data_source || this.state.media.path !== nextProps.media.path);
-		this.setState({media: (nextProps.media?nextProps.media:this.state.media), index: nextProps.index, total: nextProps.total}, () => {
-			if (newMedia) {
-				this.loadCover();
-			}
-		});
+    if (nextProps.media) {
+      var newMedia = (this.state.media.data_source !== nextProps.media.data_source || this.state.media.path !== nextProps.media.path);
+      this.setState({media: (nextProps.media?nextProps.media:this.state.media), index: nextProps.index, total: nextProps.total}, () => {
+        if (newMedia) {
+          this.loadCover();
+        }
+      });
+    }
 	}
 	
 	loadCover() {

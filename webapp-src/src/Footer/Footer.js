@@ -54,7 +54,7 @@ class Footer extends Component {
               this.setWindowTitle();
             });
           }
-        } else if (reduxState.lastAction === "loadStreamAndPlay") {
+        } else if (reduxState.lastAction === "loadStreamAndPlay" || reduxState.lastAction === "loadVideoStreamAndPlay") {
           this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, jukeboxIndex: StateStore.getState().profile.jukeboxIndex, play: true}, () => {
             this.buildExternal();
             this.setWindowTitle();
@@ -221,7 +221,7 @@ class Footer extends Component {
 			} else if (this.state.currentPlayer.type==="internal") {
 				audioPlayer =
 					<Col md={3} sm={6} xs={6} className="player-box">
-						<AudioPlayer stream={this.state.stream} play={this.state.play} index={this.state.jukeboxIndex} duration={this.state.stream.webradio?0:(this.state.mediaNow.duration/1000)} />
+						<AudioPlayer stream={this.state.stream} play={this.state.play} index={this.state.jukeboxIndex} media={this.state.mediaNow} duration={this.state.stream.webradio?0:(this.state.mediaNow.duration/1000)} />
 					</Col>;
 			} else { // External
 				audioPlayer =

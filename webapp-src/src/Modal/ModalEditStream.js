@@ -35,6 +35,9 @@ class ModalEditStream extends Component {
 			channelsDisabled: false,
 			bitrateDisabled: false,
 			sampleRateDisabled: false,
+      videoFormat: StateStore.getState().serverConfig.default_video_stream_format,
+      videoBitrate: StateStore.getState().serverConfig.default_video_stream_bitrate,
+      videoResolution: StateStore.getState().serverConfig.default_video_stream_resolution,
 			playNow: true
 		};
 		
@@ -45,7 +48,10 @@ class ModalEditStream extends Component {
 		this.handleChangeRandom = this.handleChangeRandom.bind(this);
 		this.handleChangeIcecast = this.handleChangeIcecast.bind(this);
 		this.handleChangeType = this.handleChangeType.bind(this);
-		this.handleChangeFormat = this.handleChangeFormat.bind(this);
+		this.handleChangeAudioFormat = this.handleChangeAudioFormat.bind(this);
+		this.handleChangeVideoFormat = this.handleChangeVideoFormat.bind(this);
+		this.handleChangeVideoBitrate = this.handleChangeVideoBitrate.bind(this);
+		this.handleChangeVideoResolution = this.handleChangeVideoResolution.bind(this);
 		this.handleChangeChannels = this.handleChangeChannels.bind(this);
 		this.handleChangeBitrate = this.handleChangeBitrate.bind(this);
 		this.handleChangeSampleRate = this.handleChangeSampleRate.bind(this);
@@ -79,6 +85,9 @@ class ModalEditStream extends Component {
 			channelsDisabled: false,
 			bitrateDisabled: false,
 			sampleRateDisabled: false,
+      videoFormat: StateStore.getState().serverConfig.default_video_stream_format,
+      videoBitrate: StateStore.getState().serverConfig.default_video_stream_bitrate,
+      videoResolution: StateStore.getState().serverConfig.default_video_stream_resolution,
 			playNow: true
 		});
 	}
@@ -141,7 +150,7 @@ class ModalEditStream extends Component {
 		this.setState(newStatus);
 	}
 	
-	handleChangeFormat(e) {
+	handleChangeAudioFormat(e) {
 		var newStatus = {format: e.target.value};
 			var serverConfig = config.getLocalConfigValue("serverConfig");
 			if (serverConfig) {
@@ -156,6 +165,18 @@ class ModalEditStream extends Component {
 		}
 		this.setState(newStatus);
 	}
+  
+  handleChangeVideoFormat(e) {
+    this.setState({videoFormat: e.target.value});
+  }
+  
+  handleChangeVideoBitrate(e) {
+    this.setState({videoBitrate: e.target.value});
+  }
+  
+  handleChangeVideoResolution(e) {
+    this.setState({videoResolution: e.target.value});
+  }
 	
 	handleChangeScope(e) {
 		this.setState({ scope: e.target.value });
@@ -196,7 +217,7 @@ class ModalEditStream extends Component {
 	}
 	
 	render() {
-		var recursive, random, icecast, path,  formatSelect;
+		var recursive, random, icecast, path,  audioFormatSelect;
 		if (this.state.element && this.state.element.type === "folder") {
 			recursive = 
 				<div>
@@ -273,11 +294,11 @@ class ModalEditStream extends Component {
 				</div>;
 		}
 		if (this.state.type === "webradio") {
-      formatSelect =
+      audioFormatSelect =
         <FormControl componentClass="select"
                      placeholder={i18n.t("common.select")}
                      value={this.state.format}
-                     onChange={this.handleChangeFormat}
+                     onChange={this.handleChangeAudioFormat}
                      disabled={this.state.formatDisabled}>
           <option value="mp3">{i18n.t("common.format_mp3")}</option>
           <option value="vorbis">{i18n.t("common.format_ogg")}</option>
@@ -319,11 +340,11 @@ class ModalEditStream extends Component {
         </div>
       }
 		} else {
-      formatSelect =
+      audioFormatSelect =
         <FormControl componentClass="select"
                      placeholder={i18n.t("common.select")}
                      value={this.state.format}
-                     onChange={this.handleChangeFormat}
+                     onChange={this.handleChangeAudioFormat}
                      disabled={this.state.formatDisabled}>
           <option value="mp3">{i18n.t("common.format_mp3")}</option>
           <option value="vorbis">{i18n.t("common.format_ogg")}</option>
@@ -365,6 +386,21 @@ class ModalEditStream extends Component {
 								/>
 							</Col>
 						</Row>
+						{icecast}
+            <Row>
+              <Col md={4}>
+                <Label>{i18n.t("modal.stream_url")}</Label>
+              </Col>
+              <Col md={8}>
+                <FormControl
+                  type="text"
+                  value={this.state.streamUrl}
+                  placeholder={i18n.t("modal.stream_url_random")}
+                  onChange={this.handleChangeUrl}
+                  maxLength={32}
+                />
+              </Col>
+            </Row>
 						<hr/>
 						<Row>
 							<Col md={4}>
@@ -396,27 +432,19 @@ class ModalEditStream extends Component {
 							</Col>
 						</Row>
 						{random}
-						{icecast}
-            <Row>
-              <Col md={4}>
-                <Label>{i18n.t("modal.stream_url")}</Label>
-              </Col>
-              <Col md={8}>
-                <FormControl
-                  type="text"
-                  value={this.state.streamUrl}
-                  placeholder={i18n.t("modal.stream_url_random")}
-                  onChange={this.handleChangeUrl}
-                  maxLength={32}
-                />
-              </Col>
-            </Row>
+						<Row>
+							<Col md={12}>
+								<h3>
+                  {i18n.t("modal.audio_stream_parameters")}
+                </h3>
+							</Col>
+						</Row>
 						<Row>
 							<Col md={4}>
 								<Label>{i18n.t("common.format")}</Label>
 							</Col>
 							<Col md={8}>
-                {formatSelect}
+                {audioFormatSelect}
 							</Col>
 						</Row>
 						<Row>
@@ -444,12 +472,12 @@ class ModalEditStream extends Component {
                              value={this.state.bitrate}
                              onChange={this.handleChangeBitrate}
                              disabled={this.state.bitrateDisabled}>
-									<option value="32000">{i18n.t("common.bitrate_bps", {bps: 32})}</option>
-									<option value="96000">{i18n.t("common.bitrate_bps", {bps: 96})}</option>
-									<option value="128000">{i18n.t("common.bitrate_bps", {bps: 128})}</option>
-									<option value="192000">{i18n.t("common.bitrate_bps", {bps: 192})}</option>
-									<option value="256000">{i18n.t("common.bitrate_bps", {bps: 256})}</option>
-									<option value="320000">{i18n.t("common.bitrate_bps", {bps: 320})}</option>
+									<option value="32000">{i18n.t("common.bitrate_kbps", {bps: 32})}</option>
+									<option value="96000">{i18n.t("common.bitrate_kbps", {bps: 96})}</option>
+									<option value="128000">{i18n.t("common.bitrate_kbps", {bps: 128})}</option>
+									<option value="192000">{i18n.t("common.bitrate_kbps", {bps: 192})}</option>
+									<option value="256000">{i18n.t("common.bitrate_kbps", {bps: 256})}</option>
+									<option value="320000">{i18n.t("common.bitrate_kbps", {bps: 320})}</option>
 								</FormControl>
 							</Col>
 						</Row>
@@ -472,6 +500,69 @@ class ModalEditStream extends Component {
 								</FormControl>
 							</Col>
 						</Row>
+						{/*<Row>
+							<Col md={12}>
+								<hr/>
+							</Col>
+						</Row>
+						<Row>
+							<Col md={12}>
+								<h3>
+                  {i18n.t("modal.video_stream_parameters")}
+                </h3>
+							</Col>
+						</Row>
+						<Row>
+							<Col md={4}>
+								<Label>{i18n.t("common.format")}</Label>
+							</Col>
+							<Col md={8}>
+                <FormControl componentClass="select"
+                             placeholder={i18n.t("common.select")}
+                             value={this.state.videoFormat}
+                             onChange={this.handleChangeVideoFormat}
+                             disabled={this.state.type !== "jukebox"}>
+                  <option value="mp4">{i18n.t("common.format_mp4_h264_aac")}</option>
+                  <option value="webm">{i18n.t("common.format_webm_vp9_vorbis")}</option>
+                  <option value="ogg">{i18n.t("common.format_ogg_theora_vorbis")}</option>
+                </FormControl>
+							</Col>
+						</Row>
+						<Row>
+							<Col md={4}>
+								<Label>{i18n.t("common.bitrate")}</Label>
+							</Col>
+							<Col md={8}>
+                <FormControl componentClass="select"
+                             placeholder={i18n.t("common.select")}
+                             value={this.state.videoBitrate}
+                             onChange={this.handleChangeVideoBitrate}
+                             disabled={this.state.type !== "jukebox"}>
+									<option value="250Kbps">{i18n.t("common.bitrate_kbps", {bps: 250})}</option>
+									<option value="500Kbps">{i18n.t("common.bitrate_kbps", {bps: 500})}</option>
+									<option value="1Mbps">{i18n.t("common.bitrate_mbps", {bps: 1})}</option>
+									<option value="2Mbps">{i18n.t("common.bitrate_mbps", {bps: 2})}</option>
+									<option value="4Mbps">{i18n.t("common.bitrate_mbps", {bps: 4})}</option>
+									<option value="8Mbps">{i18n.t("common.bitrate_mbps", {bps: 8})}</option>
+                </FormControl>
+							</Col>
+						</Row>
+						<Row>
+							<Col md={4}>
+								<Label>{i18n.t("common.resolution")}</Label>
+							</Col>
+							<Col md={8}>
+                <FormControl componentClass="select"
+                             placeholder={i18n.t("common.select")}
+                             value={this.state.videoResolution}
+                             onChange={this.handleChangeVideoResolution}
+                             disabled={this.state.type !== "jukebox"}>
+									<option value="480P">{i18n.t("common.resolution_p", {value: "480P"})}</option>
+									<option value="720P">{i18n.t("common.resolution_p", {value: "720P"})}</option>
+									<option value="1080P">{i18n.t("common.resolution_p", {value: "1080P"})}</option>
+                </FormControl>
+							</Col>
+						</Row>*/}
 						<Row>
 							<Col md={12}>
 								<hr/>

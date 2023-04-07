@@ -23,7 +23,7 @@ class AudioPlayer extends Component {
 			websocketUrl: "ws" + StateStore.getState().taliesinApiUrl.substring(4) + "/stream/" + props.stream.name + "/ws",
 			websocketProtocol: ["taliesin"],
 			websocketReconnect: true,
-			media: {data_source: false, path: false},
+			media: props.media||{data_source: false, path: false},
 			now: false, 
 			next: false, 
 			taliesinApiUrl: StateStore.getState().taliesinApiUrl, 
@@ -108,6 +108,7 @@ class AudioPlayer extends Component {
 			websocketUrl: websocketUrl,
 			websocketReconnect: true,
 			playNow: nextProps.play, 
+			media: nextProps.media||{data_source: false, path: false},
 			playIndex: nextProps.index,
 			duration: nextProps.duration
 		}, () => {
@@ -350,37 +351,46 @@ class AudioPlayer extends Component {
 	}
 	
 	handlePlay() {
-		this.setState({preload: (this.state.stream.webradio?"none":"auto"), currentTime: 0}, () => {
-			if (this.state.stream.name && this.state.taliesinApiUrl) {
-				this.handleStop();
-        let streamUrl;
-        if (this.state.stream.icecast) {
-          streamUrl = StateStore.getState().serverConfig.icecast_remote_address + "/" + this.state.stream.name;
-        } else {
-          var randStr = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);
-          var indexStr = this.state.stream.webradio?"":("&index="+this.state.jukeboxIndex);
-          streamUrl = this.state.taliesinApiUrl + "/stream/" + this.state.stream.name + "?rand=" + randStr + indexStr;
+    if (!this.state.stream.webradio && this.state.media.type === "video") {
+      StateStore.dispatch({
+        type: "loadVideoStreamAndPlay", 
+        stream: this.state.stream,
+        index: this.state.jukeboxIndex,
+        videoTitle: this.state.media.name.replace(/\.[^/.]+$/, "")
+      });
+    } else {
+      this.setState({preload: (this.state.stream.webradio?"none":"auto"), currentTime: 0}, () => {
+        if (this.state.stream.name && this.state.taliesinApiUrl) {
+          this.handleStop();
+          let streamUrl;
+          if (this.state.stream.icecast) {
+            streamUrl = StateStore.getState().serverConfig.icecast_remote_address + "/" + this.state.stream.name;
+          } else {
+            var randStr = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);
+            var indexStr = this.state.stream.webradio?"":("&index="+this.state.jukeboxIndex);
+            streamUrl = this.state.taliesinApiUrl + "/stream/" + this.state.stream.name + "?rand=" + randStr + indexStr;
+          }
+          var newState = {streamUrl: streamUrl};
+          if (this.state.stream.webradio) {
+            var newPlayedIndex = this.state.jukeboxPlayedIndex;
+            newPlayedIndex.push(this.state.jukeboxIndex);
+            newState.jukeboxPlayedIndex = newPlayedIndex;
+          } else {
+            this.loadMedia();
+            StateStore.dispatch({type: "setJukeboxIndex", index: this.state.jukeboxIndex});
+          }
+          this.setState(newState, () => {
+            this.dispatchPlayerStatus({status: "play"});
+            if (this.state.stream.webradio) {
+              this.sendStreamComand("now");
+            } else {
+              this.sendStreamComand("list", {offset: this.state.jukeboxIndex, limit: 1});
+            }
+            this.rap.audioEl.play();
+          });
         }
-				var newState = {streamUrl: streamUrl};
-				if (this.state.stream.webradio) {
-					var newPlayedIndex = this.state.jukeboxPlayedIndex;
-					newPlayedIndex.push(this.state.jukeboxIndex);
-					newState.jukeboxPlayedIndex = newPlayedIndex;
-				} else {
-					this.loadMedia();
-					StateStore.dispatch({type: "setJukeboxIndex", index: this.state.jukeboxIndex});
-				}
-				this.setState(newState, () => {
-					this.dispatchPlayerStatus({status: "play"});
-					if (this.state.stream.webradio) {
-						this.sendStreamComand("now");
-					} else {
-						this.sendStreamComand("list", {offset: this.state.jukeboxIndex, limit: 1});
-					}
-					this.rap.audioEl.play();
-				});
-			}
-		})
+      });
+    }
 	}
 	
 	handleListen() {

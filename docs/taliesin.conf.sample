@@ -171,3 +171,201 @@ app_files_mime_types =
     compress = 0
   }
 )
+
+audio_mime_types =
+(
+  {
+    extension = ".mp3"
+    mime_type = "audio/mpeg"
+  },
+  {
+    extension = ".m4a"
+    mime_type = "audio/aac"
+  },
+  {
+    extension = ".aac"
+    mime_type = "audio/aac"
+  },
+  {
+    extension = ".ogg"
+    mime_type = "audio/ogg"
+  },
+  {
+    extension = ".oga"
+    mime_type = "audio/ogg"
+  },
+  {
+    extension = ".flac"
+    mime_type = "audio/flac"
+  },
+  {
+    extension = ".wav"
+    mime_type = "audio/wav"
+  },
+  {
+    extension = ".wma"
+    mime_type = "video/x-ms-wma"
+  },
+  {
+    extension = ".aif"
+    mime_type = "audio/x-aiff"
+  },
+  {
+    extension = ".aiff"
+    mime_type = "audio/x-aiff"
+  },
+  {
+    extension = ".ape"
+    mime_type = "audio/x-monkeys-audio"
+  },
+  {
+    extension = ".mpc"
+    mime_type = "audio/x-musepack"
+  },
+  {
+    extension = ".shn"
+    mime_type = "application/x-shorten"
+  },
+  {
+    extension = ".au"
+    mime_type = "audio/x-au"
+  }
+)
+
+video_mime_types =
+(
+  {
+    extension = ".avi"
+    mime_type = "video/x-msvideo"
+  },
+  {
+    extension = ".mpg"
+    mime_type = "video/mpeg"
+  },
+  {
+    extension = ".webm"
+    mime_type = "video/webm"
+  },
+  {
+    extension = ".mpeg"
+    mime_type = "video/mpeg"
+  },
+  {
+    extension = ".mp4"
+    mime_type = "video/mp4"
+  },
+  {
+    extension = ".m4v"
+    mime_type = "video/x-m4v"
+  },
+  {
+    extension = ".mov"
+    mime_type = "video/quicktime"
+  },
+  {
+    extension = ".wmv"
+    mime_type = "video/x-ms-wmv"
+  },
+  {
+    extension = ".ogv"
+    mime_type = "video/ogg"
+  },
+  {
+    extension = ".divx"
+    mime_type = "video/x-divx"
+  },
+  {
+    extension = ".m2ts"
+    mime_type = "video/mp2t"
+  },
+  {
+    extension = ".mkv"
+    mime_type = "video/x-matroska"
+  },
+  {
+    extension = ".flv"
+    mime_type = "video/x-flv"
+  }
+)
+
+subtitle_mime_types =
+(
+  {
+    extension = ".srt"
+    mime_type = "text/plain"
+  },
+  {
+    extension = ".ssa"
+    mime_type = "text/plain"
+  },
+  {
+    extension = ".vtt"
+    mime_type = "text/plain"
+  },
+  {
+    extension = ".sub"
+    mime_type = "text/plain"
+  },
+  {
+    extension = ".sbv"
+    mime_type = "text/plain"
+  }
+)
+
+image_mime_types =
+(
+  {
+    extension = ".jpg"
+    mime_type = "image/jpeg"
+  },
+  {
+    extension = ".jpeg"
+    mime_type = "image/jpeg"
+  },
+  {
+    extension = ".png"
+    mime_type = "image/png"
+  },
+  {
+    extension = ".gif"
+    mime_type = "image/gif"
+  },
+  {
+    extension = ".bmp"
+    mime_type = "image/bmp"
+  }
+)
+
+image_cover_search_order =
+(
+  {
+    file_name = "folder.jpg"
+  },
+  {
+    file_name = "folder.jpeg"
+  },
+  {
+    file_name = "cover.jpg"
+  },
+  {
+    file_name = "cover.jpeg"
+  },
+  {
+    file_name = "front.jpg"
+  },
+  {
+    file_name = "front.jpeg"
+  },
+  {
+    file_name = "*.jpg"
+  },
+  {
+    file_name = "*.jpeg"
+  },
+  {
+    file_name = "*.gif"
+  },
+  {
+    file_name = "*.png"
+  }
+)

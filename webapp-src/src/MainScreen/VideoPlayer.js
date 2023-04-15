@@ -13,6 +13,7 @@ class VideoPlayer extends Component {
 		this.handleList = this.handleList.bind(this);
 		this.handleDownload = this.handleDownload.bind(this);
 		this.handlePlayExternal = this.handlePlayExternal.bind(this);
+		this.handleCopyLink = this.handleCopyLink.bind(this);
 	}
 	
 	componentWillReceiveProps(nextProps) {
@@ -29,6 +30,28 @@ class VideoPlayer extends Component {
 	
   handlePlayExternal() {
     $("#file-play-external-anchor")[0].click();
+  }
+	
+  handleCopyLink() {
+     navigator.clipboard.writeText(this.getStreamUrl()+"&direct")
+     .then(() => {
+        StateStore.getState().NotificationManager.addNotification({
+          message: i18n.t("common.copy_clipboard"),
+          level: 'info'
+        });
+     });
+  }
+  
+  getStreamUrl() {
+    let streamUrl = "";
+    if (StateStore.getState().profile.stream.icecast) {
+      streamUrl = StateStore.getState().serverConfig.icecast_remote_address + "/" + StateStore.getState().profile.stream.name;
+    } else {
+      var randStr = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);
+      var indexStr = StateStore.getState().profile.stream.webradio?"":("&index="+StateStore.getState().profile.jukeboxIndex);
+      streamUrl = StateStore.getState().taliesinApiUrl + "/stream/" + StateStore.getState().profile.stream.name + "?rand=" + randStr + indexStr;
+    }
+    return streamUrl;
   }
 	
 	render() {
@@ -53,6 +76,9 @@ class VideoPlayer extends Component {
 							</Button>
 							<Button title={i18n.t("common.external")} onClick={this.handlePlayExternal}>
 								<FontAwesome name="external-link" />
+							</Button>
+							<Button title={i18n.t("common.copy_link")} onClick={this.handleCopyLink}>
+								<FontAwesome name="copy" />
 							</Button>
 						</ButtonGroup>
           </Col>

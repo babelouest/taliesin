@@ -33,6 +33,7 @@ class MediaRow extends Component {
 		this.handleRemove = this.handleRemove.bind(this);
 		this.handleDownload = this.handleDownload.bind(this);
 		this.handlePlayExternal = this.handlePlayExternal.bind(this);
+		this.handleCopyLink = this.handleCopyLink.bind(this);
 		this.handleSelectDataSource = this.handleSelectDataSource.bind(this);
 		this.handleSelectArtist = this.handleSelectArtist.bind(this);
 		this.handleSelectAlbum = this.handleSelectAlbum.bind(this);
@@ -122,7 +123,8 @@ class MediaRow extends Component {
           return stream.name === this.state.stream
         }),
         index: this.state.index,
-        videoTitle: this.state.media.name.replace(/\.[^/.]+$/, "")
+        videoTitle: this.state.media.name.replace(/\.[^/.]+$/, ""),
+        mediaNow: this.state.media
       });
     } else {
 			StateStore.getState().NotificationManager.addNotification({
@@ -153,6 +155,16 @@ class MediaRow extends Component {
 	
   handlePlayExternal() {
     $("#file-play-external-anchor-"+this.state.index)[0].click();
+  }
+  
+  handleCopyLink() {
+     navigator.clipboard.writeText(this.state.filePlayExternal)
+     .then(() => {
+        StateStore.getState().NotificationManager.addNotification({
+          message: i18n.t("common.copy_clipboard"),
+          level: 'info'
+        });
+     });
   }
 	
 	handleSelectDataSource() {
@@ -198,7 +210,7 @@ class MediaRow extends Component {
 		} else {
 			if (this.state.stream && !this.state.stream.webradio) {
 				firstCol =
-					<Col md={2} sm={12} xs={12}>
+					<Col md={3} sm={12} xs={12}>
 						<ButtonGroup className="space-after">
 							<Button title={i18n.t("common.play_now")} onClick={this.handlePlayNow} disabled={this.state.media.type!="audio"&&this.state.media.type!="video"}>
 								<FontAwesome name="play" />
@@ -211,6 +223,9 @@ class MediaRow extends Component {
 							</Button>
 							<Button title={i18n.t("common.external")} onClick={this.handlePlayExternal}>
 								<FontAwesome name="external-link" />
+							</Button>
+							<Button title={i18n.t("common.copy_link")} onClick={this.handleCopyLink}>
+								<FontAwesome name="copy" />
 							</Button>
 						</ButtonGroup>
 						<span className="space-before">{(this.state.elements>=10&&this.state.index<9?"0":"") + (this.state.index + 1) + "/" + this.state.elements}</span>
@@ -238,7 +253,7 @@ class MediaRow extends Component {
 				<Row className={ "row-media" + (this.state.highlight?" bg-success":"") }>
 					{date}
 					{firstCol}
-					<Col md={2} sm={12} xs={12}>
+					<Col md={1} sm={12} xs={12}>
 						<Label className="visible-xs visible-sm">{i18n.t("common.data_source")}</Label><span><a role="button" onClick={this.handleSelectDataSource}>{this.state.media.data_source}</a></span>
 					</Col>
 					<Col md={2} sm={12} xs={12}>

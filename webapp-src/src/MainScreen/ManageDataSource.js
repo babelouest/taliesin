@@ -76,7 +76,15 @@ class ManageDataSource extends Component {
 				refreshStatus[dataSource.name] = result;
 				this.setState({refreshStatus: refreshStatus});
 				dataSource.status = result.status;
-				StateStore.dispatch({type: "setDataSource", dataSource: dataSource});
+				StateStore.dispatch({type: "setDataSource", dataSource: result});
+        var dataSourceList = this.state.dataSourceList;
+        for (var i in dataSourceList) {
+          if (dataSourceList[i].name === result.name) {
+            dataSourceList[i] = result;
+            this.setState({dataSourceList: dataSourceList});
+            break;
+          }
+        }
 				if (this._ismounted && (result.status === "running" || result.status === "pending" || result.status === "preparing")) {
 					window.setTimeout(() => {this.getRefreshStatus(dataSource)}, 5000);
 				}
@@ -268,6 +276,7 @@ class ManageDataSource extends Component {
 	
 	render() {
 		var dataSourceList = [];
+    console.log(this.state.dataSourceList);
 		this.state.dataSourceList.forEach((dataSource, index) => {
 			var refresh = "";
 			if (this.state.refreshStatus[dataSource.name]) {

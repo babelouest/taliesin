@@ -46,7 +46,9 @@ class MediaInfo extends Component {
 	}
 	
 	handleOpenModal() {
-		this.setState({showModal: true});
+    if (this.state.media) {
+      this.setState({showModal: true});
+    }
 	}
 	
 	handleCloseModal() {

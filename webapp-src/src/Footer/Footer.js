@@ -54,8 +54,13 @@ class Footer extends Component {
               this.setWindowTitle();
             });
           }
-        } else if (reduxState.lastAction === "loadStreamAndPlay" || reduxState.lastAction === "loadVideoStreamAndPlay") {
+        } else if (reduxState.lastAction === "loadStreamAndPlay") {
           this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, jukeboxIndex: StateStore.getState().profile.jukeboxIndex, play: true}, () => {
+            this.buildExternal();
+            this.setWindowTitle();
+          });
+        } else if (reduxState.lastAction === "loadVideoStreamAndPlay") {
+          this.setState({stream: StateStore.getState().profile.stream, mediaNow: StateStore.getState().profile.mediaNow, jukeboxIndex: StateStore.getState().profile.jukeboxIndex, play: false}, () => {
             this.buildExternal();
             this.setWindowTitle();
           });
@@ -213,7 +218,11 @@ class Footer extends Component {
 						<StreamSelector streamList={this.state.streamList} stream={this.state.stream} />
 					</ButtonGroup>
 				</Col>;
-			if (this.state.currentPlayer.type==="carleon") {
+			if (this.state.mediaNow && this.state.mediaNow.type==="video") {
+				audioPlayer =
+					<Col md={3} sm={6} xs={6} className="player-box">
+					</Col>;
+			} else if (this.state.currentPlayer.type==="carleon") {
 				audioPlayer =
 					<Col md={3} sm={6} xs={6} className="player-box">
 						<MPDController player={this.state.currentPlayer} stream={this.state.stream} play={this.state.play} index={this.state.jukeboxIndex} />
@@ -228,7 +237,7 @@ class Footer extends Component {
 					<Col md={3} sm={6} xs={6} className="player-box">
 					</Col>;
 			}
-			if (this.state.stream.name) {
+			if (this.state.stream.name && (!this.state.mediaNow || this.state.mediaNow.type!=="video")) {
 				middleButtons =
 					<Col md={2} sm={1} xs={1} className="text-center">
             <Button title={i18n.t("player.full_screen")} onClick={ ()=> this.showFullScreen()}>

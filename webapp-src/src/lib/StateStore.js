@@ -141,6 +141,9 @@ function stateStoreManager(state = defaultState, action) {
 			}
 			state.profile.stream = action.stream;
 			state.profile.videoTitle = action.videoTitle;
+      if (action.mediaNow) {
+        state.profile.mediaNow = action.mediaNow;
+      }
 			config.setLocalConfigValue("stream", action.stream);
 			break;
 		case "loadStream":

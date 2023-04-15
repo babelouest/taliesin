@@ -121,7 +121,11 @@ class ElementButtons extends Component {
 			var streamList = StateStore.getState().streamList;
 			streamList.push(result);
 			StateStore.dispatch({type: "setStreamList", streamList: streamList});
-			StateStore.dispatch({type: "loadStreamAndPlay", stream: result, index: 0});
+      if (this.state.element.type === "video") {
+        StateStore.dispatch({type: "loadVideoStreamAndPlay", stream: result, index: 0, mediaNow: this.state.element});
+      } else {
+        StateStore.dispatch({type: "loadStreamAndPlay", stream: result, index: 0});
+      }
 			StateStore.getState().NotificationManager.addNotification({
 				message: i18n.t("common.message_play_stream_ok"),
 				level: 'info'
@@ -162,7 +166,11 @@ class ElementButtons extends Component {
 				var streamList = StateStore.getState().streamList;
 				streamList.push(result);
 				StateStore.dispatch({type: "setStreamList", streamList: streamList});
-				StateStore.dispatch({type: (player.playNow?"loadStreamAndPlay":"loadStream"), stream: result, index: 0});
+        if (this.state.element.type === "video") {
+          StateStore.dispatch({type: (player.playNow?"loadVideoStreamAndPlay":"loadStream"), stream: result, index: 0, mediaNow: this.state.element});
+        } else {
+          StateStore.dispatch({type: (player.playNow?"loadStreamAndPlay":"loadStream"), stream: result, index: 0});
+        }
 			})
 			.fail(() => {
 				StateStore.getState().NotificationManager.addNotification({

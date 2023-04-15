@@ -115,7 +115,7 @@ class ModalMedia extends Component {
 	
 	getMediaFolder() {
 		if (this.state.show) {
-			var media = this.state.media;
+			var media = this.state.media||{};
 			if (media.path) {
 				if (media.path.lastIndexOf("/") > -1) {
 					media.folder = media.path.substring(0, media.path.lastIndexOf("/"));

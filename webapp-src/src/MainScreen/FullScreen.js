@@ -8,7 +8,7 @@ import i18n from '../lib/i18n';
 class FullScreen extends Component {
 	constructor(props) {
 		super(props);
-		
+
 		this.state = {
 			stream: StateStore.getState().profile.stream,
 			media: StateStore.getState().profile.mediaNow,
@@ -25,7 +25,7 @@ class FullScreen extends Component {
 			volume: StateStore.getState().profile.currentPlayerVolume,
 			playerSwitch: StateStore.getState().profile.currentPlayerSwitch
 		};
-		
+
 		StateStore.subscribe(() => {
 			if (this._ismounted) {
 				if (StateStore.getState().lastAction === "loadStream") {
@@ -67,7 +67,7 @@ class FullScreen extends Component {
 				}
 			}
 		});
-		
+
 		this.loadMedia = this.loadMedia.bind(this);
 		this.buildTitle = this.buildTitle.bind(this);
 		this.buildTitleNext = this.buildTitleNext.bind(this);
@@ -81,7 +81,7 @@ class FullScreen extends Component {
 		this.handleChangeVolume = this.handleChangeVolume.bind(this);
 		this.handleSelectFolder = this.handleSelectFolder.bind(this);
 		this.getMediaFolder = this.getMediaFolder.bind(this);
-		
+
 		this.loadMedia();
 	}
 
@@ -104,12 +104,12 @@ class FullScreen extends Component {
 			this.loadMedia();
 		});
 	}
-	
+
 	componentWillUnmount() {
 		this._ismounted = false;
 	}
-	
-	componentDidMount() { 
+
+	componentDidMount() {
 		this._ismounted = true;
 	}
 
@@ -120,7 +120,7 @@ class FullScreen extends Component {
 			this.getMediaFolder();
 		}
 	}
-	
+
 	buildTitle() {
 		var title = "";
 		if (!!this.state.media && !!this.state.media.tags) {
@@ -135,7 +135,7 @@ class FullScreen extends Component {
 		}
 		return title;
 	}
-  
+
   buildTitleNext() {
 		var title = "";
 		if (!!this.state.mediaNext && !!this.state.mediaNext.tags) {
@@ -153,18 +153,18 @@ class FullScreen extends Component {
 		}
 		return title;
   }
-	
+
 	handleClose() {
 		StateStore.dispatch({type: "showFullScreen", show: false});
 	}
-	
+
 	handleSelectArtist(value) {
 		StateStore.dispatch({type: "showFullScreen", show: false});
 		StateStore.dispatch({type: "setCurrentBrowse", browse: "category"});
 		StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: StateStore.getState().dataSourceList.find((ds) => {return ds.name === this.state.media.data_source})});
 		StateStore.dispatch({type: "setCurrentCategory", category: "artist", categoryValue: value});
 	}
-	
+
 	getMediaFolder() {
 		var media = this.state.media;
 		if (media) {
@@ -181,32 +181,32 @@ class FullScreen extends Component {
 			}
 		}
 	}
-	
+
 	handleSelectAlbum(value) {
 		StateStore.dispatch({type: "showFullScreen", show: false});
 		StateStore.dispatch({type: "setCurrentBrowse", browse: "category"});
 		StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: StateStore.getState().dataSourceList.find((ds) => {return ds.name === this.state.media.data_source})});
 		StateStore.dispatch({type: "setCurrentCategory", category: "album", categoryValue: value});
 	}
-	
+
 	handleSelectYear(value) {
 		StateStore.dispatch({type: "showFullScreen", show: false});
 		StateStore.dispatch({type: "setCurrentBrowse", browse: "category"});
 		StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: StateStore.getState().dataSourceList.find((ds) => {return ds.name === this.state.media.data_source})});
 		StateStore.dispatch({type: "setCurrentCategory", category: "year", categoryValue: value});
 	}
-	
+
 	handleSelectGenre(value) {
 		StateStore.dispatch({type: "showFullScreen", show: false});
 		StateStore.dispatch({type: "setCurrentBrowse", browse: "category"});
 		StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: StateStore.getState().dataSourceList.find((ds) => {return ds.name === this.state.media.data_source})});
 		StateStore.dispatch({type: "setCurrentCategory", category: "genre", categoryValue: value});
 	}
-	
+
 	handlePlayerAction(action) {
 		StateStore.dispatch({type: "setPlayerAction", action: action});
 	}
-	
+
 	handleChangeVolume(deltaVolume) {
 		var volume = this.state.volume + deltaVolume;
 		if (volume < 0) volume = 0;
@@ -217,14 +217,14 @@ class FullScreen extends Component {
 			});
 		}
 	}
-	
+
 	handleSelectFolder(value) {
 		StateStore.dispatch({type: "showFullScreen", show: false});
 		StateStore.dispatch({type: "setCurrentDataSource", currentDataSource: StateStore.getState().dataSourceList.find((ds) => {return ds.name === this.state.media.data_source})});
 		StateStore.dispatch({type: "setCurrentBrowse", browse: "path"});
 		StateStore.dispatch({type: "setCurrentPath", path: value});
 	}
-	
+
 	getMediaCover() {
 		if (!!this.state.media && this.state.show && this._ismounted) {
 			StateStore.getState().APIManager.taliesinApiRequest("GET", "/data_source/" + encodeURIComponent(this.state.media.data_source) + "/browse/path/" + encodeURI(this.state.media.path).replace(/#/g, "%23").replace(/\+/g, "%2B") + "?cover&base64")
@@ -236,7 +236,7 @@ class FullScreen extends Component {
 			});
 		}
 	}
-	
+
 	render() {
 		var mediaImage, metadata = [], separator, playButton, playButtonLarge, switchButton, switchButtonXs;
 		if (this.state.imgBlob) {
@@ -245,38 +245,38 @@ class FullScreen extends Component {
 			mediaImage = <Image src="images/generic-album.png" className="cover-image-full center-block" responsive />;
 		}
 		if (this.state.status === "stop") {
-			playButton = 
+			playButton =
 				<Button title={i18n.t("common.play")} onClick={() => {this.handlePlayerAction("play")}}>
 					<FontAwesome name={"play"} />
 				</Button>;
-			playButtonLarge = 
+			playButtonLarge =
 				<Button bsSize="large" title={i18n.t("common.play")} onClick={() => {this.handlePlayerAction("play")}}>
 					<FontAwesome name={"play"} />
 				</Button>;
 		} else if (this.state.status === "pause") {
-			playButton = 
+			playButton =
 				<Button title={i18n.t("common.play")} onClick={() => {this.handlePlayerAction("pause")}}>
 					<FontAwesome name={"play"} />
 				</Button>;
-			playButtonLarge = 
+			playButtonLarge =
 				<Button bsSize="large" title={i18n.t("common.play")} onClick={() => {this.handlePlayerAction("pause")}}>
 					<FontAwesome name={"play"} />
 				</Button>;
 		} else if (!this.state.stream.webradio) {
-			playButton = 
+			playButton =
 				<Button title={i18n.t("common.pause")} onClick={() => {this.handlePlayerAction("pause")}}>
 					<FontAwesome name={"pause"} />
 				</Button>;
-			playButtonLarge = 
+			playButtonLarge =
 				<Button bsSize="large" title={i18n.t("common.pause")} onClick={() => {this.handlePlayerAction("pause")}}>
 					<FontAwesome name={"pause"} />
 				</Button>;
 		} else {
-			playButton = 
+			playButton =
 				<Button title={i18n.t("common.play")} disabled={true}>
 					<FontAwesome name={"play"} />
 				</Button>;
-			playButtonLarge = 
+			playButtonLarge =
 				<Button bsSize="large" title={i18n.t("common.play")} disabled={true}>
 					<FontAwesome name={"play"} />
 				</Button>;

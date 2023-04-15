@@ -335,7 +335,7 @@ class ManageStream extends Component {
 	}
 	
 	render() {
-		var rows = [], nb_clients, buttonPlay, buttonPlayMini, streamColor = "";
+		var rows = [], nb_clients, buttonPlay, buttonPlayMini, streamColor = "", streamIcon;
 		this.state.streamList.forEach((stream, index) => {
       streamColor = "";
       buttonPlay = 
@@ -351,6 +351,7 @@ class ManageStream extends Component {
 			var type, random;
 			if (stream.webradio) {
         if (stream.icecast) {
+          streamIcon = <FontAwesome name={"globe"} className="space-after"/>
           type = i18n.t("common.webradio_icecast");
           nb_clients = "-";
           if (stream.icecast_status == "started") {
@@ -376,18 +377,21 @@ class ManageStream extends Component {
               </MenuItem>
           }
         } else {
+          streamIcon = <FontAwesome name={"music"} className="space-after"/>
           type = i18n.t("common.webradio");
         }
 				if (stream.random) {
 					random = <FontAwesome name={"random"} />;
 				}
 			} else {
+        streamIcon = <FontAwesome name={"headphones"} className="space-after"/>
 				type = i18n.t("common.jukebox");
 			}
 			rows.push(
 				<tr key={index} className={streamColor}>
 					<td className="longName">
             <a role="button" onClick={() => this.detailsStream(stream)}>
+              {streamIcon}
               {stream.display_name||i18n.t("common.no_name")}
             </a>
 					</td>

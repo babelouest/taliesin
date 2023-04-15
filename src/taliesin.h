@@ -4,7 +4,7 @@
  * 
  * Declarations for constants and prototypes
  *
- * Copyright 2017-2022 Nicolas Mora <mail@babelouest.org>
+ * Copyright 2017-2023 Nicolas Mora <mail@babelouest.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU GENERAL PUBLIC LICENSE
@@ -33,6 +33,7 @@
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
 #include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
 #include <libavutil/audio_fifo.h>
 #include <libswresample/swresample.h>
 

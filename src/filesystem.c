@@ -4,7 +4,7 @@
  * 
  * Filesystem functions definitions
  *
- * Copyright 2017-2022 Nicolas Mora <mail@babelouest.org>
+ * Copyright 2017-2023 Nicolas Mora <mail@babelouest.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU GENERAL PUBLIC LICENSE
@@ -74,7 +74,8 @@ json_t * fs_directory_read(const char * path) {
             json_array_append_new(j_folder, json_pack("{sssssi}", "type", "file", "name", ent->d_name, "last_updated", file_stat.st_mtime));
           }
         } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "fs_directory_read - error reading directory %s", full_path);
+          y_log_message(Y_LOG_LEVEL_ERROR, "fs_directory_read - Error reading path %s", full_path);
+          y_log_message(Y_LOG_LEVEL_ERROR, "error %s", strerror(errno));
         }
         o_free(full_path);
       }
@@ -115,7 +116,8 @@ ssize_t fs_directory_count_files_recursive(const char * path) {
           }
         } else {
           counter = -1;
-          y_log_message(Y_LOG_LEVEL_ERROR, "fs_directory_count_files_recursive - error reading directory %s", full_path);
+          y_log_message(Y_LOG_LEVEL_ERROR, "fs_directory_count_files_recursive - error reading path '%s'", full_path);
+          y_log_message(Y_LOG_LEVEL_ERROR, "error %s", strerror(errno));
         }
         o_free(full_path);
       }

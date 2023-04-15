@@ -3,7 +3,7 @@
 #
 # Makefile used to build the software
 #
-# Copyright 2017-2021 Nicolas Mora <mail@babelouest.org>
+# Copyright 2017-2023 Nicolas Mora <mail@babelouest.org>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU GENERAL PUBLIC LICENSE
@@ -21,7 +21,7 @@
 
 ifndef DISABLE_OAUTH2
 	OAUTH2_OBJECTS=iddawc_resource.o
-	INITIAL_LIBS=-lrhonabwy
+	INITIAL_LIBS=$(shell pkg-config --libs librhonabwy) $(shell pkg-config --libs libiddawc)
 else
 	INITIAL_FLAG=-DDISABLE_OAUTH2
 endif
@@ -29,7 +29,7 @@ endif
 CC=gcc
 #CC=clang
 CFLAGS=-c -Wall -Werror -Wextra -Wconversion $(ADDITIONALFLAGS)
-LIBS=-lc $(shell pkg-config --libs liborcania) $(shell pkg-config --libs libyder) $(shell pkg-config --libs libulfius) $(shell pkg-config --libs libhoel) $(shell pkg-config --libs librhonabwy) $(shell pkg-config --libs libiddawc) $(shell pkg-config --libs jansson) $(shell pkg-config --libs gnutls) $(shell pkg-config --libs libconfig) $(shell pkg-config --libs nettle) $(shell pkg-config --libs hogweed) $(shell pkg-config --libs nettle) $(shell pkg-config --libs shout) -lpthread -lavcodec -lavutil -lswresample -lavformat -lswscale -lz $(INITIAL_LIBS)
+LIBS=-lc $(shell pkg-config --libs liborcania) $(shell pkg-config --libs libyder) $(shell pkg-config --libs libulfius) $(shell pkg-config --libs libhoel) $(shell pkg-config --libs jansson) $(shell pkg-config --libs gnutls) $(shell pkg-config --libs libconfig) $(shell pkg-config --libs nettle) $(shell pkg-config --libs hogweed) $(shell pkg-config --libs nettle) $(shell pkg-config --libs shout) -lpthread -lavcodec -lavutil -lswresample -lavformat -lswscale -lz $(INITIAL_LIBS)
 OBJECTS=$(OAUTH2_OBJECTS) taliesin.o webservice.o static_compressed_inmemory_website_callback.o http_compression_callback.o misc.o libav-transcode-filter.o config.o file_list.o filesystem.o data_source.o media.o playlist.o stream.o stream_jukebox.o stream_webradio.o search.o
 PREFIX=/usr/local
 #CONFIG_FILE=../taliesin-ivonet.conf

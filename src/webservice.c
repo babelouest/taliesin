@@ -4,7 +4,7 @@
  * 
  * Webservices (endpoints) implementations
  *
- * Copyright 2017-2022 Nicolas Mora <mail@babelouest.org>
+ * Copyright 2017-2023 Nicolas Mora <mail@babelouest.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU GENERAL PUBLIC LICENSE
@@ -377,7 +377,11 @@ int callback_taliesin_data_source_refresh_status (const struct _u_request * requ
   if (check_result_value(j_data_source, T_OK)) {
     j_status = data_source_get_refresh_status(config, json_integer_value(json_object_get(json_object_get(j_data_source, "data_source"), "tds_id")));
     if (check_result_value(j_status, T_OK)) {
-      if (ulfius_set_json_body_response(response, 200, json_object_get(j_status, "refresh")) != U_OK) {
+      json_object_update(json_object_get(j_data_source, "data_source"), json_object_get(j_status, "refresh"));
+      json_object_del(json_object_get(j_data_source, "data_source"), "tds_id");
+      json_object_del(json_object_get(j_data_source, "data_source"), "path");
+      json_object_del(json_object_get(j_data_source, "data_source"), "username");
+      if (ulfius_set_json_body_response(response, 200, json_object_get(j_data_source, "data_source")) != U_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_data_source_refresh_status - error ulfius_set_json_body_response");
         response->status = 500;
       }

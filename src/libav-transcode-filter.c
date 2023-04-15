@@ -4,7 +4,7 @@
  * 
  * Stream functions definitions
  *
- * Copyright 2017-2022 Nicolas Mora <mail@babelouest.org>
+ * Copyright (c) 2017-2023 Nicolas Mora <mail@babelouest.org>
  * Copyright (c) 2013-2017 Andreas Unterweger
  *
  * This file contains parts of Libav.

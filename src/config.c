@@ -152,40 +152,44 @@ int config_set_values(struct config_elements * config, const char * config_type,
   res = h_delete(config->conn, j_query, NULL);
   json_decref(j_query);
   if (res == H_OK) {
-    j_query = json_pack("{sss[]}",
-                        "table",
-                        TALIESIN_TABLE_CONFIG,
-                        "values");
-    if (j_query != NULL) {
-      json_array_foreach(j_config_values, index, j_element) {
-        j_config_value = json_pack("{sssO}", "tc_type", config_type, "tc_value", j_element);
-        json_array_append_new(json_object_get(j_query, "values"), j_config_value);
-      }
-      res = h_insert(config->conn, j_query, NULL);
-      json_decref(j_query);
-      if (res == H_OK) {
-        new_config_array = get_array_from_json_list(j_config_values);
-        if (new_config_array != NULL) {
-          if (0 == o_strcmp(config_type, TALIESIN_CONFIG_EXTERNAL_PLAYER)) {
-            free_string_array(config->external_player);
-            config->external_player = new_config_array;
-            ret = T_OK;
+    if (json_array_size(j_config_values)) {
+      j_query = json_pack("{sss[]}",
+                          "table",
+                          TALIESIN_TABLE_CONFIG,
+                          "values");
+      if (j_query != NULL) {
+        json_array_foreach(j_config_values, index, j_element) {
+          j_config_value = json_pack("{sssO}", "tc_type", config_type, "tc_value", j_element);
+          json_array_append_new(json_object_get(j_query, "values"), j_config_value);
+        }
+        res = h_insert(config->conn, j_query, NULL);
+        json_decref(j_query);
+        if (res == H_OK) {
+          new_config_array = get_array_from_json_list(j_config_values);
+          if (new_config_array != NULL) {
+            if (0 == o_strcmp(config_type, TALIESIN_CONFIG_EXTERNAL_PLAYER)) {
+              free_string_array(config->external_player);
+              config->external_player = new_config_array;
+              ret = T_OK;
+            } else {
+              y_log_message(Y_LOG_LEVEL_ERROR, "config_set_values - Error config_type (this shouldn't happen)");
+              free_string_array(new_config_array);
+              new_config_array = NULL;
+              ret = T_ERROR_PARAM;
+            }
           } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "config_get_db_values - Error config_type (this shouldn't happen)");
-            free_string_array(new_config_array);
-            new_config_array = NULL;
-            ret = T_ERROR_PARAM;
+            ret = T_ERROR_MEMORY;
           }
         } else {
-          ret = T_ERROR_MEMORY;
+          y_log_message(Y_LOG_LEVEL_ERROR, "config_set_values - Error executing j_query");
+          ret = T_ERROR_DB;
         }
       } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "config_get_db_values - Error executing j_query");
-        ret = T_ERROR_DB;
+        y_log_message(Y_LOG_LEVEL_ERROR, "config_set_values - Error allocating resources for j_query");
+        ret = T_ERROR_MEMORY;
       }
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "config_get_db_values - Error allocating resources for j_query");
-      ret = T_ERROR_MEMORY;
+      ret = T_OK;
     }
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "config_set_values - Error executing j_query (1)");

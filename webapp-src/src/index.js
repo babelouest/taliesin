@@ -39,7 +39,10 @@ config.fetchConfig()
 			usePkce: curOauth2Config.usePkce,
 			changeStatusCb: function (newStatus, token, expiration) {
 				var curConfig = config.getLocalConfig() || {};
-				if ((curConfig.currentPlayer && curConfig.currentPlayer.type === "external" && !StateStore.getState().externalPlayerList.find((pl) => {return pl.name === curConfig.currentPlayer.name;})) || !curConfig.currentPlayer) {
+				if ((curConfig.currentPlayer &&
+            curConfig.currentPlayer.type === "external" &&
+            !StateStore.getState().externalPlayerList.find((pl) => {return pl.name === curConfig.currentPlayer.name;})) ||
+            !curConfig.currentPlayer) {
 					curConfig.currentPlayer = {type: "internal", name: i18n.t("player.internal")}
 				}
 				if (curConfig.currentPlayer.type === "external") {
@@ -81,7 +84,13 @@ config.fetchConfig()
 		StateStore.dispatch({ type: "setOauth2Connector", oauth2Connector: oauth2Connector});
 	} else {
 		StateStore.dispatch({ type: 'setStoredValues', config: config.getLocalConfig() });
-		StateStore.dispatch({ type: 'connection', status: "noauth", taliesinApiUrl: config.getConfigValue("taliesinApiUrl"), angharadApiUrl: config.getConfigValue("angharadApiUrl"), oauth2: false});
+		StateStore.dispatch({ type: 'connection',
+                          status: "noauth",
+                          taliesinApiUrl: config.getConfigValue("taliesinApiUrl"),
+                          benoicPrefix: config.getConfigValue("benoicPrefix"),
+                          carleonPrefix: config.getConfigValue("carleonPrefix"),
+                          angharadApiUrl: config.getConfigValue("angharadApiUrl"),
+                          oauth2: false});
 		ReactDOM.render(<App/>, document.getElementById('root'));
 	}
 	ReactDOM.render(<App/>, document.getElementById('root'));

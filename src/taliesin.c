@@ -166,9 +166,6 @@ int main (int argc, char ** argv) {
   config->stream_channels = TALIESIN_STREAM_DEFAULT_CHANNELS;
   config->stream_sample_rate = TALIESIN_STREAM_DEFAULT_SAMPLE_RATE;
   config->stream_bitrate = TALIESIN_STREAM_DEFAULT_BIT_RATE;
-  config->video_stream_format = o_strdup(TALIESIN_STREAM_DEFAULT_VIDEO_FORMAT);
-  config->video_stream_bitrate = o_strdup(TALIESIN_STREAM_DEFAULT_VIDEO_BITRATE);
-  config->video_stream_resolution = o_strdup(TALIESIN_STREAM_DEFAULT_VIDEO_RESOLUTION);
 #ifndef DISABLE_OAUTH2
   if (config->instance == NULL || config->iddawc_resource_config == NULL || config->iddawc_resource_config_admin == NULL || config->static_file_config == NULL)
 #else
@@ -549,9 +546,6 @@ void exit_server(struct config_elements ** config, int exit_value) {
     o_free((*config)->oidc_aud);
 #endif
     o_free((*config)->stream_format);
-    o_free((*config)->video_stream_format);
-    o_free((*config)->video_stream_bitrate);
-    o_free((*config)->video_stream_resolution);
     u_map_clean_full((*config)->audio_file_extension);
     u_map_clean_full((*config)->video_file_extension);
     u_map_clean_full((*config)->subtitle_file_extension);
@@ -802,9 +796,6 @@ int build_config_from_file(struct config_elements * config) {
              * extension = NULL,
              * mime_type_value = NULL,
              * cur_stream_format = NULL,
-             * cur_video_stream_format = NULL,
-             * cur_video_stream_bitrate = NULL,
-             * cur_video_stream_resolution = NULL,
              * cur_oidc_claim_user_id = NULL,
              * icecast_host = NULL,
              * icecast_user = NULL,
@@ -1261,54 +1252,6 @@ int build_config_from_file(struct config_elements * config) {
       }
     } else {
       fprintf(stderr, "Error stream_format unknown, use values 'mp3', 'vorbis' or 'flac'\n");
-      config_destroy(&cfg);
-      return 0;
-    }
-  }
-
-  if (config_lookup_string(&cfg, "video_stream_format", &cur_video_stream_format)) {
-    if (0 == o_strcasecmp(cur_video_stream_format, "mp4") || 0 == o_strcasecmp(cur_video_stream_format, "webm") || 0 == o_strcasecmp(cur_video_stream_format, "ogg")) {
-      o_free(config->video_stream_format);
-      config->video_stream_format = o_strdup(cur_video_stream_format);
-      if (config->video_stream_format == NULL) {
-        fprintf(stderr, "Error allocating resources for video_stream_format, exiting\n");
-        config_destroy(&cfg);
-        return 0;
-      }
-    } else {
-      fprintf(stderr, "Error video_stream_format unknown, use values 'mp4', 'webm' or 'ogg'\n");
-      config_destroy(&cfg);
-      return 0;
-    }
-  }
-
-  if (config_lookup_string(&cfg, "video_stream_bitrate", &cur_video_stream_bitrate)) {
-    if (0 == o_strcasecmp(cur_video_stream_bitrate, "250Kbps") || 0 == o_strcasecmp(cur_video_stream_bitrate, "500Kbps") || 0 == o_strcasecmp(cur_video_stream_bitrate, "1Mbps") || 0 == o_strcasecmp(cur_video_stream_bitrate, "2Mbps") || 0 == o_strcasecmp(cur_video_stream_bitrate, "4Mbps") || 0 == o_strcasecmp(cur_video_stream_bitrate, "8Mbps")) {
-      o_free(config->video_stream_bitrate);
-      config->video_stream_bitrate = o_strdup(cur_video_stream_bitrate);
-      if (config->video_stream_bitrate == NULL) {
-        fprintf(stderr, "Error allocating resources for video_stream_bitrate, exiting\n");
-        config_destroy(&cfg);
-        return 0;
-      }
-    } else {
-      fprintf(stderr, "Error video_stream_bitrate unknown, use values '250Kbps', '500Kbps', '1Mbps', '2Mbps', '4Mbps' or '8Mbps'\n");
-      config_destroy(&cfg);
-      return 0;
-    }
-  }
-
-  if (config_lookup_string(&cfg, "video_stream_resolution", &cur_video_stream_resolution)) {
-    if (0 == o_strcasecmp(cur_video_stream_resolution, "480P") || 0 == o_strcasecmp(cur_video_stream_resolution, "720P") || 0 == o_strcasecmp(cur_video_stream_resolution, "1080P")) {
-      o_free(config->video_stream_resolution);
-      config->video_stream_resolution = o_strdup(cur_video_stream_resolution);
-      if (config->video_stream_resolution == NULL) {
-        fprintf(stderr, "Error allocating resources for video_stream_resolution, exiting\n");
-        config_destroy(&cfg);
-        return 0;
-      }
-    } else {
-      fprintf(stderr, "Error video_stream_resolution unknown, use values '480P', '720P' or '1080P'\n");
       config_destroy(&cfg);
       return 0;
     }

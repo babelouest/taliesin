@@ -107,7 +107,7 @@ int callback_taliesin_options (const struct _u_request * request, struct _u_resp
  */
 int callback_taliesin_server_configuration (const struct _u_request * request, struct _u_response * response, void * user_data) {
   UNUSED(request);
-  set_response_json_body_and_clean(response, 200, json_pack("{ss*ss*ss*ss*sisisissss*ss*ss*sososs*}", 
+  set_response_json_body_and_clean(response, 200, json_pack("{ss*ss*ss*ss*sisisisssososs*}", 
                         "api_prefix",  ((struct config_elements *)user_data)->api_prefix,
                         "oauth_scope_user", ((struct config_elements *)user_data)->oauth_scope_user,
                         "oauth_scope_admin", ((struct config_elements *)user_data)->oauth_scope_admin,
@@ -116,9 +116,6 @@ int callback_taliesin_server_configuration (const struct _u_request * request, s
                         "default_stream_sample_rate", ((struct config_elements *)user_data)->stream_sample_rate,
                         "default_stream_bitrate", ((struct config_elements *)user_data)->stream_bitrate,
                         "oidc_claim_user_id", ((struct config_elements *)user_data)->oidc_claim_user_id,
-                        "default_video_stream_format", ((struct config_elements *)user_data)->video_stream_format,
-                        "default_video_stream_bitrate", ((struct config_elements *)user_data)->video_stream_bitrate,
-                        "default_video_stream_resolution", ((struct config_elements *)user_data)->video_stream_resolution,
 #ifdef U_DISABLE_WEBSOCKET
                         "use_websockets", json_false(),
 #else

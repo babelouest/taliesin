@@ -460,9 +460,6 @@ struct config_elements {
   unsigned int                                   stream_bitrate;
   pthread_mutex_t                                stream_stop_lock;
   pthread_cond_t                                 stream_stop_cond;
-  char                                         * video_stream_format;
-  char                                         * video_stream_bitrate;
-  char                                         * video_stream_resolution;
   uint                                           nb_refresh_status;
   struct _refresh_config                      ** refresh_status_list;
   pthread_mutex_t                                refresh_lock;

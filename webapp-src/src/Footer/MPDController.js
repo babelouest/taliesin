@@ -416,7 +416,7 @@ class MPDController extends Component {
 					<FontAwesome name={"play"} />
 				</Button>;
       playButtonXs = 
-        <MenuItem onClick={() => {this.handlePlay}}>
+        <MenuItem onClick={this.handlePlay}>
           <FontAwesome name={"play"} className="space-after"/>
           {i18n.t("common.play")}
         </MenuItem>

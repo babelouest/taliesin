@@ -997,7 +997,7 @@ int audio_stream_enqueue_buffer(struct _t_webradio * webradio, size_t max_size, 
       pthread_mutex_lock(&webradio->message_lock);
       pthread_cond_broadcast(&webradio->message_cond);
       pthread_mutex_unlock(&webradio->message_lock);
-      if (media_add_history(webradio->config, webradio->name, webradio->tpl_id, stream->first_buffer->file->tm_id) != T_OK) {
+      if (!webradio->icecast && media_add_history(webradio->config, webradio->name, webradio->tpl_id, stream->first_buffer->file->tm_id) != T_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "audio_stream_enqueue_buffer - Error media_add_history (1)");
       }
     }
@@ -1024,7 +1024,7 @@ int audio_stream_enqueue_buffer(struct _t_webradio * webradio, size_t max_size, 
           pthread_mutex_lock(&webradio->message_lock);
           pthread_cond_broadcast(&webradio->message_cond);
           pthread_mutex_unlock(&webradio->message_lock);
-          if (media_add_history(webradio->config, webradio->name, webradio->tpl_id, stream->first_buffer->file->tm_id) != T_OK) {
+          if (!webradio->icecast && media_add_history(webradio->config, webradio->name, webradio->tpl_id, stream->first_buffer->file->tm_id) != T_OK) {
             y_log_message(Y_LOG_LEVEL_ERROR, "audio_stream_enqueue_buffer - Error media_add_history (1)");
           }
         }

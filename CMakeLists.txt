@@ -20,6 +20,11 @@ project(taliesin C)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror")
 
+option(FILE_OFFSET_BITS_64 "Use compile flag _FILE_OFFSET_BITS=64" OFF)
+if (FILE_OFFSET_BITS_64)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_FILE_OFFSET_BITS=64")
+endif ()
+
 # library info
 
 set(PROGRAM_VERSION_MAJOR "1")

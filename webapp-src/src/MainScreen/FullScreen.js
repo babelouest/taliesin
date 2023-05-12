@@ -356,7 +356,7 @@ class FullScreen extends Component {
 			}
 			if (this.state.media.tags.copyright) {
 				metadata.push(
-					<Row key={5}>
+					<Row key={6}>
 						<Col xs={6} className="text-right">
 							<label className="text-fullscreen">{i18n.t("common.copyright")}</label>
 						</Col>
@@ -366,7 +366,7 @@ class FullScreen extends Component {
 					</Row>);
 			}
 			metadata.push(
-				<Row key={6}>
+				<Row key={7}>
 					<Col xs={6} className="text-right">
 						<label className="text-fullscreen">{i18n.t("common.open_folder")}</label>
 					</Col>
@@ -377,7 +377,7 @@ class FullScreen extends Component {
 			);
 			if (this.state.titleNext) {
 				metadata.push(
-					<Row key={7}>
+					<Row key={8}>
 						<Col xs={6} className="text-right">
 							<label className="text-fullscreen">{i18n.t("common.title_next")}</label>
 						</Col>

@@ -392,7 +392,7 @@ json_t * media_advanced_search(struct config_elements * config, const char * use
     tmp = "";
   }
   query = msprintf("SELECT `"TALIESIN_TABLE_MEDIA"`.`tm_id`, `"TALIESIN_TABLE_MEDIA"`.`tm_type` AS `type`, `"TALIESIN_TABLE_MEDIA"`.`tm_name` AS `name`, `"TALIESIN_TABLE_MEDIA"`.`tm_path` AS `path`, `"TALIESIN_TABLE_DATA_SOURCE"`.`tds_name` AS `data_source`, "
-                   "(SELECT COUNT(`tmh_id`) FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE `"TALIESIN_TABLE_MEDIA_HISTORY"`.`tm_id`=`"TALIESIN_TABLE_MEDIA"`.`tm_id`) AS `nb_play`, "
+                   "(SELECT COUNT(`tmh_id`) FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE `"TALIESIN_TABLE_MEDIA_HISTORY"`.`tm_id`=`"TALIESIN_TABLE_MEDIA"`.`tm_id` AND `tmh_stats_in`=1) AS `nb_play`, "
                    "(SELECT %s FROM `"TALIESIN_TABLE_MEDIA_HISTORY"` WHERE `"TALIESIN_TABLE_MEDIA_HISTORY"`.`tm_id`=`"TALIESIN_TABLE_MEDIA"`.`tm_id` ORDER BY `tmh_datestamp` DESC LIMIT 1) AS `last_played` "
                    "FROM `"TALIESIN_TABLE_DATA_SOURCE"`, `"TALIESIN_TABLE_MEDIA"` %s"
                    "WHERE `"TALIESIN_TABLE_MEDIA"`.`tds_id`=`"TALIESIN_TABLE_DATA_SOURCE"`.`tds_id` "

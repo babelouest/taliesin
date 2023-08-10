@@ -122,6 +122,8 @@
 #define TALIESIN_STREAM_DEFAULT_VIDEO_FORMAT         "webm"
 #define TALIESIN_STREAM_DEFAULT_VIDEO_BITRATE        "2Mbps"
 #define TALIESIN_STREAM_DEFAULT_VIDEO_RESOLUTION     "720P"
+#define TALIESIN_STREAM_DEFAULT_HEADER_RANGE_NAME    "range"
+#define TALIESIN_STREAM_DEFAULT_HEADER_RANGE_PREFIX  "bytes="
 
 #define TALIESIN_STREAM_STATUS_NOT_STARTED 0
 #define TALIESIN_STREAM_STATUS_STARTED     1
@@ -548,6 +550,7 @@ int              file_list_add_media_list(struct _t_file_list * file_list, json_
 json_t *         file_list_has_media_list(struct config_elements * config, struct _t_file_list * file_list, json_t * media_list, json_int_t offset, json_int_t limit);
 int              file_list_remove_media_list(struct _t_file_list * file_list, json_t * j_media_list);
 int              file_list_empty_nolock(struct _t_file_list * file_list);
+struct _t_file * file_list_dequeue_file_from_id_nolock(struct _t_file_list * file_list, json_int_t tm_id);
 
 // Jukebox audio buffer
 json_t * is_stream_parameters_valid(struct config_elements * config, int webradio, int icecast, const char * stream_url, const char * scope, int is_admin, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate);
@@ -561,6 +564,8 @@ void     is_stream_url_valid(struct config_elements * config, const char * strea
 
 // Common stream functions
 json_t * stream_list(struct config_elements * config, const char * username);
+int      stream_db_media_add_list(struct config_elements * config, const char * name, json_t * j_array_media);
+int      stream_db_media_remove_list(struct config_elements * config, const char * name, json_t * j_array_media);
 char * build_icy_title(json_t * media);
 char * build_m3u_title(json_t * media);
 
@@ -588,6 +593,7 @@ json_t * add_webradio_from_playlist(struct config_elements * config, const char 
 int      add_webradio_from_db_stream(struct config_elements * config, json_t * j_stream, struct _t_webradio ** new_webradio);
 int      scan_path_to_webradio(struct config_elements * config, json_t * j_data_source, const char * path, int recursive, struct _t_webradio * webradio);
 int      icecast_audio_buffer_add_data(struct _audio_buffer * buffer, uint8_t * buf, int buf_size);
+int      webradio_sync_playlist(struct _t_webradio * webradio, json_t * j_playlist);
 
 int     client_data_webradio_init(struct _client_data_webradio * client_data);
 void    client_data_webradio_clean(struct _client_data_webradio * client_data);
@@ -607,6 +613,7 @@ void   * jukebox_run_thread(void * args);
 json_t * add_jukebox_from_path(struct config_elements * config, const char * stream_url, json_t * j_data_source, const char * path, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, int recursive, const char * name);
 json_t * add_jukebox_from_playlist(struct config_elements * config, const char * stream_url, json_t * j_playlist, const char * username, const char * format, unsigned short channels, unsigned int sample_rate, unsigned int bit_rate, const char * name);
 int      add_jukebox_from_db_stream(struct config_elements * config, json_t * j_stream);
+int      jukebox_sync_playlist(struct _t_jukebox * jukebox, json_t * j_playlist);
 
 int     init_client_data_jukebox(struct _client_data_jukebox * client_data_jukebox);
 void    clean_client_data_jukebox(struct _client_data_jukebox * client_data_jukebox);
@@ -639,7 +646,7 @@ json_t        * media_folder_detect_cover_by_id(struct config_elements * config,
 json_t        * media_cover_get_all(struct config_elements * config, json_t * j_data_source, const char * path, int thumbnail);
 json_int_t      folder_get_id(struct config_elements * config, json_t * j_data_source, json_int_t tf_parent_id, const char * path);
 json_t        * folder_get_all(struct config_elements * config, json_t * j_data_source, json_int_t tf_id);
-int             media_add_history(struct config_elements * config, const char * stream_name, json_int_t tpl_id, json_int_t tm_id);
+int             media_add_history(struct config_elements * config, const char * stream_name, json_int_t tpl_id, json_int_t tm_id, int stats_in);
 json_t        * media_get_history(struct config_elements * config, const char * stream_name, json_int_t offset, json_int_t limit);
 int             media_image_cover_clean_orphan(struct config_elements * config, json_int_t tds_id, json_int_t tic_id);
 int             is_valid_b64_image(const unsigned char * base64_image);

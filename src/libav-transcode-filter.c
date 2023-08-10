@@ -59,7 +59,7 @@ static char * get_error_text(const int error) {
 
 int open_input_file(const char *filename, AVFormatContext **input_format_context, AVCodecContext **input_codec_context, int type) {
   AVCodecContext *avctx;
-  AVCodec *input_codec;
+  const AVCodec *input_codec;
   int error, codec_index;
   
   /* Open the input file to read from it. */
@@ -131,15 +131,19 @@ int init_resampler(AVCodecContext *input_codec_context,
                    AVCodecContext *output_codec_context,
                    SwrContext **resample_context) {
   int error;
+  AVChannelLayout av_layout_output, av_layout_input;
+  
+  av_channel_layout_default(&av_layout_output, output_codec_context->ch_layout.nb_channels);
+  av_channel_layout_default(&av_layout_input, input_codec_context->ch_layout.nb_channels);
   /* Create a resampler context for the conversion. */
-  if (!(*resample_context = swr_alloc_set_opts(NULL,
-                                               av_get_default_channel_layout(output_codec_context->channels),
-                                               output_codec_context->sample_fmt,
-                                               output_codec_context->sample_rate,
-                                               av_get_default_channel_layout(input_codec_context->channels),
-                                               input_codec_context->sample_fmt,
-                                               input_codec_context->sample_rate,
-                                               0, NULL))) {
+  if (swr_alloc_set_opts2(resample_context,
+                         &av_layout_output,
+                         output_codec_context->sample_fmt,
+                         output_codec_context->sample_rate,
+                         &av_layout_input,
+                         input_codec_context->sample_fmt,
+                         input_codec_context->sample_rate,
+                         0, NULL) < 0) {
     y_log_message(Y_LOG_LEVEL_ERROR, "Could not allocate resample context");
     return AVERROR(ENOMEM);
   }
@@ -155,7 +159,7 @@ int init_resampler(AVCodecContext *input_codec_context,
 
 int init_fifo(AVAudioFifo **fifo, AVCodecContext *output_codec_context) {
   /* Create the FIFO buffer based on the specified output sample format. */
-  if (!(*fifo = av_audio_fifo_alloc(output_codec_context->sample_fmt, output_codec_context->channels, 1))) {
+  if (!(*fifo = av_audio_fifo_alloc(output_codec_context->sample_fmt, output_codec_context->ch_layout.nb_channels, 1))) {
     y_log_message(Y_LOG_LEVEL_ERROR, "Could not allocate FIFO");
     return AVERROR(ENOMEM);
   }
@@ -252,7 +256,7 @@ int read_decode_convert_and_store(AVAudioFifo *fifo,
         /* If there is decoded data, convert and store it. */
         if (data_present) {
           out_samples = (int)av_rescale_rnd(swr_get_delay(resample_context, output_codec_context->sample_rate) + input_frame->nb_samples, input_codec_context->sample_rate, output_codec_context->sample_rate, AV_ROUND_UP);
-          if (!(converted_input_samples = calloc((size_t)output_codec_context->channels, sizeof(uint8_t *)))) {
+          if (!(converted_input_samples = calloc((size_t)output_codec_context->ch_layout.nb_channels, sizeof(uint8_t *)))) {
             y_log_message(Y_LOG_LEVEL_ERROR, "Could not allocate converted input sample pointers");
             ret = AVERROR(ENOMEM);
           } else {
@@ -297,7 +301,7 @@ int init_output_frame(AVFrame **frame,
      * Default channel layouts based on the number of channels
      * are assumed for simplicity. */
     (*frame)->nb_samples     = frame_size;
-    (*frame)->channel_layout = output_codec_context->channel_layout;
+    (*frame)->ch_layout      = output_codec_context->ch_layout;
     (*frame)->format         = output_codec_context->sample_fmt;
     (*frame)->sample_rate    = output_codec_context->sample_rate;
     /* Allocate the samples of the created frame. This call will make
@@ -410,7 +414,7 @@ static int write_packet_webradio(void *opaque, uint8_t *buf, int buf_size) {
 
 int webradio_open_output_buffer(struct _audio_stream * audio_stream) {
   AVCodecContext * avctx          = NULL;
-  AVCodec * output_codec          = NULL;
+  const AVCodec * output_codec    = NULL;
   AVAudioFifo * fifo              = NULL;
   AVIOContext * output_io_context = NULL;
   AVStream * stream               = NULL;
@@ -444,12 +448,13 @@ int webradio_open_output_buffer(struct _audio_stream * audio_stream) {
         y_log_message(Y_LOG_LEVEL_ERROR, "Could not find output format '%s'", format);
         error = AVERROR(ENOMEM);
       } else {
-        avctx->channels       = audio_stream->stream_channels;
-        avctx->channel_layout = (uint64_t)av_get_default_channel_layout(audio_stream->stream_channels);
-        avctx->sample_rate    = (int)audio_stream->stream_sample_rate;
-        avctx->sample_fmt     = output_codec->sample_fmts[0];
+//        avctx->ch_layout.nb_channels = audio_stream->stream_channels;
+//        avctx->channel_layout        = (uint64_t)av_get_default_channel_layout(audio_stream->stream_channels);
+        av_channel_layout_default(&avctx->ch_layout, audio_stream->stream_channels);
+        avctx->sample_rate           = (int)audio_stream->stream_sample_rate;
+        avctx->sample_fmt            = output_codec->sample_fmts[0];
         if (0 != o_strcasecmp("flac", audio_stream->stream_format)) {
-          avctx->bit_rate     = audio_stream->stream_bitrate;
+          avctx->bit_rate            = audio_stream->stream_bitrate;
         }
         avctx->strict_std_compliance = FF_COMPLIANCE_NORMAL;
         stream->time_base.den = (int)audio_stream->stream_sample_rate;
@@ -457,7 +462,7 @@ int webradio_open_output_buffer(struct _audio_stream * audio_stream) {
 
         if ((error = avcodec_open2(avctx, output_codec, NULL)) < 0) {
           y_log_message(Y_LOG_LEVEL_ERROR, "Could not open output codec (error '%s')", get_error_text(error));
-        } else if ((audio_stream->fifo = av_audio_fifo_alloc(avctx->sample_fmt, avctx->channels, 1)) == NULL) {
+        } else if ((audio_stream->fifo = av_audio_fifo_alloc(avctx->sample_fmt, avctx->ch_layout.nb_channels, 1)) == NULL) {
           y_log_message(Y_LOG_LEVEL_ERROR, "Could not open fifo (error '%s')", get_error_text(error));
         } else {
           if ((avcodec_parameters_from_context(stream->codecpar, avctx)) < 0) {
@@ -512,7 +517,7 @@ static int read_image_packet(void * opaque, uint8_t * buf, int buf_size) {
 int open_input_buffer(const unsigned char * base64_buffer, AVFormatContext **image_format_context, AVCodecContext **image_codec_context, int * codec_index, int type) {
   AVIOContext    *          input_io_context = NULL;
   AVCodecContext *                     avctx = NULL;
-  AVCodec        *               input_codec = NULL;
+  const AVCodec  *               input_codec = NULL;
   uint8_t        *           avio_ctx_buffer = NULL;
   size_t                avio_ctx_buffer_size = 4096;
   struct _decoded_image image;
@@ -617,7 +622,7 @@ static int write_packet_icecast(void * opaque, uint8_t * buf, int buf_size) {
 
 int open_output_buffer_jukebox(struct _client_data_jukebox * client_data_jukebox, AVFormatContext ** output_format_context, AVCodecContext ** output_codec_context, AVAudioFifo ** fifo) {
   AVCodecContext * avctx          = NULL;
-  AVCodec * output_codec          = NULL;
+  const AVCodec * output_codec    = NULL;
   AVIOContext * output_io_context = NULL;
   AVStream * stream               = NULL;
   int error                       = 0;
@@ -671,8 +676,9 @@ int open_output_buffer_jukebox(struct _client_data_jukebox * client_data_jukebox
         y_log_message(Y_LOG_LEVEL_ERROR, "Could not find output format '%s'", format);
         error = AVERROR(ENOMEM);
       } else {
-        avctx->channels       = client_data_jukebox->stream_channels;
-        avctx->channel_layout = (uint64_t)av_get_default_channel_layout(client_data_jukebox->stream_channels);
+        //avctx->channels       = client_data_jukebox->stream_channels;
+        //avctx->channel_layout = (uint64_t)av_get_default_channel_layout(client_data_jukebox->stream_channels);
+        av_channel_layout_default(&avctx->ch_layout, client_data_jukebox->stream_channels);
         avctx->sample_rate    = (int)client_data_jukebox->stream_sample_rate;
         avctx->sample_fmt     = output_codec->sample_fmts[0];
         if (0 != o_strcasecmp("flac", client_data_jukebox->stream_format)) {
@@ -684,7 +690,7 @@ int open_output_buffer_jukebox(struct _client_data_jukebox * client_data_jukebox
 
         if ((error = avcodec_open2(avctx, output_codec, NULL)) < 0) {
           y_log_message(Y_LOG_LEVEL_ERROR, "Could not open output codec (error '%s')", get_error_text(error));
-        } else if ((*fifo = av_audio_fifo_alloc(avctx->sample_fmt, avctx->channels, 1)) == NULL) {
+        } else if ((*fifo = av_audio_fifo_alloc(avctx->sample_fmt, avctx->ch_layout.nb_channels, 1)) == NULL) {
           y_log_message(Y_LOG_LEVEL_ERROR, "Could not open fifo (error '%s')", get_error_text(error));
         } else {
           if ((avcodec_parameters_from_context(stream->codecpar, avctx)) < 0) {
@@ -716,7 +722,7 @@ int open_output_buffer_jukebox(struct _client_data_jukebox * client_data_jukebox
 
 int open_output_buffer_icecast(struct _t_webradio * webradio, AVFormatContext ** output_format_context, AVCodecContext ** output_codec_context, AVAudioFifo ** fifo) {
   AVCodecContext * avctx          = NULL;
-  AVCodec * output_codec          = NULL;
+  const AVCodec * output_codec    = NULL;
   AVIOContext * output_io_context = NULL;
   AVStream * stream               = NULL;
   int error                       = 0;
@@ -763,8 +769,9 @@ int open_output_buffer_icecast(struct _t_webradio * webradio, AVFormatContext **
         y_log_message(Y_LOG_LEVEL_ERROR, "Could not find output format '%s'", format);
         error = AVERROR(ENOMEM);
       } else {
-        avctx->channels       = webradio->audio_stream->stream_channels;
-        avctx->channel_layout = (uint64_t)av_get_default_channel_layout(webradio->audio_stream->stream_channels);
+        //avctx->channels       = webradio->audio_stream->stream_channels;
+        //avctx->channel_layout = (uint64_t)av_get_default_channel_layout(webradio->audio_stream->stream_channels);
+        av_channel_layout_default(&avctx->ch_layout, webradio->audio_stream->stream_channels);
         avctx->sample_rate    = (int)webradio->audio_stream->stream_sample_rate;
         avctx->sample_fmt     = output_codec->sample_fmts[0];
         if (0 != o_strcasecmp("flac", webradio->audio_stream->stream_format)) {
@@ -776,7 +783,7 @@ int open_output_buffer_icecast(struct _t_webradio * webradio, AVFormatContext **
 
         if ((error = avcodec_open2(avctx, output_codec, NULL)) < 0) {
           y_log_message(Y_LOG_LEVEL_ERROR, "Could not open output codec (error '%s')", get_error_text(error));
-        } else if ((*fifo = av_audio_fifo_alloc(avctx->sample_fmt, avctx->channels, 1)) == NULL) {
+        } else if ((*fifo = av_audio_fifo_alloc(avctx->sample_fmt, avctx->ch_layout.nb_channels, 1)) == NULL) {
           y_log_message(Y_LOG_LEVEL_ERROR, "Could not open fifo (error '%s')", get_error_text(error));
         } else {
           if ((avcodec_parameters_from_context(stream->codecpar, avctx)) < 0) {
@@ -807,7 +814,7 @@ int open_output_buffer_icecast(struct _t_webradio * webradio, AVFormatContext **
 }
 
 int init_output_jpeg_image(AVCodecContext ** image_codec_context, int dst_width, int dst_height) {
-  AVCodec * output_codec = NULL;
+  const AVCodec * output_codec = NULL;
   int ret = T_ERROR;
   char * err;
   

@@ -1160,7 +1160,9 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
   json_t * j_media, * j_valid;
   FILE * media_file;
   const char * content_type = NULL;
-  int is_video = 0, download_file = 0, direct_stream = 0;
+  int is_video = 0, download_file = 0, direct_stream = 0, is_error = 0;
+  long int range = 0;
+  unsigned int status = 200;
   
   if (config->status == TALIESIN_RUNNING) {
     for (i=0; i<config->nb_webradio; i++) {
@@ -1276,20 +1278,40 @@ int callback_taliesin_stream_media (const struct _u_request * request, struct _u
             if (download_file || direct_stream) {
               if ((path = msprintf("%s/%s", json_string_value(json_object_get(json_object_get(j_media, "media"), "path_ds")), json_string_value(json_object_get(json_object_get(j_media, "media"), "path_media")))) != NULL) {
                 if ((media_file = fopen(path, "rb")) != NULL) {
-                  if (ulfius_set_stream_response(response, 200, u_jukebox_stream_download, u_jukebox_stream_download_free, U_STREAM_SIZE_UNKOWN, 16384, media_file) == U_OK) {
-                    if ((content_type = config_get_content_type_from_path(config, json_string_value(json_object_get(json_object_get(j_media, "media"), "path_media")))) != NULL) {
-                      ulfius_add_header_to_response(response, "Content-Type", content_type);
+                  if (u_map_get_case(request->map_header, TALIESIN_STREAM_DEFAULT_HEADER_RANGE_NAME) != NULL && o_strncasecmp(u_map_get_case(request->map_header, TALIESIN_STREAM_DEFAULT_HEADER_RANGE_NAME), TALIESIN_STREAM_DEFAULT_HEADER_RANGE_PREFIX, o_strlen(TALIESIN_STREAM_DEFAULT_HEADER_RANGE_PREFIX)) == 0) {
+                    range = strtol(u_map_get_case(request->map_header, TALIESIN_STREAM_DEFAULT_HEADER_RANGE_NAME)+o_strlen(TALIESIN_STREAM_DEFAULT_HEADER_RANGE_PREFIX), NULL, 10);
+                    if (range > 0) {
+                      if (fseek(media_file, range, SEEK_SET)) {
+                        y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error fseek for stream %s", u_map_get(request->map_url, "stream_name"));
+                        response->status = 416;
+                        is_error = 1;
+                        fclose(media_file);
+                      } else {
+                        status = 206;
+                      }
+                    } else if (range < 0) {
+                      y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - invalid range value %ld for stream %s", range, u_map_get(request->map_url, "stream_name"));
+                      response->status = 416;
+                      is_error = 1;
+                      fclose(media_file);
                     }
-                    if (direct_stream) {
-                      escaped_filename = url_encode(json_string_value(json_object_get(json_object_get(j_media, "media"), "name")));
-                      content_disposition = msprintf("attachment; filename=%s", escaped_filename);
-                      ulfius_add_header_to_response(response, "Content-Disposition", content_disposition);
-                      o_free(escaped_filename);
-                      o_free(content_disposition);
+                  }
+                  if (!is_error) {
+                    if (ulfius_set_stream_response(response, status, u_jukebox_stream_download, u_jukebox_stream_download_free, U_STREAM_SIZE_UNKOWN, 16384, media_file) == U_OK) {
+                      if ((content_type = config_get_content_type_from_path(config, json_string_value(json_object_get(json_object_get(j_media, "media"), "path_media")))) != NULL) {
+                        ulfius_add_header_to_response(response, "Content-Type", content_type);
+                      }
+                      if (direct_stream) {
+                        escaped_filename = url_encode(json_string_value(json_object_get(json_object_get(j_media, "media"), "name")));
+                        content_disposition = msprintf("attachment; filename=%s", escaped_filename);
+                        ulfius_add_header_to_response(response, "Content-Disposition", content_disposition);
+                        o_free(escaped_filename);
+                        o_free(content_disposition);
+                      }
+                    } else {
+                      y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error ulfius_set_stream_response (2)");
+                      response->status = 500;
                     }
-                  } else {
-                    y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error ulfius_set_stream_response (2)");
-                    response->status = 500;
                   }
                 } else {
                   y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_media - Error opening file path %s", path);

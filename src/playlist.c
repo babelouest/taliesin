@@ -502,37 +502,140 @@ int playlist_delete(struct config_elements * config, json_int_t tpl_id) {
   }
 }
 
+void stream_from_playlist_add_media(struct config_elements * config, json_int_t tpl_id, json_t * j_array_media) {
+  struct _t_webradio * webradio;
+  struct _t_jukebox * jukebox;
+  unsigned int i;
+  size_t index = 0;
+  json_t * j_media;
+  
+  for (i=0; i<config->nb_webradio; i++) {
+    webradio = config->webradio_set[i];
+    if (webradio->tpl_id == tpl_id) {
+      if (pthread_mutex_lock(&webradio->file_list->file_lock)) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "stream_from_playlist_add_media - Error lock mutex file_list for webradio stream %s", webradio->name);
+      } else {
+        json_array_foreach(j_array_media, index, j_media) {
+          if (file_list_enqueue_new_file_nolock(webradio->file_list, json_integer_value(j_media)) != T_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "stream_from_playlist_add_media - Error adding media %"JSON_INTEGER_FORMAT" to webradio stream %s", json_integer_value(j_media), webradio->name);
+          }
+        }
+        pthread_mutex_unlock(&webradio->file_list->file_lock);
+        if (stream_db_media_add_list(config, webradio->name, j_array_media) != T_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "stream_from_playlist_add_media - Error stream_db_media_add_list for webradio stream %s", webradio->name);
+        }
+      }
+    }
+  }
+  for (i=0; i<config->nb_jukebox; i++) {
+    jukebox = config->jukebox_set[i];
+    if (jukebox->tpl_id == tpl_id) {
+      if (pthread_mutex_lock(&jukebox->file_list->file_lock)) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "stream_from_playlist_add_media - Error lock mutex file_list for jukebox stream %s", jukebox->name);
+      } else {
+        json_array_foreach(j_array_media, index, j_media) {
+          if (file_list_enqueue_new_file_nolock(jukebox->file_list, json_integer_value(j_media)) != T_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "stream_from_playlist_add_media - Error adding media %"JSON_INTEGER_FORMAT" to jukebox stream %s", json_integer_value(j_media), jukebox->name);
+          }
+        }
+        pthread_mutex_unlock(&jukebox->file_list->file_lock);
+        if (stream_db_media_add_list(config, jukebox->name, j_array_media) != T_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "stream_from_playlist_add_media - Error stream_db_media_add_list for jukebox stream %s", jukebox->name);
+        }
+      }
+    }
+  }
+}
+
 int playlist_add_media(struct config_elements * config, json_int_t tpl_id, json_t * media_list) {
-  json_t * j_query, * j_element;
+  json_t * j_query, * j_element, * j_array_media;
   int res, ret;
   size_t index;
   
   if (media_list != NULL && json_array_size(media_list) > 0) {
-    // Insert new elements
-    j_query = json_pack("{sss[]}",
-                        "table",
-                        TALIESIN_TABLE_PLAYLIST_ELEMENT,
-                        "values");
-    if (j_query != NULL) {
-      json_array_foreach(media_list, index, j_element) {
-        json_array_append_new(json_object_get(j_query, "values"), json_pack("{sIsO}", "tpl_id", tpl_id, "tm_id", json_object_get(j_element, "tm_id")));
-      }
-      res = h_insert(config->conn, j_query, NULL);
-      json_decref(j_query);
-      if (res != H_OK) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add_media - Error executing j_query");
-        ret = T_ERROR_DB;
+    if ((j_array_media = json_array()) != NULL) {
+      // Insert new elements
+      j_query = json_pack("{sss[]}",
+                          "table",
+                          TALIESIN_TABLE_PLAYLIST_ELEMENT,
+                          "values");
+      if (j_query != NULL) {
+        json_array_foreach(media_list, index, j_element) {
+          json_array_append_new(json_object_get(j_query, "values"), json_pack("{sIsO}", "tpl_id", tpl_id, "tm_id", json_object_get(j_element, "tm_id")));
+          json_array_append(j_array_media, json_object_get(j_element, "tm_id"));
+        }
+        res = h_insert(config->conn, j_query, NULL);
+        json_decref(j_query);
+        if (res != H_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add_media - Error executing j_query");
+          ret = T_ERROR_DB;
+        } else {
+          stream_from_playlist_add_media(config, tpl_id, j_array_media);
+          ret = T_OK;
+        }
       } else {
-        ret = T_OK;
+        y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add_media - Error allocating resources for j_query");
+        ret = T_ERROR_MEMORY;
       }
+      json_decref(j_array_media);
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add_media - Error allocating resources for j_query");
+      y_log_message(Y_LOG_LEVEL_ERROR, "playlist_add_media - Error allocating resources for j_array_media");
       ret = T_ERROR_MEMORY;
     }
   } else{
     ret = T_OK;
   }
   return ret;
+}
+
+void stream_from_playlist_delete_media(struct config_elements * config, json_int_t tpl_id, json_t * j_array_media) {
+  struct _t_webradio * webradio;
+  struct _t_jukebox * jukebox;
+  unsigned int i;
+  size_t index = 0;
+  json_t * j_media;
+  struct _t_file * file;
+  
+  for (i=0; i<config->nb_webradio; i++) {
+    webradio = config->webradio_set[i];
+    if (webradio->tpl_id == tpl_id) {
+      if (pthread_mutex_lock(&webradio->file_list->file_lock)) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "stream_from_playlist_delete_media - Error lock mutex file_list for webradio stream %s", webradio->name);
+      } else {
+        json_array_foreach(j_array_media, index, j_media) {
+          if ((file = file_list_dequeue_file_from_id_nolock(webradio->file_list, json_integer_value(j_media))) == NULL) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "stream_from_playlist_delete_media - Error removing media %"JSON_INTEGER_FORMAT" to webradio stream %s", json_integer_value(j_media), webradio->name);
+          } else {
+            o_free(file);
+          }
+        }
+        pthread_mutex_unlock(&webradio->file_list->file_lock);
+        if (stream_db_media_remove_list(config, webradio->name, j_array_media) != T_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "stream_from_playlist_delete_media - Error stream_db_media_remove_list for webradio stream %s", webradio->name);
+        }
+      }
+    }
+  }
+  for (i=0; i<config->nb_jukebox; i++) {
+    jukebox = config->jukebox_set[i];
+    if (jukebox->tpl_id == tpl_id) {
+      if (pthread_mutex_lock(&jukebox->file_list->file_lock)) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "stream_from_playlist_delete_media - Error lock mutex file_list for jukebox stream %s", jukebox->name);
+      } else {
+        json_array_foreach(j_array_media, index, j_media) {
+          if ((file = file_list_dequeue_file_from_id_nolock(jukebox->file_list, json_integer_value(j_media))) == NULL) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "stream_from_playlist_delete_media - Error removing media %"JSON_INTEGER_FORMAT" to jukebox stream %s", json_integer_value(j_media), jukebox->name);
+          } else {
+            o_free(file);
+          }
+        }
+        pthread_mutex_unlock(&jukebox->file_list->file_lock);
+        if (stream_db_media_remove_list(config, jukebox->name, j_array_media) != T_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "stream_from_playlist_delete_media - Error stream_db_media_remove_list for jukebox stream %s", jukebox->name);
+        }
+      }
+    }
+  }
 }
 
 int playlist_delete_media(struct config_elements * config, json_int_t tpl_id, json_t * media_list) {
@@ -544,7 +647,7 @@ int playlist_delete_media(struct config_elements * config, json_int_t tpl_id, js
     json_array_foreach(media_list, index, j_element) {
       json_array_append(j_tm_id_array, json_object_get(j_element, "tm_id"));
     }
-    j_query = json_pack("{sss{sIs{ssso}}}",
+    j_query = json_pack("{sss{sIs{sssO}}}",
                         "table",
                         TALIESIN_TABLE_PLAYLIST_ELEMENT,
                         "where",
@@ -559,10 +662,12 @@ int playlist_delete_media(struct config_elements * config, json_int_t tpl_id, js
     json_decref(j_query);
     if (res == H_OK) {
       ret = T_OK;
+      stream_from_playlist_delete_media(config, tpl_id, j_tm_id_array);
     } else {
       y_log_message(Y_LOG_LEVEL_ERROR, "playlist_delete_media - Error executing j_query");
       ret = T_ERROR_DB;
     }
+    json_decref(j_tm_id_array);
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "playlist_delete_media - Error allocating resources for j_tm_id_array");
     ret = T_ERROR_MEMORY;

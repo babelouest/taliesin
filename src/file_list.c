@@ -72,6 +72,7 @@ int file_list_enqueue_new_file(struct _t_file_list * file_list/*, const char * p
     if (file_list_enqueue_file(file_list, file) == T_OK) {
       return T_OK;
     } else {
+      o_free(file);
       y_log_message(Y_LOG_LEVEL_ERROR, "file_list_enqueue_new_file - Error file_list_enqueue_file");
       return T_ERROR;
     }

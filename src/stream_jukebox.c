@@ -1102,6 +1102,31 @@ json_t * is_jukebox_command_valid(struct config_elements * config, struct _t_juk
   return j_result;
 }
 
+int jukebox_sync_playlist(struct _t_jukebox * jukebox, json_t * j_playlist) {
+  int ret;
+  size_t index = 0;
+  json_t * j_element = NULL;
+
+  if (pthread_mutex_lock(&jukebox->file_list->file_lock)) {
+    ret = T_ERROR;
+    y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_sync_playlist - Error lock mutex file_list");
+  } else {
+    jukebox->busy = 1;
+    if (jukebox->file_list->start != NULL) {
+      file_list_clean_file(jukebox->file_list->start);
+      jukebox->file_list->start = NULL;
+      jukebox->file_list->nb_files = 0;
+    }
+    json_array_foreach(json_object_get(j_playlist, "media"), index, j_element) {
+      if (file_list_enqueue_new_file(jukebox->file_list, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_sync_playlist - Error adding file %s", json_string_value(json_object_get(j_element, "full_path")));
+      }
+    }
+    pthread_mutex_unlock(&jukebox->file_list->file_lock);
+  }
+  return ret;
+}
+
 json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * jukebox, const char * username, json_t * j_command) {
   const char * str_command = json_string_value(json_object_get(j_command, "command"));
   int ret;
@@ -1305,30 +1330,18 @@ json_t * jukebox_command(struct config_elements * config, struct _t_jukebox * ju
   } else if (0 == o_strcmp(str_command, "reload")) {
     if (jukebox->tpl_id) {
       if (!jukebox->busy) {
-        jukebox->busy = 1;
         j_playlist = playlist_get_by_id(config, jukebox->tpl_id);
         if (check_result_value(j_playlist, T_OK)) {
-          if (pthread_mutex_lock(&jukebox->file_list->file_lock)) {
-            j_return = json_pack("{si}", "result", T_ERROR);
-            y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error lock mutex file_list");
-          } else {
-            if (jukebox->file_list->start != NULL) {
-              file_list_clean_file(jukebox->file_list->start);
-              jukebox->file_list->start = NULL;
-              jukebox->file_list->nb_files = 0;
-            }
-            json_array_foreach(json_object_get(json_object_get(j_playlist, "playlist"), "media"), index, j_element) {
-              if (file_list_enqueue_new_file(jukebox->file_list, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
-                y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error adding file %s", json_string_value(json_object_get(j_element, "full_path")));
-              }
-            }
-            pthread_mutex_unlock(&jukebox->file_list->file_lock);
+          if (jukebox_sync_playlist(jukebox, json_object_get(j_playlist, "playlist")) == T_OK) {
             if (jukebox_update_db_stream_media_list(config, jukebox) == T_OK) {
               j_return = json_pack("{si}", "result", T_OK);
             } else {
               y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error jukebox_update_db_stream_media_list");
               j_return = json_pack("{si}", "result", T_ERROR);
             }
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error jukebox_sync_playlist");
+            j_return = json_pack("{si}", "result", T_ERROR);
           }
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_command - Error playlist_get_by_id");
@@ -1455,7 +1468,7 @@ void * jukebox_run_thread(void * args) {
       path = msprintf("%s/%s", json_string_value(json_object_get(json_object_get(j_media, "media"), "path_ds")), json_string_value(json_object_get(json_object_get(j_media, "media"), "path_media")));
       // Open file
       if (!open_input_file(path, &input_format_context, &input_codec_context, AVMEDIA_TYPE_AUDIO) && !init_resampler(input_codec_context, output_codec_context, &resample_context)) {
-        if (media_add_history(config, client_data_jukebox->jukebox->name, client_data_jukebox->jukebox->tpl_id, client_data_jukebox->audio_buffer->file->tm_id) != T_OK) {
+        if (media_add_history(config, client_data_jukebox->jukebox->name, client_data_jukebox->jukebox->tpl_id, client_data_jukebox->audio_buffer->file->tm_id, 1) != T_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "jukebox_run_thread - Error media_add_history");
         }
         while (client_data_jukebox->audio_buffer->status != TALIESIN_STREAM_STATUS_STOPPED) {

@@ -155,7 +155,7 @@ json_t * media_folder_get_cover(struct config_elements * config, json_t * j_data
 int get_media_cover(AVFormatContext * full_size_cover_format_context, AVCodecContext ** full_size_cover_codec_context, AVPacket * full_size_cover_packet) {
   int ret = T_ERROR;
   size_t i;
-  AVCodec * cover_codec = NULL;
+  const AVCodec * cover_codec = NULL;
   int video_stream;
   
   video_stream = -1;
@@ -190,7 +190,7 @@ int get_media_cover(AVFormatContext * full_size_cover_format_context, AVCodecCon
 
 json_t * get_format(struct config_elements * config, AVFormatContext *fmt_ctx, const char * path) {
   json_t * j_format = json_object();
-  AVCodec * input_codec = NULL;
+  const AVCodec * input_codec = NULL;
   int codec_index, file_type = config_get_type_from_path(config, path);
   size_t i;
   
@@ -503,14 +503,16 @@ json_t * media_get_by_id(struct config_elements * config, json_int_t tm_id) {
               json_object_set(j_element, "data_source", json_object_get(json_array_get(j_result_data_source, 0), "tds_name"));
               
               json_decref(j_result_data_source);
-              j_query = json_pack("{sss[s]s{sI}}",
+              j_query = json_pack("{sss[s]s{sIsi}}",
                                   "table",
                                   TALIESIN_TABLE_MEDIA_HISTORY,
                                   "columns",
                                     "COUNT(`tmh_id`) AS nb_play",
                                    "where",
                                      "tm_id",
-                                     tm_id);
+                                     tm_id,
+                                     "tmh_stats_in",
+                                     1);
               res = h_select(config->conn, j_query, &j_result_history, NULL);
               json_decref(j_query);
               if (res == H_OK) {
@@ -608,14 +610,16 @@ json_t * media_get_by_id_for_stream(struct config_elements * config, json_int_t 
               json_object_set(j_element, "path_ds", json_object_get(json_array_get(j_result_data_source, 0), "path_ds"));
               
               json_decref(j_result_data_source);
-              j_query = json_pack("{sss[s]s{sI}}",
+              j_query = json_pack("{sss[s]s{sIsi}}",
                                   "table",
                                   TALIESIN_TABLE_MEDIA_HISTORY,
                                   "columns",
                                     "COUNT(`tmh_id`) AS nb_play",
                                    "where",
                                      "tm_id",
-                                     tm_id);
+                                     tm_id,
+                                     "tmh_stats_in",
+                                     1);
               res = h_select(config->conn, j_query, &j_result_history, NULL);
               json_decref(j_query);
               if (res == H_OK) {
@@ -698,14 +702,16 @@ json_t * media_get_file(struct config_elements * config, json_t * j_data_source,
               json_object_set(json_object_get(j_element, "tags"), json_string_value(json_object_get(j_tag, "tmd_key")), json_object_get(j_tag, "tmd_value"));
             }
             json_decref(j_result_tag);
-            j_query = json_pack("{sss[s]s{sI}}",
+            j_query = json_pack("{sss[s]s{sIsi}}",
                                 "table",
                                 TALIESIN_TABLE_MEDIA_HISTORY,
                                 "columns",
                                   "COUNT(`tmh_id`) AS nb_play",
                                  "where",
                                    "tm_id",
-                                   json_integer_value(json_object_get(j_element, "tm_id")));
+                                   json_integer_value(json_object_get(j_element, "tm_id")),
+                                   "tmh_stats_in",
+                                   1);
             res = h_select(config->conn, j_query, &j_result_history, NULL);
             json_decref(j_query);
             if (res == H_OK) {
@@ -793,14 +799,16 @@ json_t * media_list_folder(struct config_elements * config, json_t * j_data_sour
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "media_list_folder - Error allocating resources for j_query (tag)");
         }
-        j_query = json_pack("{sss[s]s{sI}}",
+        j_query = json_pack("{sss[s]s{sIsi}}",
                             "table",
                             TALIESIN_TABLE_MEDIA_HISTORY,
                             "columns",
                               "COUNT(`tmh_id`) AS nb_play",
                              "where",
                                "tm_id",
-                               json_integer_value(json_object_get(j_element, "tm_id")));
+                               json_integer_value(json_object_get(j_element, "tm_id")),
+                               "tmh_stats_in",
+                               1);
         res = h_select(config->conn, j_query, &j_result_history, NULL);
         json_decref(j_query);
         if (res == H_OK) {
@@ -1728,18 +1736,20 @@ json_t * media_cover_get_by_id(struct config_elements * config, json_int_t tm_id
   return j_return;
 }
 
-int media_add_history(struct config_elements * config, const char * stream_name, json_int_t tpl_id, json_int_t tm_id) {
+int media_add_history(struct config_elements * config, const char * stream_name, json_int_t tpl_id, json_int_t tm_id, int stats_in) {
   json_t * j_query;
   int res;
   
-  j_query = json_pack("{sss{sssI}}",
+  j_query = json_pack("{sss{sssIsi}}",
                       "table",
                       TALIESIN_TABLE_MEDIA_HISTORY,
                       "values",
                         "tmh_stream_name",
                         stream_name,
                         "tm_id",
-                        tm_id);
+                        tm_id,
+                        "tmh_stats_in",
+                        stats_in);
   if (j_query != NULL) {
     if (tpl_id) {
       json_object_set_new(json_object_get(j_query, "values"), "tpl_id", json_integer(tpl_id));

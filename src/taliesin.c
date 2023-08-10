@@ -480,8 +480,8 @@ int main (int argc, char ** argv) {
       pthread_cond_wait(&config->stream_stop_cond, &config->stream_stop_lock);
       pthread_mutex_unlock(&config->stream_stop_lock);
     }
-    for (i=0; i<config->nb_jukebox; i++) {
-      if (jukebox_close(config, config->jukebox_set[i]) != T_OK) {
+    while (config->nb_jukebox) {
+      if (jukebox_close(config, config->jukebox_set[0]) != T_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "Error closing playlist");
       }
     }
@@ -568,9 +568,9 @@ void exit_server(struct config_elements ** config, int exit_value) {
     o_free(*config);
     (*config) = NULL;
   }
+  shout_shutdown();
   i_global_close();
   y_close_logs();
-  shout_shutdown();
   exit(exit_value==TALIESIN_STOP?0:1);
 }
 
@@ -808,7 +808,6 @@ int build_config_from_file(struct config_elements * config) {
       cur_stream_sample_rate = 0,
       cur_stream_bit_rate = 0,
       cur_use_oidc_authentication = 1,
-      cur_user_can_create_data_source = 0,
       cur_timeout = 0,
       compress = 0,
       icecast_port = 0;
@@ -1295,10 +1294,6 @@ int build_config_from_file(struct config_elements * config) {
       config_destroy(&cfg);
       return 0;
     }
-  }
-
-  if (config_lookup_bool(&cfg, "user_can_create_data_source", &cur_user_can_create_data_source) == CONFIG_TRUE) {
-    config->user_can_create_data_source = (short unsigned int)cur_user_can_create_data_source;
   }
 
   config_destroy(&cfg);

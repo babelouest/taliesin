@@ -306,3 +306,104 @@ json_t * db_stream_get_media_list_from_name(struct config_elements * config, con
   }
   return j_return;
 }
+
+int stream_db_media_add_list(struct config_elements * config, const char * name, json_t * j_array_media) {
+  json_t * j_query, * j_result, * j_element = NULL;
+  json_int_t ts_id;
+  int res, ret;
+  size_t index = 0;
+
+  j_query = json_pack("{sss[s]s{ss}}",
+                      "table",
+                      TALIESIN_TABLE_STREAM,
+                      "columns",
+                        "ts_id",
+                      "where",
+                        "ts_name",
+                        name);
+  res = h_select(config->conn, j_query, &j_result, NULL);
+  json_decref(j_query);
+  if (res == H_OK) {
+    if (json_array_size(j_result) > 0) {
+      ts_id = json_integer_value(json_object_get(json_array_get(j_result, 0), "ts_id"));
+      j_query = json_pack("{sss[]}",
+                          "table",
+                          TALIESIN_TABLE_STREAM_ELEMENT,
+                          "values");
+      if (j_query != NULL) {
+        json_array_foreach(j_array_media, index, j_element) {
+          json_array_append_new(json_object_get(j_query, "values"), json_pack("{sIsO}", "ts_id", ts_id, "tm_id", j_element));
+        }
+        res = h_insert(config->conn, j_query, NULL);
+        json_decref(j_query);
+        if (res != H_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "webradio_add_db_stream_media_list - Error executing j_query (2)");
+          ret = T_ERROR_DB;
+        } else {
+          ret = T_OK;
+        }
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "webradio_add_db_stream_media_list - Error allocatinng resources for j_query");
+        ret = T_ERROR_MEMORY;
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "webradio_add_db_stream_media_list - stream not found");
+      ret = T_ERROR_MEMORY;
+    }
+    json_decref(j_result);
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "webradio_add_db_stream_media_list - Error executing j_query (1)");
+    ret = T_ERROR_DB;
+  }
+  return ret;
+}
+
+int stream_db_media_remove_list(struct config_elements * config, const char * name, json_t * j_array_media) {
+  json_t * j_query, * j_result;
+  json_int_t ts_id;
+  int res, ret;
+
+  j_query = json_pack("{sss[s]s{ss}}",
+                      "table",
+                      TALIESIN_TABLE_STREAM,
+                      "columns",
+                        "ts_id",
+                      "where",
+                        "ts_name", name);
+  res = h_select(config->conn, j_query, &j_result, NULL);
+  json_decref(j_query);
+  if (res == H_OK) {
+    if (json_array_size(j_result) > 0) {
+      ts_id = json_integer_value(json_object_get(json_array_get(j_result, 0), "ts_id"));
+      j_query = json_pack("{sss{sIs{sssO}}}",
+                          "table",
+                          TALIESIN_TABLE_STREAM_ELEMENT,
+                          "where",
+                            "ts_id", ts_id,
+                            "tm_id",
+                              "operator", "IN",
+                              "value", j_array_media);
+      if (j_query != NULL) {
+        res = h_delete(config->conn, j_query, NULL);
+        json_decref(j_query);
+        if (res != H_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "stream_db_media_remove_list - Error executing j_query (2)");
+          ret = T_ERROR_DB;
+        } else {
+          ret = T_OK;
+        }
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "stream_db_media_remove_list - Error allocatinng resources for j_query");
+        ret = T_ERROR_MEMORY;
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "stream_db_media_remove_list - stream not found");
+      ret = T_ERROR_MEMORY;
+    }
+    json_decref(j_result);
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "stream_db_media_remove_list - Error executing j_query (1)");
+    ret = T_ERROR_DB;
+  }
+  return ret;
+}

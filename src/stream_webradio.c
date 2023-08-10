@@ -997,7 +997,7 @@ int audio_stream_enqueue_buffer(struct _t_webradio * webradio, size_t max_size, 
       pthread_mutex_lock(&webradio->message_lock);
       pthread_cond_broadcast(&webradio->message_cond);
       pthread_mutex_unlock(&webradio->message_lock);
-      if (!webradio->icecast && media_add_history(webradio->config, webradio->name, webradio->tpl_id, stream->first_buffer->file->tm_id) != T_OK) {
+      if (media_add_history(webradio->config, webradio->name, webradio->tpl_id, stream->first_buffer->file->tm_id, webradio->icecast?0:1) != T_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "audio_stream_enqueue_buffer - Error media_add_history (1)");
       }
     }
@@ -1024,7 +1024,7 @@ int audio_stream_enqueue_buffer(struct _t_webradio * webradio, size_t max_size, 
           pthread_mutex_lock(&webradio->message_lock);
           pthread_cond_broadcast(&webradio->message_cond);
           pthread_mutex_unlock(&webradio->message_lock);
-          if (!webradio->icecast && media_add_history(webradio->config, webradio->name, webradio->tpl_id, stream->first_buffer->file->tm_id) != T_OK) {
+          if (media_add_history(webradio->config, webradio->name, webradio->tpl_id, stream->first_buffer->file->tm_id, webradio->icecast?0:1) != T_OK) {
             y_log_message(Y_LOG_LEVEL_ERROR, "audio_stream_enqueue_buffer - Error media_add_history (1)");
           }
         }
@@ -1352,6 +1352,31 @@ int webradio_close(struct config_elements * config, struct _t_webradio * webradi
   return T_OK;
 }
 
+int webradio_sync_playlist(struct _t_webradio * webradio, json_t * j_playlist) {
+  int ret;
+  size_t index = 0;
+  json_t * j_element = NULL;
+
+  if (pthread_mutex_lock(&webradio->file_list->file_lock)) {
+    ret = T_ERROR;
+    y_log_message(Y_LOG_LEVEL_ERROR, "webradio_sync_playlist - Error lock mutex file_list");
+  } else {
+    webradio->busy = 1;
+    if (webradio->file_list->start != NULL) {
+      file_list_clean_file(webradio->file_list->start);
+      webradio->file_list->start = NULL;
+      webradio->file_list->nb_files = 0;
+    }
+    json_array_foreach(json_object_get(j_playlist, "media"), index, j_element) {
+      if (file_list_enqueue_new_file(webradio->file_list, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "webradio_sync_playlist - Error adding file %s", json_string_value(json_object_get(j_element, "full_path")));
+      }
+    }
+    pthread_mutex_unlock(&webradio->file_list->file_lock);
+  }
+  return ret;
+}
+
 json_t * webradio_command(struct config_elements * config, struct _t_webradio * webradio, const char * username, json_t * j_command) {
   const char * str_command = json_string_value(json_object_get(j_command, "command"));
   int ret;
@@ -1631,28 +1656,16 @@ json_t * webradio_command(struct config_elements * config, struct _t_webradio * 
       if (!webradio->busy) {
         j_playlist = playlist_get_by_id(config, webradio->tpl_id);
         if (check_result_value(j_playlist, T_OK)) {
-          if (pthread_mutex_lock(&webradio->file_list->file_lock)) {
-            j_return = json_pack("{si}", "result", T_ERROR);
-            y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error lock mutex file_list");
-          } else {
-            webradio->busy = 1;
-            if (webradio->file_list->start != NULL) {
-              file_list_clean_file(webradio->file_list->start);
-              webradio->file_list->start = NULL;
-              webradio->file_list->nb_files = 0;
-            }
-            json_array_foreach(json_object_get(json_object_get(j_playlist, "playlist"), "media"), index, j_element) {
-              if (file_list_enqueue_new_file(webradio->file_list, json_integer_value(json_object_get(j_element, "tm_id"))) != T_OK) {
-                y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error adding file %s", json_string_value(json_object_get(j_element, "full_path")));
-              }
-            }
-            pthread_mutex_unlock(&webradio->file_list->file_lock);
+          if (webradio_sync_playlist(webradio, json_object_get(j_playlist, "playlist")) == T_OK) {
             if (webradio_update_db_stream_media_list(config, webradio) == T_OK) {
               j_return = json_pack("{si}", "result", T_OK);
             } else {
               y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error webradio_update_db_stream_media_list");
               j_return = json_pack("{si}", "result", T_ERROR);
             }
+          } else {
+            j_return = json_pack("{si}", "result", T_ERROR);
+            y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error webradio_sync_playlist");
           }
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "webradio_command - Error playlist_get_by_id");
@@ -2326,6 +2339,7 @@ int icecast_init_shout(shout_t ** shout, struct _t_webradio * webradio) {
   int ret = T_OK;
   char * icecast_mount = NULL;
   unsigned int shout_format = SHOUT_FORMAT_MP3;
+  shout_metadata_t * meta = NULL;
 
   do {
     if ((*shout = shout_new()) == NULL) {
@@ -2362,17 +2376,33 @@ int icecast_init_shout(shout_t ** shout, struct _t_webradio * webradio) {
       ret = T_ERROR;
       break;
     }
-    
-    if (shout_set_name(*shout, webradio->display_name) != SHOUTERR_SUCCESS) {
-      y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_name: %s", shout_get_error(*shout));
-      ret = T_ERROR;
-      break;
-    }
 
-    if (shout_set_description(*shout, webradio->display_name) != SHOUTERR_SUCCESS) {
-      y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_description: %s", shout_get_error(*shout));
-      ret = T_ERROR;
-      break;
+    if (!o_strnullempty(webradio->display_name)) {
+      if ((meta = shout_metadata_new()) != NULL) {
+        if (shout_metadata_add(meta, SHOUT_META_NAME, webradio->display_name) != SHOUTERR_SUCCESS) {
+          shout_metadata_free(meta);
+          y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_metadata_add SHOUT_META_NAME");
+          ret = T_ERROR;
+          break;
+        }
+        if (shout_metadata_add(meta, SHOUT_META_DESCRIPTION, webradio->display_name) != SHOUTERR_SUCCESS) {
+          shout_metadata_free(meta);
+          y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_metadata_add SHOUT_META_DESCRIPTION");
+          ret = T_ERROR;
+          break;
+        }
+        /*if (shout_set_metadata_utf8(*shout, meta) != SHOUTERR_SUCCESS) {
+          shout_metadata_free(meta);
+          y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_metadata_utf8 ");
+          ret = T_ERROR;
+          break;
+        }*/
+        shout_metadata_free(meta);
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_metadata_new");
+        ret = T_ERROR;
+        break;
+      }
     }
 
     if (o_strnullempty(webradio->config->icecast_mount_prefix)) {
@@ -2395,8 +2425,8 @@ int icecast_init_shout(shout_t ** shout, struct _t_webradio * webradio) {
       ret = T_ERROR;
       break;
     }
-    if (shout_set_format(*shout, shout_format) != SHOUTERR_SUCCESS) {
-      y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_format: %s", shout_get_error(*shout));
+    if (shout_set_content_format(*shout, shout_format, SHOUT_USAGE_AUDIO, NULL) != SHOUTERR_SUCCESS) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_set_content_format: %s", shout_get_error(*shout));
       ret = T_ERROR;
       break;
     }
@@ -2412,7 +2442,7 @@ int icecast_init_shout(shout_t ** shout, struct _t_webradio * webradio) {
     shout_free(*shout);
     *shout = NULL;
   }
-  
+
   return ret;
 }
 
@@ -2463,8 +2493,9 @@ void * icecast_push_run_thread(void * args) {
       buffer = webradio->audio_stream->first_buffer;
       if ((title = get_icy_title(webradio->config, webradio, buffer->file->tm_id)) != NULL) {
         if ((meta = shout_metadata_new()) != NULL) {
-          shout_metadata_add(meta, "song", title);
-          shout_set_metadata(shout, meta);
+          if (shout_metadata_add(meta, "song", title) != SHOUTERR_SUCCESS || shout_set_metadata_utf8(shout, meta) != SHOUTERR_SUCCESS) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_metadata_add");
+          }
           shout_metadata_free(meta);
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_metadata_new");
@@ -2515,8 +2546,9 @@ void * icecast_push_run_thread(void * args) {
               } else {
                 if ((title = get_icy_title(webradio->config, webradio, buffer->file->tm_id)) != NULL) {
                   if ((meta = shout_metadata_new()) != NULL) {
-                    shout_metadata_add(meta, "song", title);
-                    shout_set_metadata(shout, meta);
+                    if (shout_metadata_add(meta, "song", title) != SHOUTERR_SUCCESS || shout_set_metadata_utf8(shout, meta) != SHOUTERR_SUCCESS) {
+                      y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_metadata_add");
+                    }
                     shout_metadata_free(meta);
                   } else {
                     y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_metadata_new");
@@ -2545,7 +2577,7 @@ void * icecast_push_run_thread(void * args) {
               y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error pthread_mutex_lock (2)");
               webradio_send_close_signal(webradio);
               webradio->icecast_status = TALIESIN_STREAM_STATUS_ERROR;
-              
+
               buffer = NULL;
               break;
             }
@@ -2556,15 +2588,16 @@ void * icecast_push_run_thread(void * args) {
             offset = 0;
             if ((title = get_icy_title(webradio->config, webradio, buffer->file->tm_id)) != NULL) {
               if ((meta = shout_metadata_new()) != NULL) {
-                shout_metadata_add(meta, "song", title);
-                shout_set_metadata(shout, meta);
+                if (shout_metadata_add(meta, "song", title) != SHOUTERR_SUCCESS || shout_set_metadata_utf8(shout, meta) != SHOUTERR_SUCCESS) {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_metadata_add");
+                }
                 shout_metadata_free(meta);
               } else {
                 y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_metadata_new");
               }
               o_free(title);
             }
-            
+
             pthread_mutex_lock(&webradio->audio_stream->stream_lock);
             pthread_cond_signal(&webradio->audio_stream->stream_cond);
             pthread_mutex_unlock(&webradio->audio_stream->stream_lock);
@@ -2583,8 +2616,9 @@ void * icecast_push_run_thread(void * args) {
             } else {
               if ((title = get_icy_title(webradio->config, webradio, buffer->file->tm_id)) != NULL) {
                 if ((meta = shout_metadata_new()) != NULL) {
-                  shout_metadata_add(meta, "song", title);
-                  shout_set_metadata(shout, meta);
+                  if (shout_metadata_add(meta, "song", title) != SHOUTERR_SUCCESS || shout_set_metadata_utf8(shout, meta) != SHOUTERR_SUCCESS) {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_metadata_add");
+                  }
                   shout_metadata_free(meta);
                 } else {
                   y_log_message(Y_LOG_LEVEL_ERROR, "webradio icecast - Error shout_metadata_new");

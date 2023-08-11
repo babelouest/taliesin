@@ -284,14 +284,16 @@ class MediaRow extends Component {
            style={{display: "none"}}
            target="_blank"
            id={"file-download-anchor-"+this.state.index}
-           download={this.state.media.name}>
+           download={this.state.media.name}
+           rel="noreferrer">
           {i18n.t("common.download")}
         </a>
         <a href={(this.state.filePlayExternal||"")}
            style={{display: "none"}}
            target="_blank"
            id={"file-play-external-anchor-"+this.state.index}
-           download={this.state.media.name}>
+           download={this.state.media.name}
+           rel="noreferrer">
           {i18n.t("common.external")}
         </a>
 			</div>

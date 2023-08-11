@@ -90,13 +90,15 @@ class VideoPlayer extends Component {
         <a href={(streamUrl+"&download")}
            style={{display: "none"}}
            target="_blank"
-           id={"file-download-anchor"}>
+           id={"file-download-anchor"}
+           rel="noreferrer">
           {i18n.t("common.download")}
         </a>
         <a href={(streamUrl+"&direct")}
            style={{display: "none"}}
            target="_blank"
-           id={"file-play-external-anchor"}>
+           id={"file-play-external-anchor"}
+           rel="noreferrer">
           {i18n.t("common.external")}
         </a>
       </div>

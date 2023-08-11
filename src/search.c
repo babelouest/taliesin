@@ -360,8 +360,8 @@ json_t * is_valid_media_advanced_search(struct config_elements * config, const c
           0 != o_strcmp(json_string_value(json_object_get(search_criteria, "sort_direction")), "desc")))) {
         json_array_append_new(j_return, json_pack("{ss}", "sort_direction", "sort_direction is optional and must be a string of the following values: 'asc' or 'desc'"));
       }
-      if (json_object_get(search_criteria, "limit") != NULL && (!json_is_integer(json_object_get(search_criteria, "limit")) || json_integer_value(json_object_get(search_criteria, "limit")) < 0)) {
-        json_array_append_new(j_return, json_pack("{ss}", "limit", "limit value is optional and must be a positive or null integer"));
+      if (json_object_get(search_criteria, "limit") != NULL && (!json_is_integer(json_object_get(search_criteria, "limit")) || json_integer_value(json_object_get(search_criteria, "limit")) <= 0)) {
+        json_array_append_new(j_return, json_pack("{ss}", "limit", "limit value is optional and must be a positive not null integer"));
       }
       if (json_object_get(search_criteria, "offset") != NULL && (!json_is_integer(json_object_get(search_criteria, "offset")) || json_integer_value(json_object_get(search_criteria, "offset")) < 0)) {
         json_array_append_new(j_return, json_pack("{ss}", "offset", "offset value is optional and must be a positive or null integer"));
@@ -714,11 +714,9 @@ json_t * media_advanced_search(struct config_elements * config, const char * use
   }
   
   if (json_object_get(search_criteria, "limit") != NULL) {
-    if (json_integer_value(json_object_get(search_criteria, "limit")) > 0) {
-      tmp = msprintf("%s LIMIT %"JSON_INTEGER_FORMAT, query, json_integer_value(json_object_get(search_criteria, "limit")));
-      o_free(query);
-      query = tmp;
-    }
+    tmp = msprintf("%s LIMIT %"JSON_INTEGER_FORMAT, query, json_integer_value(json_object_get(search_criteria, "limit")));
+    o_free(query);
+    query = tmp;
   } else {
     tmp = msprintf("%s LIMIT %d", query, TALIESIN_MEDIA_LIMIT_DEFAULT);
     o_free(query);

@@ -4,6 +4,7 @@ import FontAwesome from 'react-fontawesome';
 
 import StateStore from '../lib/StateStore';
 import i18n from '../lib/i18n';
+import config from '../lib/ConfigManager';
 
 class FullScreen extends Component {
 	constructor(props) {
@@ -16,6 +17,8 @@ class FullScreen extends Component {
 			jukeboxIndex: StateStore.getState().profile.jukeboxIndex,
 			currentPlayer: StateStore.getState().profile.currentPlayer,
 			show: StateStore.getState().showFullScreen,
+      playerList: StateStore.getState().externalPlayerList,
+      streamList: StateStore.getState().streamList,
 			title: "",
 			titleNext: "",
 			imgBlob: false,
@@ -28,7 +31,9 @@ class FullScreen extends Component {
 
 		StateStore.subscribe(() => {
 			if (this._ismounted) {
-				if (StateStore.getState().lastAction === "loadStream") {
+        if (StateStore.getState().lastAction === "setStreamList") {
+          this.setState({streamList: StateStore.getState().streamList});
+				} else if (StateStore.getState().lastAction === "loadStream") {
 					this.setState({stream: StateStore.getState().profile.stream}, () => {this.loadMedia();});
 				} else if (StateStore.getState().lastAction === "setJukeboxIndex") {
 					this.setState({jukeboxIndex: StateStore.getState().profile.jukeboxIndex}, () => {this.loadMedia();});
@@ -64,6 +69,10 @@ class FullScreen extends Component {
 					this.setState({stream: StateStore.getState().profile.stream}, () => {this.loadMedia();});
 				} else if (StateStore.getState().lastAction === "setJukeboxSwitch") {
 					this.setState({playerSwitch: StateStore.getState().profile.currentPlayerSwitch});
+        } else if (StateStore.getState().lastAction === "setExternalPlayerList") {
+          this.setState({playerList: StateStore.getState().externalPlayerList});
+        } else if (StateStore.getState().lastAction === "setCurrentPlayer") {
+          this.setState({currentPlayer: StateStore.getState().profile.currentPlayer});
 				}
 			}
 		});
@@ -81,6 +90,7 @@ class FullScreen extends Component {
 		this.handleChangeVolume = this.handleChangeVolume.bind(this);
 		this.handleSelectFolder = this.handleSelectFolder.bind(this);
 		this.getMediaFolder = this.getMediaFolder.bind(this);
+		this.handleSelectPlayer = this.handleSelectPlayer.bind(this);
 
 		this.loadMedia();
 	}
@@ -92,6 +102,8 @@ class FullScreen extends Component {
 			mediaNext: StateStore.getState().profile.mediaNext,
 			jukeboxIndex: StateStore.getState().profile.jukeboxIndex,
 			show: StateStore.getState().showFullScreen,
+      playerList: StateStore.getState().externalPlayerList,
+      streamList: StateStore.getState().streamList,
 			title: "",
 			titleNext: "",
 			imgBlob: false,
@@ -237,6 +249,22 @@ class FullScreen extends Component {
 		}
 	}
 
+	handleSelectPlayer(player) {
+    StateStore.dispatch({type: "setMediaNow", media: false});
+    StateStore.dispatch({type: "loadStream", stream: {name: false, webradio: false}});
+		StateStore.dispatch({type: "setCurrentPlayer", currentPlayer: player});
+	}
+	
+	handleSelectStream(name) {
+		var newStream = this.state.streamList.find((stream) => {return stream.name === name});
+		if (newStream) {
+			this.setState({stream: newStream}, () => {
+				config.setLocalConfigValue("stream", newStream);
+				StateStore.dispatch({type: "loadStream", stream: this.state.stream});
+			});
+		}
+	}
+	
 	render() {
 		var mediaImage, metadata = [], separator, playButton, playButtonLarge, switchButton, switchButtonXs;
 		if (this.state.imgBlob) {
@@ -397,6 +425,29 @@ class FullScreen extends Component {
           <FontAwesome name={"power-off"} />
         </Button>
     }
+		var carleonPlayerList = [
+			<MenuItem key={0} eventKey={0} onClick={() => this.handleSelectPlayer({type: "internal", name: i18n.t("player.internal")})} className={this.state.currentPlayer.type==="internal"?"bg-success":""}>{i18n.t("player.internal")}</MenuItem>,
+			<MenuItem key={1} eventKey={1} onClick={() => this.handleSelectPlayer({type: "external", name: i18n.t("player.external")})} className={this.state.currentPlayer.type==="external"?"bg-success":""}>{i18n.t("player.external")}</MenuItem>
+		], separator, manager;
+		this.state.playerList.forEach((player, index) => {
+			if (player.enabled) {
+				carleonPlayerList.push(
+					<MenuItem key={index+2} eventKey={index+2} onClick={() => this.handleSelectPlayer({type: "carleon", name: player.name})} className={this.state.currentPlayer.type==="carleon"&&player.name===this.state.currentPlayer.name?"bg-success":""}>{player.name}</MenuItem>
+				)
+			}
+		});
+
+		var currentStreamList = [];
+		this.state.streamList.forEach((stream, index) => {
+			currentStreamList.push(
+				<MenuItem key={index}
+                  eventKey={index}
+                  onClick={() => this.handleSelectStream(stream.name)}
+                  data-name={stream.name}
+                  className={stream.name===this.state.stream.name?"bg-success":""}>{stream.display_name||i18n.t("common.no_name")}
+        </MenuItem>
+			)
+		});
 		return (
 			<div className={"fullscreen" + (!this.state.show?" hidden":"")} >
 				<div className="media-background-fullscreen" style={{backgroundImage:this.state.imgBlob?"url(data:image/png;base64,"+this.state.imgBlob+")":"" }}>
@@ -409,6 +460,16 @@ class FullScreen extends Component {
 				<Row style={{marginTop: "10px"}}>
 					<Col md={12} className="text-center hidden-sm hidden-xs">
 						<ButtonGroup>
+              <DropdownButton title={
+                <span><i className="fa fa-headphones"></i></span>
+              } id="playerList">
+                {carleonPlayerList}
+              </DropdownButton>
+              <DropdownButton title={
+                <span><i className="fa fa-music"></i></span>
+              } id="streamList">
+                {currentStreamList}
+              </DropdownButton>
 							<Button title={i18n.t("common.previous")} onClick={() => {this.handlePlayerAction("previous")}}>
 								<FontAwesome name={"fast-backward"} />
 							</Button>
@@ -437,6 +498,16 @@ class FullScreen extends Component {
 					</Col>
 					<Col md={12} className="text-center visible-sm visible-xs">
 						<ButtonGroup>
+              <DropdownButton bsSize="large" title={
+                <span><i className="fa fa-headphones"></i></span>
+              } id="playerList">
+                {carleonPlayerList}
+              </DropdownButton>
+              <DropdownButton bsSize="large" title={
+                <span><i className="fa fa-music"></i></span>
+              } id="streamList">
+                {currentStreamList}
+              </DropdownButton>
 							<Button bsSize="large" title={i18n.t("common.previous")} onClick={() => {this.handlePlayerAction("previous")}}>
 								<FontAwesome name={"fast-backward"} />
 							</Button>

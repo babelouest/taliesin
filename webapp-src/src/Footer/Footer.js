@@ -28,7 +28,7 @@ class Footer extends Component {
 			currentPlayer: StateStore.getState().profile.currentPlayer,
 			play: false,
 			stream_external: false,
-												imgBlob: false
+			imgBlob: false
 		};
 		
 		StateStore.subscribe(() => {
@@ -41,7 +41,14 @@ class Footer extends Component {
         } else if (reduxState.lastAction === "setUserList") {
           this.setState({isAdmin: StateStore.getState().profile.isAdmin, play: false});
         } else if (reduxState.lastAction === "setCurrentPlayer") {
-          this.setState({currentPlayer: StateStore.getState().profile.currentPlayer, stream: {name: false}, play: false});
+          this.setState({currentPlayer: StateStore.getState().profile.currentPlayer, stream: {name: false}, play: false}, () => {
+            if (this.state.currentPlayer.type !== "carleon") {
+              this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, play: false}, () => {
+                this.buildExternal();
+                this.setWindowTitle();
+              });
+            }
+          });
         } else if (reduxState.lastAction === "loadStream") {
           this.setState({stream: StateStore.getState().profile.stream, mediaNow: false, play: false}, () => {
             this.buildExternal();
@@ -106,7 +113,11 @@ class Footer extends Component {
 			var body = "";
 			var timeout = 10000;
 			if (this.state.mediaNow.tags) {
-				body = (this.state.mediaNow.tags.title || this.state.mediaNow.name) + "\n" + (this.state.mediaNow.tags.artist || this.state.mediaNow.tags.album_artist || "") + "\n" + (this.state.mediaNow.tags.album || "") + "\n" + (this.state.mediaNow.tags.date || "");
+        let dateYear = "";
+        if (this.state.mediaNow.tags.date) {
+          dateYear = "\n" + this.state.mediaNow.tags.date.substring(0, 4);
+        }
+				body = (this.state.mediaNow.tags.title || this.state.mediaNow.name) + "\n" + (this.state.mediaNow.tags.artist || this.state.mediaNow.tags.album_artist || "") + "\n" + (this.state.mediaNow.tags.album || "") + dateYear;
 			} else {
 				body = this.state.mediaNow.name;
 			}

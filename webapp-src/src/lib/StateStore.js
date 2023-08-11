@@ -149,6 +149,9 @@ function stateStoreManager(state = defaultState, action) {
 		case "loadStream":
 			state.profile.stream = action.stream;
 			config.setLocalConfigValue("stream", action.stream);
+      if (state.profile.currentPlayer && state.profile.currentPlayer.type !== "carleon" && action.stream.name) {
+        config.setLocalConfigValue("streamInternal", action.stream);
+      }
 			break;
 		case "setCurrentBrowse":
 			state.profile.browse = action.browse;
@@ -190,6 +193,10 @@ function stateStoreManager(state = defaultState, action) {
 		case "setCurrentPlayer":
 			state.profile.currentPlayer = action.currentPlayer;
 			config.setLocalConfigValue("currentPlayer", action.currentPlayer);
+      let streamInternal = config.getLocalConfigValue("streamInternal");
+      if (action.currentPlayer && action.currentPlayer.type !== "carleon" && streamInternal && streamInternal.name) {
+        state.profile.stream = streamInternal;
+      }
 			break;
 		case "setMediaNow":
 			state.profile.mediaNow = action.media;

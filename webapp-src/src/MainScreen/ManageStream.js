@@ -110,7 +110,7 @@ class ManageStream extends Component {
       var streamList = StateStore.getState().streamList;
       for (var i in streamList) {
         if (streamList[i].name === stream.name) {
-          streamList[i].name = result.name;
+          streamList[i].icecast_status == "stopped"
           this.setState({stream: streamList[i]});
           break;
         }
@@ -135,7 +135,7 @@ class ManageStream extends Component {
       var streamList = StateStore.getState().streamList;
       for (var i in streamList) {
         if (streamList[i].name === stream.name) {
-          streamList[i].name = result.name;
+          streamList[i].icecast_status == "started"
           this.setState({stream: streamList[i]});
           break;
         }

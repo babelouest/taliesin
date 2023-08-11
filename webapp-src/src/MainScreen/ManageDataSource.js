@@ -276,7 +276,6 @@ class ManageDataSource extends Component {
 	
 	render() {
 		var dataSourceList = [];
-    console.log(this.state.dataSourceList);
 		this.state.dataSourceList.forEach((dataSource, index) => {
 			var refresh = "";
 			if (this.state.refreshStatus[dataSource.name]) {

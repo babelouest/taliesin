@@ -7,7 +7,12 @@ import i18n from '../lib/i18n';
 class PlayerSelector extends Component {
 	constructor(props) {
 		super(props);
-		this.state = {player: props.player, loaded: false, currentList: props.currentList, isAdmin: props.isAdmin};
+		this.state = {
+      player: props.player,
+      loaded: false,
+      currentList: props.currentList,
+      isAdmin: props.isAdmin
+    };
 		
 		this.handleManagePlayers = this.handleManagePlayers.bind(this);
 		this.handleSelectPlayer = this.handleSelectPlayer.bind(this);
@@ -23,8 +28,8 @@ class PlayerSelector extends Component {
 	}
 	
 	handleSelectPlayer(player) {
-		StateStore.dispatch({type: "setMediaNow", media: false});
-		StateStore.dispatch({type: "loadStream", stream: {name: false, webradio: false}});
+    StateStore.dispatch({type: "setMediaNow", media: false});
+    StateStore.dispatch({type: "loadStream", stream: {name: false, webradio: false}});
 		StateStore.dispatch({type: "setCurrentPlayer", currentPlayer: player});
 	}
 	

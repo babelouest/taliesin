@@ -52,6 +52,8 @@ class StreamDetails extends Component {
 		this.handleHistoryNext = this.handleHistoryNext.bind(this);
 		this.handleSelectMediaList = this.handleSelectMediaList.bind(this);
 		this.handleHistoryRefresh = this.handleHistoryRefresh.bind(this);
+		this.icecastStop = this.icecastStop.bind(this);
+		this.icecastStart = this.icecastStart.bind(this);
 		
 		this.getHistory();
 	}
@@ -314,12 +316,86 @@ class StreamDetails extends Component {
 		this.setState({mediaListExpanded: !this.state.mediaListExpanded});
 	}
 	
+  icecastStop() {
+    StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "icecast_stop"})
+    .then((result) => {
+      StateStore.getState().APIManager.taliesinApiRequest("GET", "/stream")
+      .then((result) => {
+        StateStore.dispatch({type: "setStreamList", streamList: result});
+      })
+      .fail((result) => {
+        StateStore.getState().NotificationManager.addNotification({
+          message: i18n.t("stream.message_stream_list_reload_error"),
+          level: 'error'
+        });
+      });
+      StateStore.getState().NotificationManager.addNotification({
+        message: i18n.t("stream.message_stream_reload_ok"),
+        level: 'info'
+      });
+    })
+    .fail(() => {
+      StateStore.getState().NotificationManager.addNotification({
+        message: i18n.t("stream.message_stream_reload_error"),
+        level: 'error'
+      });
+    });
+  }
+
+  icecastStart() {
+    StateStore.getState().APIManager.taliesinApiRequest("PUT", "/stream/" + encodeURIComponent(this.state.stream.name) + "/manage", {command: "icecast_start"})
+    .then((result) => {
+      StateStore.getState().APIManager.taliesinApiRequest("GET", "/stream")
+      .then((result) => {
+        StateStore.dispatch({type: "setStreamList", streamList: result});
+      })
+      .fail((result) => {
+        StateStore.getState().NotificationManager.addNotification({
+          message: i18n.t("stream.message_stream_list_reload_error"),
+          level: 'error'
+        });
+      });
+      StateStore.getState().NotificationManager.addNotification({
+        message: i18n.t("stream.message_stream_reload_ok"),
+        level: 'info'
+      });
+    })
+    .fail(() => {
+      StateStore.getState().NotificationManager.addNotification({
+        message: i18n.t("stream.message_stream_reload_error"),
+        level: 'error'
+      });
+    });
+  }
+
 	render() {
-		var streamRandom, playlistAttached, history, clientList = [], mediaList, streamType, streamUrl;
+		var streamRandom, playlistAttached, history, clientList = [], mediaList, streamType, streamUrl, buttonPlay, buttonPlayMini, streamColor;
 		if (this.state.stream.webradio) {
       if (this.state.stream.icecast) {
         streamUrl = StateStore.getState().serverConfig.icecast_remote_address + "/" + this.state.stream.name;
         streamType = i18n.t("common.webradio_icecast");
+        if (this.state.stream.icecast_status == "started") {
+          buttonPlay = 
+            <Button title={i18n.t("common.stop")} onClick={() => this.icecastStop()}>
+              <FontAwesome name={"stop"} />
+            </Button>
+          buttonPlayMini = 
+            <MenuItem onClick={() => this.icecastStop()}>
+              <FontAwesome name={"stop"} className="space-after"/>
+              {i18n.t("common.stop")}
+            </MenuItem>
+        } else {
+          streamColor = "warning";
+          buttonPlay = 
+            <Button title={i18n.t("common.start")} onClick={() => this.icecastStart()}>
+              <FontAwesome name={"play"} />
+            </Button>
+          buttonPlayMini = 
+            <MenuItem onClick={() => this.icecastStart()}>
+              <FontAwesome name={"play"} className="space-after"/>
+              {i18n.t("common.start")}
+            </MenuItem>
+        }
       } else {
         streamUrl = StateStore.getState().taliesinApiUrl + "/stream/" + this.state.stream.name;
         streamType = i18n.t("common.webradio");
@@ -464,9 +540,7 @@ class StreamDetails extends Component {
 					<Col md={12}>
 						<a href={this.state.playExternalAnchor} style={{display: "none"}} id="play-external-anchor" download={(this.state.stream.display_name||i18n.t("common.no_name"))+".m3u"}>External</a>
 						<ButtonGroup className="hidden-xs">
-							<Button title={i18n.t("common.play")} onClick={this.playStream}>
-								<FontAwesome name={"play"} />
-							</Button>
+							{buttonPlay}
 							<Button title={i18n.t("common.external")} onClick={this.playStreamExternal}>
 								<FontAwesome name={"external-link"} />
 							</Button>
@@ -492,10 +566,7 @@ class StreamDetails extends Component {
 						<DropdownButton className="visible-xs" id={"xs-manage-"+this.state.stream.name} title={
 							<span><i className="fa fa-cog"></i></span>
 						}>
-							<MenuItem onClick={this.playStream}>
-								<FontAwesome name={"play"} className="space-after"/>
-								{i18n.t("common.play")}
-							</MenuItem>
+							{buttonPlayMini}
 							<MenuItem onClick={this.playStreamExternal}>
 								<FontAwesome name={"external-link"} className="space-after"/>
 								{i18n.t("common.external")}

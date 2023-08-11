@@ -91,6 +91,20 @@ config.fetchConfig()
                           carleonPrefix: config.getConfigValue("carleonPrefix"),
                           angharadApiUrl: config.getConfigValue("angharadApiUrl"),
                           oauth2: false});
+    var curConfig = config.getLocalConfig() || {};
+    if ((curConfig.currentPlayer &&
+        curConfig.currentPlayer.type === "external" &&
+        !StateStore.getState().externalPlayerList.find((pl) => {return pl.name === curConfig.currentPlayer.name;})) ||
+        !curConfig.currentPlayer) {
+      curConfig.currentPlayer = {type: "internal", name: i18n.t("player.internal")}
+    }
+    if (curConfig.currentPlayer.type === "external") {
+      curConfig.stream = false;
+    } else if (curConfig.currentPlayer.type === "internal" && curConfig.streamInternal && curConfig.streamInternal.name) {
+      curConfig.stream = curConfig.streamInternal;
+    }
+    StateStore.dispatch({ type: 'setStoredValues', config: curConfig });
+    StateStore.dispatch({ type: 'showFullScreen', show: curConfig.fullScreen });
 		ReactDOM.render(<App/>, document.getElementById('root'));
 	}
 	ReactDOM.render(<App/>, document.getElementById('root'));

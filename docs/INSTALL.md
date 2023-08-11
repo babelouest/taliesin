@@ -1,96 +1,12 @@
 # Taliesin installation
 
-## Automatic install script for Raspberry Pi running Raspbian
-
-Follow the documentation [docs/minimal/README.md](https://github.com/babelouest/taliesin/blob/master/docs/minimal/README.md) to install a minimal instance of Taliesin on a Raspberry PI with Raspbian installed.
-
-## Pre-compiled packages
-
-You can install Taliesin with a pre-compiled package available in the [release pages](https://github.com/babelouest/taliesin/releases/latest/). The package files `taliesin-full_*` contain the package libraries of `orcania`, `yder`, `ulfius`, `hoel`, `rhonabwy` and `iddawc` precompiled for `taliesin`, plus `taliesin` package. To install a pre-compiled package, you need to have installed the following libraries:
-
-```
-libjansson
-libavfilter
-libavcodec
-libavformat
-libswresample
-libavutil
-libcurl-gnutls
-libgnutls
-libgcrypt
-libsqlite3
-libmariadbclient
-libconfig
-```
-
-For example, to install Taliesin with the `taliesin-full_1.0.19_Debian_bullseye_x86_64.tar.gz` package downloaded on the `releases` page, you must execute the following commands:
-
-```shell
-$ sudo apt install -y libjansson4 libavcodec58 libavfilter7 libavformat58 libswresample3 libavutil56 libcurl-gnutls libgnutls libsqlite3-0 libpq5 default-mysql-client zlib1g libconfig9
-$ wget https://github.com/babelouest/taliesin/releases/download/v1.0.19/taliesin-full_1.0.19_Debian_bullseye_x86_64.tar.gz
-$ tar xf taliesin-full_1.0.19_Debian_bullseye_x86_64.tar.gz
-$ sudo dpkg -i liborcania_2.2.1_Debian_bullseye_x86_64.deb
-$ sudo dpkg -i libyder_1.4.14_Debian_bullseye_x86_64.deb
-$ sudo dpkg -i libhoel_1.4.18_Debian_bullseye_x86_64.deb
-$ sudo dpkg -i libulfius_2.7.7_Debian_bullseye_x86_64.deb
-$ sudo dpkg -i taliesin_1.0.19_Debian_bullseye_x86_64.deb
-```
-
-If there's no package available for your distribution, you can recompile it manually using `CMake` or `Makefile`.
-
-## Docker image
-
-You can install a Docker image based on Alpine Linux 3.15
-
-### Quickstart with a Taliesin server without authentication and a SQLite3 database
-
-You must map a volume to store the SQLite3 database on the docker host and another volume to map the path to your media files.
-
-Example:
-
-```shell
-docker run --rm -it -p 8576:8576 -v /tmp/taliesin/:/var/cache/taliesin -v /media/Music/:/media babelouest/taliesin_x86_64_sqlite_noauth_quickstart
-```
-
-### Quickstart with your own configuration file
-
-The folder `taliesin/docker/x86_64_custom` contains a Docker file, sql and configuration files.
-
-You can update the files `config.json` and `taliesin.conf` with your own settings, update the file `Docker` and uncomment some of the following if required:
-
-```shell
-#COPY ["taliesin.sqlite3.sql", "/"]
-#COPY ["taliesin.mariadb.sql", "/"]
-```
-
-Then, build the image:
-
-```shell
-$ cd taliesin/docker/x86_64_custom
-$ docker build -t my_taliesin .
-```
-
-When your docker image is ready, you can run it, don't forget to map the media volume at least, and the sqlite3 database volume if necessary.
-
-#### Run a built docker image configured with a SQLite3 database
-
-```shell
-$ docker run -it --rm -p 8576:8576 -v /tmp/taliesin/:/var/cache/taliesin -v /media/Music/:/media my_taliesin
-```
-
-#### Run a built docker image configured with a MariaDB/Mysql database
-
-```shell
-$ docker run -it --rm -p 8576:8576 -p 3306:3306 -v /media/Music/:/media my_taliesin
-```
-
 ## Manual install Taliesin and its dependencies
 
 Taliesin requires [libav](https://libav.org/) version 11, or equivalent ffmpeg, available in Debian Stretch or Ubuntu 17.04. It also requires [ulfius](https://github.com/babelouest/ulfius), [hoel](https://github.com/babelouest/hoel), [libjwt](https://github.com/benmcollins/libjwt), [libconfig](http://www.hyperrealm.com/libconfig/libconfig.html) and their dependencies.
 
 ```shell
 $ # Install libraries
-$ apt install -y libjansson-dev libavfilter-dev libavcodec-dev libavformat-dev libswresample-dev libavutil-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libsqlite3-dev libmariadbclient-dev libconfig-dev zlib1g-dev
+$ apt install -y libjansson-dev libavfilter-dev libavcodec-dev libavformat-dev libswresample-dev libavutil-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libsqlite3-dev libmariadbclient-dev libconfig-dev zlib1g-dev libshout3-dev
 $ git clone https://github.com/benmcollins/libjwt.git
 $ cd libjwt
 $ autoreconf -a && ./configure --without-openssl && make && sudo make install

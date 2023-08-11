@@ -508,6 +508,8 @@ class FullScreen extends Component {
               } id="streamList">
                 {currentStreamList}
               </DropdownButton>
+						</ButtonGroup>
+						<ButtonGroup>
 							<Button bsSize="large" title={i18n.t("common.previous")} onClick={() => {this.handlePlayerAction("previous")}}>
 								<FontAwesome name={"fast-backward"} />
 							</Button>

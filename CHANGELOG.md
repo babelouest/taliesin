@@ -3,6 +3,9 @@
 ## 1.0.20
 
 - Allow to disable static files server
+- cmake: remove `DownloadProject` feature, now dependencies must be previously installed
+- Add minimalist video player
+- Allow to stream webradios via an icecast server
 
 ## 1.0.19
 

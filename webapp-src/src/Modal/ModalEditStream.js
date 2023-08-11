@@ -322,22 +322,15 @@ class ModalEditStream extends Component {
 			</div>
       if (StateStore.getState().serverConfig.icecast) {
         icecast =
-        <div>
-          <Row>
-            <Col md={4}>
-              <Label>{i18n.t("common.icecast")}</Label>
-            </Col>
-            <Col md={8}>
-              <Checkbox checked={this.state.icecast} onChange={this.handleChangeIcecast}>
-              </Checkbox>
-            </Col>
-          </Row>
-          <Row>
-            <Col md={12}>
-              <hr/>
-            </Col>
-          </Row>
-        </div>
+        <Row>
+          <Col md={4}>
+            <Label>{i18n.t("common.icecast")}</Label>
+          </Col>
+          <Col md={8}>
+            <Checkbox checked={this.state.icecast} onChange={this.handleChangeIcecast}>
+            </Checkbox>
+          </Col>
+        </Row>
       }
 		} else {
       audioFormatSelect =
@@ -386,7 +379,6 @@ class ModalEditStream extends Component {
 								/>
 							</Col>
 						</Row>
-						{icecast}
             <Row>
               <Col md={4}>
                 <Label>{i18n.t("modal.stream_url")}</Label>
@@ -426,6 +418,7 @@ class ModalEditStream extends Component {
 								</FormControl>
 							</Col>
 						</Row>
+						{icecast}
 						<Row>
 							<Col md={12}>
 								<hr/>

@@ -62,7 +62,6 @@ database =
 };
 
 # security parameters
-user_can_create_data_source = false # default false, only administrator can create data_source
 use_oidc_authentication     = false # default true, on false no authentication is required and all users are admin
 
 # streaming default parameters

@@ -1353,7 +1353,7 @@ int webradio_close(struct config_elements * config, struct _t_webradio * webradi
 }
 
 int webradio_sync_playlist(struct _t_webradio * webradio, json_t * j_playlist) {
-  int ret;
+  int ret = T_OK;
   size_t index = 0;
   json_t * j_element = NULL;
 

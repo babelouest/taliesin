@@ -1103,7 +1103,7 @@ json_t * is_jukebox_command_valid(struct config_elements * config, struct _t_juk
 }
 
 int jukebox_sync_playlist(struct _t_jukebox * jukebox, json_t * j_playlist) {
-  int ret;
+  int ret = T_OK;
   size_t index = 0;
   json_t * j_element = NULL;
 

@@ -77,6 +77,12 @@ find_package_handle_standard_args(Libswresample
 if (LIBSWRESAMPLE_FOUND)
     set(LIBSWRESAMPLE_LIBRARIES ${LIBSWRESAMPLE_LIBRARY})
     set(LIBSWRESAMPLE_INCLUDE_DIRS ${LIBSWRESAMPLE_INCLUDE_DIR})
+    if (NOT TARGET Libav::Swresample)
+        add_library(Libav::Swresample UNKNOWN IMPORTED)
+        set_target_properties(Libav::Swresample PROPERTIES
+                IMPORTED_LOCATION "${LIBSWRESAMPLE_LIBRARY}"
+                INTERFACE_INCLUDE_DIRECTORIES "${LIBSWRESAMPLE_INCLUDE_DIR}")
+    endif ()
 endif ()
 
 mark_as_advanced(LIBSWRESAMPLE_INCLUDE_DIR LIBSWRESAMPLE_LIBRARY)

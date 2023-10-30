@@ -76,6 +76,12 @@ find_package_handle_standard_args(Libavcodec
 if (LIBAVCODEC_FOUND)
     set(LIBAVCODEC_LIBRARIES ${LIBAVCODEC_LIBRARY})
     set(LIBAVCODEC_INCLUDE_DIRS ${LIBAVCODEC_INCLUDE_DIR})
+    if (NOT TARGET Libav::Avcodec)
+        add_library(Libav::Avcodec UNKNOWN IMPORTED)
+        set_target_properties(Libav::Avcodec PROPERTIES
+                IMPORTED_LOCATION "${LIBAVCODEC_LIBRARY}"
+                INTERFACE_INCLUDE_DIRECTORIES "${LIBAVCODEC_INCLUDE_DIR}")
+    endif ()
 endif ()
 
 mark_as_advanced(LIBAVCODEC_INCLUDE_DIR LIBAVCODEC_LIBRARY)

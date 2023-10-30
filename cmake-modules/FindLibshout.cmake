@@ -76,6 +76,12 @@ find_package_handle_standard_args(Libshout
 if (LIBSHOUT_FOUND)
     set(LIBSHOUT_LIBRARIES ${LIBSHOUT_LIBRARY})
     set(LIBSHOUT_INCLUDE_DIRS ${LIBSHOUT_INCLUDE_DIR})
+    if (NOT TARGET Libshout::Libshout)
+        add_library(Libshout::Libshout UNKNOWN IMPORTED)
+        set_target_properties(Libshout::Libshout PROPERTIES
+                IMPORTED_LOCATION "${LIBSHOUT_LIBRARY}"
+                INTERFACE_INCLUDE_DIRECTORIES "${LIBSHOUT_INCLUDE_DIR}")
+    endif ()
 endif ()
 
 mark_as_advanced(LIBSHOUT_INCLUDE_DIR LIBSHOUT_LIBRARY)

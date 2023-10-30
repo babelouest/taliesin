@@ -77,6 +77,12 @@ find_package_handle_standard_args(Libavdevice
 if (LIBAVDEVICE_FOUND)
     set(LIBAVDEVICE_LIBRARIES ${LIBAVDEVICE_LIBRARY})
     set(LIBAVDEVICE_INCLUDE_DIRS ${LIBAVDEVICE_INCLUDE_DIR})
+    if (NOT TARGET Libav::Avdevice)
+        add_library(Libav::Avdevice UNKNOWN IMPORTED)
+        set_target_properties(Libav::Avdevice PROPERTIES
+                IMPORTED_LOCATION "${LIBAVDEVICE_LIBRARY}"
+                INTERFACE_INCLUDE_DIRECTORIES "${LIBAVDEVICE_INCLUDE_DIR}")
+    endif ()
 endif ()
 
 mark_as_advanced(LIBAVDEVICE_INCLUDE_DIR LIBAVDEVICE_LIBRARY)

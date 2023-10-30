@@ -77,6 +77,12 @@ find_package_handle_standard_args(Libavfilter
 if (LIBAVFILTER_FOUND)
     set(LIBAVFILTER_LIBRARIES ${LIBAVFILTER_LIBRARY})
     set(LIBAVFILTER_INCLUDE_DIRS ${LIBAVFILTER_INCLUDE_DIR})
+    if (NOT TARGET Libav::Avfilter)
+        add_library(Libav::Avfilter UNKNOWN IMPORTED)
+        set_target_properties(Libav::Avfilter PROPERTIES
+                IMPORTED_LOCATION "${LIBAVFILTER_LIBRARY}"
+                INTERFACE_INCLUDE_DIRECTORIES "${LIBAVFILTER_INCLUDE_DIR}")
+    endif ()
 endif ()
 
 mark_as_advanced(LIBAVFILTER_INCLUDE_DIR LIBAVFILTER_LIBRARY)

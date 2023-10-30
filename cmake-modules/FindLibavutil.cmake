@@ -76,6 +76,12 @@ find_package_handle_standard_args(Libavutil
 if (LIBAVUTIL_FOUND)
     set(LIBAVUTIL_LIBRARIES ${LIBAVUTIL_LIBRARY})
     set(LIBAVUTIL_INCLUDE_DIRS ${LIBAVUTIL_INCLUDE_DIR})
+    if (NOT TARGET Libav::Avutil)
+        add_library(Libav::Avutil UNKNOWN IMPORTED)
+        set_target_properties(Libav::Avutil PROPERTIES
+                IMPORTED_LOCATION "${LIBAVUTIL_LIBRARY}"
+                INTERFACE_INCLUDE_DIRECTORIES "${LIBAVUTIL_INCLUDE_DIR}")
+    endif ()
 endif ()
 
 mark_as_advanced(LIBAVUTIL_INCLUDE_DIR LIBAVUTIL_LIBRARY)

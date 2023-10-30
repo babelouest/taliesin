@@ -76,6 +76,12 @@ find_package_handle_standard_args(Libswscale
 if (LIBSWSCALE_FOUND)
     set(LIBSWSCALE_LIBRARIES ${LIBSWSCALE_LIBRARY})
     set(LIBSWSCALE_INCLUDE_DIRS ${LIBSWSCALE_INCLUDE_DIR})
+    if (NOT TARGET Libav::Swscale)
+        add_library(Libav::Swscale UNKNOWN IMPORTED)
+        set_target_properties(Libav::Swscale PROPERTIES
+                IMPORTED_LOCATION "${LIBSWSCALE_LIBRARY}"
+                INTERFACE_INCLUDE_DIRECTORIES "${LIBSWSCALE_INCLUDE_DIR}")
+    endif ()
 endif ()
 
 mark_as_advanced(LIBSWSCALE_INCLUDE_DIR LIBSWSCALE_LIBRARY)

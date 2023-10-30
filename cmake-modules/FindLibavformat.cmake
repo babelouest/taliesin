@@ -77,6 +77,12 @@ find_package_handle_standard_args(Libavformat
 if (LIBAVFORMAT_FOUND)
     set(LIBAVFORMAT_LIBRARIES ${LIBAVFORMAT_LIBRARY})
     set(LIBAVFORMAT_INCLUDE_DIRS ${LIBAVFORMAT_INCLUDE_DIR})
+    if (NOT TARGET Libav::Avformat)
+        add_library(Libav::Avformat UNKNOWN IMPORTED)
+        set_target_properties(Libav::Avformat PROPERTIES
+                IMPORTED_LOCATION "${LIBAVFORMAT_LIBRARY}"
+                INTERFACE_INCLUDE_DIRECTORIES "${LIBAVFORMAT_INCLUDE_DIR}")
+    endif ()
 endif ()
 
 mark_as_advanced(LIBAVFORMAT_INCLUDE_DIR LIBAVFORMAT_LIBRARY)

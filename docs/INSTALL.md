@@ -2,15 +2,11 @@
 
 ## Manual install Taliesin and its dependencies
 
-Taliesin requires [libav](https://libav.org/) version 11, or equivalent ffmpeg, available in Debian Stretch or Ubuntu 17.04. It also requires [ulfius](https://github.com/babelouest/ulfius), [hoel](https://github.com/babelouest/hoel), [libjwt](https://github.com/benmcollins/libjwt), [libconfig](http://www.hyperrealm.com/libconfig/libconfig.html) and their dependencies.
+Taliesin requires [libav](https://libav.org/) version 11, or equivalent ffmpeg, available in Debian Stretch or Ubuntu 17.04. It also requires [orcania](https://github.com/babelouest/orcania), [yder](https://github.com/babelouest/yder), [ulfius](https://github.com/babelouest/ulfius), [hoel](https://github.com/babelouest/hoel), [rhonabwy](https://github.com/babelouest/rhonabwy), [iddawc](https://github.com/babelouest/iddawc), [libconfig](https://www.hyperrealm.com/libconfig/libconfig.html), [libshout](https://www.icecast.org/) and their dependencies.
 
 ```shell
 $ # Install libraries
 $ apt install -y libjansson-dev libavfilter-dev libavcodec-dev libavformat-dev libswresample-dev libavutil-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libsqlite3-dev libmariadbclient-dev libconfig-dev zlib1g-dev libshout3-dev
-$ git clone https://github.com/benmcollins/libjwt.git
-$ cd libjwt
-$ autoreconf -a && ./configure --without-openssl && make && sudo make install
-$ cd ..
 ```
 
 ### CMake

@@ -49,54 +49,54 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libconfig-dev libsystemd-dev libjansson-dev libcurl4-gnutls-dev libmicrohttpd-dev libsqlite3-dev sqlite3 default-libmysqlclient-dev cmake pkg-config check libsubunit-dev cppcheck gnutls-bin libavfilter-dev libavcodec-dev libavformat-dev libswresample-dev libavutil-dev libgnutls28-dev libgcrypt20-dev zlib1g-dev libshout3-dev
 
-    - name: dependencies
-      run: |
-        cd /opt
-        git clone https://github.com/babelouest/orcania.git
-        git clone https://github.com/babelouest/yder.git
-        git clone https://github.com/babelouest/hoel.git
-        git clone https://github.com/babelouest/ulfius.git
-        git clone https://github.com/babelouest/rhonabwy.git
-        git clone https://github.com/babelouest/iddawc.git
-        mkdir build
-        cd build
-        
-        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib ../orcania
-        make
-        sudo make install
-        rm -rf *
-        
-        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib ../yder
-        make
-        sudo make install
-        rm -rf *
-        
-        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib ../hoel
-        make
-        sudo make install
-        rm -rf *
-        
-        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib ../ulfius
-        make
-        sudo make install
-        rm -rf *
-        
-        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib ../rhonabwy
-        make
-        sudo make install
-        rm -rf *
-        
-        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib ../iddawc
-        make
-        sudo make install
-        rm -rf *
-    - name: build
-      run: |
-        mkdir build
-        cd build
-        cmake -DBUILD_IDWCC=OFF  -DWITH_PGSQL=off -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib ..
-        make
-        sudo make install
+#    - name: dependencies
+#      run: |
+#        cd /opt
+#        git clone https://github.com/babelouest/orcania.git
+#        git clone https://github.com/babelouest/yder.git
+#        git clone https://github.com/babelouest/hoel.git
+#        git clone https://github.com/babelouest/ulfius.git
+#        git clone https://github.com/babelouest/rhonabwy.git
+#        git clone https://github.com/babelouest/iddawc.git
+#        mkdir build
+#        cd build
+#
+#        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib ../orcania
+#        make
+#        sudo make install
+#        rm -rf *
+#
+#        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib ../yder
+#        make
+#        sudo make install
+#        rm -rf *
+#
+#        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib ../hoel
+#        make
+#        sudo make install
+#        rm -rf *
+#
+#        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib ../ulfius
+#        make
+#        sudo make install
+#        rm -rf *
+#
+#        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib ../rhonabwy
+#        make
+#        sudo make install
+#        rm -rf *
+#
+#        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib ../iddawc
+#        make
+#        sudo make install
+#        rm -rf *
+#    - name: build
+#      run: |
+#        mkdir build
+#        cd build
+#        cmake -DBUILD_IDWCC=OFF  -DWITH_PGSQL=off -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib ..
+#        make
+#        sudo make install
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1

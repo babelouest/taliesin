@@ -66,13 +66,16 @@ class FullScreen extends Component {
             playerSwitch: StateStore.getState().profile.currentPlayerSwitch
 					}, () => {this.loadMedia();});
 				} else if (StateStore.getState().lastAction === "loadStream" || StateStore.getState().lastAction === "loadStreamAndPlay") {
-					this.setState({stream: StateStore.getState().profile.stream}, () => {this.loadMedia();});
+					this.setState({stream: StateStore.getState().profile.stream}, () => {
+            this.loadMedia();
+            this.setState({title: this.buildTitle(), titleNext: this.buildTitleNext()});
+          });
 				} else if (StateStore.getState().lastAction === "setJukeboxSwitch") {
 					this.setState({playerSwitch: StateStore.getState().profile.currentPlayerSwitch});
         } else if (StateStore.getState().lastAction === "setExternalPlayerList") {
           this.setState({playerList: StateStore.getState().externalPlayerList});
         } else if (StateStore.getState().lastAction === "setCurrentPlayer") {
-          this.setState({currentPlayer: StateStore.getState().profile.currentPlayer});
+          this.setState({currentPlayer: StateStore.getState().profile.currentPlayer, stream: StateStore.getState().profile.stream});
 				}
 			}
 		});
@@ -150,7 +153,7 @@ class FullScreen extends Component {
 
   buildTitleNext() {
 		var title = "";
-		if (!!this.state.mediaNext && !!this.state.mediaNext.tags) {
+		if (this.state.stream.webradio && !!this.state.mediaNext && !!this.state.mediaNext.tags) {
       if (this.state.mediaNext.tags.artist) {
         title += this.state.mediaNext.tags.artist + " - ";
       }

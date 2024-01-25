@@ -120,7 +120,7 @@ char * get_ip_source(const struct _u_request * request) {
   }
   
   return o_strdup(ip_source);
-};
+}
 
 /**
  * Check if the result json object has a "result" element that is equal to value

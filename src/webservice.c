@@ -125,7 +125,7 @@ int callback_taliesin_server_configuration (const struct _u_request * request, s
                         "icecast_remote_address", ((struct config_elements *)user_data)->icecast_remote_address
                         ));
   return U_CALLBACK_COMPLETE;
-};
+}
 
 /**
  * Authentication endpoint, user scope, redirect to glelwyd authentication callback or build a fake valid user depending on the configuration
@@ -606,7 +606,7 @@ int callback_taliesin_media_get_path (const struct _u_request * request, struct 
                 cover_b64_len = o_strlen(cover_b64);
                 cover_decoded = o_malloc(cover_b64_len);
                 if (o_base64_decode((const unsigned char *)cover_b64, cover_b64_len, cover_decoded, &cover_decoded_len)) {
-                  ulfius_set_binary_body_response(response, 200, (const char *)cover_decoded, cover_decoded_len);
+                  ulfius_set_binary_body_response(response, 200, cover_decoded, cover_decoded_len);
                 } else {
                   y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_media_cover_get - Error decoding cover");
                   response->status = 500;
@@ -1976,7 +1976,7 @@ int callback_taliesin_stream_cover (const struct _u_request * request, struct _u
         cover_b64_len = o_strlen(cover_b64);
         cover_decoded = o_malloc(cover_b64_len);
         if (o_base64_decode((const unsigned char *)cover_b64, cover_b64_len, cover_decoded, &cover_decoded_len)) {
-          ulfius_set_binary_body_response(response, 200, (const char *)cover_decoded, cover_decoded_len);
+          ulfius_set_binary_body_response(response, 200, cover_decoded, cover_decoded_len);
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_cover - Error decoding cover");
           response->status = 500;
@@ -2004,7 +2004,7 @@ int callback_taliesin_stream_cover (const struct _u_request * request, struct _u
         cover_b64_len = o_strlen(cover_b64);
         cover_decoded = o_malloc(cover_b64_len);
         if (o_base64_decode((const unsigned char *)cover_b64, cover_b64_len, cover_decoded, &cover_decoded_len)) {
-          ulfius_set_binary_body_response(response, 200, (const char *)cover_decoded, cover_decoded_len);
+          ulfius_set_binary_body_response(response, 200, cover_decoded, cover_decoded_len);
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "callback_taliesin_stream_cover - Error decoding cover");
           response->status = 500;

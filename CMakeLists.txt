@@ -155,7 +155,7 @@ else ()
                             ${CMAKE_CURRENT_SOURCE_DIR}/src/webservice.c
                             ${CMAKE_CURRENT_SOURCE_DIR}/src/taliesin.c )
 endif ()
-set_target_properties(taliesin PROPERTIES COMPILE_OPTIONS "-Wextra;-Wconversion")
+set_target_properties(taliesin PROPERTIES COMPILE_OPTIONS "-Wextra;-Wconversion;-Wpedantic")
 
 find_package(Orcania ${ORCANIA_VERSION_REQUIRED} REQUIRED)
 if ("${ORCANIA_VERSION_STRING}" VERSION_GREATER_EQUAL "${ORCANIA_VERSION_REQUIRED}")
